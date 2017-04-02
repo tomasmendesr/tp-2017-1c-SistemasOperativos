@@ -5,7 +5,7 @@
  *      Author: utnso
  */
 
-#include <interface.h>
+#include "interface.h"
 
 void interface(interface_thread_param* param){
 
