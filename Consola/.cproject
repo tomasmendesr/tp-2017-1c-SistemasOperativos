@@ -29,8 +29,12 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.41624942" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.919446247" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
-								<option id="gnu.c.link.option.libs.1438983473" superClass="gnu.c.link.option.libs" valueType="libs">
+								<option id="gnu.c.link.option.libs.1438983473" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="commons"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="&quot;${workspace_loc:/Libs-Commons/leerArchivoConfig.c}&quot;"/>
+								</option>
+								<option id="gnu.c.link.option.paths.2011635975" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Libs-Commons}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1642384586" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -46,7 +50,9 @@
 					</folderInfo>
 				</configuration>
 			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
+				<externalSettings containerId="Libs-Commons;" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier"/>
+			</storageModule>
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.release.1706668215">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.release.1706668215" moduleId="org.eclipse.cdt.core.settings" name="Release">
@@ -107,4 +113,5 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
