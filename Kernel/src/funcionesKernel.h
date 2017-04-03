@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <commons/config.h>
 #include <commons/collections/dictionary.h>
+#include <interface.h>
+#include <pthread.h>
 
 typedef struct {
 	int puerto_PROG;
@@ -32,5 +34,14 @@ typedef struct {
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
 t_dictionary* crearDiccionarioConValue(char** array, char** valores);
 t_dictionary* crearDiccionario(char** array);
+
+//Funciones de interfaz
+void levantarInterfaz();
+void listProcesses(char* comando, char* param);
+void processInfo(char* comando, char* param);
+void getTablaArchivos(char* comando, char* param);
+void gradoMultiprogramacion(char* comando, char* param);
+void killProcess(char*,char*);
+void stopPlanification(char*,char*);
 
 #endif /* SRC_FUNCIONESKERNEL_H_ */
