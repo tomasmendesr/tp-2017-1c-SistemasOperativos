@@ -1,10 +1,13 @@
 #include <stdio.h>
-#include <commons/config.h>
+#include "funcionesMemoria.h"
 
 int main(){
 
-	printf("soy la memoria");
+	t_config_memoria* config = levantarConfiguracionMemoria("confMemoria.init");
 
+	printf("soy la memoria\n");
+
+	free(config);
 	return 0;
 }
 
