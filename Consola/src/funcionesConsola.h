@@ -1,10 +1,10 @@
 
 #include <commons/config.h>
+#include "interface.h"
 
 #ifndef SRC_FUNCIONESCONSOLA_H_
 #define SRC_FUNCIONESCONSOLA_H_
 
-#include <interface.h>
 
 typedef struct{
 	char* ip_Kernel;
