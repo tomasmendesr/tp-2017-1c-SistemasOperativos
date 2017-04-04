@@ -1,5 +1,4 @@
 #include "funcionesConsola.h"
-#include "consola.h"
 
 t_log* logger;
 

@@ -1,6 +1,6 @@
 
 #include <commons/config.h>
-#include "interface.h"
+#include <commons/log.h>
 
 #ifndef SRC_FUNCIONESCONSOLA_H_
 #define SRC_FUNCIONESCONSOLA_H_
