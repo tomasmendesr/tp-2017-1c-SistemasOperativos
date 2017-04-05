@@ -8,11 +8,8 @@
  ============================================================================
  */
 
-
 #define MAX_COMMAND_SIZE 256
 #define IniciarProceso "iniciarProceso"
-#define IP "127.0.0.1"
-#define PUERTO "8080"
 
 #include "consola.h"
 
