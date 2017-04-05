@@ -17,6 +17,14 @@
 #include "consola.h"
 
 int main(){
+	if(crearLog()){
+		config = levantarConfiguracionConsola("confConsola.init");
+	}else{
+		log_info(logger,"La consola no pudo iniciarse");
+		return EXIT_FAILURE;
+	}
+	log_destroy(logger);
+
    char *comando = malloc(MAX_COMMAND_SIZE);
    int socket_cliente;
    fgets(comando,MAX_COMMAND_SIZE,stdin);
@@ -27,8 +35,9 @@ int main(){
    {
 	   //Iniciar Proceso
 	   if(strcmp(comandos[0],IniciarProceso)){
+		   verificarExistenciaDeArchivo(comandos[1]);
     	   printf("Su proceso se inicializo");
-    	   socket_cliente = createClient(IP, PUERTO);
+    	   socket_cliente = createClient(config->ip_Kernel, config->puerto_Kernel);
     	   if(socket_cliente){
     		   printf("Cliente creado satisfactoriamente.\n");
     	   }
@@ -49,3 +58,55 @@ int main(){
 
    return EXIT_SUCCESS;
 }
+
+
+t_config_consola* levantarConfiguracionConsola(char * archivo) {
+
+        t_config_consola* config = malloc(sizeof(t_config_consola));
+
+        t_config* configConsola;
+        configConsola = config_create(archivo);
+        config->ip_Kernel = config_get_string_value(configConsola, "IP_KERNEL");
+        config->puerto_Kernel = config_get_int_value(configConsola, "PUERTO_KERNEL");
+
+        config_destroy(configConsola);
+        return config;
+}
+
+//funciones interfaz
+void levantarInterfaz(){
+
+}
+
+void iniciarPrograma(char* comando, char* param){
+        printf("iniciarPrograma\n");
+}
+void finalizarPrograma(char* comando, char* param){
+        printf("finalizarPrograma\n");
+}
+void desconectarConsola(char* comando, char* param){
+        printf("desconectarConsola\n");
+}
+void limpiarMensajes(char* comando, char* param){
+        printf("limpiarMensajes");
+}
+
+int crearLog() {
+        logger = log_create(getenv("/home/utnso/tp-2017-1c-Dirty-Cow/Consola/consola_log.txt"), "consola", 1, 0);
+        if (logger) {
+                return 1;
+        } else {
+                return 0;
+        }
+}
+
+int verificarExistenciaDeArchivo(char* path) {
+        FILE * archivoConfig = fopen(path, "r");
+        if (archivoConfig!=NULL){
+                fclose(archivoConfig);
+                return 1;
+        }
+        return -1;
+}
+
+
