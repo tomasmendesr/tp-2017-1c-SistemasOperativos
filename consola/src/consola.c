@@ -15,7 +15,7 @@
 
 int main(){
 	if(crearLog()){
-		config = levantarConfiguracionConsola("consolaConfiguracion");
+		config = levantarConfiguracionConsola("/home/utnso/TPOperativos/tp-2017-1c-Dirty-Cow/consola/consolaConfiguracion");
 	}else{
 		log_info(logger,"La consola no pudo iniciarse");
 		return EXIT_FAILURE;
@@ -66,7 +66,6 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
         config->ip_Kernel = config_get_string_value(configConsola, "IP_KERNEL");
         config->puerto_Kernel = config_get_string_value(configConsola, "PUERTO_KERNEL");
 
-        config_destroy(configConsola);
         return config;
 }
 
