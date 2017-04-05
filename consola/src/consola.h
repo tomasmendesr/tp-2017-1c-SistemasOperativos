@@ -18,7 +18,7 @@
 
 typedef struct{
         char* ip_Kernel;
-        int puerto_Kernel;
+        char* puerto_Kernel;
 
 }t_config_consola;
 

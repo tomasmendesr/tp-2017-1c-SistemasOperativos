@@ -15,12 +15,11 @@
 
 int main(){
 	if(crearLog()){
-		config = levantarConfiguracionConsola("confConsola.init");
+		config = levantarConfiguracionConsola("consolaConfiguracion");
 	}else{
 		log_info(logger,"La consola no pudo iniciarse");
 		return EXIT_FAILURE;
 	}
-	log_destroy(logger);
 
    char *comando = malloc(MAX_COMMAND_SIZE);
    int socket_cliente;
@@ -62,9 +61,10 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
         t_config_consola* config = malloc(sizeof(t_config_consola));
 
         t_config* configConsola;
+        verificarExistenciaDeArchivo(archivo);
         configConsola = config_create(archivo);
         config->ip_Kernel = config_get_string_value(configConsola, "IP_KERNEL");
-        config->puerto_Kernel = config_get_int_value(configConsola, "PUERTO_KERNEL");
+        config->puerto_Kernel = config_get_string_value(configConsola, "PUERTO_KERNEL");
 
         config_destroy(configConsola);
         return config;
@@ -89,7 +89,7 @@ void limpiarMensajes(char* comando, char* param){
 }
 
 int crearLog() {
-        logger = log_create(getenv("/home/utnso/tp-2017-1c-Dirty-Cow/Consola/consola_log.txt"), "consola", 1, 0);
+        logger = log_create(getenv("/home/utnso/TPOperativos/tp-2017-1c-Dirty-Cow/consola/logConsola"), "consola", 1, 0);
         if (logger) {
                 return 1;
         } else {
@@ -100,8 +100,10 @@ int crearLog() {
 int verificarExistenciaDeArchivo(char* path) {
         FILE * archivoConfig = fopen(path, "r");
         if (archivoConfig!=NULL){
-                fclose(archivoConfig);
-                return 1;
+			 fclose(archivoConfig);
+			 return 1;
+        }else{
+        	log_info(logger,"El archivo no existe");
         }
         return -1;
 }
