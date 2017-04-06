@@ -10,12 +10,14 @@
 
 #include "funcionesKernel.h"
 
+int main(int argc, char** argv){
 
+	char* pathConfig=string_new();
 
-int main(void) {
-
-	if(verificarExistenciaDeArchivo(configuracionKernel)){
-		config = levantarConfiguracionKernel(configuracionKernel);
+	if(!argv[1])string_append(pathConfig,argv[1]);
+		else string_append(pathConfig,configuracionKernel);
+	if(verificarExistenciaDeArchivo(pathConfig)){
+		config = levantarConfiguracionKernel(pathConfig);
 	}else{
 		printf("No se pudo levantar archivo de configuracion");
 		return EXIT_FAILURE;
