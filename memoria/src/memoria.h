@@ -17,17 +17,26 @@
 #include <commons/collections/queue.h>
 #include <pthread.h>
 
-typedef struct {
-
+typedef struct{
         int puerto;
         int marcos;
         int marcos_Size;
         int entradas_Cache;
         int cache_x_Proceso;
-        char* reemplazo_cache;
+        char reemplazo_cache[3];
         int retardo_Memoria;
-
 }t_config_memoria;
+
+typedef struct{
+	int pid;
+	int nroPag;
+}tableInv;
+
+typedef struct{
+	int pid;
+	int nroPag;
+	char* content;
+}entradaCache;
 
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
 
