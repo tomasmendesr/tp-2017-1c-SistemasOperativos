@@ -67,10 +67,9 @@ void inicializarMemoria(){
 	memset(memoria,'\0',memSize);
 
 	//Creo las entradas de la tabla invertida
-	int i, offset = 0;
+	int i;
 	for(i=0;i<config->marcos * 2;i++){//*2 porque son 2 ints, pid y nroPag
-		memoria[offset] = -1;
-		offset += sizeof(int);
+		((int*)memoria)[i] = -1;
 	} //Esto hay que revisar que funcione correctamente
 
 	//Imprimo el contenido de la memoria
