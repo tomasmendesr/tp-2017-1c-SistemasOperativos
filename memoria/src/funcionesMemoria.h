@@ -34,16 +34,22 @@ typedef struct{
 typedef struct{
 	int pid;
 	int nroPag;
-}tableInv;
+}t_entrada_tabla;
 
 typedef struct{
 	int pid;
 	int nroPag;
 	char* content;
-}entradaCache;
+}t_entrada_cache;
 
+void crearConfig(int argc, char* argv[]);
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
 void destruirConfiguracionMemoria(t_config_memoria* config);
+
+/* Esta funcion hace la creacion de la memoria y todas las estructuras
+ * administrativas necesarias para que el sistema arranque
+ */
+void inicializarMemoria();
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -53,6 +59,12 @@ void flush(char* comando, char* param);
 void size(char* comando, char* param);
 
 //Variables Globales
+t_log* log;
 t_config_memoria* config;
+char* memoria; /*Este va a ser el bloque que simula la memoria principal.
+				Uso char* porque sizeof(char) = 1 y facilita la aritmetica,
+				pero no tiene nada que ver con caracteres*/
+t_entrada_cache* cache;
+
 
 #endif /* FUNCIONESMEMORIA_H_ */

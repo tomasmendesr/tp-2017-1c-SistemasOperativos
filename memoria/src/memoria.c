@@ -12,23 +12,17 @@
 
 int main(int argc, char** argv){
 
-    levantarInterfaz();
+	log = log_create("logMemoria","memoria",true,LOG_LEVEL_TRACE);
 
-    sleep(10000);
+	crearConfig(argc, argv);
 
-	char* pathConfig=string_new();
+	inicializarMemoria();
 
-	if(argv[1]!=NULL)string_append(&pathConfig,argv[1]);
-		else string_append(&pathConfig,configuracionMemoria);
-	if(verificarExistenciaDeArchivo(pathConfig)){
-		config = levantarConfiguracionMemoria(pathConfig);
-	}else{
-		printf("No se pudo levantar archivo de configuracion\n");
-		return EXIT_FAILURE;
-	}
+	//LevantarServer
 
-    printf("soy la memoria\n");
+	levantarInterfaz();
 
     destruirConfiguracionMemoria(config);
+
     return EXIT_SUCCESS;
 }

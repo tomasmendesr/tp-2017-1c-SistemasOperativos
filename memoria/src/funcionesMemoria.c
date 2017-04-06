@@ -1,5 +1,21 @@
 #include "funcionesMemoria.h"
 
+void crearConfig(int argc, char* argv[]){
+	char* pathConfig=string_new();
+
+	if(argc>1){
+		string_append(&pathConfig,argv[1]);
+	}
+		else string_append(&pathConfig,configuracionMemoria);
+	if(verificarExistenciaDeArchivo(pathConfig)){
+		config = levantarConfiguracionMemoria(pathConfig);
+	}else{
+		printf("No se pudo levantar archivo de configuracion\n");
+		exit(EXIT_FAILURE);
+	}
+
+    printf("soy la memoria\n");
+}
 t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
 
         t_config_memoria* config = malloc(sizeof(t_config_memoria));
@@ -31,7 +47,41 @@ void destruirConfiguracionMemoria(t_config_memoria* config){
 	free(config);
 }
 
+void inicializarMemoria(){
 
+	const int memSize = config->marcos * config->marcos_Size;
+
+	//Creo el bloque de memoria principal
+	memoria = malloc(memSize);
+
+	//Creo la cache
+	cache = malloc(sizeof(t_entrada_cache) * config->entradas_Cache);
+
+	//Reviso los mallocs
+	if(memoria == NULL || cache == NULL){
+		log_error(log, "No pude reservar memoria para cache y/o memoria");
+		exit(EXIT_FAILURE);
+	}
+
+	//Setteo la memoria con \0
+	memset(memoria,'\0',memSize);
+
+	//Creo las entradas de la tabla invertida
+	int i;
+	for(i=0;i<config->marcos * 2;i++){//*2 porque son 2 ints, pid y nroPag
+		((int*)memoria)[i] = -1;
+	} //Esto hay que revisar que funcione correctamente
+
+	//Imprimo el contenido de la memoria
+	FILE* memFile = fopen("memDump","w");
+	for(i=0;i<memSize;i++){
+		fputc(memoria[i],memFile);
+		fputc(memoria[i],stdout);
+	}
+	fclose(memFile);
+}
+
+//funciones interfaz
 void levantarInterfaz(){
 	//creo los comandos y el parametro
 	comando* comandos = malloc(sizeof(comando)*4);

@@ -44,10 +44,14 @@ typedef struct {
 
 } t_config_kernel;
 
+
+void crearConfig(int argc, char* argv[]);
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
 void destruirConfiguracionKernel(t_config_kernel* config);
 t_dictionary* crearDiccionarioConValue(char** array, char** valores);
 t_dictionary* crearDiccionario(char** array);
+
+void establecerConexiones();
 
 //Funciones de interfaz
 void levantarInterfaz();

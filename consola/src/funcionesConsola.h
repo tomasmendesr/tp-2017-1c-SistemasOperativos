@@ -28,6 +28,7 @@ typedef struct{
 
 }t_config_consola;
 
+void crearConfig(int argc,char* argv[]);
 t_config_consola* levantarConfiguracionConsola(char * archivo);
 int crearLog();
 int verificarExistenciaDeArchivo(char*);

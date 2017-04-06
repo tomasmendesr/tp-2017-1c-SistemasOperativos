@@ -1,6 +1,20 @@
 #include "funcionesKernel.h"
 
+void crearConfig(int argc, char* argv[]){
+	char* pathConfig=string_new();
 
+	if(argc>0)string_append(&pathConfig,argv[1]);
+		else string_append(&pathConfig,configuracionKernel);
+	if(verificarExistenciaDeArchivo(pathConfig)){
+		config = levantarConfiguracionKernel(pathConfig);
+	}else{
+		printf("No se pudo levantar archivo de configuracion");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("Configuracion levantada correctamente\n");
+	return;
+}
 
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 
@@ -84,6 +98,10 @@ t_dictionary* crearDiccionario(char** array){
         }
 
         return dic;
+}
+
+void establecerConexiones(){
+	//TODO: todo.
 }
 
 //funciones interfaz

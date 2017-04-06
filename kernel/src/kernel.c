@@ -10,23 +10,25 @@
 
 #include "funcionesKernel.h"
 
+void trabajarConexiones();
+
 int main(int argc, char** argv){
 
-	char* pathConfig=string_new();
+	crearConfig(argc,argv);
 
-	if(argv[1]!=NULL)string_append(&pathConfig,argv[1]);
-		else string_append(&pathConfig,configuracionKernel);
-	if(verificarExistenciaDeArchivo(pathConfig)){
-		config = levantarConfiguracionKernel(pathConfig);
-	}else{
-		printf("No se pudo levantar archivo de configuracion");
-		return EXIT_FAILURE;
-	}
+	establecerConexiones();//Conectarse a FS y Memoria
 
+	trabajarConexiones();//Esto es lo que hace el thread principal, escucha.
 
-	printf("Configuracion levantada correctamente\n");
+	destruirConfiguracionKernel(config);
+
+	return EXIT_SUCCESS;
+}
+
+void trabajarConexiones(){
 
 	int socket_servidor_kernel = createServer(IP,config->puerto_PROG,BACKLOG);
+	//todo: Checkear esto, BACKLOG es un char* y la funcion espera un int
 
 	int numero_maximo_socket;
 	int newSocket;
@@ -94,10 +96,5 @@ int main(int argc, char** argv){
 		}
 	}
 	}
-
-	destruirConfiguracionKernel(config);
-	return EXIT_SUCCESS;
 }
-
-
 
