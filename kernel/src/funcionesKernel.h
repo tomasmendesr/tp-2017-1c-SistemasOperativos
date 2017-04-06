@@ -5,8 +5,11 @@
  *      Author: utnso
  */
 
-#ifndef KERNEL_H_
-#define KERNEL_H_
+#ifndef FUNCIONESKERNEL_H_
+#define FUNCIONESKERNEL_H_
+
+#define IP "127.0.0.1"
+#define BACKLOG "10"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,12 +25,12 @@
 #include <pthread.h>
 
 typedef struct {
-        int puerto_PROG;
-        int puerto_CPU;
+        char* puerto_PROG;
+        char* puerto_CPU;
         char* ip_Memoria;
-        int puerto_Memoria;
+        char* puerto_Memoria;
         char* ip_FS;
-        int puerto_FS;
+        char puerto_FS;
         int quantum;
         int quantum_Sleep;
         char* algoritmo;
@@ -53,4 +56,4 @@ void stopPlanification(char*,char*);
 
 
 
-#endif /* KERNEL_H_ */
+#endif /* FUNCIONESKERNEL_H_ */
