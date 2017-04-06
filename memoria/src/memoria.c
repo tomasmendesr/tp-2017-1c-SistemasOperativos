@@ -62,8 +62,7 @@ void levantarInterfaz(){
 	pthread_attr_init(&atributos);
 	pthread_attr_setdetachstate(&atributos, PTHREAD_CREATE_DETACHED);
 
-	//pthread_create(&threadInterfaz, &atributos, (void*)interface, params);
-	//Tira referencia a pthread_create sin definir :/
+	pthread_create(&threadInterfaz, &atributos, (void*)interface, params);
 
 	return;
 }
