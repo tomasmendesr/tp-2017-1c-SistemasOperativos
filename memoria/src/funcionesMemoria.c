@@ -11,7 +11,7 @@ t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
         config->marcos_Size = config_get_int_value(configMemoria, "MARCOS_SIZE");
         config->entradas_Cache = config_get_int_value(configMemoria, "ENTRADAS_CACHE");
         config->entradas_Cache = config_get_int_value(configMemoria, "CACHE_X_PROC");
-        strcpy(config->reemplazo_cache,config_get_string_value(configMemoria, "REEMPLAZO_CACHE"));
+        config->reemplazo_cache = config_get_string_value(configMemoria, "REEMPLAZO_CACHE");
         config->retardo_Memoria = config_get_int_value(configMemoria, "RETARDO_MEMORIA");
 
         config_destroy(configMemoria);

@@ -26,7 +26,7 @@ typedef struct{
         int marcos_Size;
         int entradas_Cache;
         int cache_x_Proceso;
-        char reemplazo_cache[3];
+        char* reemplazo_cache;
         int retardo_Memoria;
 }t_config_memoria;
 
