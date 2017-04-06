@@ -14,8 +14,8 @@ int main(int argc, char** argv){
 
 	char* pathConfig=string_new();
 
-	if(!argv[1])string_append(pathConfig,argv[1]);
-		else string_append(pathConfig,configuracionKernel);
+	if(!argv[1])string_append(&pathConfig,argv[1]);
+		else string_append(&pathConfig,configuracionKernel);
 	if(verificarExistenciaDeArchivo(pathConfig)){
 		config = levantarConfiguracionKernel(pathConfig);
 	}else{
