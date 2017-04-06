@@ -18,7 +18,7 @@ int main(int argc, char** argv){
 
 	char* pathConfig=string_new();
 
-	if(!argv[1])string_append(&pathConfig,argv[1]);
+	if(argv[1]!=NULL)string_append(&pathConfig,argv[1]);
 		else string_append(&pathConfig,configuracionMemoria);
 	if(verificarExistenciaDeArchivo(pathConfig)){
 		config = levantarConfiguracionMemoria(pathConfig);
