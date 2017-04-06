@@ -18,9 +18,7 @@ int main(void) {
     free(config);
     return EXIT_SUCCESS;
 }
-void levantarInterfaz(){
 
-}
 
 t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
 
@@ -41,6 +39,34 @@ t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
 
 }
 
+void levantarInterfaz(){
+	//creo los comandos y el parametro
+	comando* comandos = malloc(sizeof(comando)*4);
+
+	strcpy(comandos[0].comando, "retardo");
+	comandos[0].funcion = retardo;
+	strcpy(comandos[1].comando, "dump");
+	comandos[1].funcion = dump;
+	strcpy(comandos[2].comando, "flush");
+	comandos[2].funcion = flush;
+	strcpy(comandos[3].comando, "size");
+	comandos[3].funcion = size;
+
+	interface_thread_param* params = malloc(sizeof(interface_thread_param));
+	params->comandos = comandos;
+	params->cantComandos = 4;
+
+	//Lanzo el thread
+	pthread_t threadInterfaz;
+	pthread_attr_t atributos;
+	pthread_attr_init(&atributos);
+	pthread_attr_setdetachstate(&atributos, PTHREAD_CREATE_DETACHED);
+
+	//pthread_create(&threadInterfaz, &atributos, (void*)interface, params);
+	//Tira referencia a pthread_create sin definir :/
+
+	return;
+}
 void retardo(char* comando, char* param){
         printf("retardo\n");
 }

@@ -15,6 +15,7 @@
 #define BACKLOG "10"
 
 int main(void) {
+
 	int socket_servidor_kernel = createServer(IP,PUERTO,BACKLOG);
 
 	int numero_maximo_socket;
@@ -133,10 +134,6 @@ t_dictionary* crearDiccionarioConValue(char** array, char** valores){
         return dic;
 }
 
-//funciones interfaz
-void levantarInterfaz(){
-}
-
 t_dictionary* crearDiccionario(char** array){
 
         t_dictionary* dic = malloc(sizeof(t_dictionary));
@@ -148,6 +145,39 @@ t_dictionary* crearDiccionario(char** array){
         }
 
         return dic;
+}
+
+//funciones interfaz
+void levantarInterfaz(){
+	//creo los comandos y el parametro
+	comando* comandos = malloc(sizeof(comando)*6);
+
+	strcpy(comandos[0].comando, "list");
+	comandos[0].funcion = listProcesses;
+	strcpy(comandos[1].comando, "info");
+	comandos[1].funcion = processInfo;
+	strcpy(comandos[2].comando, "tablaArchivos");
+	comandos[2].funcion = getTablaArchivos;
+	strcpy(comandos[3].comando, "grMulti");
+	comandos[3].funcion = gradoMultiprogramacion;
+	strcpy(comandos[4].comando, "kill");
+	comandos[4].funcion = killProcess;
+	strcpy(comandos[5].comando, "stopPlan");
+	comandos[5].funcion = stopPlanification;
+
+	interface_thread_param* params = malloc(sizeof(interface_thread_param));
+	params->comandos = comandos;
+	params->cantComandos = 6;
+
+	//Lanzo el thread
+	pthread_t threadInterfaz;
+	pthread_attr_t atributos;
+	pthread_attr_init(&atributos);
+	pthread_attr_setdetachstate(&atributos, PTHREAD_CREATE_DETACHED);
+
+	pthread_create(&threadInterfaz, &atributos, interface, params);
+
+	return;
 }
 void listProcesses(char* comando, char* param){
         printf("listProcesses\n");

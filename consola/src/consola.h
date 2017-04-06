@@ -15,6 +15,8 @@
 #include <commons/sockets.h>
 #include <commons/log.h>
 #include <commons/config.h>
+#include <commons/interface.h>
+#include <pthread.h>
 
 typedef struct{
         char* ip_Kernel;
