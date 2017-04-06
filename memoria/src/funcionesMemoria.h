@@ -42,7 +42,7 @@ typedef struct{
 	char* content;
 }t_entrada_cache;
 
-void crearConfig(char* path);
+void crearConfig(int argc, char* argv[]);
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
 void destruirConfiguracionMemoria(t_config_memoria* config);
 

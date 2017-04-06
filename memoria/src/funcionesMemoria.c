@@ -1,9 +1,11 @@
 #include "funcionesMemoria.h"
 
-void crearConfig(char* path){
+void crearConfig(int argc, char* argv[]){
 	char* pathConfig=string_new();
 
-	if(!path)string_append(&pathConfig,path);
+	if(argc>1){
+		string_append(&pathConfig,argv[1]);
+	}
 		else string_append(&pathConfig,configuracionMemoria);
 	if(verificarExistenciaDeArchivo(pathConfig)){
 		config = levantarConfiguracionMemoria(pathConfig);
@@ -71,10 +73,7 @@ void inicializarMemoria(){
 		offset += sizeof(int);
 	} //Esto hay que revisar que funcione correctamente
 
-	int marcosOcupadosPorTabla = (sizeof(t_entrada_tabla) * config->marcos) % config->marcos_Size;
-
-	//Imprimo cuantos marcos me ocupo y el contenido de la memoria
-	printf("%i\n", marcosOcupadosPorTabla);
+	//Imprimo el contenido de la memoria
 	FILE* memFile = fopen("memDump","w");
 	for(i=0;i<memSize;i++){
 		fputc(memoria[i],memFile);

@@ -45,7 +45,7 @@ typedef struct {
 } t_config_kernel;
 
 
-void crearConfig(char* path);
+void crearConfig(int argc, char* argv[]);
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
 void destruirConfiguracionKernel(t_config_kernel* config);
 t_dictionary* crearDiccionarioConValue(char** array, char** valores);

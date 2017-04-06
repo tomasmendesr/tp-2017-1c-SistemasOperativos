@@ -14,7 +14,7 @@ void trabajarConexiones();
 
 int main(int argc, char** argv){
 
-	crearConfig(argv[1]);
+	crearConfig(argc,argv);
 
 	establecerConexiones();//Conectarse a FS y Memoria
 

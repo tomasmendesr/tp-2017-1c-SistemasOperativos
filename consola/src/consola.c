@@ -15,7 +15,7 @@ int main(int argc, char** argv){
 
 	crearLog();
 
-	crearConfig(argv[1]);
+	crearConfig(argc,argv);
 
 	levantarInterfaz();
 

@@ -1,9 +1,9 @@
 #include "funcionesKernel.h"
 
-void crearConfig(char* path){
+void crearConfig(int argc, char* argv[]){
 	char* pathConfig=string_new();
 
-	if(!path)string_append(&pathConfig,path);
+	if(argc>0)string_append(&pathConfig,argv[1]);
 		else string_append(&pathConfig,configuracionKernel);
 	if(verificarExistenciaDeArchivo(pathConfig)){
 		config = levantarConfiguracionKernel(pathConfig);

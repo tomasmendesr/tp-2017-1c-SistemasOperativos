@@ -14,7 +14,7 @@ int main(int argc, char** argv){
 
 	log = log_create("logMemoria","memoria",true,LOG_LEVEL_TRACE);
 
-	crearConfig(argv[1]);
+	crearConfig(argc, argv);
 
 	inicializarMemoria();
 
