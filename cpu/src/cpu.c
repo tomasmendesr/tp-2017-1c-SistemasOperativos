@@ -9,10 +9,14 @@
  */
 #include "funcionesCpu.h"
 
-int main(void) {
+int main(int argc, char** argv) {
 
-	if(verificarExistenciaDeArchivo(configuracionCPU)){
-		config = levantarConfiguracionCPU(configuracionCPU);
+	char *pathConfig=string_new();
+
+	if(!argv[1])string_append(pathConfig,argv[1]);
+		else string_append(pathConfig,configuracionCPU);
+	if(verificarExistenciaDeArchivo(pathConfig)){
+		config = levantarConfiguracionCPU(pathConfig);
 	}else{
 		printf("No se pudo levantar archivo configuracion\n");
 		return EXIT_FAILURE;

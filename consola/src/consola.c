@@ -11,14 +11,16 @@
 
 #include "funcionesConsola.h"
 
-
-
-int main(){
+int main(int argc, char** argv){
 
 	crearLog();
 
-	if(verificarExistenciaDeArchivo(configuracionConsola)){
-		config = levantarConfiguracionConsola(configuracionConsola);
+	char* pathConfig=string_new();
+	if(!argv[1])string_append(&pathConfig,argv[1]);
+		else string_append(&pathConfig,configuracionConsola);
+
+	if(verificarExistenciaDeArchivo(pathConfig)){
+		config = levantarConfiguracionConsola(pathConfig);
 	}else{
 		log_info(logger,"No Pudo levantarse el archivo de configuracion");
 		return EXIT_FAILURE;
@@ -33,7 +35,7 @@ int main(){
    if (comandos)
    {
 	   //Iniciar Proceso
-	   if(strcmp(comandos[0],IniciarProceso)){
+	   if(!strcmp(comandos[0],IniciarProceso)){
 		   verificarExistenciaDeArchivo(comandos[1]);
     	   printf("Su proceso se inicializo");
     	   socket_cliente = createClient(config->ip_Kernel, config->puerto_Kernel);
