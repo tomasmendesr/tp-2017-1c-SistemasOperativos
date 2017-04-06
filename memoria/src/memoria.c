@@ -10,10 +10,10 @@
 
 #include "funcionesMemoria.h"
 
-int main(int argc, char** argv){
+int main(void){
 
-	if(verificarExistenciaDeArchivo(argv[1])){
-		config = levantarConfiguracionMemoria(argv[1]);
+	if(verificarExistenciaDeArchivo(configuracionMemoria)){
+		config = levantarConfiguracionMemoria(configuracionMemoria);
 	}else{
 		printf("No se pudo levantar archivo de configuracion\n");
 		return EXIT_FAILURE;
