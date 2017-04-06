@@ -5,12 +5,18 @@
 t_config_consola* levantarConfiguracionConsola(char * archivo) {
 
         t_config_consola* config = malloc(sizeof(t_config_consola));
-
         t_config* configConsola;
+
         verificarExistenciaDeArchivo(archivo);
         configConsola = config_create(archivo);
-        config->ip_Kernel = config_get_string_value(configConsola, "IP_KERNEL");
-        config->puerto_Kernel = config_get_string_value(configConsola, "PUERTO_KERNEL");
+
+        config->ip_Kernel = malloc(strlen(config_get_string_value(configConsola, "IP_KERNEL"))+1);
+        strcpy(config->ip_Kernel,config_get_string_value(configConsola, "IP_KERNEL"));
+
+        config->puerto_Kernel = malloc(strlen(config_get_string_value(configConsola, "PUERTO_KERNEL"))+1);
+        strcpy(config->puerto_Kernel,config_get_string_value(configConsola, "PUERTO_KERNEL"));
+
+        config_destroy(configConsola);
 
         return config;
 }
