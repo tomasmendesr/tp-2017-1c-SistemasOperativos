@@ -1,12 +1,10 @@
 #include "funcionesConsola.h"
 
-void crearConfig(char* configPath) {
+void crearConfig(char* path) {
 	char* pathConfig = string_new();
-	if (configPath)
-		string_append(&pathConfig, configPath);
-	else
-		string_append(&pathConfig, configuracionConsola);
 
+	if (!path)string_append(&pathConfig, path);
+		else string_append(&pathConfig, configuracionConsola);
 	if (verificarExistenciaDeArchivo(pathConfig)) {
 		config = levantarConfiguracionConsola(pathConfig);
 	} else {
@@ -85,7 +83,7 @@ void iniciarPrograma(char* comando, char* param) {
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		printf("Conexion con Kernel establecida! :D \n");
-		printf("Se procede a mandar el archivo: ", comando[1]);
+		printf("Se procede a mandar el archivo: ", param);
 	} else {
 		printf("El Kernel no devolvio handshake :( \n");
 	}
