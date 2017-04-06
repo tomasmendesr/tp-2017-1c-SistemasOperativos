@@ -85,4 +85,7 @@
 	*/
 	void 	  config_destroy(t_config *config);
 
+	//verifica si el archivo de configuracion existe
+	int verificarExistenciaDeArchivo(char* path);
+
 #endif /* CONFIG_H_ */

@@ -10,6 +10,7 @@
 
 #define IP "127.0.0.1"
 #define BACKLOG "10"
+#define configuracionKernel "confKernel.init"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,6 +55,7 @@ void gradoMultiprogramacion(char* comando, char* param);
 void killProcess(char*,char*);
 void stopPlanification(char*,char*);
 
-
+//Variables Globales
+t_config_kernel* config;
 
 #endif /* FUNCIONESKERNEL_H_ */

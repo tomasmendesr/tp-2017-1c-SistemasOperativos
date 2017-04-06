@@ -14,7 +14,13 @@
 
 int main(void) {
 
-	t_config_kernel* config = levantarConfiguracionKernel("confKernel.init");
+	if(verificarExistenciaDeArchivo(configuracionKernel)){
+		config = levantarConfiguracionKernel(configuracionKernel);
+	}else{
+		printf("No se pudo levantar archivo de configuracion");
+		return EXIT_FAILURE;
+	}
+
 
 	printf("Configuracion levantada correctamente\n");
 
