@@ -9,15 +9,31 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         char** varGlob, **semID, **semInit;
 
         configNucleo = config_create(archivo_conf);
-        conf->puerto_CPU = config_get_string_value(configNucleo, "PUERTO_CPU");
-        conf->puerto_PROG = config_get_string_value(configNucleo, "PUERTO_PROG");
-        conf->ip_Memoria = config_get_string_value(configNucleo, "IP_MEMORIA");
-        conf->puerto_Memoria = config_get_string_value(configNucleo, "PUERTO_MEMORIA");
-        conf->ip_FS = config_get_string_value(configNucleo, "IP_FS");
-        conf->puerto_FS = config_get_string_value(configNucleo, "PUERTO_FS");
+
+        conf->puerto_CPU = malloc(MAX_LEN_PUERTO);
+        strcpy(conf->puerto_CPU, config_get_string_value(configNucleo, "PUERTO_CPU"));
+
+        conf->puerto_PROG = malloc(MAX_LEN_PUERTO);
+        strcpy(conf->puerto_PROG, config_get_string_value(configNucleo, "PUERTO_PROG"));
+
+        conf->ip_Memoria = malloc(MAX_LEN_IP);
+        strcpy(conf->ip_Memoria, config_get_string_value(configNucleo, "IP_MEMORIA"));
+
+        conf->puerto_Memoria = malloc(MAX_LEN_PUERTO);
+        strcpy(conf->puerto_Memoria, config_get_string_value(configNucleo, "PUERTO_MEMORIA"));
+
+        conf->ip_FS = malloc(MAX_LEN_IP);
+        strcpy(conf->ip_FS, config_get_string_value(configNucleo, "IP_FS"));
+
+        conf->puerto_FS = malloc(MAX_LEN_PUERTO);
+        strcpy(conf->puerto_FS, config_get_string_value(configNucleo, "PUERTO_FS"));
+
         conf->quantum = config_get_int_value(configNucleo, "QUANTUM");
         conf->quantum_Sleep = config_get_int_value(configNucleo, "QUANTUM_SLEEP");
-        conf->algoritmo = config_get_string_value(configNucleo, "ALGORITMO");
+
+        conf->algoritmo = malloc(MAX_LEN_PUERTO);
+        strcpy(conf->algoritmo, config_get_string_value(configNucleo, "ALGORITMO"));
+
         conf->grado_MultiProg = config_get_int_value(configNucleo, "GRADO_MULTIPROG");
 
         semID = config_get_array_value(configNucleo, "SEM_ID");
@@ -29,9 +45,21 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 
         conf->stack_Size = config_get_int_value(configNucleo, "STACK_SIZE");
 
-
+        config_destroy(configNucleo);
         return conf;
 }
+
+void destruirConfiguracionKernel(t_config_kernel* config){
+	free(config->algoritmo);
+	free(config->ip_FS);
+	free(config->ip_Memoria);
+	free(config->puerto_CPU);
+	free(config->puerto_FS);
+	free(config->puerto_Memoria);
+	free(config->puerto_PROG);
+	free(config);
+}
+
 t_dictionary* crearDiccionarioConValue(char** array, char** valores){
 
         t_dictionary* dic = dictionary_create();

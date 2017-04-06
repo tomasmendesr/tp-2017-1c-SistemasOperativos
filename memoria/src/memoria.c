@@ -29,7 +29,6 @@ int main(int argc, char** argv){
 
     printf("soy la memoria\n");
 
-
-    free(config);
+    destruirConfiguracionMemoria(config);
     return EXIT_SUCCESS;
 }

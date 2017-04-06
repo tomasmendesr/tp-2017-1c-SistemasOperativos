@@ -95,6 +95,7 @@ int main(int argc, char** argv){
 	}
 	}
 
+	destruirConfiguracionKernel(config);
 	return EXIT_SUCCESS;
 }
 

@@ -19,6 +19,7 @@
 #include <pthread.h>
 
 #define configuracionMemoria "confMemoria.init"
+#define MAX_LEN_PUERTO 6
 
 typedef struct{
         char* puerto;
@@ -42,6 +43,7 @@ typedef struct{
 }entradaCache;
 
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
+void destruirConfiguracionMemoria(t_config_memoria* config);
 
 //Funciones de interfaz
 void levantarInterfaz();
