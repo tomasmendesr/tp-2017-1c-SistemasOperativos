@@ -12,6 +12,10 @@
 
 int main(int argc, char** argv){
 
+    levantarInterfaz();
+
+    sleep(10000);
+
 	char* pathConfig=string_new();
 
 	if(!argv[1])string_append(&pathConfig,argv[1]);
@@ -24,6 +28,7 @@ int main(int argc, char** argv){
 	}
 
     printf("soy la memoria\n");
+
 
     free(config);
     return EXIT_SUCCESS;

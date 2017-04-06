@@ -11,8 +11,11 @@ void interface(interface_thread_param* param){
 	char comando[command_size + 1];
 	char parametro[command_size + 1];
 	int cantParametros;
+	bool comandoCorrecto;
 
 	for(;;){
+		//Reseteo el flag
+		comandoCorrecto = false;
 
 		//limpio buffers
 		fflush(stdin);
@@ -28,9 +31,14 @@ void interface(interface_thread_param* param){
 		//Paso por todos los comandos. Si el comando coincide con alguno, ejecuta la funcion
 		int i;
 		for(i=0;i<cantComandos;i++){
-			if( !strcmp(comando, comandos[i].comando) )
+			if( !strcmp(comando, comandos[i].comando) ){
 				comandos[i].funcion(comando,parametro);
+				comandoCorrecto = true;
+			}
 		}
+
+		if(!comandoCorrecto)
+			printf("Comando no reconocido.\n");
 
 	}
 

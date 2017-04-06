@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define command_size 20
 #define buffer_size command_size * 2
