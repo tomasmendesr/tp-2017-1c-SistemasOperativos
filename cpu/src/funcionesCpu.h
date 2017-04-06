@@ -5,13 +5,15 @@
  *      Author: utnso
  */
 
-#ifndef CPU_H_
-#define CPU_H_
+#ifndef FUNCIONESCPU_H_
+#define FUNCIONESCPU_H_
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <commons/config.h>
 #include <commons/log.h>
+
+#define configuracionCPU "confCpu.init"
 
 typedef struct {
 
@@ -25,4 +27,7 @@ typedef struct {
 
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
 
-#endif /* CPU_H_ */
+//Variables Globales
+t_config_cpu* config;
+
+#endif /* FUNCIONESCPU_H_ */

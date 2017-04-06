@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
-#ifndef MEMORIA_H_
-#define MEMORIA_H_
+#ifndef FUNCIONESMEMORIA_H_
+#define FUNCIONESMEMORIA_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,10 +15,13 @@
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
+#include <commons/interface.h>
 #include <pthread.h>
 
+#define configuracionMemoria "confMemoria.init"
+
 typedef struct{
-        int puerto;
+        char* puerto;
         int marcos;
         int marcos_Size;
         int entradas_Cache;
@@ -47,4 +50,7 @@ void dump(char* comando, char* param);
 void flush(char* comando, char* param);
 void size(char* comando, char* param);
 
-#endif /* MEMORIA_H_ */
+//Variables Globales
+t_config_memoria* config;
+
+#endif /* FUNCIONESMEMORIA_H_ */

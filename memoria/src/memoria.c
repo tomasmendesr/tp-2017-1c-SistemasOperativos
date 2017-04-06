@@ -8,17 +8,16 @@
  ============================================================================
  */
 
-#include "memoria.h"
+#include "funcionesMemoria.h"
 
 int main(int argc, char** argv){
 
-	if(!argv[1]) printf("No hay ningun archivo");
-
-    t_config_memoria* config = levantarConfiguracionMemoria(argv[1]);
-
-    char* memoria=malloc(config->marcos*config->marcos_Size);
-
-    int size_adm = (config->marcos*8-1)/config->marcos_Size+1;
+	if(verificarExistenciaDeArchivo(argv[1])){
+		config = levantarConfiguracionMemoria(argv[1]);
+	}else{
+		printf("No se pudo levantar archivo de configuracion\n");
+		return EXIT_FAILURE;
+	}
 
     printf("soy la memoria\n");
 

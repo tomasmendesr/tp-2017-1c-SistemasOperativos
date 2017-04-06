@@ -8,16 +8,19 @@
  ============================================================================
  */
 
-#define MAX_COMMAND_SIZE 256
-#define IniciarProceso "iniciarProceso"
 
-#include "consola.h"
+#include "funcionesConsola.h"
+
+
 
 int main(){
-	if(crearLog()){
-		config = levantarConfiguracionConsola("/home/utnso/TPOperativos/tp-2017-1c-Dirty-Cow/consola/consolaConfiguracion");
+
+	crearLog();
+
+	if(verificarExistenciaDeArchivo(configuracionConsola)){
+		config = levantarConfiguracionConsola(configuracionConsola);
 	}else{
-		log_info(logger,"La consola no pudo iniciarse");
+		log_info(logger,"No Pudo levantarse el archivo de configuracion");
 		return EXIT_FAILURE;
 	}
 
@@ -56,55 +59,8 @@ int main(){
 }
 
 
-t_config_consola* levantarConfiguracionConsola(char * archivo) {
 
-        t_config_consola* config = malloc(sizeof(t_config_consola));
 
-        t_config* configConsola;
-        verificarExistenciaDeArchivo(archivo);
-        configConsola = config_create(archivo);
-        config->ip_Kernel = config_get_string_value(configConsola, "IP_KERNEL");
-        config->puerto_Kernel = config_get_string_value(configConsola, "PUERTO_KERNEL");
 
-        return config;
-}
-
-//funciones interfaz
-void levantarInterfaz(){
-
-}
-
-void iniciarPrograma(char* comando, char* param){
-        printf("iniciarPrograma\n");
-}
-void finalizarPrograma(char* comando, char* param){
-        printf("finalizarPrograma\n");
-}
-void desconectarConsola(char* comando, char* param){
-        printf("desconectarConsola\n");
-}
-void limpiarMensajes(char* comando, char* param){
-        printf("limpiarMensajes");
-}
-
-int crearLog() {
-        logger = log_create(getenv("/home/utnso/TPOperativos/tp-2017-1c-Dirty-Cow/consola/logConsola"), "consola", 1, 0);
-        if (logger) {
-                return 1;
-        } else {
-                return 0;
-        }
-}
-
-int verificarExistenciaDeArchivo(char* path) {
-        FILE * archivoConfig = fopen(path, "r");
-        if (archivoConfig!=NULL){
-			 fclose(archivoConfig);
-			 return 1;
-        }else{
-        	log_info(logger,"El archivo no existe");
-        }
-        return -1;
-}
 
 

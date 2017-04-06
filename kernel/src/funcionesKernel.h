@@ -5,8 +5,12 @@
  *      Author: utnso
  */
 
-#ifndef KERNEL_H_
-#define KERNEL_H_
+#ifndef FUNCIONESKERNEL_H_
+#define FUNCIONESKERNEL_H_
+
+#define IP "127.0.0.1"
+#define BACKLOG "10"
+#define configuracionKernel "confKernel.init"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,18 +19,19 @@
 #include <commons/collections/queue.h>
 #include <commons/collections/dictionary.h>
 #include <commons/log.h>
-#include <stdbool.h>
+#include <commons/interface.h>
 #include <commons/config.h>
-#include <pthread.h>
 #include <commons/collections/list.h>
+#include <stdbool.h>
+#include <pthread.h>
 
 typedef struct {
-        int puerto_PROG;
-        int puerto_CPU;
+        char* puerto_PROG;
+        char* puerto_CPU;
         char* ip_Memoria;
-        int puerto_Memoria;
+        char* puerto_Memoria;
         char* ip_FS;
-        int puerto_FS;
+        char puerto_FS;
         int quantum;
         int quantum_Sleep;
         char* algoritmo;
@@ -50,6 +55,7 @@ void gradoMultiprogramacion(char* comando, char* param);
 void killProcess(char*,char*);
 void stopPlanification(char*,char*);
 
+//Variables Globales
+t_config_kernel* config;
 
-
-#endif /* KERNEL_H_ */
+#endif /* FUNCIONESKERNEL_H_ */

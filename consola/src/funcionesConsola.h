@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
-#ifndef CONSOLA_H_
-#define CONSOLA_H_
+#ifndef FUNCIONESCONSOLA_H_
+#define FUNCIONESCONSOLA_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +15,12 @@
 #include <commons/sockets.h>
 #include <commons/log.h>
 #include <commons/config.h>
+#include <commons/interface.h>
+#include <pthread.h>
+
+#define MAX_COMMAND_SIZE 256
+#define IniciarProceso "iniciarProceso"
+#define configuracionConsola "confConsola.init"
 
 typedef struct{
         char* ip_Kernel;
@@ -38,4 +44,4 @@ void limpiarMensajes(char* comando, char* param);
 t_log* logger;
 t_config_consola* config;
 
-#endif /* CONSOLA_H_ */
+#endif /* FUNCIONESCONSOLA_H_ */
