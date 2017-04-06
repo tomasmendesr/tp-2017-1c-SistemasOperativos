@@ -203,4 +203,7 @@ char *paqueteEnviarAEjecutar_serializer(u_int16_t quantum, uint32_t retardo_quan
 t_segmento* segmento_deserializer(int socketfd);
 void* segmento_serializer(t_segmento *self, int16_t *length);
 
+int sendAll(int fd, char *cosa, int size, int flags);
+int recvAll(int fd, char *buffer, int size, int flags);
+
 #endif /* COMMONS_SOCKETS_H_ */
