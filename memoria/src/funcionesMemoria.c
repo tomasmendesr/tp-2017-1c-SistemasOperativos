@@ -45,7 +45,45 @@ void destruirConfiguracionMemoria(t_config_memoria* config){
 	free(config);
 }
 
+void inicializarMemoria(){
 
+	const int memSize = config->marcos * config->marcos_Size;
+
+	//Creo el bloque de memoria principal
+	memoria = malloc(memSize);
+
+	//Creo la cache
+	cache = malloc(sizeof(t_entrada_cache) * config->entradas_Cache);
+
+	//Reviso los mallocs
+	if(memoria == NULL || cache == NULL){
+		log_error(log, "No pude reservar memoria para cache y/o memoria");
+		exit(EXIT_FAILURE);
+	}
+
+	//Setteo la memoria con \0
+	memset(memoria,'\0',memSize);
+
+	//Creo las entradas de la tabla invertida
+	int i, offset = 0;
+	for(i=0;i<config->marcos * 2;i++){//*2 porque son 2 ints, pid y nroPag
+		memoria[offset] = -1;
+		offset += sizeof(int);
+	} //Esto hay que revisar que funcione correctamente
+
+	int marcosOcupadosPorTabla = (sizeof(t_entrada_tabla) * config->marcos) % config->marcos_Size;
+
+	//Imprimo cuantos marcos me ocupo y el contenido de la memoria
+	printf("%i\n", marcosOcupadosPorTabla);
+	FILE* memFile = fopen("memDump","w");
+	for(i=0;i<memSize;i++){
+		fputc(memoria[i],memFile);
+		fputc(memoria[i],stdout);
+	}
+	fclose(memFile);
+}
+
+//funciones interfaz
 void levantarInterfaz(){
 	//creo los comandos y el parametro
 	comando* comandos = malloc(sizeof(comando)*4);
