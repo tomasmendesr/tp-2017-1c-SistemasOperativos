@@ -1,5 +1,19 @@
 #include "funcionesMemoria.h"
 
+void crearConfig(char* path){
+	char* pathConfig=string_new();
+
+	if(!path)string_append(&pathConfig,path);
+		else string_append(&pathConfig,configuracionMemoria);
+	if(verificarExistenciaDeArchivo(pathConfig)){
+		config = levantarConfiguracionMemoria(pathConfig);
+	}else{
+		printf("No se pudo levantar archivo de configuracion\n");
+		exit(EXIT_FAILURE);
+	}
+
+    printf("soy la memoria\n");
+}
 t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
 
         t_config_memoria* config = malloc(sizeof(t_config_memoria));
