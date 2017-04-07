@@ -68,8 +68,10 @@ void inicializarMemoria(){
 
 	//Creo las entradas de la tabla invertida
 	int i;
-	for(i=0;i<config->marcos * 2;i++){//*2 porque son 2 ints, pid y nroPag
+	for(i=0;i<config->marcos*2;i++){
 		((int*)memoria)[i] = -1;
+		//((t_entrada_tabla*)memoria)[i].nroPag = -1;
+		//((t_entrada_tabla*)memoria)[i].pid = -1;
 	} //Esto hay que revisar que funcione correctamente
 
 	//Imprimo el contenido de la memoria
