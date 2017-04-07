@@ -50,6 +50,8 @@ void destruirConfiguracionMemoria(t_config_memoria* config){
 void inicializarMemoria(){
 
 	const int memSize = config->marcos * config->marcos_Size;
+	int i;
+	bool noEspacioCache = false;
 
 	//Creo el bloque de memoria principal
 	memoria = malloc(memSize);
@@ -57,8 +59,16 @@ void inicializarMemoria(){
 	//Creo la cache
 	cache = malloc(sizeof(t_entrada_cache) * config->entradas_Cache);
 
+	//Inicializo la cache
+	for(i=0;i<config->entradas_Cache;i++){
+		cache[i].pid = -1;
+		cache[i].nroPag = -1;
+		cache[i].content = malloc(config->marcos_Size);
+		if(cache[i].content == NULL) noEspacioCache = true;
+	}
+
 	//Reviso los mallocs
-	if(memoria == NULL || cache == NULL){
+	if(memoria == NULL || cache == NULL || noEspacioCache){
 		log_error(log, "No pude reservar memoria para cache y/o memoria");
 		exit(EXIT_FAILURE);
 	}
@@ -67,20 +77,24 @@ void inicializarMemoria(){
 	memset(memoria,'\0',memSize);
 
 	//Creo las entradas de la tabla invertida
-	int i;
-	for(i=0;i<config->marcos*2;i++){
-		((int*)memoria)[i] = -1;
-		//((t_entrada_tabla*)memoria)[i].nroPag = -1;
-		//((t_entrada_tabla*)memoria)[i].pid = -1;
-	} //Esto hay que revisar que funcione correctamente
+	for(i=0;i<config->marcos;i++){
+		((t_entrada_tabla*)memoria)[i].nroPag = -1;
+		((t_entrada_tabla*)memoria)[i].pid = -1;
+	}
 
-	//Imprimo el contenido de la memoria
+	int cantEntradas = (sizeof(t_entrada_tabla) * config->marcos) / config->marcos_Size;
+	if( ((sizeof(t_entrada_tabla) * config->marcos) % config->marcos_Size) > 0)
+		cantEntradas++;
+
+	printf("\n--------------------\ncantidad de frames ocupados por tabla: %i\n", cantEntradas);
+
+	/*Imprimo el contenido de la memoria en un archivo dump
 	FILE* memFile = fopen("memDump","w");
 	for(i=0;i<memSize;i++){
 		fputc(memoria[i],memFile);
-		fputc(memoria[i],stdout);
 	}
-	fclose(memFile);
+	fclose(memFile); ESTO SE DEBERIA BORRAR UNA VEZ QUE NOS ASEGUREMOS QUE FUNCIONA 10puntos*/
+
 }
 
 //funciones interfaz
