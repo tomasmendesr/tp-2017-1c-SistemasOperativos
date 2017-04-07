@@ -5,7 +5,7 @@
  *      Author: utnso
  */
 
-#include <cosas.h>
+#include "cosas.h"
 
 int max(int a, int b){
 	if(a>b) return a;
