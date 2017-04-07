@@ -16,10 +16,12 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <commons/interface.h>
+#include <commons/cosas.h>
 #include <pthread.h>
 
 #define configuracionMemoria "confMemoria.init"
 #define MAX_LEN_PUERTO 6
+#define frame_size config->marcos_Size
 
 typedef struct{
         char* puerto;
@@ -33,12 +35,12 @@ typedef struct{
 
 typedef struct{
 	int pid;
-	int nroPag;
+	int pag;
 }t_entrada_tabla;
 
 typedef struct{
 	int pid;
-	int nroPag;
+	int pag;
 	char* content;
 }t_entrada_cache;
 
@@ -50,6 +52,11 @@ void destruirConfiguracionMemoria(t_config_memoria* config);
  * administrativas necesarias para que el sistema arranque
  */
 void inicializarMemoria();
+
+//Funciones administracion memoria
+int buscarFrame(int pid, int pag);
+int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
+int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
 
 //Funciones de interfaz
 void levantarInterfaz();
