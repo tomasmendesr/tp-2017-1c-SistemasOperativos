@@ -53,6 +53,7 @@ t_dictionary* crearDiccionario(char** array);
 
 void establecerConexiones();
 int conexionConFileSystem();
+int conexionConMemoria();
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -66,5 +67,6 @@ void stopPlanification(char*,char*);
 //Variables Globales
 t_config_kernel* config;
 int socketConexionFS;
+int socketConexionMemoria;
 
 #endif /* FUNCIONESKERNEL_H_ */

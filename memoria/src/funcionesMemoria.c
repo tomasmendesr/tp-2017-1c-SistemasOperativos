@@ -14,7 +14,6 @@ void crearConfig(int argc, char* argv[]){
 		exit(EXIT_FAILURE);
 	}
 
-    printf("soy la memoria\n");
 }
 t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
 

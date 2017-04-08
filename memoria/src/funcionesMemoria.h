@@ -22,6 +22,8 @@
 #define configuracionMemoria "confMemoria.init"
 #define MAX_LEN_PUERTO 6
 #define frame_size config->marcos_Size
+#define IP "127.0.0.1"
+#define BACKLOG "10"
 
 typedef struct{
         char* puerto;
@@ -48,6 +50,9 @@ void crearConfig(int argc, char* argv[]);
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
 void destruirConfiguracionMemoria(t_config_memoria* config);
 
+//Funciones de conexionado
+int esperarConexionKernel();
+
 /* Esta funcion hace la creacion de la memoria y todas las estructuras
  * administrativas necesarias para que el sistema arranque
  */
@@ -68,6 +73,8 @@ void size(char* comando, char* param);
 //Variables Globales
 t_log* log;
 t_config_memoria* config;
+int socketEscuchaConexiones;
+int socketConexionKernel;
 char* memoria; /*Este va a ser el bloque que simula la memoria principal.
 				Uso char* porque sizeof(char) = 1 y facilita la aritmetica,
 				pero no tiene nada que ver con caracteres*/

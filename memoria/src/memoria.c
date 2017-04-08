@@ -18,6 +18,9 @@ int main(int argc, char** argv){
 
 	inicializarMemoria();
 
+	esperarConexionKernel();
+
+
 	//LevantarServer
 
 	levantarInterfaz();
@@ -25,4 +28,18 @@ int main(int argc, char** argv){
     destruirConfiguracionMemoria(config);
 
     return EXIT_SUCCESS;
+}
+
+int esperarConexionKernel(){
+
+	socketEscuchaConexiones = createServer(IP, config->puerto, BACKLOG);
+
+	socketConexionKernel = acceptSocket(socketEscuchaConexiones);
+	if(socketConexionKernel < 0) return -1;
+
+	recibirHanshake(socketConexionKernel, HANDSHAKE_KERNEL, HANDSHAKE_MEMORIA);
+
+	printf("kernel Conectado\n");
+
+	return 1;
 }

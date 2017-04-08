@@ -16,6 +16,11 @@ int main(int argc, char** argv){
 
 	crearConfig(argc,argv);
 
+	if(conexionConMemoria()() == -1){
+		printf("no se pudo conectar con fs\n");
+		return EXIT_FAILURE;
+	}
+
 	if(conexionConFileSystem() == -1){
 		printf("no se pudo conectar con fs\n");
 		return EXIT_FAILURE;
@@ -118,4 +123,17 @@ int conexionConFileSystem(){
 	return 1;
 }
 
+int conexionConMemoria(){
 
+	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
+
+	if(socketConexionMemoria == -1){
+		return -1;
+	}
+
+	enviarHandshake(socketConexionFS, HANDSHAKE_KERNEL, HANDSHAKE_MEMORIA);
+
+	printf("conexion con memoria establecida");
+
+	return 1;
+}
