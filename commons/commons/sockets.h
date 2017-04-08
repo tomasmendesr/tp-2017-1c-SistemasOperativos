@@ -94,7 +94,8 @@ enum enum_protocolo {// Si yo soy el kernel tengo que enviar handshake_kernel.
 	RESPUESTA_PEDIDO_INFO_CONEXION = 2,
 	HANDSHAKE_CPU = 3,
 	HANDSHAKE_KERNEL = 4,
-	HANDSHAKE_UMV = 5,
+	HANDSHAKE_MEMORIA = 5,
+	HANDSHAKE_FS = 8,
 	NOTIFICACION_DATOS_CPU = 6,
 	OK = 7
 };

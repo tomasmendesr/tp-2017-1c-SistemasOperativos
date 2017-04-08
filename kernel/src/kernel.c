@@ -16,6 +16,10 @@ int main(int argc, char** argv){
 
 	crearConfig(argc,argv);
 
+	if(conexionConFileSystem() == -1){
+		return EXIT_FAILURE;
+	}
+
 	establecerConexiones();//Conectarse a FS y Memoria
 
 	trabajarConexiones();//Esto es lo que hace el thread principal, escucha.
@@ -97,4 +101,27 @@ void trabajarConexiones(){
 	}
 	}
 }
+
+int conexionConFileSystem(){
+
+	int operacion = 0;
+	void* paquete_vacio;
+
+	socketConexionFS = createClient(config->ip_FS, config->puerto_FS);
+
+	if(socketConexionFS == -1){
+		return -1;
+	}
+
+	enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionFS);
+
+	recibir_paquete(socketConexionFS, &paquete_vacio, &operacion);
+
+	if(operacion == HANDSHAKE_FS){
+		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionFS);
+	}
+
+	printf("conexion con fs establecida");
+}
+
 

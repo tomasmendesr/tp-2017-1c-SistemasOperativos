@@ -16,6 +16,8 @@
 
 #define configuracionFS "confFileSystem.init"
 #define MAX_LEN_PUERTO 6
+#define IP "127.0.0.1"
+#define BACKLOG "10"
 
 //TADS
 typedef struct{
@@ -29,6 +31,8 @@ void destruirConfiguracionFS(t_config_FS* conf);
 
 //Variables Globales
 t_config_FS* conf;
+int socketEscucha;
+int socketConexionKernel;
 
 
 #endif /* FUNCIONESFS_H_ */
