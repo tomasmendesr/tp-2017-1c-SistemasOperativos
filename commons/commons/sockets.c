@@ -485,3 +485,41 @@ int recvAll(int fd, char *buffer, int size, int flags){
 
 	return cant_recibida;
 }
+
+
+bool enviarHandshake(int socket, int handshakeEnviar, int handshakeRespuesta){
+
+	int operacion = 0;
+	void* paquete_vacio;
+
+	enviar_paquete_vacio(handshakeEnviar,socket);
+
+	if(recibir_paquete(socket, &paquete_vacio, &operacion) == 0){
+		return false;
+	}
+
+	if(operacion == handshakeRespuesta ){
+		enviar_paquete_vacio(handshakeEnviar,socket);
+	}
+
+	return true;
+}
+
+bool recibirHanshake(int socket, int handshakeRecibir, int handshakeRespuesta){
+	int operacion = 0;
+	void* paquete_vacio;
+
+	if (recibir_paquete(socket, &paquete_vacio, &operacion)) return false;
+
+	if (operacion == handshakeRecibir) {
+		enviar_paquete_vacio(handshakeRespuesta,socket);
+
+		recibir_paquete(socket, &paquete_vacio, &operacion);
+
+		if(operacion == handshakeRecibir){
+			return true;
+		}
+	}
+
+	return false;
+}
