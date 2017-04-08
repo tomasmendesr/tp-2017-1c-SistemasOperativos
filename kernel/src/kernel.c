@@ -105,24 +105,17 @@ void trabajarConexiones(){
 
 int conexionConFileSystem(){
 
-	int operacion = 0;
-	void* paquete_vacio;
-
 	socketConexionFS = createClient(config->ip_FS, config->puerto_FS);
 
 	if(socketConexionFS == -1){
 		return -1;
 	}
 
-	enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionFS);
-
-	recibir_paquete(socketConexionFS, &paquete_vacio, &operacion);
-
-	if(operacion == HANDSHAKE_FS){
-		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionFS);
-	}
+	enviarHandshake(socketConexionFS, HANDSHAKE_KERNEL, HANDSHAKE_FS);
 
 	printf("conexion con fs establecida");
+
+	return 1;
 }
 
 

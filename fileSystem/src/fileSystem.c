@@ -24,16 +24,6 @@ void esperarConexionKernel(){
 		int operacion = 0;
 		void* paquete_vacio;
 
-		recibir_paquete(socketConexionKernel, &paquete_vacio, &operacion);
-
-		if (operacion == HANDSHAKE_KERNEL) {
-			enviar_paquete_vacio(HANDSHAKE_FS,socketConexionKernel);
-
-			recibir_paquete(socketConexionKernel, &paquete_vacio, &operacion);
-
-			if(operacion == HANDSHAKE_KERNEL){
-				printf("kernel conectado\n");
-			}
-		}
+		recibirHanshake(socketConexionKernel, HANDSHAKE_KERNEL, HANDSHAKE_FS);
 
 }
