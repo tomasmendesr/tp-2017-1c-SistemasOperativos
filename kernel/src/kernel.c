@@ -17,12 +17,13 @@ int main(int argc, char** argv){
 	crearConfig(argc,argv);
 
 	if(conexionConFileSystem() == -1){
+		printf("no se pudo conectar con fs\n");
 		return EXIT_FAILURE;
 	}
 
-	establecerConexiones();//Conectarse a FS y Memoria
+	//establecerConexiones();//Conectarse a FS y Memoria
 
-	trabajarConexiones();//Esto es lo que hace el thread principal, escucha.
+	//trabajarConexiones();//Esto es lo que hace el thread principal, escucha.
 
 	destruirConfiguracionKernel(config);
 

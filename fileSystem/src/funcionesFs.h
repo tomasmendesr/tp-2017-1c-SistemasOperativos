@@ -28,6 +28,7 @@ typedef struct{
 //Prototipos
 t_config_FS* levantarConfiguracion(char* archivo);
 void destruirConfiguracionFS(t_config_FS* conf);
+void esperarConexionKernel();
 
 //Variables Globales
 t_config_FS* conf;

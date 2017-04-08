@@ -3,7 +3,7 @@
 void crearConfig(int argc, char* argv[]){
 	char* pathConfig=string_new();
 
-	if(argc>0)string_append(&pathConfig,argv[1]);
+	if(argc>1)string_append(&pathConfig,argv[1]);
 		else string_append(&pathConfig,configuracionKernel);
 	if(verificarExistenciaDeArchivo(pathConfig)){
 		config = levantarConfiguracionKernel(pathConfig);
@@ -80,7 +80,7 @@ t_dictionary* crearDiccionarioConValue(char** array, char** valores){
         int j = 0;
 
         while(array[j] != NULL){
-                dictionary_put(dic, array, valores);
+                dictionary_put(dic, array[j], valores);
                 j++;
         }
 
@@ -93,7 +93,7 @@ t_dictionary* crearDiccionario(char** array){
         int j = 0;
 
         while(array[j] != NULL){
-                dictionary_put(dic, array, 0);
+                dictionary_put(dic, array[j], 0);
                 j++;
         }
 

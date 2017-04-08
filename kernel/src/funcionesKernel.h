@@ -33,7 +33,7 @@ typedef struct {
         char* ip_Memoria;
         char* puerto_Memoria;
         char* ip_FS;
-        char puerto_FS;
+        char* puerto_FS;
         int quantum;
         int quantum_Sleep;
         char* algoritmo;
