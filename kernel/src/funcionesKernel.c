@@ -74,6 +74,15 @@ void destruirConfiguracionKernel(t_config_kernel* config){
 	free(config);
 }
 
+void esperarConexionCPU(){
+	socketReceptorCPU = createServer(IP, config->puerto_CPU, BACKLOG);
+
+	printf("Esperando conexion del cpu.......\n");
+	socketConexionCPU = acceptSocket(socketReceptorCPU);
+
+	recibirHanshake(socketConexionCPU, HANDSHAKE_CPU, HANDSHAKE_KERNEL);
+}
+
 t_dictionary* crearDiccionarioConValue(char** array, char** valores){
 
         t_dictionary* dic = dictionary_create();

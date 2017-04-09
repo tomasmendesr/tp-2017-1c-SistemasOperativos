@@ -17,9 +17,9 @@
 #define configuracionCPU "confCpu.init"
 
 typedef struct {
-        int puerto_Memoria;
+		char* puerto_Memoria;
         char* ip_Memoria;
-        int puerto_Kernel;
+        char* puerto_Kernel;
         char* ip_Kernel;
 
 }t_config_cpu;

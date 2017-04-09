@@ -16,16 +16,17 @@ int main(int argc, char** argv){
 
 	crearConfig(argc,argv);
 
-	if(conexionConMemoria()() == -1){
-		printf("no se pudo conectar con fs\n");
-		return EXIT_FAILURE;
-	}
+	//if(conexionConMemoria() == -1){
+	//	printf("no se pudo conectar con fs\n");
+	//	return EXIT_FAILURE;
+	//}
 
 	if(conexionConFileSystem() == -1){
 		printf("no se pudo conectar con fs\n");
 		return EXIT_FAILURE;
 	}
 
+	esperarConexionCPU();
 	//establecerConexiones();//Conectarse a FS y Memoria
 
 	//trabajarConexiones();//Esto es lo que hace el thread principal, escucha.
@@ -118,7 +119,7 @@ int conexionConFileSystem(){
 
 	enviarHandshake(socketConexionFS, HANDSHAKE_KERNEL, HANDSHAKE_FS);
 
-	printf("conexion con fs establecida");
+	printf("conexion con fs establecida\n");
 
 	return 1;
 }
