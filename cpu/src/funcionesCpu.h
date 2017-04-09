@@ -15,7 +15,6 @@
 #include <commons/sockets.h>
 
 #define configuracionCPU "confCpu.init"
-#define SOCKET_BUFFER_CAPACITY 1024
 
 typedef struct {
         int puerto_Memoria;
@@ -27,7 +26,6 @@ typedef struct {
 
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
 int conexionConKernel();
-t_log* logger;
 
 //Variables Globales
 t_config_cpu* config;

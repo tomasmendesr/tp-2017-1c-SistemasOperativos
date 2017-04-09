@@ -19,14 +19,13 @@ t_config_cpu* levantarConfiguracionCPU(char* archivo) {
         conf->puerto_Kernel = config_get_int_value(configCPU, "PUERTO_KERNEL");
         conf->puerto_Memoria = config_get_int_value(configCPU, "PUERTO_MEMORIA");
         conf->ip_Memoria = config_get_string_value(configCPU, "IP_MEMORIA");
-        conf->ip_Kernel = config_get_int_value(configCPU, "IP_KERNEL");
+        conf->ip_Kernel = config_get_string_value(configCPU, "IP_KERNEL");
 
         config_destroy(configCPU);
         return conf;
 }
 
 int conexionConKernel(){
-	printf("Conectandose al servidor...\n");
 	socketConexionKernel = createClient(config->ip_Kernel, config->puerto_Kernel);
 	if (socketConexionKernel) {
 		printf("Conectado al servidor. Ya puede enviar mensajes. Escriba 'exit' para salir\n");;
