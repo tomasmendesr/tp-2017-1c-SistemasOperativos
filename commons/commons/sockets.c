@@ -125,6 +125,15 @@ int createServer(char *addr, char *port, int backlog) {
 	return sockfd;
 }
 
+/**
+ * @NAME: finalizarConexion
+ * @DESC: Finaliza la conexion de un socket.
+ */
+int finalizarConexion(int socket) {
+	close(socket);
+	return 0;
+}
+
 
 /**
  * @NAME: createClient

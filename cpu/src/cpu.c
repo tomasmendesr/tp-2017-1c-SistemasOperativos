@@ -10,7 +10,9 @@
 #include "funcionesCpu.h"
 
 int main(int argc, char** argv) {
+	crearLog();
 
+	// Leer config
 	char *pathConfig=string_new();
 
 	if(argv[1]!=NULL)string_append(&pathConfig,argv[1]);
@@ -22,8 +24,13 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+	// Conecta con kernel
+	if(conexionConKernel() == -1){
+		printf("No se pudo conectar con el servidor\n");
+		return EXIT_FAILURE;
+	}
 
 	free(config);
+	finalizarConexion(socketConexionKernel);
 	return EXIT_SUCCESS;
 }

@@ -184,6 +184,7 @@ int enviar_paquete_vacio(int codigo_operacion, int socket);
 int enviar_paquete_vacio_a_cpu(int codigo_operacion, int socket);
 bool recibirHanshake(int socket, int handshakeRecibir, int handshakeRespuesta);
 bool enviarHandshake(int socket, int handshakeEnviar, int handshakeRespuesta);
+int finalizarConexion(int socket);
 
 //
 // Serializadores y Deserializadores de mensajes.

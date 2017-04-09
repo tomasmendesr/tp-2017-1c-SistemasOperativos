@@ -12,22 +12,26 @@
 #include <stdlib.h>
 #include <commons/config.h>
 #include <commons/log.h>
+#include <commons/sockets.h>
 
 #define configuracionCPU "confCpu.init"
+#define SOCKET_BUFFER_CAPACITY 1024
 
 typedef struct {
-
         int puerto_Memoria;
         char* ip_Memoria;
         int puerto_Kernel;
         char* ip_Kernel;
 
-
 }t_config_cpu;
 
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
+int conexionConKernel();
+t_log* logger;
 
 //Variables Globales
 t_config_cpu* config;
+int socketConexionKernel;
+t_log* logger;
 
 #endif /* FUNCIONESCPU_H_ */
