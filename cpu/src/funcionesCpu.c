@@ -28,7 +28,7 @@ t_config_cpu* levantarConfiguracionCPU(char* archivo) {
 int conexionConKernel(){
 	socketConexionKernel = createClient(config->ip_Kernel, config->puerto_Kernel);
 	if (socketConexionKernel) {
-		printf("Conectado al servidor. Ya puede enviar mensajes. Escriba 'exit' para salir\n");;
+		printf("Cliente a kernel creado\n");
 	}
 
 	//------------Envio de mensajes al servidor------------

@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 
 	// Conecta con kernel
 	if(conexionConKernel() == -1){
-		printf("No se pudo conectar con el servidor\n");
+		printf("No se pudo conectar con el kernel\n");
 		return EXIT_FAILURE;
 	}
 
