@@ -59,9 +59,18 @@ int esperarConexionKernel();
 void inicializarMemoria();
 
 //Funciones administracion memoria
+int framesLibres();
 int buscarFrame(int pid, int pag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
+
+ 	 	 	 	 	 	/*Este thread maneja tanto cpus como kernel, porque la interfaz es una sola.*/
+void requestHandler();	/* Solo una de las operaciones esta restringida a Kernel,
+						asi que validamos eso solo*/
+void iniciarPrograma(int fd);
+void finalizarPrograma(int fd);
+void solicitudBytes();
+void grabarBytes();
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -79,6 +88,5 @@ char* memoria; /*Este va a ser el bloque que simula la memoria principal.
 				Uso char* porque sizeof(char) = 1 y facilita la aritmetica,
 				pero no tiene nada que ver con caracteres*/
 t_entrada_cache* cache;
-
 
 #endif /* FUNCIONESMEMORIA_H_ */

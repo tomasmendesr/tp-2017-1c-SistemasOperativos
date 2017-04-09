@@ -20,7 +20,6 @@ int main(int argc, char** argv){
 
 	esperarConexionKernel();
 
-
 	//LevantarServer
 
 	levantarInterfaz();
@@ -38,8 +37,17 @@ int esperarConexionKernel(){
 	if(socketConexionKernel < 0) return -1;
 
 	recibirHanshake(socketConexionKernel, HANDSHAKE_KERNEL, HANDSHAKE_MEMORIA);
+	//Esto se deberia checkear
 
 	printf("kernel Conectado\n");
+
+	//Lanzo el hilo que maneja el kernel
+	pthread_t threadKernel;
+	pthread_attr_t atributos;
+	pthread_attr_init(&atributos);
+	pthread_attr_setdetachstate(&atributos, PTHREAD_CREATE_DETACHED);
+
+	pthread_create(&threadKernel, &atributos, requestHandler, &socketConexionKernel);
 
 	return 1;
 }

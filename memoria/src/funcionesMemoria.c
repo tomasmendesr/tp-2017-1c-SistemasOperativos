@@ -96,6 +96,55 @@ void inicializarMemoria(){
 
 }
 
+void requestHandler(int fd){
+
+	int msj_recibido;
+
+	//Ciclo infinito
+	for(;;){
+		//Recibo mensajes de kernel y hago el switch
+		if(recv(fd, &msj_recibido, sizeof(int), 0) <= 0)
+		{//Chequeo desconexion
+			log_error(log, "Desconexion del kernel. Terminando...");
+			close(fd);
+			exit(1);
+		}
+
+		switch(msj_recibido){
+		case INICIAR_PROGRAMA:
+			iniciarPrograma(fd);
+			break;
+
+		case FINALIZAR_PROGRAMA:
+			finalizarPrograma(fd);
+			break;
+
+		case SOLICITUD_BYTES:
+			solicitudBytes();
+			break;
+
+		case GRABAR_BYTES:
+			grabarBytes();
+			break;
+
+		default:
+			log_warn(log, "Mensaje Recibido Incorrecto");
+		}
+	}
+}
+
+int framesLibres(){
+
+	int i, cant = 0;
+	for(i=0;i<config->marcos;i++){
+		if( ((t_entrada_cache*)memoria)[i].pid == -1 &&
+			((t_entrada_cache*)memoria)[i].pag == -1  )
+			cant++;
+	}
+
+	return cant;
+}
+
 /* Busqueda secuencial, despues implementamos hash */
 int buscarFrame(int pid, int pag){
 

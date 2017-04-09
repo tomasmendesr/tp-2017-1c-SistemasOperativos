@@ -134,7 +134,9 @@ enum protocolo_a_umv{
 	GRABAR_BYTES = 61,
 	CAMBIO_PROCESO_ACTIVO = 62,
 	CREAR_SEGMENTO = 63,
-	DESTRUIR_SEGMENTOS = 64
+	DESTRUIR_SEGMENTOS = 64,
+	INICIAR_PROGRAMA = 65,
+	FINALIZAR_PROGRAMA = 66
 };
 
 //Mensajes que la umv le envia el resto de los procesos.
