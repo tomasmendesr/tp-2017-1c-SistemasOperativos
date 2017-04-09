@@ -128,9 +128,22 @@ void requestHandler(int fd){
 			break;
 
 		default:
-			log_warn(log, "Mensaje Recibido Incorrecto");
+			log_warning(log, "Mensaje Recibido Incorrecto");
 		}
 	}
+}
+
+void iniciarPrograma(int fd){
+
+}
+void finalizarPrograma(int fd){
+
+}
+void solicitudBytes(){
+
+}
+void grabarBytes(){
+
 }
 
 int framesLibres(){
