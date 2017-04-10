@@ -19,7 +19,7 @@
 #include <commons/cosas.h>
 #include <pthread.h>
 
-#define configuracionMemoria "confMemoria.init"
+#define configuracionMemoria "../confMemoria.init"
 #define MAX_LEN_PUERTO 6
 #define frame_size config->marcos_Size
 #define IP "127.0.0.1"

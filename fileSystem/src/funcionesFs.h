@@ -14,7 +14,7 @@
 #include <commons/string.h>
 #include <commons/sockets.h>
 
-#define configuracionFS "confFileSystem.init"
+#define configuracionFS "../confFileSystem.init"
 #define MAX_LEN_PUERTO 6
 #define IP "127.0.0.1"
 #define BACKLOG "10"

@@ -110,8 +110,8 @@ int verificarExistenciaDeArchivo(char* path) {
 	FILE * archivoConfig = fopen(path, "r");
 	if (archivoConfig!=NULL){
 		 fclose(archivoConfig);
-		 return 1;
+		 return true;
 	}
-	return -1;
+	return false;
 }
 

@@ -14,7 +14,7 @@
 #include <commons/log.h>
 #include <commons/sockets.h>
 
-#define configuracionCPU "confCpu.init"
+#define configuracionCPU "../confCpu.init"
 
 typedef struct {
 		char* puerto_Memoria;
