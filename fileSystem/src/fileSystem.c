@@ -22,5 +22,4 @@ void esperarConexionKernel(){
 	socketConexionKernel = acceptSocket(socketEscucha);
 
 	recibirHanshake(socketConexionKernel, HANDSHAKE_KERNEL, HANDSHAKE_FS);
-
 }

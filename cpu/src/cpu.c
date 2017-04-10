@@ -12,21 +12,11 @@
 int main(int argc, char** argv) {
 	crearLog();
 
-	// Leer config
-	char *pathConfig=string_new();
-
-	if(argv[1]!=NULL)string_append(&pathConfig,argv[1]);
-		else string_append(&pathConfig,configuracionCPU);
-	if(verificarExistenciaDeArchivo(pathConfig)){
-		config = levantarConfiguracionCPU(pathConfig);
-	}else{
-		printf("No se pudo levantar archivo configuracion\n");
-		return EXIT_FAILURE;
-	}
+	crearConfig(argc,argv);
 
 	// Conecta con kernel
 	if(conexionConKernel() == -1){
-		printf("No se pudo conectar con el kernel\n");
+		log_error(logger, "No se pudo conectar con el kernel");
 		return EXIT_FAILURE;
 	}
 

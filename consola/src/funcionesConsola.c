@@ -3,7 +3,7 @@
 void crearConfig(int argc, char* argv[]) {
 	char* pathConfig = string_new();
 
-	if (argc>0)string_append(&pathConfig, argv[1]);
+	if (argc>1)string_append(&pathConfig, argv[1]);
 		else string_append(&pathConfig, configuracionConsola);
 	if (verificarExistenciaDeArchivo(pathConfig)) {
 		config = levantarConfiguracionConsola(pathConfig);

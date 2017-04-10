@@ -10,6 +10,21 @@ int crearLog() {
 	}
 }
 
+void crearConfig(int argc, char* argv[]){
+	char* pathConfig=string_new();
+
+	if(argc>1)string_append(&pathConfig,argv[1]);
+		else string_append(&pathConfig,configuracionCPU);
+	if(verificarExistenciaDeArchivo(pathConfig)){
+		config = levantarConfiguracionCPU(pathConfig);
+	}else{
+		printf("No se pudo levantar archivo de configuracion");
+		exit(EXIT_FAILURE);
+	}
+	printf("Configuracion levantada correctamente\n");
+	return;
+}
+
 t_config_cpu* levantarConfiguracionCPU(char* archivo) {
 
         t_config_cpu* conf = malloc(sizeof(t_config_cpu));
