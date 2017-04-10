@@ -16,6 +16,79 @@ void crearConfig(int argc, char* argv[]){
 	return;
 }
 
+void trabajarConexionCPU(){
+	int socket_servidor_kernel = createServer(IP,config->puerto_CPU,BACKLOG);
+	if(socket_servidor_kernel){
+		printf("Esperando conexion CPU...\n");
+	}
+	int numero_maximo_socket;
+	int newSocket;
+
+	fd_set read_fds;
+	fd_set socket_master;
+
+	FD_ZERO(&read_fds);
+	FD_ZERO(&socket_master);
+	FD_SET(socket_servidor_kernel,&socket_master);
+	numero_maximo_socket = socket_servidor_kernel;
+	int iterador_sockets;
+	void* paquete;
+
+	while(1){
+		read_fds = socket_master;
+
+		if(select(numero_maximo_socket + 1, &read_fds, NULL, NULL, NULL) == -1) {
+			perror("select");
+			exit(1);
+		}
+	for(iterador_sockets = 0; iterador_sockets <= numero_maximo_socket; iterador_sockets++) {
+		if(FD_ISSET(iterador_sockets, &read_fds)) {
+			if(iterador_sockets == socket_servidor_kernel) {
+
+				newSocket = acceptSocket(socket_servidor_kernel);
+
+				if(newSocket == -1) {
+					perror("Error al aceptar");
+				} else {
+					FD_SET(newSocket, &socket_master);
+					if(newSocket > numero_maximo_socket) numero_maximo_socket = newSocket;
+				}
+			} else {
+				//Gestiono cada conexi�n -> Recibo los programas y creo sus PCB.
+				int tipo_mensaje; //Para que la funcion recibir_string lo reciba
+				int check = recibir_paquete(iterador_sockets, &paquete, &tipo_mensaje);
+
+				//Chequeo de errores
+				if (check == 0) {
+					printf("Se cerro el socket %d\n", iterador_sockets);
+					close(iterador_sockets);
+					FD_CLR(iterador_sockets, &socket_master);
+				}
+
+				if(check == -1){
+					perror("recv");
+					close(iterador_sockets);
+					FD_CLR(iterador_sockets, &socket_master);
+				}
+				// Fin chequeo de errores
+
+				if(check > 0) {
+					switch(tipo_mensaje){
+						case HANDSHAKE_CPU:{
+							enviar_paquete_vacio(HANDSHAKE_KERNEL,iterador_sockets);
+							break;
+						}
+						default:{ printf("Se recibio un codigo no valido");
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	}
+}
+
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 
         t_config_kernel* conf = malloc(sizeof(t_config_kernel));
@@ -63,6 +136,107 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         return conf;
 }
 
+void trabajarConexionConsola(){
+	int socket_servidor_kernel = createServer(IP,config->puerto_PROG,BACKLOG);
+
+	int numero_maximo_socket;
+	int newSocket;
+
+	fd_set read_fds;
+	fd_set socket_master;
+
+	FD_ZERO(&read_fds);
+	FD_ZERO(&socket_master);
+	FD_SET(socket_servidor_kernel,&socket_master);
+	numero_maximo_socket = socket_servidor_kernel;
+	int iterador_sockets;
+	void* paquete;
+
+	while(1){
+		read_fds = socket_master;
+
+		if(select(numero_maximo_socket + 1, &read_fds, NULL, NULL, NULL) == -1) {
+			perror("select");
+			exit(1);
+		}
+	for(iterador_sockets = 0; iterador_sockets <= numero_maximo_socket; iterador_sockets++) {
+		if(FD_ISSET(iterador_sockets, &read_fds)) {
+			if(iterador_sockets == socket_servidor_kernel) {
+
+				newSocket = acceptSocket(socket_servidor_kernel);
+
+				if(newSocket == -1) {
+					perror("Error al aceptar");
+				} else {
+					FD_SET(newSocket, &socket_master);
+					if(newSocket > numero_maximo_socket) numero_maximo_socket = newSocket;
+				}
+			} else {
+				//Gestiono cada conexi�n -> Recibo los programas y creo sus PCB.
+				int tipo_mensaje; //Para que la funcion recibir_string lo reciba
+				int check = recibir_paquete(iterador_sockets, &paquete, &tipo_mensaje);
+
+				//Chequeo de errores
+				if (check == 0) {
+					printf("Se cerro el socket %d\n", iterador_sockets);
+					close(iterador_sockets);
+					FD_CLR(iterador_sockets, &socket_master);
+				}
+
+				if(check == -1){
+					perror("recv");
+					close(iterador_sockets);
+					FD_CLR(iterador_sockets, &socket_master);
+				}
+				// Fin chequeo de errores
+
+				if(check > 0) {
+					switch(tipo_mensaje){
+						case HANDSHAKE_PROGRAMA:{
+							enviar_paquete_vacio(HANDSHAKE_KERNEL,iterador_sockets);
+							break;
+						}
+						default:{ printf("Se recibio un codigo no valido");
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	}
+}
+
+int conexionConFileSystem(){
+
+	socketConexionFS = createClient(config->ip_FS, config->puerto_FS);
+
+	if(socketConexionFS == -1){
+		return -1;
+	}
+
+	enviarHandshake(socketConexionFS, HANDSHAKE_KERNEL, HANDSHAKE_FS);
+
+	printf("Conexion con fs establecida\n");
+
+	return 1;
+}
+
+int conexionConMemoria(){
+
+	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
+
+	if(socketConexionMemoria == -1){
+		return -1;
+	}
+
+	enviarHandshake(socketConexionFS, HANDSHAKE_KERNEL, HANDSHAKE_MEMORIA);
+
+	printf("Conexion con memoria establecida\n");
+
+	return 1;
+}
+
 void destruirConfiguracionKernel(t_config_kernel* config){
 	free(config->algoritmo);
 	free(config->ip_FS);
@@ -72,15 +246,6 @@ void destruirConfiguracionKernel(t_config_kernel* config){
 	free(config->puerto_Memoria);
 	free(config->puerto_PROG);
 	free(config);
-}
-
-void esperarConexionCPU(){
-	socketReceptorCPU = createServer(IP, config->puerto_CPU, BACKLOG);
-
-	printf("Esperando conexion del cpu.......\n");
-	socketConexionCPU = acceptSocket(socketReceptorCPU);
-
-	recibirHanshake(socketConexionCPU, HANDSHAKE_CPU, HANDSHAKE_KERNEL);
 }
 
 t_dictionary* crearDiccionarioConValue(char** array, char** valores){
@@ -107,10 +272,6 @@ t_dictionary* crearDiccionario(char** array){
         }
 
         return dic;
-}
-
-void establecerConexiones(){
-	//TODO: todo.
 }
 
 //funciones interfaz

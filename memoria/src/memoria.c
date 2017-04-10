@@ -32,7 +32,12 @@ int main(int argc, char** argv){
 int esperarConexionKernel(){
 
 	socketEscuchaConexiones = createServer(IP, config->puerto, BACKLOG);
-
+	if(socketEscuchaConexiones != -1){
+		printf("Esperando conexion del kernel.......\n");
+	}else{
+		printf("Error al levantar servidor\n");
+		return -1;
+	}
 	socketConexionKernel = acceptSocket(socketEscuchaConexiones);
 	if(socketConexionKernel < 0) return -1;
 

@@ -36,7 +36,7 @@ t_config_cpu* levantarConfiguracionCPU(char* archivo) {
         conf->ip_Memoria = config_get_string_value(configCPU, "IP_MEMORIA");
         conf->ip_Kernel = config_get_string_value(configCPU, "IP_KERNEL");
 
-        config_destroy(configCPU);
+
         return conf;
 }
 
@@ -48,20 +48,15 @@ int conexionConKernel(){
 
 	//------------Envio de mensajes al servidor------------
 	enviar_paquete_vacio(HANDSHAKE_CPU, socketConexionKernel);
-	int operacion;
-	void* paquete;
-	if (recibir_paquete(socketConexionKernel, &paquete, &operacion) == 0) {
-		log_error(logger, "No se recibio nada");
-		return -1;
-	}else{
-		switch (operacion) {
-			case HANDSHAKE_KERNEL:
-				log_info(logger, "Handshake Kernel.");
-				printf("Conexion con Kernel establecida\n");
-				return 1;
-			default:
-				log_error(logger, "Handshake no reconocido.");
-				return -1;
-		}
+	int operacion = 0;
+	void* paquete_vacio;
+
+	recibir_paquete(socketConexionKernel, &paquete_vacio, &operacion);
+
+	if (operacion == HANDSHAKE_KERNEL) {
+		printf("Conexion con Kernel establecida! :D \n");
+	} else {
+		printf("El Kernel no devolvio handshake :( \n");
 	}
 }
+

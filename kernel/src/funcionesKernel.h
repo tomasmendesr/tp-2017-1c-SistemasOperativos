@@ -54,7 +54,8 @@ t_dictionary* crearDiccionario(char** array);
 void establecerConexiones();
 int conexionConFileSystem();
 int conexionConMemoria();
-void esperarConexionCPU();
+void trabajarConexionCPU();
+void trabajarConexionConsola();
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -69,7 +70,5 @@ void stopPlanification(char*,char*);
 t_config_kernel* config;
 int socketConexionFS;
 int socketConexionMemoria;
-int socketReceptorCPU;
-int socketConexionCPU;
 
 #endif /* FUNCIONESKERNEL_H_ */

@@ -128,8 +128,8 @@ enum protocolo_cpu_a_kernel{
 	SENIAL_SIGUSR1 = 51
 };
 
-//Mensajes que se le envian a la umv.
-enum protocolo_a_umv{
+//Mensajes que se le envian a la memoria.
+enum protocolo_a_memoria{
 	SOLICITUD_BYTES = 60,
 	GRABAR_BYTES = 61,
 	CAMBIO_PROCESO_ACTIVO = 62,
@@ -139,8 +139,8 @@ enum protocolo_a_umv{
 	FINALIZAR_PROGRAMA = 66
 };
 
-//Mensajes que la umv le envia el resto de los procesos.
-enum protocolo_umv_a_cualquiera{
+//Mensajes que la memoria le envia el resto de los procesos.
+enum protocolo_memoria_a_cualquiera{
 	RESPUESTA_BYTES = 80,
 	SEGMENTATION_FAULT = 81,
 	MEMORY_OVERLOAD = 82,
