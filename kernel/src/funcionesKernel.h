@@ -9,7 +9,7 @@
 #define FUNCIONESKERNEL_H_
 
 #define IP "127.0.0.1"
-#define BACKLOG "10"
+#define BACKLOG 10
 #define configuracionKernel "confKernel.init"
 #define MAX_LEN_PUERTO 6
 #define MAX_LEN_IP 20
@@ -54,7 +54,8 @@ t_dictionary* crearDiccionario(char** array);
 void establecerConexiones();
 int conexionConFileSystem();
 int conexionConMemoria();
-void esperarConexionCPU();
+void trabajarConexionCPU();
+void trabajarConexionConsola();
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -69,7 +70,5 @@ void stopPlanification(char*,char*);
 t_config_kernel* config;
 int socketConexionFS;
 int socketConexionMemoria;
-int socketReceptorCPU;
-int socketConexionCPU;
 
 #endif /* FUNCIONESKERNEL_H_ */

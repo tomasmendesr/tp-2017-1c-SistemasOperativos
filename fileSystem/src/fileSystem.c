@@ -17,8 +17,11 @@ int main(){
 
 void esperarConexionKernel(){
 	socketEscucha = createServer(IP, conf->puertoEscucha, BACKLOG);
-
-	printf("Esperando conexion del kernel.......\n");
+	if(socketEscucha != -1){
+		printf("Esperando conexion del kernel.......\n");
+	}else{
+		printf("Error al levantar el servidor\n");
+	}
 	socketConexionKernel = acceptSocket(socketEscucha);
 
 	recibirHanshake(socketConexionKernel, HANDSHAKE_KERNEL, HANDSHAKE_FS);

@@ -10,8 +10,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <commons/sockets.h>
 #include <commons/config.h>
+#include <commons/sockets.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
