@@ -15,6 +15,8 @@
 #include <commons/sockets.h>
 
 #define configuracionCPU "confCpu.init"
+#define MAX_LEN_PUERTO 6
+#define MAX_LEN_IP 20
 
 typedef struct {
 		char* puerto_Memoria;
