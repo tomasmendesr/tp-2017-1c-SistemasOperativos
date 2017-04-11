@@ -22,6 +22,7 @@ int main(int argc, char** argv){
 
 	int resultado_creacion_plp, resultado_creacion_pcp;
 
+	// Lanzar hilo PLP
 	resultado_creacion_plp = pthread_create(&hilo_plp, NULL, plp, NULL);
 
 	// Se valida que se haya creado el hilo, pthread_create devuelve 0 en caso de que NO haya errores
