@@ -76,6 +76,8 @@ void enviarArchivo(int kernel_fd, char* path){
 		return;
 	}
 
+	memcpy(buffer,header,2*sizeof(uint32_t));
+
 	if( sendAll(kernel_fd,buffer,file_size + 2*sizeof(uint32_t),0) == -1 ){
 		log_error(logger, "no se pudo enviar el archivo");
 		return;
