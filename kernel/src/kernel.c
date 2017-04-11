@@ -15,18 +15,30 @@ int main(int argc, char** argv){
 
 	crearConfig(argc,argv);
 
-	if(conexionConMemoria() == -1){
-		printf("no se pudo conectar con fs\n");
-		return EXIT_FAILURE;
+	//Tiramos 2 hilos porque necesitamos escuchar conexiones y desconexion de sockets por puertos diferentes
+	//Planificador de largo plazo
+	//Planificador de corto plazo
+	pthread_t hilo_plp, hilo_pcp;
+
+	int resultado_creacion_plp, resultado_creacion_pcp;
+
+	resultado_creacion_plp = pthread_create(&hilo_plp, NULL, plp, NULL);
+
+	// Se valida que se haya creado el hilo, pthread_create devuelve 0 en caso de que NO haya errores
+	if(resultado_creacion_plp){
+		printf("Se produjo un error al crear el hilo plp, codigo de error: %d", resultado_creacion_plp);
+		exit(EXIT_FAILURE);
 	}
-	if(conexionConFileSystem() == -1){
-		printf("no se pudo conectar con fs\n");
-		return EXIT_FAILURE;
+	// Lanzar hilo PCP
+	resultado_creacion_pcp = pthread_create(&hilo_pcp, NULL, pcp, NULL);
+
+	if(resultado_creacion_pcp){
+		printf("Se produjo un error al crear el hilo pcp, codigo de error: %d", resultado_creacion_pcp);
+		exit(EXIT_FAILURE);
 	}
 
-	trabajarConexionCPU();
-	trabajarConexionConsola();//Esto es lo que hace el thread principal, escucha.
-
+	pthread_join(hilo_pcp, NULL);
+	pthread_join(hilo_plp, NULL);
 	destruirConfiguracionKernel(config);
 	return EXIT_SUCCESS;
 }

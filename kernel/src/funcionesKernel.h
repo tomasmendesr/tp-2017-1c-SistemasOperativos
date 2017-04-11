@@ -26,6 +26,8 @@
 #include <commons/collections/list.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include "plp.h"
+#include "pcp.h"
 
 typedef struct {
 	char* puerto_PROG;
