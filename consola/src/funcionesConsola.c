@@ -37,6 +37,53 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 	return config;
 }
 
+void enviarArchivo(int kernel_fd, char* path){
+
+	//Verifico existencia archivo (Aguante esta funcion loco!)
+	if( !verificarExistenciaDeArchivo(path) ){
+		log_error(logger, "no existe el archivo");
+		return;
+	}
+
+	FILE* file;
+	int file_fd, file_size;
+	struct stat stats;
+
+	//Abro el archivo y le saco los stats
+	file = fopen(path, "r");
+	if(file == NULL){//esto nunca deberia fallar porque ya esta verificado, pero por las dudas
+		log_error(logger, "no pudo abrir archivo");
+		return;
+	}
+	file_fd = fileno(file);
+
+	fstat(file_fd, &stats);
+	file_size = stats.st_size;
+
+	uint32_t header[2];
+	char* buffer = malloc(file_size + 2 * sizeof(uint32_t));
+
+	if(buffer == NULL){
+		log_error(logger, "no pude reservar memoria para enviar archivo");
+		return;
+	}
+
+	header[0] = ENVIO_CODIGO;
+	header[1] = file_size;
+
+	if( fread(buffer + 2*sizeof(uint32_t),file_size,1,file) < file_size ){
+		log_error(logger, "no leyo bien el archivo");
+		return;
+	}
+
+	if( sendAll(kernel_fd,buffer,file_size + 2*sizeof(uint32_t),0) == -1 ){
+		log_error(logger, "no se pudo enviar el archivo");
+		return;
+	}
+
+	return;
+}
+
 //funciones interfaz
 void levantarInterfaz() {
 	//creo los comandos y el parametro

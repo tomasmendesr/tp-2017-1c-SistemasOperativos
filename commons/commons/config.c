@@ -106,7 +106,7 @@ void config_destroy(t_config *config) {
 	free(config);
 }
 
-int verificarExistenciaDeArchivo(char* path) {
+bool verificarExistenciaDeArchivo(char* path) {
 	FILE * archivoConfig = fopen(path, "r");
 	if (archivoConfig!=NULL){
 		 fclose(archivoConfig);
