@@ -23,7 +23,7 @@
 #define MAX_LEN_PUERTO 6
 #define frame_size config->marcos_Size
 #define IP "127.0.0.1"
-#define BACKLOG "10"
+#define BACKLOG 10
 
 typedef struct{
         char* puerto;
@@ -58,17 +58,25 @@ int esperarConexiones();
 void inicializarMemoria();
 
 //Funciones administracion memoria
+int primerFrameLibre();
+int primerFrameLibreCache();
+int framesLibresCache();
+int buscarPaginas(int pid, int frame);
 int framesLibres();
 int buscarFrame(int pid, int pag);
+int buscarPagCache(int pid, int pag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
 
  	 	 	 	 	 	/*Este thread maneja tanto cpus como kernel, porque la interfaz es una sola.*/
 void requestHandler();	/* Solo una de las operaciones esta restringida a Kernel,
 						asi que validamos eso solo*/
-void iniciarPrograma(int fd);
-void finalizarPrograma(int fd);
-void solicitudBytes();
+//void iniciarPrograma(int fd);
+void iniciarPrograma(int fd, int pid, int cantPag);
+//void finalizarPrograma(int fd);
+void finalizarPrograma(int fd, int pid);
+//void solicitudBytes();
+char* solicitudBytes(int pid, int pag, int offset, int size);
 void grabarBytes();
 
 //Funciones de interfaz
@@ -79,7 +87,7 @@ void flush(char* comando, char* param);
 void size(char* comando, char* param);
 
 //Variables Globales
-t_log* log;
+t_log* logger;
 t_config_memoria* config;
 int socketEscuchaConexiones;
 int socketConexionKernel;

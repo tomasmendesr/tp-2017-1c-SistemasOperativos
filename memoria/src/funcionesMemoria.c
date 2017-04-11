@@ -61,14 +61,14 @@ void inicializarMemoria(){
 	//Inicializo la cache
 	for(i=0;i<config->entradas_Cache;i++){
 		cache[i].pid = -1;
-		cache[i].pag = -1;
+		//cache[i].pag = -1; no alcanza con el pid?
 		cache[i].content = malloc(config->marcos_Size);
 		if(cache[i].content == NULL) noEspacioCache = true;
 	}
 
 	//Reviso los mallocs
 	if(memoria == NULL || cache == NULL || noEspacioCache){
-		log_error(log, "No pude reservar memoria para cache y/o memoria");
+		log_error(logger, "No pude reservar memoria para cache y/o memoria");
 		exit(EXIT_FAILURE);
 	}
 
@@ -77,7 +77,7 @@ void inicializarMemoria(){
 
 	//Creo las entradas de la tabla invertida
 	for(i=0;i<config->marcos;i++){
-		((t_entrada_tabla*)memoria)[i].pag = -1;
+//		((t_entrada_tabla*)memoria)[i].pag = -1; con el pid no alcanza?
 		((t_entrada_tabla*)memoria)[i].pid = -1;
 	}
 
@@ -105,70 +105,160 @@ void requestHandler(int fd){
 		//Recibo mensajes de kernel y hago el switch
 		if(recv(fd, &msj_recibido, sizeof(int), 0) <= 0)
 		{//Chequeo desconexion
-			log_error(log, "Desconexion del kernel. Terminando...");
+			log_error(logger, "Desconexion del kernel. Terminando...");
 			close(fd);
 			exit(1);
 		}
 
 		switch(msj_recibido){
 		case INICIAR_PROGRAMA:
-			iniciarPrograma(fd);
+//			iniciarPrograma(fd);
 			break;
 
 		case FINALIZAR_PROGRAMA:
-			finalizarPrograma(fd);
+//			finalizarPrograma(fd);
 			break;
 
 		case SOLICITUD_BYTES:
-			solicitudBytes();
+//			solicitudBytes();
 			break;
 
 		case GRABAR_BYTES:
-			grabarBytes();
+//			grabarBytes();
 			break;
 
 		default:
-			log_warning(log, "Mensaje Recibido Incorrecto");
+			log_warning(logger, "Mensaje Recibido Incorrecto");
 		}
 	}
 }
 
-void iniciarPrograma(int fd){
+void iniciarPrograma(int fd, int pid, int cantPag){
+
+	int i, frame;
+	for(i=0;i<cantPag;i++){
+		frame = primerFrameLibre();
+		((t_entrada_tabla*)memoria)[frame].pid=pid;
+		((t_entrada_tabla*)memoria)[frame].pag=i;
+	}
 
 }
-void finalizarPrograma(int fd){
-
+void finalizarPrograma(int fd, int pid){
+	//entre otras cosas eliminar las entradas en la tabla invertida
+	int frame = buscarPaginas(pid,0);
+	while(frame!=-1){
+		((t_entrada_tabla*)memoria)[frame].pid = -1;
+		frame=buscarPaginas(pid,frame);
+	}
+	//tambien hay que eliminar entradas de la cache?
 }
-void solicitudBytes(){
+char* solicitudBytes(int pid, int pag, int offset, int size){
 
+	int frameMemoria,frameCache;
+	char* buffer=malloc(size+1);
+	memset((void*)buffer,'\0',size+1);
+	frameCache=buscarPagCache(pid,pag);
+	if(frameCache>=0)
+	memcpy((void*)buffer,cache[frameCache].content+offset,size);
+
+	else{
+		frameMemoria=buscarFrame(pid,pag);
+		if(framesLibresCache()>0){
+			frameCache=primerFrameLibreCache();
+			cache[frameCache].pid=pid;
+			cache[frameCache].pag=pag;
+			memcpy((void*)cache[frameCache].content,memoria+frameMemoria*config->marcos_Size,config->marcos_Size);
+		}
+		else{
+			//aplicar algoritmo LRU para realizar el reemplazo
+		}
+		memcpy((void*)buffer,cache[frameCache].content+offset,size);
+	}
+	return buffer;
 }
 void grabarBytes(){
 
+}
+
+int primerFrameLibre(){
+
+	int i;
+	for(i=0;i<config->marcos;i++){
+		if( ((t_entrada_tabla*)memoria)[i].pid == -1)
+			return i;
+	}
+
+	return -1;
+}
+
+int primerFrameLibreCache(){
+
+	int i;
+	for(i=0;i<config->marcos;i++){
+		if( cache[i].pid == -1)
+			return i;
+	}
+	return -1;
 }
 
 int framesLibres(){
 
 	int i, cant = 0;
 	for(i=0;i<config->marcos;i++){
-		if( ((t_entrada_cache*)memoria)[i].pid == -1 &&
-			((t_entrada_cache*)memoria)[i].pag == -1  )
+		if( ((t_entrada_tabla*)memoria)[i].pid == -1 /*&&
+			((t_entrada_tabla*)memoria)[i].pag == -1  */)
 			cant++;
 	}
 
 	return cant;
 }
 
+int framesLibresCache(){
+
+	int i, cant = 0;
+	for(i=0;i<config->entradas_Cache;i++){
+		if( cache[i].pid == -1 /*&&
+			cache[i].pag == -1  */)
+			cant++;
+	}
+	return cant;
+}
+
 /* Busqueda secuencial, despues implementamos hash */
+
 int buscarFrame(int pid, int pag){
 
 	int i;
 	for(i=0;i<config->marcos;i++){
-		if( ((t_entrada_cache*)memoria)[i].pid == pid &&
-			((t_entrada_cache*)memoria)[i].pag == pag  )
+		if( ((t_entrada_tabla*)memoria)[i].pid == pid &&
+			((t_entrada_tabla*)memoria)[i].pag == pag  )
 			return i;
 	}
 
 	return -1; //No encontro en la tabla de paginas la entrada
+}
+
+int buscarPaginas(int pid, int frame){
+
+	int i;
+	for(i=frame;i<config->marcos;frame++){
+		if(((t_entrada_tabla*)memoria)[frame].pid == pid)
+			return i;
+	}
+
+	return -1;
+}
+
+int buscarPagCache(int pid, int pag){
+
+	int i;
+	for(i=0;i<config->entradas_Cache;i++){
+		if( cache[i].pid == pid )
+		if( cache[i].pag == pag )
+			return i;
+	}
+
+	return -1;
 }
 
 /* Esta funcion necesita que le pasen en resultado, un puntero con al menos
