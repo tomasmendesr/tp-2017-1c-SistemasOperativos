@@ -170,24 +170,23 @@ void iniciarPrograma(int pid, int cantPag){
 	}
 
 }
+//falta bastante
 void finalizarPrograma(int pid){
-	//entre otras cosas eliminar las entradas en la tabla invertida
+	//entre otras cosas elimina las entradas en la tabla invertida
 	int frame = buscarPaginas(pid,0);
 	while(frame!=-1){
 		((t_entrada_tabla*)memoria)[frame].pid = -1;
 		frame=buscarPaginas(pid,frame);
 	}
-	//falta
 }
+//falta
 char* solicitudBytes(int pid, int pag, int offset, int size){
 
 	int frameMemoria,frameCache;
-	char* buffer=malloc(size+1);
-	memset((void*)buffer,'\0',size+1);
+	char* buffer=malloc(size);
 	frameCache=buscarPagCache(pid,pag);
 	if(frameCache>=0)
 	memcpy((void*)buffer,cache[frameCache].content+offset,size);
-
 	else{
 		frameMemoria=buscarFrame(pid,pag);
 		if(framesLibresCache()>0){
@@ -228,24 +227,25 @@ int primerFrameLibreCache(){
 	return -1;
 }
 
+/* creo que no hace no hace falta darle valor negativo a las paginas */
 int framesLibres(){
 
 	int i, cant = 0;
 	for(i=0;i<config->marcos;i++){
-		if( ((t_entrada_tabla*)memoria)[i].pid == -1 /*&&
-			((t_entrada_tabla*)memoria)[i].pag == -1  */)
+		if( ((t_entrada_tabla*)memoria)[i].pid == -1 &&
+			((t_entrada_tabla*)memoria)[i].pag == -1  )
 			cant++;
 	}
-
 	return cant;
 }
 
+/*lo mismo que la de arriba*/
 int framesLibresCache(){
 
 	int i, cant = 0;
 	for(i=0;i<config->entradas_Cache;i++){
-		if( cache[i].pid == -1 /*&&
-			cache[i].pag == -1  */)
+		if( cache[i].pid == -1 &&
+			cache[i].pag == -1  )
 			cant++;
 	}
 	return cant;
@@ -280,11 +280,10 @@ int buscarPagCache(int pid, int pag){
 
 	int i;
 	for(i=0;i<config->entradas_Cache;i++){
-		if( cache[i].pid == pid )
-		if( cache[i].pag == pag )
+		if( cache[i].pid == pid &&
+			cache[i].pag == pag )
 			return i;
 	}
-
 	return -1;
 }
 
