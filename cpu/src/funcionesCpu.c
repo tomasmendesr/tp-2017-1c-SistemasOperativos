@@ -62,7 +62,7 @@ int conexionConKernel(){
 int conexionConMemoria(){
 	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
 	if (socketConexionMemoria) {
-		printf("Cliente a kernel creado\n");
+		printf("Cliente a Memoria creado\n");
 	}
 
 	//------------Envio de mensajes al servidor------------

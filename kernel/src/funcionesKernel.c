@@ -75,6 +75,7 @@ void trabajarConexionCPU(){
 				if(check > 0) {
 					switch(tipo_mensaje){
 						case HANDSHAKE_CPU:{
+							printf("conexion con cpu establecida");
 							enviar_paquete_vacio(HANDSHAKE_KERNEL,iterador_sockets);
 							break;
 						}
@@ -193,6 +194,7 @@ void trabajarConexionConsola(){
 				if(check > 0) {
 					switch(tipo_mensaje){
 						case HANDSHAKE_PROGRAMA:{
+							printf("Conexion con la consola establecida\n");
 							enviar_paquete_vacio(HANDSHAKE_KERNEL,iterador_sockets);
 							break;
 						}
@@ -230,7 +232,7 @@ int conexionConMemoria(){
 		return -1;
 	}
 
-	enviarHandshake(socketConexionFS, HANDSHAKE_KERNEL, HANDSHAKE_MEMORIA);
+	enviarHandshake(socketConexionMemoria, HANDSHAKE_KERNEL, HANDSHAKE_MEMORIA);
 
 	printf("Conexion con memoria establecida\n");
 

@@ -51,8 +51,7 @@ t_config_memoria* levantarConfiguracionMemoria(char* archivo);
 void destruirConfiguracionMemoria(t_config_memoria* config);
 
 //Funciones de conexionado
-int esperarConexionKernel();
-
+int esperarConexiones();
 /* Esta funcion hace la creacion de la memoria y todas las estructuras
  * administrativas necesarias para que el sistema arranque
  */
@@ -84,6 +83,8 @@ t_log* log;
 t_config_memoria* config;
 int socketEscuchaConexiones;
 int socketConexionKernel;
+int socketConexionCpu;
+
 char* memoria; /*Este va a ser el bloque que simula la memoria principal.
 				Uso char* porque sizeof(char) = 1 y facilita la aritmetica,
 				pero no tiene nada que ver con caracteres*/

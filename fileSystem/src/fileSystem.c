@@ -25,4 +25,5 @@ void esperarConexionKernel(){
 	socketConexionKernel = acceptSocket(socketEscucha);
 
 	recibirHanshake(socketConexionKernel, HANDSHAKE_KERNEL, HANDSHAKE_FS);
+	printf("Conexion con kernel establecida\n");
 }
