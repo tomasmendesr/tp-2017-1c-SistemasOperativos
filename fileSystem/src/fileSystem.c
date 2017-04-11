@@ -5,7 +5,7 @@ int main(){
 	if(verificarExistenciaDeArchivo(configuracionFS))
 		conf = levantarConfiguracion(configuracionFS);
 	else{
-		printf("No se puede cargar la configuracion");
+		printf("No se pudo cargar la configuracion\n");
 		return EXIT_FAILURE;
 	}
 

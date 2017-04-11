@@ -93,47 +93,47 @@ void trabajarConexionCPU(){
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 
         t_config_kernel* conf = malloc(sizeof(t_config_kernel));
-        t_config* configNucleo;
+        t_config* configKernel;
         char** varGlob, **semID, **semInit;
 
-        configNucleo = config_create(archivo_conf);
+        configKernel = config_create(archivo_conf);
 
         conf->puerto_CPU = malloc(MAX_LEN_PUERTO);
-        strcpy(conf->puerto_CPU, config_get_string_value(configNucleo, "PUERTO_CPU"));
+        strcpy(conf->puerto_CPU, config_get_string_value(configKernel, "PUERTO_CPU"));
 
         conf->puerto_PROG = malloc(MAX_LEN_PUERTO);
-        strcpy(conf->puerto_PROG, config_get_string_value(configNucleo, "PUERTO_PROG"));
+        strcpy(conf->puerto_PROG, config_get_string_value(configKernel, "PUERTO_PROG"));
 
         conf->ip_Memoria = malloc(MAX_LEN_IP);
-        strcpy(conf->ip_Memoria, config_get_string_value(configNucleo, "IP_MEMORIA"));
+        strcpy(conf->ip_Memoria, config_get_string_value(configKernel, "IP_MEMORIA"));
 
         conf->puerto_Memoria = malloc(MAX_LEN_PUERTO);
-        strcpy(conf->puerto_Memoria, config_get_string_value(configNucleo, "PUERTO_MEMORIA"));
+        strcpy(conf->puerto_Memoria, config_get_string_value(configKernel, "PUERTO_MEMORIA"));
 
         conf->ip_FS = malloc(MAX_LEN_IP);
-        strcpy(conf->ip_FS, config_get_string_value(configNucleo, "IP_FS"));
+        strcpy(conf->ip_FS, config_get_string_value(configKernel, "IP_FS"));
 
         conf->puerto_FS = malloc(MAX_LEN_PUERTO);
-        strcpy(conf->puerto_FS, config_get_string_value(configNucleo, "PUERTO_FS"));
+        strcpy(conf->puerto_FS, config_get_string_value(configKernel, "PUERTO_FS"));
 
-        conf->quantum = config_get_int_value(configNucleo, "QUANTUM");
-        conf->quantum_Sleep = config_get_int_value(configNucleo, "QUANTUM_SLEEP");
+        conf->quantum = config_get_int_value(configKernel, "QUANTUM");
+        conf->quantum_Sleep = config_get_int_value(configKernel, "QUANTUM_SLEEP");
 
         conf->algoritmo = malloc(MAX_LEN_PUERTO);
-        strcpy(conf->algoritmo, config_get_string_value(configNucleo, "ALGORITMO"));
+        strcpy(conf->algoritmo, config_get_string_value(configKernel, "ALGORITMO"));
 
-        conf->grado_MultiProg = config_get_int_value(configNucleo, "GRADO_MULTIPROG");
+        conf->grado_MultiProg = config_get_int_value(configKernel, "GRADO_MULTIPROG");
 
-        semID = config_get_array_value(configNucleo, "SEM_ID");
-        semInit = config_get_array_value(configNucleo, "SEM_INIT");
+        semID = config_get_array_value(configKernel, "SEM_ID");
+        semInit = config_get_array_value(configKernel, "SEM_INIT");
         conf->semaforos = crearDiccionarioConValue(semID,semInit);
 
-        varGlob = config_get_array_value(configNucleo, "SHARED_VARS");
+        varGlob = config_get_array_value(configKernel, "SHARED_VARS");
         conf->variablesGlobales = crearDiccionario(varGlob);
 
-        conf->stack_Size = config_get_int_value(configNucleo, "STACK_SIZE");
+        conf->stack_Size = config_get_int_value(configKernel, "STACK_SIZE");
 
-        config_destroy(configNucleo);
+        config_destroy(configKernel);
         return conf;
 }
 
@@ -198,7 +198,7 @@ void trabajarConexionConsola(){
 							enviar_paquete_vacio(HANDSHAKE_KERNEL,iterador_sockets);
 							break;
 						}
-						default:{ printf("Se recibio un codigo no valido");
+						default:{ printf("Se recibio un codigo no valido\n");
 							break;
 						}
 					}

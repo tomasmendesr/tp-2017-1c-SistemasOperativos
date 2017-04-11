@@ -9,12 +9,12 @@
 
 void plp() {
 	if(conexionConMemoria() == -1){
-		printf("no se pudo conectar con fs\n");
+		printf("No se pudo conectar con la memoria\n");
 		//Fijares que hacer si no puede tener acceso a estos modulos
 		exit(1);
 	}
 	if(conexionConFileSystem() == -1){
-		printf("no se pudo conectar con fs\n");
+		printf("No se pudo conectar con el file system\n");
 		exit(1);
 	}
 	trabajarConexionConsola();

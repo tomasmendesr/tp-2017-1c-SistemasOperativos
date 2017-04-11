@@ -46,8 +46,10 @@ t_config_cpu* levantarConfiguracionCPU(char* archivo) {
 
 int conexionConKernel(){
 	socketConexionKernel = createClient(config->ip_Kernel, config->puerto_Kernel);
-	if (socketConexionKernel) {
+	if (socketConexionKernel != -1) {
 		printf("Cliente a kernel creado\n");
+	}else{
+		return -1;
 	}
 
 	//------------Envio de mensajes al servidor------------
@@ -65,8 +67,10 @@ int conexionConKernel(){
 }
 int conexionConMemoria(){
 	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
-	if (socketConexionMemoria) {
+	if (socketConexionMemoria != -1) {
 		printf("Cliente a Memoria creado\n");
+	}else{
+		return -1;
 	}
 
 	//------------Envio de mensajes al servidor------------

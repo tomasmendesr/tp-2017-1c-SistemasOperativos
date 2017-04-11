@@ -70,8 +70,10 @@ void iniciarPrograma(char* comando, char* param) {
 	verificarExistenciaDeArchivo(param);
 	printf("Su proceso se inicializo");
 	socket_cliente = createClient(config->ip_Kernel, config->puerto_Kernel);
-	if (socket_cliente) {
+	if (socket_cliente != -1) {
 		printf("Cliente creado satisfactoriamente.\n");
+	}else{
+		perror("No se pudo crear el cliente");
 	}
 	enviar_paquete_vacio(HANDSHAKE_PROGRAMA, socket_cliente);
 	int operacion = 0;
