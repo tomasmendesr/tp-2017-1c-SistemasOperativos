@@ -44,5 +44,10 @@ typedef struct{
 	uint32_t size;
 }t_variable;
 
+typedef struct indiceCodigo{
+	uint32_t offset;
+	uint32_t start;
+}t_indice_codigo;
+
 #endif /* STRUCTSUTILES_H_ */
 
