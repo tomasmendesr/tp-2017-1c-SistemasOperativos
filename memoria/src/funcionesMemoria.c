@@ -96,9 +96,11 @@ void inicializarMemoria(){
 
 }
 
-void requestHandler(int fd){
+void requestHandlerKernel(int fd){
 
 	int msj_recibido;
+//	char* paquete;
+//	int tipo_mensaje;
 
 	//Ciclo infinito
 	for(;;){
@@ -112,18 +114,43 @@ void requestHandler(int fd){
 
 		switch(msj_recibido){
 		case INICIAR_PROGRAMA:
-//			iniciarPrograma(fd);
+//			iniciarPrograma(int pid, int cantPag);
 			break;
 
 		case FINALIZAR_PROGRAMA:
-//			finalizarPrograma(fd);
+//			finalizarPrograma(int pid);
 			break;
 
-		case SOLICITUD_BYTES:
-//			solicitudBytes();
+		case ASIGNAR_PAGINAS:
+//			asignarPaginas();
 			break;
 
-		case GRABAR_BYTES:
+		default:
+			log_warning(logger, "Mensaje Recibido Incorrecto");
+		}
+	}
+}
+
+void requestHandlerCpu(int fd){
+
+	int msj_recibido;
+
+	//Ciclo infinito
+	for(;;){
+		//Recibo mensajes de cpu y hago el switch
+		if(recv(fd, &msj_recibido, sizeof(int), 0) <= 0)
+		{//Chequeo desconexion
+			log_error(logger, "Desconexion del kernel. Terminando...");
+			close(fd);
+			exit(1);
+		}
+
+		switch(msj_recibido){
+			case SOLICITUD_BYTES:
+//			solicitudBytes(int pid, int pag, int offset, int size);
+			break;
+
+			case GRABAR_BYTES:
 //			grabarBytes();
 			break;
 
@@ -133,7 +160,7 @@ void requestHandler(int fd){
 	}
 }
 
-void iniciarPrograma(int fd, int pid, int cantPag){
+void iniciarPrograma(int pid, int cantPag){
 
 	int i, frame;
 	for(i=0;i<cantPag;i++){
@@ -143,14 +170,14 @@ void iniciarPrograma(int fd, int pid, int cantPag){
 	}
 
 }
-void finalizarPrograma(int fd, int pid){
+void finalizarPrograma(int pid){
 	//entre otras cosas eliminar las entradas en la tabla invertida
 	int frame = buscarPaginas(pid,0);
 	while(frame!=-1){
 		((t_entrada_tabla*)memoria)[frame].pid = -1;
 		frame=buscarPaginas(pid,frame);
 	}
-	//tambien hay que eliminar entradas de la cache?
+	//falta
 }
 char* solicitudBytes(int pid, int pag, int offset, int size){
 
