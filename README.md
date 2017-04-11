@@ -7,4 +7,6 @@
   <li>Lectura de archivos de configuracion</li>
   <li>Logueo</li>
   <li>Implementacion funciones consola</li>
+  <li>Funciones Sockets - Envio de paquetes</li>
+  <li>Protocolos</li>
 </ul>
