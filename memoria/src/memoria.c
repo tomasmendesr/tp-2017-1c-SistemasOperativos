@@ -18,6 +18,10 @@ int main(int argc, char** argv){
 
 	inicializarMemoria();
 
+	socketEscuchaConexiones = createServer(IP, config->puerto, BACKLOG);
+
+	esperarConexionKernel();
+
 	esperarConexiones();
 
 	levantarInterfaz();
@@ -27,9 +31,43 @@ int main(int argc, char** argv){
     return EXIT_SUCCESS;
 }
 
+void esperarConexionKernel(){
+
+	void* paquete;
+	int tipo_mensaje;
+	int check;
+
+	socketConexionKernel = acceptSocket(socketEscuchaConexiones);
+
+	if(socketConexionKernel == -1){
+		perror("Error al aceptar conexion con el kernel");
+		exit(1);
+	}
+
+	check = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
+
+	//Chequeo de errores
+	if (check <= 0){
+		perror("recv");
+		close(socketConexionKernel);
+		exit(1);
+	}
+
+	if(tipo_mensaje == HANDSHAKE_KERNEL){
+		printf("Conexion con el kernel establecido\n");
+		enviar_paquete_vacio(HANDSHAKE_MEMORIA,socketConexionKernel);
+		pthread_t threadKernel;
+		pthread_create(&threadKernel, NULL, (void*)requestHandlerKernel, &socketConexionKernel);
+		pthread_detach(threadKernel);
+	}else{
+		exit(1);
+	}
+
+}
+
 void esperarConexiones(){
 
-	int socketEscucha = createServer(IP, config->puerto, BACKLOG);
+
 	int newSocket;
 	void* paquete;
 	int tipo_mensaje;
@@ -37,7 +75,7 @@ void esperarConexiones(){
 
 	while(1){
 
-		newSocket = acceptSocket(socketEscucha);
+		newSocket = acceptSocket(socketEscuchaConexiones);
 
 		if(newSocket == -1)
 			perror("Error al aceptar");
@@ -56,27 +94,17 @@ void esperarConexiones(){
 		//Fin chequeo de errores
 
 		if(check > 0){
-			switch(tipo_mensaje){
+			if(tipo_mensaje == HANDSHAKE_CPU){
 
-				case HANDSHAKE_CPU:
-					printf("Conexion con la CPU establecido\n");
-					enviar_paquete_vacio(HANDSHAKE_MEMORIA,newSocket);
-					pthread_t threadCpu;
-					pthread_create(&threadCpu, NULL, (void*)requestHandlerCpu, &newSocket);
-					pthread_detach(threadCpu);
-					break;
+				printf("Conexion con la CPU establecido\n");
+				enviar_paquete_vacio(HANDSHAKE_MEMORIA,newSocket);
+				pthread_t threadCpu;
+				pthread_create(&threadCpu, NULL, (void*)requestHandlerCpu, &newSocket);
+				pthread_detach(threadCpu);
 
-				case HANDSHAKE_KERNEL:
-					printf("Conexion con el kernel establecido\n");
-					enviar_paquete_vacio(HANDSHAKE_MEMORIA,newSocket);
-					pthread_t threadKernel;
-					pthread_create(&threadKernel, NULL, (void*)requestHandlerKernel, &newSocket);
-					pthread_detach(threadKernel);
-					break;
-
-				default:
-					printf("Solo se aceptan conexiones de Kernel y Cpu\n");
-					break;
+			}else{
+				close(newSocket);
+				printf("Solo se aceptan conexiones de Cpu\n");
 			}
 		}
 	}
