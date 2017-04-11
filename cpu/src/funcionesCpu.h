@@ -26,10 +26,12 @@ typedef struct {
 
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
 int conexionConKernel();
+int conexionConMemoria();
 
 //Variables Globales
 t_config_cpu* config;
 int socketConexionKernel;
+int socketConexionMemoria;
 t_log* logger;
 
 #endif /* FUNCIONESCPU_H_ */

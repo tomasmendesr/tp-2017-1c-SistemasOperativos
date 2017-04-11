@@ -44,5 +44,6 @@ void limpiarMensajes(char* comando, char* param);
 
 t_log* logger;
 t_config_consola* config;
+pthread_t threadInterfaz;
 
 #endif /* FUNCIONESCONSOLA_H_ */

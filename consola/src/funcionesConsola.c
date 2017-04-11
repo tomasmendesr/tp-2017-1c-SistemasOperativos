@@ -56,10 +56,8 @@ void levantarInterfaz() {
 	params->cantComandos = 4;
 
 	//Lanzo el thread
-	pthread_t threadInterfaz;
 	pthread_attr_t atributos;
 	pthread_attr_init(&atributos);
-	pthread_attr_setdetachstate(&atributos, PTHREAD_CREATE_DETACHED);
 
 	pthread_create(&threadInterfaz, &atributos, (void*) interface, params);
 
@@ -93,18 +91,16 @@ void finalizarPrograma(char* comando, char* param) {
 	printf("finalizarPrograma\n");
 }
 void desconectarConsola(char* comando, char* param) {
-	printf("desconectarConsola\n");
+	//Aca va a tener que ir toda la logica de limpiar variables finalizar proceso o algo
+	//AL menos que se la prueba del cierre Total de los programas.
+	exit(1);
 }
 void limpiarMensajes(char* comando, char* param) {
 	printf("limpiarMensajes");
 }
 
 int crearLog() {
-	logger =
-			log_create(
-					getenv(
-							"/home/utnso/TPOperativos/tp-2017-1c-Dirty-Cow/consola/logConsola"),
-					"consola", 1, 0);
+	logger = log_create(getenv("../logConsola"),"consola", 1, 0);
 	if (logger) {
 		return 1;
 	} else {
