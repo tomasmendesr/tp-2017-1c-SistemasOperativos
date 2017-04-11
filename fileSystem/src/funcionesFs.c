@@ -6,7 +6,8 @@ t_config_FS* levantarConfiguracion(char* archivo){
 
 	t_config* configFS = config_create(archivo);
 
-	conf->puertoEscucha = malloc(MAX_LEN_PUERTO);
+
+	conf->puertoEscucha = malloc(strlen(config_get_string_value(configFS, "PUERTO")));
 	strcpy(conf->puertoEscucha, config_get_string_value(configFS, "PUERTO"));
 
 	conf->punto_montaje = malloc(strlen(config_get_string_value(configFS, "PUNTO_MONTAJE")));

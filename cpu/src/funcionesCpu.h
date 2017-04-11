@@ -14,6 +14,8 @@
 #include <commons/log.h>
 #include <commons/sockets.h>
 
+#define MAX_LEN_PUERTO 6
+#define MAX_LEN_IP 20
 #define configuracionCPU "../confCpu.init"
 
 typedef struct {

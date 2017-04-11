@@ -18,7 +18,7 @@ int main(){
 void esperarConexionKernel(){
 	socketEscucha = createServer(IP, conf->puertoEscucha, BACKLOG);
 	if(socketEscucha != -1){
-		printf("Esperando conexion del kernel.......\n");
+		printf("Esperando conexion del kernel...\n");
 	}else{
 		printf("Error al levantar el servidor\n");
 	}

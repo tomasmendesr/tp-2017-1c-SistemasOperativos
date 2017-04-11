@@ -31,9 +31,13 @@ t_config_cpu* levantarConfiguracionCPU(char* archivo) {
         t_config* configCPU;
 
         configCPU = config_create(archivo);
+        conf->puerto_Kernel = malloc(MAX_LEN_PUERTO);
         conf->puerto_Kernel = config_get_string_value(configCPU, "PUERTO_KERNEL");
+        conf->puerto_Memoria = malloc(MAX_LEN_PUERTO);
         conf->puerto_Memoria = config_get_string_value(configCPU, "PUERTO_MEMORIA");
+        conf->ip_Memoria = malloc(MAX_LEN_IP);
         conf->ip_Memoria = config_get_string_value(configCPU, "IP_MEMORIA");
+        conf->ip_Kernel = malloc(MAX_LEN_IP);
         conf->ip_Kernel = config_get_string_value(configCPU, "IP_KERNEL");
 
 
