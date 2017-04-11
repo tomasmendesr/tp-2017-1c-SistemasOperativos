@@ -19,5 +19,6 @@ int main(int argc, char** argv){
 
 	levantarInterfaz();
 
+	pthread_join(threadInterfaz,NULL);
 	return EXIT_SUCCESS;
 }

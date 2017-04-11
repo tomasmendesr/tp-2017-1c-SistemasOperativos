@@ -14,9 +14,9 @@
 #include <commons/log.h>
 #include <commons/sockets.h>
 
-#define configuracionCPU "confCpu.init"
 #define MAX_LEN_PUERTO 6
 #define MAX_LEN_IP 20
+#define configuracionCPU "../confCpu.init"
 
 typedef struct {
 		char* puerto_Memoria;
@@ -28,10 +28,12 @@ typedef struct {
 
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
 int conexionConKernel();
+int conexionConMemoria();
 
 //Variables Globales
 t_config_cpu* config;
 int socketConexionKernel;
+int socketConexionMemoria;
 t_log* logger;
 
 #endif /* FUNCIONESCPU_H_ */

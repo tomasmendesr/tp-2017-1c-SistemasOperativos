@@ -63,4 +63,23 @@ int conexionConKernel(){
 		printf("El Kernel no devolvio handshake :( \n");
 	}
 }
+int conexionConMemoria(){
+	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
+	if (socketConexionMemoria) {
+		printf("Cliente a kernel creado\n");
+	}
+
+	//------------Envio de mensajes al servidor------------
+	enviar_paquete_vacio(HANDSHAKE_CPU, socketConexionMemoria);
+	int operacion = 0;
+	void* paquete_vacio;
+
+	recibir_paquete(socketConexionMemoria, &paquete_vacio, &operacion);
+
+	if (operacion == HANDSHAKE_MEMORIA) {
+		printf("Conexion con Memoria establecida! :D \n");
+	} else {
+		printf("La Memoria no devolvio handshake :( \n");
+	}
+}
 
