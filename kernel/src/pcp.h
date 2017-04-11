@@ -8,6 +8,6 @@
 #ifndef PCP_H_
 #define PCP_H_
 
-void* pcp(void *);
+void pcp();
 
 #endif /* PCP_H_ */

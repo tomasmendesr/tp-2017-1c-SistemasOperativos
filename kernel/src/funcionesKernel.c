@@ -232,7 +232,7 @@ int conexionConMemoria(){
 		return -1;
 	}
 
-	enviarHandshake(socketConexionMemoria, HANDSHAKE_KERNEL, HANDSHAKE_MEMORIA);
+	enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionMemoria);
 
 	printf("Conexion con memoria establecida\n");
 

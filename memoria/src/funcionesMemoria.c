@@ -104,30 +104,30 @@ void requestHandlerKernel(int fd){
 
 	//Ciclo infinito
 	for(;;){
-		//Recibo mensajes de kernel y hago el switch
-		if(recv(fd, &msj_recibido, sizeof(int), 0) <= 0)
-		{//Chequeo desconexion
-			log_error(logger, "Desconexion del kernel. Terminando...");
-			close(fd);
-			exit(1);
-		}
-
-		switch(msj_recibido){
-		case INICIAR_PROGRAMA:
-//			iniciarPrograma(int pid, int cantPag);
-			break;
-
-		case FINALIZAR_PROGRAMA:
-//			finalizarPrograma(int pid);
-			break;
-
-		case ASIGNAR_PAGINAS:
-//			asignarPaginas();
-			break;
-
-		default:
-			log_warning(logger, "Mensaje Recibido Incorrecto");
-		}
+//		//Recibo mensajes de kernel y hago el switch
+//		if(recv(fd, &msj_recibido, sizeof(int), 0) <= 0)
+//		{//Chequeo desconexion
+//			log_error(logger, "Desconexion del kernel. Terminando...");
+//			close(fd);
+//			exit(1);
+//		}
+//
+//		switch(msj_recibido){
+//		case INICIAR_PROGRAMA:
+////			iniciarPrograma(int pid, int cantPag);
+//			break;
+//
+//		case FINALIZAR_PROGRAMA:
+////			finalizarPrograma(int pid);
+//			break;
+//
+//		case ASIGNAR_PAGINAS:
+////			asignarPaginas();
+//			break;
+//
+//		default:
+//			log_warning(logger, "Mensaje Recibido Incorrecto");
+//		}
 	}
 }
 
@@ -137,26 +137,26 @@ void requestHandlerCpu(int fd){
 
 	//Ciclo infinito
 	for(;;){
-		//Recibo mensajes de cpu y hago el switch
-		if(recv(fd, &msj_recibido, sizeof(int), 0) <= 0)
-		{//Chequeo desconexion
-			log_error(logger, "Desconexion del kernel. Terminando...");
-			close(fd);
-			exit(1);
-		}
-
-		switch(msj_recibido){
-			case SOLICITUD_BYTES:
-//			solicitudBytes(int pid, int pag, int offset, int size);
-			break;
-
-			case GRABAR_BYTES:
-//			grabarBytes();
-			break;
-
-		default:
-			log_warning(logger, "Mensaje Recibido Incorrecto");
-		}
+//		//Recibo mensajes de cpu y hago el switch
+//		if(recv(fd, &msj_recibido, sizeof(int), 0) <= 0)
+//		{//Chequeo desconexion
+//			log_error(logger, "Desconexion del kernel. Terminando...");
+//			close(fd);
+//			exit(1);
+//		}
+//
+//		switch(msj_recibido){
+//			case SOLICITUD_BYTES:
+////			solicitudBytes(int pid, int pag, int offset, int size);
+//			break;
+//
+//			case GRABAR_BYTES:
+////			grabarBytes();
+//			break;
+//
+//		default:
+//			log_warning(logger, "Mensaje Recibido Incorrecto");
+//		}
 	}
 }
 

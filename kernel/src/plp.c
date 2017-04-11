@@ -7,14 +7,15 @@
 
 #include "funcionesKernel.h"
 
-void* plp(void *b) {
+void plp() {
 	if(conexionConMemoria() == -1){
 		printf("no se pudo conectar con fs\n");
-		return EXIT_FAILURE;
+		//Fijares que hacer si no puede tener acceso a estos modulos
+		exit(1);
 	}
 	if(conexionConFileSystem() == -1){
 		printf("no se pudo conectar con fs\n");
-		return EXIT_FAILURE;
+		exit(1);
 	}
 	trabajarConexionConsola();
 }

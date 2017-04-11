@@ -7,6 +7,6 @@
 
 #include "funcionesKernel.h"
 
-void* pcp(void *a){
+void pcp(){
 	trabajarConexionCPU();
 }

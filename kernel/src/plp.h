@@ -8,6 +8,6 @@
 #ifndef PLP_H_
 #define PLP_H_
 
-void* plp(void *);
+void plp();
 
 #endif /* PLP_H_ */
