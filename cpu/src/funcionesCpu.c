@@ -61,8 +61,10 @@ int conexionConKernel(){
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		printf("Conexion con Kernel establecida! :D \n");
+		return 0;
 	} else {
 		printf("El Kernel no devolvio handshake :( \n");
+		return -1;
 	}
 }
 int conexionConMemoria(){
@@ -82,8 +84,10 @@ int conexionConMemoria(){
 
 	if (operacion == HANDSHAKE_MEMORIA) {
 		printf("Conexion con Memoria establecida! :D \n");
+		return 0;
 	} else {
 		printf("La Memoria no devolvio handshake :( \n");
+		return -1;
 	}
 }
 

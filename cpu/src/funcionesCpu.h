@@ -29,6 +29,8 @@ typedef struct {
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
 int conexionConKernel();
 int conexionConMemoria();
+int crearLog();
+void crearConfig(int argc, char* argv[]);
 
 //Variables Globales
 t_config_cpu* config;

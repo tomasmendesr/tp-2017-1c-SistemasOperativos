@@ -12,6 +12,7 @@
 int main(int argc, char** argv) {
 	crearLog();
 
+
 	crearConfig(argc,argv);
 
 	// Conecta con kernel
