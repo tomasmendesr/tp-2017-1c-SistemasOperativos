@@ -133,6 +133,7 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 
         conf->stack_Size = config_get_int_value(configKernel, "STACK_SIZE");
 
+
         config_destroy(configKernel);
         return conf;
 }
@@ -256,8 +257,8 @@ t_dictionary* crearDiccionarioConValue(char** array, char** valores){
         int j = 0;
 
         while(array[j] != NULL){
-                dictionary_put(dic, array[j], valores);
-                j++;
+        	dictionary_put(dic, array[j], valores[j]);
+        	j++;
         }
 
         return dic;
@@ -308,6 +309,26 @@ void levantarInterfaz(){
 
 	return;
 }
+
+void modificarValorDiccionario(t_dictionary* dic, char* key, void* data){
+	void* previo = dictionary_get(dic, key);
+	previo = data;
+}
+
+int semaforoSignal(t_dictionary* dic, char* key){
+	int* previo = dictionary_get(dic, key);
+	*previo = *previo + 1;
+
+	return atoi(previo);
+}
+
+int semaforoWait(t_dictionary* dic, char* key){
+	int* previo = dictionary_get(dic, key);
+	*previo = *previo - 1;
+
+	return atoi(previo);
+}
+
 void listProcesses(char* comando, char* param){
         printf("listProcesses\n");
 }

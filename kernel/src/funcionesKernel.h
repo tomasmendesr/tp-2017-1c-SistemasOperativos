@@ -52,6 +52,9 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
 void destruirConfiguracionKernel(t_config_kernel* config);
 t_dictionary* crearDiccionarioConValue(char** array, char** valores);
 t_dictionary* crearDiccionario(char** array);
+void modificarValorDiccionario(t_dictionary* dic, char* key, void* data);
+int semaforoSignal(t_dictionary* dic, char* key);
+int semaforoWait(t_dictionary* dic, char* key);
 
 void establecerConexiones();
 int conexionConFileSystem();
