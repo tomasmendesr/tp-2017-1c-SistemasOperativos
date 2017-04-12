@@ -33,6 +33,8 @@ t_config_consola* levantarConfiguracionConsola(char * archivo);
 int crearLog();
 int verificarExistenciaDeArchivo(char*);
 
+int enviarArchivo(int kernel_fd, char* path);
+
 //Funciones de interfaz
 void levantarInterfaz();
 void iniciarPrograma(char* comando, char* param);

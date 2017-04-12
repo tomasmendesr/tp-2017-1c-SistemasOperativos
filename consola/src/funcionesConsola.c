@@ -37,6 +37,56 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 	return config;
 }
 
+int enviarArchivo(int kernel_fd, char* path){
+
+	//Verifico existencia archivo (Aguante esta funcion loco!)
+ 	if( !verificarExistenciaDeArchivo(path) ){
+ 		log_error(logger, "no existe el archivo");
+ 		return -1;
+ 	}
+
+ 	FILE* file;
+ 	int file_fd, file_size;
+ 	struct stat stats;
+
+ 	//Abro el archivo y le saco los stats
+ 	file = fopen(path, "r");
+ 	if(file == NULL){//esto nunca deberia fallar porque ya esta verificado, pero por las dudas
+ 		log_error(logger, "no pudo abrir archivo");
+ 		return -1;
+ 	}
+ 	file_fd = fileno(file);
+
+ 	fstat(file_fd, &stats);
+ 	file_size = stats.st_size;
+
+ 	header_t header;
+ 	char* buffer = malloc(file_size + sizeof(header_t));
+ 	int offset = 0;
+
+ 	if(buffer == NULL){
+ 		log_error(logger, "no pude reservar memoria para enviar archivo");
+ 		return -1;
+ 	}
+
+ 	header.type = ENVIO_CODIGO;
+ 	header.length = file_size;
+
+ 	memcpy(buffer, &(header.type), offset += sizeof(header.type));
+ 	memcpy(buffer + offset, &(header.length), offset += sizeof(header.length));
+ 	if( fread(buffer + offset,file_size,1,file) < file_size){
+ 		log_error(logger, "No pude leer el archivo");
+ 		return -1;
+ 	}
+
+ 	if ( sendAll(kernel_fd, buffer, file_size + sizeof(header_t), 0) <=0 ){
+ 		log_error(logger, "Error al enviar archivo");
+ 		return -1;
+ 	}
+
+ 	return 0;
+}
+
 //funciones interfaz
 void levantarInterfaz() {
 	//creo los comandos y el parametro
