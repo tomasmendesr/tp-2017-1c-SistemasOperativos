@@ -162,7 +162,8 @@ enum protocolo_kernel_programa{
 
 enum protocolo_programa_a_kernel{
 	CODIGO_PROGRAMA = 120,
-	HANDSHAKE_PROGRAMA = 121
+	HANDSHAKE_PROGRAMA = 121,
+	ENVIO_CODIGO = 122
 };
 
 

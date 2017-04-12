@@ -487,7 +487,7 @@ int recvAll(int fd, char *buffer, int size, int flags){
 		if(aux == -1){
 			return -1;
 		}else if(aux == 0)
-			return -1;
+			return 0;
 
 		cant_recibida += aux;
 	}
