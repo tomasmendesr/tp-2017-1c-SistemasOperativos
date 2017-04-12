@@ -1,5 +1,14 @@
 #include "funcionesKernel.h"
 
+void inicializarColas(){
+
+	new = queue_create();
+	ready = queue_create();
+	finished = queue_create();
+
+	max_pid = 0;
+}
+
 void crearConfig(int argc, char* argv[]){
 	char* pathConfig=string_new();
 
@@ -210,7 +219,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 			break;
 
 		case ENVIO_CODIGO:
-			inicializarPrograma(consola_fd, package);
+			crearProceso(consola_fd, package);
 			break;
 
 		default: printf("Se recibio un codigo no valido\n");
@@ -218,13 +227,21 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 	}
 }
 
-void inicializarPrograma(int consola_fd, char* package){
+void crearProceso(int consola_fd, char* source){
 
-	printf("Archivo recibido:\n\n%s", package);
+	printf("Archivo recibido:\n\n%s", source);
 
-	//Bueno, ahora habria que crear el pcb, asignarle pid y eso
+	pcb_t* pcb = crearPCB(source, asignarPid() );
+	pcb->consolaFd = consola_fd;
+
+	queue_push(new, pcb);
 
 	return;
+}
+
+int asignarPid(){
+	max_pid++;
+	return max_pid;
 }
 
 int conexionConFileSystem(){

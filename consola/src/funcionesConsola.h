@@ -17,6 +17,10 @@
 #include <commons/config.h>
 #include <commons/interface.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 
 #define MAX_COMMAND_SIZE 256
 #define IniciarProceso "iniciarProceso"
@@ -31,7 +35,6 @@ typedef struct{
 void crearConfig(int argc,char* argv[]);
 t_config_consola* levantarConfiguracionConsola(char * archivo);
 int crearLog();
-int verificarExistenciaDeArchivo(char*);
 
 int enviarArchivo(int kernel_fd, char* path);
 

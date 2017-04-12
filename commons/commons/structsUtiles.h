@@ -42,7 +42,7 @@ typedef struct{
 	uint32_t pagina;
 	uint32_t offset;
 	uint32_t size;
-}t_variable;
+}t_variableLALALLALAL;
 
 typedef struct indiceCodigo{
 	uint32_t offset;

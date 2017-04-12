@@ -28,6 +28,7 @@
 #include <pthread.h>
 #include "plp.h"
 #include "pcp.h"
+#include "pcb.h"
 
 typedef struct {
 	char* puerto_PROG;
@@ -46,6 +47,7 @@ typedef struct {
 
 } t_config_kernel;
 
+void inicializarColas();
 
 void crearConfig(int argc, char* argv[]);
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
@@ -64,7 +66,8 @@ void trabajarConexionCPU();
 //Mensajes con consola
 void trabajarConexionConsola();
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
-void inicializarPrograma(int consola_fd, char* package);
+void crearProceso(int consola_fd, char* package);
+int asignarPid();
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -79,5 +82,9 @@ void stopPlanification(char*,char*);
 t_config_kernel* config;
 int socketConexionFS;
 int socketConexionMemoria;
+int max_pid;
+
+//Colas procesos
+t_queue *new, *ready, *finished;
 
 #endif /* FUNCIONESKERNEL_H_ */

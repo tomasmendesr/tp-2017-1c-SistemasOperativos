@@ -14,23 +14,24 @@
 #include <parser/parser.h>
 
 typedef struct{
-	uint32_t id;
+	uint32_t pid;
 	uint32_t programCounter;
 	uint32_t cantPaginasCodigo;
 	t_intructions* indiceCodigo;
 	char* etiquetas;
 	t_list* indiceStack;
 	int16_t exitCode;
+	uint32_t consolaFd;
 
-}pcb;
+}pcb_t;
 
 char* ansisop_a_string(char* path);
 
 //Prototipos de creacion y manejo de pcb
-pcb* crearPCB(char* codigo, int id);
+pcb_t* crearPCB(char* codigo, int id);
 t_stack* crearPosicionStack();
-void insertarNuevoStack(pcb* pcb);
-void eliminarUltimaPosicionStack(pcb* pcb);
+void insertarNuevoStack(pcb_t* pcb);
+void eliminarUltimaPosicionStack(pcb_t* pcb);
 void destruirPosicionStack(t_stack* stack);
 t_variable* crearVariableStack(char* id, uint32_t pagina, uint32_t offset, uint32_t size);
 void destruirVariableStack(t_variable* var);
