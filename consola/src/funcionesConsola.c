@@ -76,14 +76,19 @@ int enviarArchivo(int kernel_fd, char* path){
  	memcpy(buffer + offset, &(header.length), offset += sizeof(header.length));
  	if( fread(buffer + offset,file_size,1,file) < file_size){
  		log_error(logger, "No pude leer el archivo");
+ 		free(buffer);
  		return -1;
  	}
 
+ 	/*Esto lo hago asi porque de la otra forma habría que reservar MAS espacio para
+ 	 * enviar el paquete */
  	if ( sendAll(kernel_fd, buffer, file_size + sizeof(header_t), 0) <=0 ){
  		log_error(logger, "Error al enviar archivo");
+ 		free(buffer);
  		return -1;
  	}
 
+ 	free(buffer);
  	return 0;
 }
 
