@@ -66,6 +66,7 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	if(buffer == NULL){
  		log_error(logger, "no pude reservar memoria para enviar archivo");
+ 		fclose(file);
  		return -1;
  	}
 
@@ -77,6 +78,7 @@ int enviarArchivo(int kernel_fd, char* path){
  	if( fread(buffer + offset,file_size,1,file) < file_size){
  		log_error(logger, "No pude leer el archivo");
  		free(buffer);
+ 		fclose(file);
  		return -1;
  	}
 
@@ -85,10 +87,12 @@ int enviarArchivo(int kernel_fd, char* path){
  	if ( sendAll(kernel_fd, buffer, file_size + sizeof(header_t), 0) <=0 ){
  		log_error(logger, "Error al enviar archivo");
  		free(buffer);
+ 		fclose(file);
  		return -1;
  	}
 
  	free(buffer);
+ 	fclose(file);
  	return 0;
 }
 
