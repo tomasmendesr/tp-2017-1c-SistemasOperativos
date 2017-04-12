@@ -193,21 +193,38 @@ void trabajarConexionConsola(){
 				// Fin chequeo de errores
 
 				if(check > 0) {
-					switch(tipo_mensaje){
-						case HANDSHAKE_PROGRAMA:{
-							printf("Conexion con la consola establecida\n");
-							enviar_paquete_vacio(HANDSHAKE_KERNEL,iterador_sockets);
-							break;
-						}
-						default:{ printf("Se recibio un codigo no valido\n");
-							break;
-						}
-					}
+					procesarMensajeConsola(iterador_sockets,tipo_mensaje, paquete);
 				}
 			}
 		}
 	}
 	}
+}
+
+void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
+
+	switch(mensaje){
+		case HANDSHAKE_PROGRAMA:
+			printf("Conexion con la consola establecida\n");
+			enviar_paquete_vacio(HANDSHAKE_KERNEL,consola_fd);
+			break;
+
+		case ENVIO_CODIGO:
+			inicializarPrograma(consola_fd, package);
+			break;
+
+		default: printf("Se recibio un codigo no valido\n");
+		break;
+	}
+}
+
+void inicializarPrograma(int consola_fd, char* package){
+
+	printf("Archivo recibido:\n\n%s", package);
+
+	//Bueno, ahora habria que crear el pcb, asignarle pid y eso
+
+	return;
 }
 
 int conexionConFileSystem(){

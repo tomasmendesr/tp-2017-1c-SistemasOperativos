@@ -60,7 +60,11 @@ void establecerConexiones();
 int conexionConFileSystem();
 int conexionConMemoria();
 void trabajarConexionCPU();
+
+//Mensajes con consola
 void trabajarConexionConsola();
+void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
+void inicializarPrograma(int consola_fd, char* package);
 
 //Funciones de interfaz
 void levantarInterfaz();
