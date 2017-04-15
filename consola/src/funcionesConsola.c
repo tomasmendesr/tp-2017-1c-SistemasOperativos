@@ -37,6 +37,76 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 	return config;
 }
 
+/* Esta funcion es genial, la probe y anda bien
+ * Pero me di cuenta de que el codigo se podia hacer un poco mas amigable
+ * si usaba una funcion de socket que hice ayer (refactorizando el codigo de Tomi)
+ * Podemos dejar cualquiera de las dos, es lo mismo
+ * Lo unico que cambie es la manera de mandar y recibir el contenido del archivo
+ * Saludos!
+ */
+
+//int enviarArchivo(int kernel_fd, char* path){
+//
+//	//Verifico existencia archivo (Aguante esta funcion loco!)
+// 	if( !verificarExistenciaDeArchivo(path) ){
+// 		log_error(logger, "no existe el archivo");
+// 		return -1;
+// 	}
+//
+// 	FILE* file;
+// 	int file_fd, file_size;
+// 	struct stat stats;
+//
+// 	//Abro el archivo y le saco los stats
+// 	file = fopen(path, "r");
+// 	//esto nunca deberia fallar porque ya esta verificado, pero por las dudas
+// 	if(file == NULL){
+// 		log_error(logger, "no pudo abrir archivo");
+// 		return -1;
+// 	}
+// 	file_fd = fileno(file);
+//
+// 	fstat(file_fd, &stats);
+// 	file_size = stats.st_size;
+//
+// 	header_t header;
+// 	char* buffer = malloc(file_size + sizeof(header_t));
+// 	int offset = 0;
+//
+// 	if(buffer == NULL){
+// 		log_error(logger, "no pude reservar memoria para enviar archivo");
+// 		fclose(file);
+// 		return -1;
+// 	}
+//
+// 	header.type = ENVIO_CODIGO;
+// 	header.length = file_size;
+//
+// 	memcpy(buffer, &(header.type), offset += sizeof(header.type));
+// 	memcpy(buffer + offset, &(header.length), sizeof(header.length));
+// 	offset += sizeof(header.length);
+//
+// 	if( fread(buffer + offset,file_size,1,file) < file_size){
+// 		log_error(logger, "No pude leer el archivo");
+// 		free(buffer);
+// 		fclose(file);
+// 		return -1;
+// 	}
+//
+// 	/*Esto lo hago asi porque de la otra forma habría que reservar MAS espacio para
+// 	 * enviar el paquete */
+// 	if ( sendAll(kernel_fd, buffer, file_size + sizeof(header_t), 0) <=0 ){
+// 		log_error(logger, "Error al enviar archivo");
+// 		free(buffer);
+// 		fclose(file);
+// 		return -1;
+// 	}
+//
+// 	free(buffer);
+// 	fclose(file);
+// 	return 0;
+//}
+
 int enviarArchivo(int kernel_fd, char* path){
 
 	//Verifico existencia archivo (Aguante esta funcion loco!)
@@ -51,7 +121,8 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	//Abro el archivo y le saco los stats
  	file = fopen(path, "r");
- 	if(file == NULL){//esto nunca deberia fallar porque ya esta verificado, pero por las dudas
+ 	//esto nunca deberia fallar porque ya esta verificado, pero por las dudas
+ 	if(file == NULL){
  		log_error(logger, "no pudo abrir archivo");
  		return -1;
  	}
@@ -60,9 +131,7 @@ int enviarArchivo(int kernel_fd, char* path){
  	fstat(file_fd, &stats);
  	file_size = stats.st_size;
 
- 	header_t header;
- 	char* buffer = malloc(file_size + sizeof(header_t));
- 	int offset = 0;
+ 	char* buffer = malloc(file_size);
 
  	if(buffer == NULL){
  		log_error(logger, "no pude reservar memoria para enviar archivo");
@@ -70,23 +139,14 @@ int enviarArchivo(int kernel_fd, char* path){
  		return -1;
  	}
 
- 	header.type = ENVIO_CODIGO;
- 	header.length = file_size;
-
- 	memcpy(buffer, &(header.type), offset += sizeof(header.type));
- 	memcpy(buffer + offset, &(header.length), sizeof(header.length));
- 	offset += sizeof(header.length);
-
- 	if( fread(buffer + offset,file_size,1,file) < file_size){
+ 	if( fread(buffer,file_size,1,file) < file_size){
  		log_error(logger, "No pude leer el archivo");
  		free(buffer);
  		fclose(file);
  		return -1;
  	}
 
- 	/*Esto lo hago asi porque de la otra forma habría que reservar MAS espacio para
- 	 * enviar el paquete */
- 	if ( sendAll(kernel_fd, buffer, file_size + sizeof(header_t), 0) <=0 ){
+ 	if ( enviar_info(kernel_fd,ENVIO_CODIGO,file_size,buffer) == -1 ){
  		log_error(logger, "Error al enviar archivo");
  		free(buffer);
  		fclose(file);
@@ -119,17 +179,21 @@ void levantarInterfaz() {
 	//Lanzo el thread
 	pthread_attr_t atributos;
 	pthread_attr_init(&atributos);
-
-	pthread_create(&threadInterfaz, &atributos, (void*) interface, params);
+	pthread_create(&threadInterfaz, &atributos, (void*)interface, params);
 
 	return;
 }
+
 void iniciarPrograma(char* comando, char* param) {
 
 	int socket_cliente;
 
-	verificarExistenciaDeArchivo(param);
-	printf("Su proceso se inicializo");
+	if(verificarExistenciaDeArchivo(param))
+		printf("Su proceso se inicializo");
+	else{
+		log_error(logger, "no existe el archivo");
+		exit(1);
+	}
 	socket_cliente = createClient(config->ip_Kernel, config->puerto_Kernel);
 	if (socket_cliente != -1) {
 		printf("Cliente creado satisfactoriamente.\n");
@@ -149,15 +213,22 @@ void iniciarPrograma(char* comando, char* param) {
 		printf("El Kernel no devolvio handshake :( \n");
 	}
 	printf("iniciarPrograma\n");
+	if((enviarArchivo(socket_cliente, param))==-1)
+		log_error(logger,"No se pudo mandar el archivo");
+	else
+		log_info(logger,"Archivo enviado correctamente");
 }
+
 void finalizarPrograma(char* comando, char* param) {
 	printf("finalizarPrograma\n");
 }
+
 void desconectarConsola(char* comando, char* param) {
 	//Aca va a tener que ir toda la logica de limpiar variables finalizar proceso o algo
 	//AL menos que se la prueba del cierre Total de los programas.
 	exit(1);
 }
+
 void limpiarMensajes(char* comando, char* param) {
 	printf("limpiarMensajes");
 }

@@ -148,6 +148,7 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 }
 
 void trabajarConexionConsola(){
+
 	int socket_servidor_kernel = createServer(IP,config->puerto_PROG,BACKLOG);
 
 	int numero_maximo_socket;
@@ -185,7 +186,7 @@ void trabajarConexionConsola(){
 			} else {
 				//Gestiono cada conexi�n -> Recibo los programas y creo sus PCB.
 				int tipo_mensaje; //Para que la funcion recibir_string lo reciba
-				int check = recibir_paquete(iterador_sockets, &paquete, &tipo_mensaje);
+				int check = recibir_info(iterador_sockets, &paquete, &tipo_mensaje);
 
 				//Chequeo de errores
 				if (check == 0) {
@@ -202,7 +203,7 @@ void trabajarConexionConsola(){
 				// Fin chequeo de errores
 
 				if(check > 0) {
-					procesarMensajeConsola(iterador_sockets,tipo_mensaje, paquete);
+					procesarMensajeConsola(iterador_sockets,tipo_mensaje, (void*)paquete);
 				}
 			}
 		}
