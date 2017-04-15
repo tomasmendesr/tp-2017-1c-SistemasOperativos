@@ -204,7 +204,7 @@ void iniciarPrograma(char* comando, char* param) {
 	int operacion = 0;
 	void* paquete_vacio;
 
-	recibir_paquete(socket_cliente, &paquete_vacio, &operacion);
+	recibir_info(socket_cliente, &paquete_vacio, &operacion);
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		printf("Conexion con Kernel establecida! :D \n");
@@ -212,14 +212,33 @@ void iniciarPrograma(char* comando, char* param) {
 	} else {
 		printf("El Kernel no devolvio handshake :( \n");
 	}
-	printf("iniciarPrograma\n");
-	if((enviarArchivo(socket_cliente, param))==-1)
+
+	if((enviarArchivo(socket_cliente, param))==-1){
 		log_error(logger,"No se pudo mandar el archivo");
-	else
-		log_info(logger,"Archivo enviado correctamente");
+		exit(1);
+	}
+	log_info(logger,"Archivo enviado correctamente");
+
+	if(recibir_info(socket_cliente, &paquete_vacio, &operacion)<0){
+		log_error(logger, "El kernel se desconecto");
+		exit(1);
+	}
+
+	t_param_consola param_consola;
+
+	if(operacion == PID_PROGRAMA){
+		param_consola.fd=socket_cliente;
+		param_consola.pid=*(int*)paquete_vacio;
+	}
+
+	pthread_t threadPrograma;
+	pthread_attr_t atributos;
+	pthread_attr_init(&atributos);
+	pthread_create(&threadPrograma, &atributos, (void*)impresora, &param_consola);
+	pthread_detach(threadPrograma);
 }
 
-void finalizarPrograma(char* comando, char* param) {
+void finalizarPrograma(char* comando, char* param){
 	printf("finalizarPrograma\n");
 }
 
@@ -239,5 +258,28 @@ int crearLog() {
 		return 1;
 	} else {
 		return 0;
+	}
+}
+
+void impresora(void* param){
+
+	int operacion;
+	void* paquete_vacio;
+	t_param_consola*param_consola=param;
+
+	for(;;){
+		if(recibir_info(param_consola->fd, &paquete_vacio, &operacion)<0){
+				log_error(logger, "El kernel se desconecto");
+				exit(1);
+		}
+		switch(operacion){
+		/* hay que definir como manda las ordenes el kernel */
+			case IMPRIMIR_VARIABLE_PROGRAMA:
+				printf("%d %d\n",param_consola->pid,*(int*)paquete_vacio);
+				break;
+			case IMPRIMIR_TEXTO_PROGRAMA:
+				printf("%d %s\n",param_consola->pid,(char*)paquete_vacio);
+				break;
+		}
 	}
 }

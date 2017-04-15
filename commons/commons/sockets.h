@@ -151,6 +151,7 @@ enum protocolo_memoria_a_cualquiera{
 
 //Mensajes entre Kernel y Programa
 enum protocolo_kernel_programa{
+	PID_PROGRAMA = 99,
 	IMPRIMIR_VARIABLE_PROGRAMA = 100,
 	IMPRIMIR_TEXTO_PROGRAMA = 101,
 	ERROR_GENERAL = 102,
