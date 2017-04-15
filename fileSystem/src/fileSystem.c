@@ -35,6 +35,6 @@ void esperarConexionKernel(){
 
 	if(recibirHanshake(socketConexionKernel, HANDSHAKE_KERNEL, HANDSHAKE_FS)){
 		printf("Conexion con kernel establecida\n");
-		log_info("Conexion con kernel establecida");
+		log_info(logger, "Conexion con kernel establecida");
 	}
 }
