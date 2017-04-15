@@ -10,7 +10,7 @@ void crearConfig(int argc, char* argv[]){
 	if(verificarExistenciaDeArchivo(pathConfig)){
 		config = levantarConfiguracionMemoria(pathConfig);
 	}else{
-		printf("No se pudo levantar archivo de configuracion\n");
+		log_info(logger,"No se pudo levantar archivo de configuracion\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -96,67 +96,65 @@ void inicializarMemoria(){
 
 }
 
-void requestHandlerKernel(int fd){
+void requestHandlerKernel(int* fd){
 
-	int msj_recibido;
-//	char* paquete;
-//	int tipo_mensaje;
+	void* paquete;
+	int tipo_mensaje;
+	int bytes;
 
-	//Ciclo infinito
 	for(;;){
-//		//Recibo mensajes de kernel y hago el switch
-//		if(recv(fd, &msj_recibido, sizeof(int), 0) <= 0)
-//		{//Chequeo desconexion
-//			log_error(logger, "Desconexion del kernel. Terminando...");
-//			close(fd);
-//			exit(1);
-//		}
-//
-//		switch(msj_recibido){
-//		case INICIAR_PROGRAMA:
-////			iniciarPrograma(int pid, int cantPag);
-//			break;
-//
-//		case FINALIZAR_PROGRAMA:
-////			finalizarPrograma(int pid);
-//			break;
-//
-//		case ASIGNAR_PAGINAS:
-////			asignarPaginas();
-//			break;
-//
-//		default:
-//			log_warning(logger, "Mensaje Recibido Incorrecto");
-//		}
+		bytes = recibir_info(*fd, &paquete, &tipo_mensaje);
+		if(bytes < 0){
+			log_error(logger, "Desconexion del kernel. Terminando...");
+			close(*fd);
+			exit(1);
+		}
+
+		switch(tipo_mensaje){
+		case INICIAR_PROGRAMA:
+//			iniciarPrograma(int pid, int cantPag);
+			break;
+
+		case FINALIZAR_PROGRAMA:
+//			finalizarPrograma(int pid);
+			break;
+
+		case ASIGNAR_PAGINAS:
+//			asignarPaginas();
+			break;
+
+		default:
+			log_warning(logger, "Mensaje Recibido Incorrecto");
+		}
 	}
 }
 
-void requestHandlerCpu(int fd){
+void requestHandlerCpu(int* fd){
 
 	int msj_recibido;
 
 	//Ciclo infinito
 	for(;;){
-//		//Recibo mensajes de cpu y hago el switch
-//		if(recv(fd, &msj_recibido, sizeof(int), 0) <= 0)
-//		{//Chequeo desconexion
-//			log_error(logger, "Desconexion del kernel. Terminando...");
-//			close(fd);
-//			exit(1);
-//		}
-//
-//		switch(msj_recibido){
-//			case SOLICITUD_BYTES:
-////			solicitudBytes(int pid, int pag, int offset, int size);
-//			break;
-//
-//			case GRABAR_BYTES:
-////			grabarBytes();
-//			break;
-//
-//		default:
-//			log_warning(logger, "Mensaje Recibido Incorrecto");
-//		}
+		//Recibo mensajes de cpu y hago el switch
+		if(recv(*fd, &msj_recibido, sizeof(int), 0) <= 0)
+		{//Chequeo desconexion
+			log_error(logger, "Desconexion del kernel. Terminando...");
+			close(*fd);
+			exit(1);
+		}
+
+		switch(msj_recibido){
+			case SOLICITUD_BYTES:
+//			solicitudBytes(int pid, int pag, int offset, int size);
+			break;
+
+			case GRABAR_BYTES:
+//			grabarBytes();
+			break;
+
+		default:
+			log_warning(logger, "Mensaje Recibido Incorrecto");
+		}
 	}
 }
 

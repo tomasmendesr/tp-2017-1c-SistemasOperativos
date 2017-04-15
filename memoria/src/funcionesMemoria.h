@@ -19,7 +19,7 @@
 #include <commons/cosas.h>
 #include <pthread.h>
 
-#define configuracionMemoria "../confMemoria.init"
+#define configuracionMemoria "confMemoria.init"
 #define MAX_LEN_PUERTO 6
 #define frame_size config->marcos_Size
 #define IP "127.0.0.1"
@@ -70,8 +70,8 @@ int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelv
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
 
  	 	 	 	 	 				/*Este thread maneja tanto cpus como kernel, porque la interfaz es una sola.*/
-void requestHandlerKernel(int fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
-void requestHandlerCpu(int fd);		/* asi que validamos eso solo*/
+void requestHandlerKernel(int* fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
+void requestHandlerCpu(int* fd);		/* asi que validamos eso solo*/
 
 void iniciarPrograma(int pid, int cantPag);
 void finalizarPrograma(int pid);

@@ -11,6 +11,8 @@ void crearConfig(int argc, char* argv[]) {
 		log_info(logger, "No Pudo levantarse el archivo de configuracion");
 		exit(EXIT_FAILURE);
 	}
+	printf("Configuracion levantada correctamente\n");
+	return;
 }
 
 t_config_consola* levantarConfiguracionConsola(char * archivo) {
@@ -18,7 +20,6 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 	t_config_consola* config = malloc(sizeof(t_config_consola));
 	t_config* configConsola;
 
-	verificarExistenciaDeArchivo(archivo);
 	configConsola = config_create(archivo);
 
 	config->ip_Kernel = malloc(
@@ -27,8 +28,7 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 			config_get_string_value(configConsola, "IP_KERNEL"));
 
 	config->puerto_Kernel = malloc(
-			strlen(config_get_string_value(configConsola, "PUERTO_KERNEL"))
-					+ 1);
+			strlen(config_get_string_value(configConsola, "PUERTO_KERNEL")) + 1);
 	strcpy(config->puerto_Kernel,
 			config_get_string_value(configConsola, "PUERTO_KERNEL"));
 
@@ -74,7 +74,9 @@ int enviarArchivo(int kernel_fd, char* path){
  	header.length = file_size;
 
  	memcpy(buffer, &(header.type), offset += sizeof(header.type));
- 	memcpy(buffer + offset, &(header.length), offset += sizeof(header.length));
+ 	memcpy(buffer + offset, &(header.length), sizeof(header.length));
+ 	offset += sizeof(header.length);
+
  	if( fread(buffer + offset,file_size,1,file) < file_size){
  		log_error(logger, "No pude leer el archivo");
  		free(buffer);
@@ -142,7 +144,7 @@ void iniciarPrograma(char* comando, char* param) {
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		printf("Conexion con Kernel establecida! :D \n");
-		printf("Se procede a mandar el archivo: ", param);
+		printf("Se procede a mandar el archivo: %s\n", param);
 	} else {
 		printf("El Kernel no devolvio handshake :( \n");
 	}
