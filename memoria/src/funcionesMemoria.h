@@ -60,13 +60,9 @@ void esperarConexionKernel();
 void inicializarMemoria();
 
 //Funciones administracion memoria
-int primerFrameLibre();
-int primerFrameLibreCache();
 int framesLibresCache();
-int buscarPaginas(int pid, int frame);
 int framesLibres();
 int buscarFrame(int pid, int pag);
-int buscarPagCache(int pid, int pag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
 

@@ -32,18 +32,11 @@ typedef struct{
 	char* puerto_Kernel;
 }t_config_consola;
 
-typedef struct{
-	int fd;
-	int pid;
-}t_param_consola;
-
-
 void crearConfig(int argc,char* argv[]);
 t_config_consola* levantarConfiguracionConsola(char * archivo);
 int crearLog();
 
 int enviarArchivo(int kernel_fd, char* path);
-void impresora(void* param);
 
 //Funciones de interfaz
 void levantarInterfaz();

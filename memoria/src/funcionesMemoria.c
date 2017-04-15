@@ -102,11 +102,8 @@ void inicializarMemoria(){
 void requestHandlerKernel(int* fd){
 
 	void* paquete;
-//	header_t header;
 	int bytes;
-	int resultado;
 	int tipo_mensaje;
-	t_operacion_pag* st_pag;
 
 	for(;;){
 		bytes = recibir_info(*fd, &paquete, &tipo_mensaje);
@@ -118,40 +115,15 @@ void requestHandlerKernel(int* fd){
 
 		switch(tipo_mensaje){
 		case INICIAR_PROGRAMA:
-			st_pag=paquete;
-			if((resultado = iniciarPrograma(st_pag->pid ,st_pag->cantPag))==-1){
-				log_info(logger, "No se pudo iniciar el programa en memoria");
-				enviar_paquete_vacio(MEMORY_OVERLOAD,*fd);
-				free(paquete);
-			}
-			else{
-				/*enviar confirmacion*/
-				free(paquete);
-			}
+
 			break;
 
 		case FINALIZAR_PROGRAMA:
 
-			if((resultado=finalizarPrograma(*(int*)paquete))==-1){
-				log_info(logger, "El programa no finalizo correctamente");
-				free(paquete);
-			}
-			else{
-				/*Enviar confirmacion*/
-				free(paquete);
-			}
 			break;
 
 		case ASIGNAR_PAGINAS:
-			st_pag=paquete;
-			if((resultado=asignarPaginas(st_pag->pid, st_pag->cantPag))==-1){
-				enviar_paquete_vacio(MEMORY_OVERLOAD,*fd);
-				free(paquete);
-			}
-			else{
-				/*Enviar confirmacion*/
-				free(paquete);
-			}
+
 			break;
 
 		default:
@@ -163,12 +135,8 @@ void requestHandlerKernel(int* fd){
 void requestHandlerCpu(int* fd){
 
 	void* paquete;
-//	header_t header;
 	int tipo_mensaje;
 	int bytes;
-	int resultado;
-	void* buff;
-	t_operacion_bytes* st_bytes;
 
 	for(;;){
 		//Recibo mensajes de cpu y hago el switch
@@ -182,45 +150,11 @@ void requestHandlerCpu(int* fd){
 		switch(tipo_mensaje){
 
 			case SOLICITUD_BYTES:
-			st_bytes=paquete;
-			buff=malloc(st_bytes->size);
-			resultado=solicitudBytes(st_bytes->pid, st_bytes->pag, st_bytes->offset, st_bytes->size, buff);
-			if(resultado==-1){
-				/* actualizar protocolo */
-				enviar_paquete_vacio(SEGMENTATION_FAULT,*fd);
-				free(buff);
-				free(paquete);
-			}
-			else{
-				enviar_info(*fd,RESPUESTA_BYTES,st_bytes->size,buff);
-				free(buff);
-				free(paquete);
-			}
+
 			break;
 
 			case GRABAR_BYTES:
-			st_bytes=paquete;
-			bytes = recibir_info(*fd, &paquete, &tipo_mensaje);
-			if(bytes < 0){
-				log_error(logger, "Desconexion del Cpu. Terminando...");
-				close(*fd);
-				exit(1);
-			}
-			resultado=grabarBytes(st_bytes->pid, st_bytes->pag, st_bytes->offset, st_bytes->size, paquete);
-			if(resultado==-1){
-				/* actualizar protocolo */
-				enviar_paquete_vacio(SEGMENTATION_FAULT,*fd);
-				free(buff);
-				free(paquete);
-				free(st_bytes);
-			}
-			else{
-				/* no se bien que significa respuesta_bytes */
-				enviar_info(*fd,RESPUESTA_BYTES,st_bytes->size,buff);
-				free(buff);
-				free(paquete);
-				free(st_bytes);
-			}
+
 			break;
 
 		default:
@@ -231,100 +165,29 @@ void requestHandlerCpu(int* fd){
 
 int iniciarPrograma(int pid, int cantPag){
 
-	int i, frame;
-	for(i=0;i<cantPag;i++){
-		if((frame = primerFrameLibre()) == -1)
-		 return -1;
-		((t_entrada_tabla*)memoria)[frame].pid=pid;
-		((t_entrada_tabla*)memoria)[frame].pag=i;
-	}
-	return EXIT_SUCCESS;
+	return 0;
 }
 
 int asignarPaginas(int pid, int cantPag){
-/* buscar la manera de distinguirlas */
 
-	int i, frame;
-	for(i=0;i<cantPag;i++){
-		if((frame = primerFrameLibre()) == -1)
-		 return -1;
-		((t_entrada_tabla*)memoria)[frame].pid=pid;
-		((t_entrada_tabla*)memoria)[frame].pag=i;
-	}
-	return EXIT_SUCCESS;
+	return 0;
 }
 
 int finalizarPrograma(int pid){
-	/*entre otras cosas elimina las entradas en la tabla invertida*/
-	int frame = buscarPaginas(pid,0);
-	while(frame!=-1){
-		((t_entrada_tabla*)memoria)[frame].pid = -1;
-		frame=buscarPaginas(pid,frame);
-	}
-	return EXIT_SUCCESS;
+
+	return 0;
 }
 
 int solicitudBytes(int pid, int pag, int offset, int size, void* buff){
 
-	int frameMemoria,frameCache;
-	frameCache=buscarPagCache(pid,pag);
-	if(frameCache>=0)
-	memcpy(buff,cache[frameCache].content+offset,size);
-	else{
-		frameMemoria=buscarFrame(pid,pag);
-		if(framesLibresCache()>0){
-			frameCache=primerFrameLibreCache();
-			cache[frameCache].pid=pid;
-			cache[frameCache].pag=pag;
-			memcpy((void*)cache[frameCache].content,memoria+frameMemoria*config->marcos_Size,config->marcos_Size);
-		}
-		else{
-			//aplicar algoritmo LRU para realizar el reemplazo
-		}
-		memcpy(buff,cache[frameCache].content+offset,size);
-	}
-	return size;
+	return 0;
 }
 
 int grabarBytes(int pid, int pag, int offset, int size, void* buff){
 
-	int frameMemoria,frameCache;
-	frameCache=buscarPagCache(pid,pag);
-	if(frameCache>=0){
-		memcpy(cache[frameCache].content+offset,buff,size);
-		frameMemoria=buscarFrame(pid,pag);
-		memcpy(memoria+frameMemoria*config->marcos_Size+offset,buff,size);
-	}
-	else{
-		if((frameMemoria=buscarFrame(pid,pag))>=0)
-			memcpy(memoria+frameMemoria*config->marcos_Size+offset,buff,size);
-		else
-			return -1;
-	}
-	return size;
+	return 0;
 }
 
-int primerFrameLibre(){
-
-	int i;
-	for(i=0;i<config->marcos;i++){
-		if( ((t_entrada_tabla*)memoria)[i].pid == -1)
-			return i;
-	}
-	return -1;
-}
-
-int primerFrameLibreCache(){
-
-	int i;
-	for(i=0;i<config->marcos;i++){
-		if( cache[i].pid == -1)
-			return i;
-	}
-	return -1;
-}
-
-/* creo que no hace no hace falta darle valor negativo a las paginas */
 int framesLibres(){
 
 	int i, cant = 0;
@@ -336,7 +199,6 @@ int framesLibres(){
 	return cant;
 }
 
-/*lo mismo que la de arriba*/
 int framesLibresCache(){
 
 	int i, cant = 0;
@@ -358,30 +220,7 @@ int buscarFrame(int pid, int pag){
 			((t_entrada_tabla*)memoria)[i].pag == pag  )
 			return i;
 	}
-
 	return -1; //No encontro en la tabla de paginas la entrada
-}
-
-int buscarPaginas(int pid, int frame){
-
-	int i;
-	for(i=frame;i<config->marcos;frame++){
-		if(((t_entrada_tabla*)memoria)[frame].pid == pid)
-			return i;
-	}
-
-	return -1;
-}
-
-int buscarPagCache(int pid, int pag){
-
-	int i;
-	for(i=0;i<config->entradas_Cache;i++){
-		if( cache[i].pid == pid &&
-			cache[i].pag == pag )
-			return i;
-	}
-	return -1;
 }
 
 /* Esta funcion necesita que le pasen en resultado, un puntero con al menos
