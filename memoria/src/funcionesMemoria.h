@@ -72,9 +72,13 @@ int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelv
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
 
 //Funciones cache
+void increaseOpCount(); //Suma uno al opCount
 bool hayEntradasLibres(); //Utilizada por entradaAReemplazar
-bool existeEntrada(int pid, int pag); //Me dice si existe una entrada con ese pid y esa pagina
-int entradaAReemplazar(); //Esta funcion aplica el LRU y me dice que entrada debo reemplazar en caso de que esten todas ocupadas.
+/* Busca la entrada con pid y pag. Si no existe retorna -1*/
+bool buscarEntrada(int pid, int pag);
+/* Esta funcion aplica el LRU y me dice que entrada debo reemplazar
+ * en caso de que esten todas ocupadas.*/
+int entradaAReemplazar();
 /* Busca la entrada que coincida con pid y pag, y devuelve el puntero contenido de la entrada
  * Devuelve 0 en caso de que exista la entrada, -1 en caso contrario*/
 int leerCache(int pid, int pag, char* contenido);

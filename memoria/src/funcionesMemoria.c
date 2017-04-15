@@ -262,6 +262,9 @@ int escribir(int pid, int pag, int offset, char* contenido, int size){
 }
 
 //Funciones Cache
+void increaseOpCount(){
+	op_count++;
+}
 bool hayEntradasLibres(){
 	int i;
 	for(i=0;i<cache_entradas;i++){
@@ -272,14 +275,14 @@ bool hayEntradasLibres(){
 	return false;
 }
 
-bool existeEntrada(int pid, int pag){
+bool buscarEntrada(int pid, int pag){
 	int i;
 	for(i=0;i<cache_entradas;i++){
 		if(cache[i].pid == pid && cache[i].pag == pag){
-			return true;
+			return i;
 		}
 	}
-	return false;
+	return -1;
 }
 
 int entradaAReemplazar(){
@@ -294,7 +297,7 @@ int entradaAReemplazar(){
 
 	//Sali del for => no hay entrada libre. Debo reemplazar
 	int entrada; //A reemplazar
-	int minTime = LONG_MAX;
+	int minTime = ULONG_MAX;
 
 	for(i=0;i<cache_entradas;i++){
 		if( cache[i].time_used < minTime){
@@ -308,14 +311,37 @@ int entradaAReemplazar(){
 
 int leerCache(int pid, int pag, char** contenido){
 
+	increaseOpCount();
+
 	int i;
 	for(i=0;i<cache_entradas;i++){//Si alguna entrada coincide, pongo el valor de content en contenido
 		if(cache[i].pid == pid && cache[i].pag == pag){
 			*contenido = cache[i].content;
+			cache[i].time_used = op_count;
 			return 0;
 		}
 	}
 	return -1;
+}
+
+void actualizarEntradaCache(int pid, int pag, char* frame){
+
+	increaseOpCount();
+
+	int entrada = buscarEntrada(pid, pag);
+
+	if(entrada != -1){
+		memcpy(cache[entrada].content,frame,frame_size);
+	}else{ //tengo que reemplazar una entrada
+		entrada = entradaAReemplazar();
+		cache[entrada].pid = pid;
+		cache[entrada].pag = pag;
+		memcpy(cache[entrada].content,frame,frame_size);
+	}
+
+	cache[entrada].time_used = op_count;
+
+	return;
 }
 
 //funciones interfaz
