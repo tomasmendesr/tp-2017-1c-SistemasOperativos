@@ -31,9 +31,13 @@ void esperarConexionKernel(){
 		printf("Error al levantar el servidor\n");
 		log_error(logger,"Error al levantar el servidor");
 	}
+
 	socketConexionKernel = acceptSocket(socketEscucha);
 
-	if(recibirHanshake(socketConexionKernel, HANDSHAKE_KERNEL, HANDSHAKE_FS)){
+	void* paquete;
+	int tipo_mensaje;
+
+	if(recibir_info(socketConexionKernel, &paquete, &tipo_mensaje)){
 		printf("Conexion con kernel establecida\n");
 		log_info(logger, "Conexion con kernel establecida");
 	}

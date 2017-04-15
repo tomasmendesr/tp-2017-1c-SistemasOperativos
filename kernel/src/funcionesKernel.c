@@ -253,7 +253,10 @@ int conexionConFileSystem(){
 		return -1;
 	}
 
-	enviarHandshake(socketConexionFS, HANDSHAKE_KERNEL, HANDSHAKE_FS);
+	void* paquete;
+		int tipo_mensaje;
+
+	enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionFS);
 
 	printf("Conexion con fs establecida\n");
 
@@ -340,7 +343,7 @@ void levantarInterfaz(){
 	pthread_attr_init(&atributos);
 	pthread_attr_setdetachstate(&atributos, PTHREAD_CREATE_DETACHED);
 
-	pthread_create(&threadInterfaz, &atributos, interface, params);
+	pthread_create(&threadInterfaz, &atributos, (void*)interface, params);
 
 	return;
 }
