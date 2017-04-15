@@ -23,7 +23,9 @@
 
 
 #define MAX_COMMAND_SIZE 256
-#define configuracionConsola "confConsola.init"
+
+#define IniciarProceso "iniciarProceso"
+#define configuracionConsola "../confConsola.init"
 
 typedef struct{
 	char* ip_Kernel;
