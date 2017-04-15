@@ -131,8 +131,8 @@ void iniciarPrograma(char* comando, char* param) {
 	if(verificarExistenciaDeArchivo(param))
 		printf("Su proceso se inicializo");
 	else{
-		log_error(logger, "no existe el archivo");
-		exit(1);
+		log_warning(logger, "no existe el archivo");
+		return;
 	}
 	socket_cliente = createClient(config->ip_Kernel, config->puerto_Kernel);
 	if (socket_cliente != -1) {
