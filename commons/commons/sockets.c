@@ -553,7 +553,7 @@ int enviar_info(int sockfd, int codigo_operacion, int length, void* buff){
 	return bytes_enviados;
 }
 
-int recibir_info(int socket, void** paquete, int* tipo){
+int recibir_info(int socket, void** paquete, int *tipo_mensaje){
 
 	int bytes_recibidos;
 	header_t cabecera;
@@ -563,13 +563,11 @@ int recibir_info(int socket, void** paquete, int* tipo){
 	if(bytes_recibidos == 0) return 0;
 	if(bytes_recibidos == -1) return -1;
 
-	*tipo = cabecera.type;
+	*tipo_mensaje=cabecera.type;
 
 	if(cabecera.length){
 		*paquete = malloc(cabecera.length);
-
 		bytes_recibidos = recvAll(socket, (char*)*paquete, cabecera.length, MSG_WAITALL);
-
 		if(bytes_recibidos == 0) return 0;
 		if(bytes_recibidos == -1) return -1;
 	}

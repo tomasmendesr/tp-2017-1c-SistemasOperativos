@@ -16,6 +16,7 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <commons/interface.h>
+#include <commons/sharedStructs.h>
 #include <commons/cosas.h>
 #include <pthread.h>
 
@@ -73,11 +74,11 @@ int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve co
 void requestHandlerKernel(int* fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
 void requestHandlerCpu(int* fd);		/* asi que validamos eso solo*/
 
-void iniciarPrograma(int pid, int cantPag);
-void finalizarPrograma(int pid);
-void asignarPaginas();
-char* solicitudBytes(int pid, int pag, int offset, int size);
-void grabarBytes();
+int iniciarPrograma(int pid, int cantPag);
+int asignarPaginas(int pid, int cantPag);
+int finalizarPrograma(int pid);
+int solicitudBytes(int pid, int pag, int offset, int size, void*buff);
+int grabarBytes(int pid, int pag, int offset, int size,void* buff);
 
 //Funciones de interfaz
 void levantarInterfaz();
