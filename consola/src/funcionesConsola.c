@@ -73,8 +73,8 @@ int enviarArchivo(int kernel_fd, char* path){
  	header.type = ENVIO_CODIGO;
  	header.length = file_size;
 
- 	memcpy(buffer, &(header.type), offset += sizeof(header.type));
- 	memcpy(buffer + offset, &(header.length), offset += sizeof(header.length));
+ 	memcpy(buffer, &(header.type),sizeof(header.type)); offset+=sizeof(header.type);
+ 	memcpy(buffer + offset, &(header.length),sizeof(header.length)); offset+=sizeof(header.length);
  	if( fread(buffer + offset,file_size,1,file) < file_size){
  		log_error(logger, "No pude leer el archivo");
  		free(buffer);
