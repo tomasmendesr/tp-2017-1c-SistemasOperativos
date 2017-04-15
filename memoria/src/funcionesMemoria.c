@@ -64,8 +64,9 @@ void inicializarMemoria(){
 	//Inicializo la cache
 	for(i=0;i<config->entradas_Cache;i++){
 		cache[i].pid = -1;
-		//cache[i].pag = -1; no alcanza con el pid?
-		cache[i].content = malloc(config->marcos_Size);
+		cache[i].pag = -1;
+		cache[i].content = malloc(frame_size);
+		cache[i].time_used = 0;
 		if(cache[i].content == NULL) noEspacioCache = true;
 	}
 
@@ -80,7 +81,7 @@ void inicializarMemoria(){
 
 	//Creo las entradas de la tabla invertida
 	for(i=0;i<config->marcos;i++){
-//		((t_entrada_tabla*)memoria)[i].pag = -1; con el pid no alcanza?
+		((t_entrada_tabla*)memoria)[i].pag = -1;
 		((t_entrada_tabla*)memoria)[i].pid = -1;
 	}
 
@@ -115,15 +116,15 @@ void requestHandlerKernel(int* fd){
 
 		switch(tipo_mensaje){
 		case INICIAR_PROGRAMA:
-
+			iniciarPrograma();
 			break;
 
 		case FINALIZAR_PROGRAMA:
-
+			finalizarPrograma();
 			break;
 
 		case ASIGNAR_PAGINAS:
-
+			asignarPaginas();
 			break;
 
 		default:
@@ -150,15 +151,15 @@ void requestHandlerCpu(int* fd){
 		switch(tipo_mensaje){
 
 			case SOLICITUD_BYTES:
-
-			break;
+				solicitudBytes();
+				break;
 
 			case GRABAR_BYTES:
+				grabarBytes();
+				break;
 
-			break;
-
-		default:
-			log_warning(logger, "Mensaje Recibido Incorrecto");
+			default:
+				log_warning(logger, "Mensaje Recibido Incorrecto");
 		}
 	}
 }
@@ -191,7 +192,7 @@ int grabarBytes(int pid, int pag, int offset, int size, void* buff){
 int framesLibres(){
 
 	int i, cant = 0;
-	for(i=0;i<config->marcos;i++){
+	for(i=0;i<cant_frames;i++){
 		if( ((t_entrada_tabla*)memoria)[i].pid == -1 &&
 			((t_entrada_tabla*)memoria)[i].pag == -1  )
 			cant++;
@@ -199,19 +200,8 @@ int framesLibres(){
 	return cant;
 }
 
-int framesLibresCache(){
-
-	int i, cant = 0;
-	for(i=0;i<config->entradas_Cache;i++){
-		if( cache[i].pid == -1 &&
-			cache[i].pag == -1  )
-			cant++;
-	}
-	return cant;
-}
 
 /* Busqueda secuencial, despues implementamos hash */
-
 int buscarFrame(int pid, int pag){
 
 	int i;
@@ -269,6 +259,63 @@ int escribir(int pid, int pag, int offset, char* contenido, int size){
 	}
 
 	return 0;
+}
+
+//Funciones Cache
+bool hayEntradasLibres(){
+	int i;
+	for(i=0;i<cache_entradas;i++){
+		if(cache[i].pag == -1 || cache[i].pid == -1){
+			return true;
+		}
+	}
+	return false;
+}
+
+bool existeEntrada(int pid, int pag){
+	int i;
+	for(i=0;i<cache_entradas;i++){
+		if(cache[i].pid == pid && cache[i].pag == pag){
+			return true;
+		}
+	}
+	return false;
+}
+
+int entradaAReemplazar(){
+
+	//Recorro buscando una entrada libre
+	int i;
+	for(i=0;i<cache_entradas;i++){
+		if(cache[i].pid == -1 || cache[i].pag -1){
+			return i;
+		}
+	}
+
+	//Sali del for => no hay entrada libre. Debo reemplazar
+	int entrada; //A reemplazar
+	int minTime = LONG_MAX;
+
+	for(i=0;i<cache_entradas;i++){
+		if( cache[i].time_used < minTime){
+			entrada = i;
+			minTime = cache[i].time_used;
+		}
+	}
+
+	return entrada;
+}
+
+int leerCache(int pid, int pag, char** contenido){
+
+	int i;
+	for(i=0;i<cache_entradas;i++){//Si alguna entrada coincide, pongo el valor de content en contenido
+		if(cache[i].pid == pid && cache[i].pag == pag){
+			*contenido = cache[i].content;
+			return 0;
+		}
+	}
+	return -1;
 }
 
 //funciones interfaz
