@@ -22,9 +22,9 @@ int main(int argc, char** argv){
 
 	esperarConexionKernel();
 
-	esperarConexiones();
-
 	levantarInterfaz();
+
+	esperarConexiones();
 
     destruirConfiguracionMemoria(config);
 
