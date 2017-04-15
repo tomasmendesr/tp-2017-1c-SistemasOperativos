@@ -16,10 +16,11 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <commons/interface.h>
+#include <commons/sharedStructs.h>
 #include <commons/cosas.h>
 #include <pthread.h>
 
-#define configuracionMemoria "../confMemoria.init"
+#define configuracionMemoria "confMemoria.init"
 #define MAX_LEN_PUERTO 6
 #define frame_size config->marcos_Size
 #define IP "127.0.0.1"
@@ -59,25 +60,21 @@ void esperarConexionKernel();
 void inicializarMemoria();
 
 //Funciones administracion memoria
-int primerFrameLibre();
-int primerFrameLibreCache();
 int framesLibresCache();
-int buscarPaginas(int pid, int frame);
 int framesLibres();
 int buscarFrame(int pid, int pag);
-int buscarPagCache(int pid, int pag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
 
  	 	 	 	 	 				/*Este thread maneja tanto cpus como kernel, porque la interfaz es una sola.*/
-void requestHandlerKernel(int fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
-void requestHandlerCpu(int fd);		/* asi que validamos eso solo*/
+void requestHandlerKernel(int* fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
+void requestHandlerCpu(int* fd);		/* asi que validamos eso solo*/
 
-void iniciarPrograma(int pid, int cantPag);
-void finalizarPrograma(int pid);
-void asignarPaginas();
-char* solicitudBytes(int pid, int pag, int offset, int size);
-void grabarBytes();
+int iniciarPrograma(int pid, int cantPag);
+int asignarPaginas(int pid, int cantPag);
+int finalizarPrograma(int pid);
+int solicitudBytes(int pid, int pag, int offset, int size, void*buff);
+int grabarBytes(int pid, int pag, int offset, int size,void* buff);
 
 //Funciones de interfaz
 void levantarInterfaz();

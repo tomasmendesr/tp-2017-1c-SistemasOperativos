@@ -33,11 +33,11 @@ t_stack* crearPosicionStack();
 void insertarNuevoStack(pcb_t* pcb);
 void eliminarUltimaPosicionStack(pcb_t* pcb);
 void destruirPosicionStack(t_stack* stack);
-t_variable* crearVariableStack(char* id, uint32_t pagina, uint32_t offset, uint32_t size);
-void destruirVariableStack(t_variable* var);
+t_var_local* crearVariableStack(char* id, uint32_t pagina, uint32_t offset, uint32_t size);
+void destruirVariableStack(t_var_local* var);
 t_argumento* crearArgumentoStack(uint32_t pagina, uint32_t offset, uint32_t size);
 void destruirArgumentoStack(t_argumento* arg);
-void agregarVariable(t_stack* stack, t_variable* variable);
+void agregarVariable(t_stack* stack, t_var_local* variable);
 void agregarArgumento(t_stack* stack, t_argumento* argumento);
 
 #endif /* PCB_H_ */

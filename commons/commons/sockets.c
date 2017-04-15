@@ -205,6 +205,8 @@ int recibir_paquete(int socket, void** paquete, int* tipo){
 	if(bytes_recibidos == -1) return -1;
 
 	*tipo = cabecera.type;
+
+	if(cabecera.length!=0){
 	buffer = malloc(cabecera.length);
 
 	bytes_recibidos = recv(socket, buffer, cabecera.length, MSG_WAITALL);
@@ -213,9 +215,9 @@ int recibir_paquete(int socket, void** paquete, int* tipo){
 	if(bytes_recibidos == -1) return -1;
 
 	*paquete = buffer;
+	}
 
 	return bytes_recibidos;
-
 }
 
 /*
@@ -427,13 +429,12 @@ header_t crear_cabecera(int codigo, int length){
 	cabecera.length = length;
 
 	return cabecera;
-
 }
 
 int enviar_paquete_vacio(int codigo_operacion, int socket){
 
-	header_t cabecera = crear_cabecera(codigo_operacion, 1);
-	int bytes_enviados = sendSocket(socket, &cabecera, "0");
+	int bytes_enviados;
+	bytes_enviados=enviar_info(socket, codigo_operacion, 0, NULL);
 
 	return bytes_enviados;
 }
@@ -531,4 +532,47 @@ bool recibirHanshake(int socket, int handshakeRecibir, int handshakeRespuesta){
 	}
 
 	return false;
+}
+
+int enviar_info(int sockfd, int codigo_operacion, int length, void* buff){
+
+	int bytes_enviados;
+	header_t cabecera = crear_cabecera(codigo_operacion, length);
+
+	bytes_enviados = sendAll(sockfd, (char*)&cabecera, sizeof(cabecera), 0);
+
+	if(bytes_enviados == 0) return 0;
+	if(bytes_enviados == -1) return -1;
+
+	if(cabecera.length!=0){
+		bytes_enviados += sendAll(sockfd, (char*)buff, cabecera.length, 0);
+		if(bytes_enviados == 0) return 0;
+		if(bytes_enviados == -1) return -1;
+	}
+
+	return bytes_enviados;
+}
+
+int recibir_info(int socket, void** paquete, int *tipo_mensaje){
+
+	int bytes_recibidos;
+	header_t cabecera;
+
+	bytes_recibidos = recvAll(socket, (char*)&cabecera, sizeof(header_t), MSG_WAITALL);
+
+	if(bytes_recibidos == 0) return 0;
+	if(bytes_recibidos == -1) return -1;
+
+	*tipo_mensaje=cabecera.type;
+
+	if(cabecera.length){
+		*paquete = malloc(cabecera.length);
+		bytes_recibidos = recvAll(socket, (char*)*paquete, cabecera.length, MSG_WAITALL);
+		if(bytes_recibidos == 0) return 0;
+		if(bytes_recibidos == -1) return -1;
+	}
+	else
+		*paquete=NULL;
+
+	return bytes_recibidos;
 }

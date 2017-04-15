@@ -68,8 +68,8 @@ void destruirPosicionStack(t_stack* stack){
 	free(stack);
 }
 
-t_variable* crearVariableStack(char* id, uint32_t pagina, uint32_t offset, uint32_t size){
-	t_variable* var = malloc(sizeof(t_variable));
+t_var_local* crearVariableStack(char* id, uint32_t pagina, uint32_t offset, uint32_t size){
+	t_var_local* var = malloc(sizeof(t_var_local));
 	var->idVariable = malloc(strlen(id));
 
 	var->idVariable = id;
@@ -80,7 +80,7 @@ t_variable* crearVariableStack(char* id, uint32_t pagina, uint32_t offset, uint3
 	return var;
 }
 
-void destruirVariableStack(t_variable* var){
+void destruirVariableStack(t_var_local* var){
 	free(var->idVariable);
 	free(var);
 }
@@ -98,7 +98,7 @@ void destruirArgumentoStack(t_argumento* arg){
 	free(arg);
 }
 
-void agregarVariable(t_stack* stack, t_variable* variable){
+void agregarVariable(t_stack* stack, t_var_local* variable){
 	list_add(stack->variables, variable);
 }
 

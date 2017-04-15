@@ -151,6 +151,7 @@ enum protocolo_memoria_a_cualquiera{
 
 //Mensajes entre Kernel y Programa
 enum protocolo_kernel_programa{
+	PID_PROGRAMA = 99,
 	IMPRIMIR_VARIABLE_PROGRAMA = 100,
 	IMPRIMIR_TEXTO_PROGRAMA = 101,
 	ERROR_GENERAL = 102,
@@ -184,6 +185,8 @@ int recibir_paquete(int socket, void** paquete, int* tipo);
 int recibir_string(int socket,void** puntero_buffer,int* tipo);
 int agregar_caracter_nulo(void* stream, int tamanio);
 header_t crear_cabecera(int codigo, int length);
+int recibir_info(int socket, void** paquete, int* tipo_mensaje);
+int enviar_info(int sockfd, int codigo_operacion, int length, void* buff);
 int enviar_paquete_vacio(int codigo_operacion, int socket);
 int enviar_paquete_vacio_a_cpu(int codigo_operacion, int socket);
 bool recibirHanshake(int socket, int handshakeRecibir, int handshakeRespuesta);

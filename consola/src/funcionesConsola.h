@@ -23,13 +23,13 @@
 
 
 #define MAX_COMMAND_SIZE 256
+
 #define IniciarProceso "iniciarProceso"
 #define configuracionConsola "../confConsola.init"
 
 typedef struct{
-        char* ip_Kernel;
-        char* puerto_Kernel;
-
+	char* ip_Kernel;
+	char* puerto_Kernel;
 }t_config_consola;
 
 void crearConfig(int argc,char* argv[]);

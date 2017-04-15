@@ -11,6 +11,8 @@ void crearConfig(int argc, char* argv[]) {
 		log_info(logger, "No Pudo levantarse el archivo de configuracion");
 		exit(EXIT_FAILURE);
 	}
+	printf("Configuracion levantada correctamente\n");
+	return;
 }
 
 t_config_consola* levantarConfiguracionConsola(char * archivo) {
@@ -18,7 +20,6 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 	t_config_consola* config = malloc(sizeof(t_config_consola));
 	t_config* configConsola;
 
-	verificarExistenciaDeArchivo(archivo);
 	configConsola = config_create(archivo);
 
 	config->ip_Kernel = malloc(
@@ -27,8 +28,7 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 			config_get_string_value(configConsola, "IP_KERNEL"));
 
 	config->puerto_Kernel = malloc(
-			strlen(config_get_string_value(configConsola, "PUERTO_KERNEL"))
-					+ 1);
+			strlen(config_get_string_value(configConsola, "PUERTO_KERNEL")) + 1);
 	strcpy(config->puerto_Kernel,
 			config_get_string_value(configConsola, "PUERTO_KERNEL"));
 
@@ -51,7 +51,8 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	//Abro el archivo y le saco los stats
  	file = fopen(path, "r");
- 	if(file == NULL){//esto nunca deberia fallar porque ya esta verificado, pero por las dudas
+ 	//esto nunca deberia fallar porque ya esta verificado, pero por las dudas
+ 	if(file == NULL){
  		log_error(logger, "no pudo abrir archivo");
  		return -1;
  	}
@@ -75,6 +76,7 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	memcpy(buffer, &(header.type),sizeof(header.type)); offset+=sizeof(header.type);
  	memcpy(buffer + offset, &(header.length),sizeof(header.length)); offset+=sizeof(header.length);
+
  	if( fread(buffer + offset,file_size,1,file) < file_size){
  		log_error(logger, "No pude leer el archivo");
  		free(buffer);
@@ -117,17 +119,21 @@ void levantarInterfaz() {
 	//Lanzo el thread
 	pthread_attr_t atributos;
 	pthread_attr_init(&atributos);
-
-	pthread_create(&threadInterfaz, &atributos, (void*) interface, params);
+	pthread_create(&threadInterfaz, &atributos, (void*)interface, params);
 
 	return;
 }
+
 void iniciarPrograma(char* comando, char* param) {
 
 	int socket_cliente;
 
-	verificarExistenciaDeArchivo(param);
-	printf("Su proceso se inicializo");
+	if(verificarExistenciaDeArchivo(param))
+		printf("Su proceso se inicializo");
+	else{
+		log_error(logger, "no existe el archivo");
+		exit(1);
+	}
 	socket_cliente = createClient(config->ip_Kernel, config->puerto_Kernel);
 	if (socket_cliente != -1) {
 		printf("Cliente creado satisfactoriamente.\n");
@@ -138,24 +144,37 @@ void iniciarPrograma(char* comando, char* param) {
 	int operacion = 0;
 	void* paquete_vacio;
 
-	recibir_paquete(socket_cliente, &paquete_vacio, &operacion);
+	recibir_info(socket_cliente, &paquete_vacio, &operacion);
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		printf("Conexion con Kernel establecida! :D \n");
-		printf("Se procede a mandar el archivo: ", param);
+		printf("Se procede a mandar el archivo: %s\n", param);
 	} else {
 		printf("El Kernel no devolvio handshake :( \n");
 	}
-	printf("iniciarPrograma\n");
+
+	if((enviarArchivo(socket_cliente, param))==-1){
+		log_error(logger,"No se pudo mandar el archivo");
+		exit(1);
+	}
+	log_info(logger,"Archivo enviado correctamente");
+
+	if(recibir_info(socket_cliente, &paquete_vacio, &operacion)==0){
+		log_error(logger, "El kernel se desconecto");
+		exit(1);
+	}
 }
-void finalizarPrograma(char* comando, char* param) {
+
+void finalizarPrograma(char* comando, char* param){
 	printf("finalizarPrograma\n");
 }
+
 void desconectarConsola(char* comando, char* param) {
 	//Aca va a tener que ir toda la logica de limpiar variables finalizar proceso o algo
 	//AL menos que se la prueba del cierre Total de los programas.
 	exit(1);
 }
+
 void limpiarMensajes(char* comando, char* param) {
 	printf("limpiarMensajes");
 }
