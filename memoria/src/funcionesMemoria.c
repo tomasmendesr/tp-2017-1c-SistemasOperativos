@@ -173,7 +173,7 @@ void requestHandlerCpu(int* fd){
 	for(;;){
 		//Recibo mensajes de cpu y hago el switch
 		bytes = recibir_info(*fd, &paquete, &tipo_mensaje);
-		if(bytes < 0){
+		if(bytes <= 0){
 			log_error(logger, "Desconexion del Cpu. Terminando...");
 			close(*fd);
 			exit(1);
