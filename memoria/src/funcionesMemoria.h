@@ -86,9 +86,9 @@ int reemplazoLocal(int pid);
 int reemplazoGlobal();
 /* Busca la entrada que coincida con pid y pag, y devuelve el puntero contenido de la entrada
  * Devuelve 0 en caso de que exista la entrada, -1 en caso contrario*/
-int leerCache(int pid, int pag, char* contenido);
+int leerCache(int pid, int pag, char** contenido);
 /* Se llena una entrada de la cache con los valores pasados por parametro.
- * Si ya existe la entrada, se usa esa misma.
+ * Si ya existe la entrada, se usa esa misma. Sino, reemplaza una usando LRU.
  * El puntero frame apunta al comienzo del frame referenciado por pid y pag*/
 int actualizarEntradaCache(int pid, int pag, char* frame);
 

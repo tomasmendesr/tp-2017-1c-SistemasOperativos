@@ -220,16 +220,24 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 	int frame;
 	int cant_leida = 0;
 	int cant_a_leer;
+	char* pos_leer;
 
 	while(cant_leida < size){
 
-		frame = buscarFrame(pid,pag);
-		if(frame == -1)
-			return -1;
+		if( leerCache(pid,pag,&pos_leer) == -1 ){//No Esta en cache, debo leer de memoria
+			frame = buscarFrame(pid,pag);
+			if(frame == -1)
+				return -1;
 
-		//Me fijo cuanto tengo que leer y copio lo que esta en memoria en resultado
+			pos_leer = memoria + frame * frame_size;
+
+			actualizarEntradaCache(pid, pag, pos_leer);
+		}/* Al salir de este if pos_leer apunta o bien al frame de donde tengo que leer,
+		  * o a donde esta cacheado el frame */
+
+		//Me fijo cuanto tengo que leer y copio lo que esta en memoria/cache en resultado
 		cant_a_leer = min(size - cant_leida, frame_size - offset);
-		memcpy(resultado + cant_leida, memoria + frame * frame_size + offset, cant_a_leer);
+		memcpy(resultado + cant_leida, pos_leer + offset, cant_a_leer);
 
 		offset = 0;
 		pag++;
@@ -252,6 +260,8 @@ int escribir(int pid, int pag, int offset, char* contenido, int size){
 
 		cant_a_escribir = min(size - cant_escrita, frame_size - offset);
 		memcpy(memoria + frame * frame_size + offset, contenido + cant_escrita, cant_a_escribir);
+
+		actualizarEntradaCache(pid, pag, memoria + frame * frame_size);
 
 		offset = 0;
 		pag++;
