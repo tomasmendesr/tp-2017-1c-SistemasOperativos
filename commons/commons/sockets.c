@@ -281,36 +281,24 @@ int deserializar_string(void* paquete, char** string){
 
 }
 
-void* pcb_serializer(pcb* self, int16_t *length){
+void* pcb_serializer(pcb_t* self, int16_t *length){
 
-	void *serialized = malloc(sizeof(pcb));
+	void *serialized = malloc(sizeof(pcb_t));
 	int offset = 0, tmp_size = 0;
 
-	memcpy(serialized, &self->id, tmp_size = sizeof(self->id));
+	memcpy(serialized, &self->pid, tmp_size = sizeof(self->pid));
 	offset += tmp_size;
 
-	memcpy(serialized + offset, &self->codePointer, tmp_size = sizeof(self->codePointer));
+	memcpy(serialized + offset, &self->programCounter, tmp_size = sizeof(self->programCounter));
 	offset += tmp_size;
 
-	memcpy(serialized+ offset, &self->stackPointer, tmp_size = sizeof(self->stackPointer));
+	memcpy(serialized+ offset, &self->cantPaginasCodigo, tmp_size = sizeof(self->cantPaginasCodigo));
 	offset += tmp_size;
 
-	memcpy(serialized+ offset, &self->stackContextPointer, tmp_size = sizeof(self->stackContextPointer));
+	memcpy(serialized+ offset, &self->exitCode, tmp_size = sizeof(self->exitCode));
 	offset += tmp_size;
 
-	memcpy(serialized+ offset, &self->indexCodePointer, tmp_size = sizeof(self->indexCodePointer));
-	offset += tmp_size;
-
-	memcpy(serialized+ offset, &self->labelIndexPointer, tmp_size = sizeof(self->labelIndexPointer));
-	offset += tmp_size;
-
-	memcpy(serialized+ offset, &self->programCounter, tmp_size = sizeof(self->programCounter));
-	offset += tmp_size;
-
-	memcpy(serialized+ offset, &self->tamanioContexto, tmp_size = sizeof(self->tamanioContexto));
-	offset += tmp_size;
-
-	memcpy(serialized+ offset, &self->tamanioIndiceEtiquetas, tmp_size = sizeof(self->tamanioIndiceEtiquetas));
+	memcpy(serialized+ offset, &self->consolaFd, tmp_size = sizeof(self->consolaFd));
 	offset += tmp_size;
 
 	*length = offset;
@@ -318,17 +306,13 @@ void* pcb_serializer(pcb* self, int16_t *length){
 	return serialized;
 }
 
-pcb* pcb_deserializer(int socketfd) {
-	pcb* self = malloc(sizeof(pcb));
-	recv(socketfd, &self->id, sizeof(self->id), MSG_WAITALL);
-	recv(socketfd, &self->codePointer, sizeof(self->codePointer), MSG_WAITALL);
-	recv(socketfd, &self->stackPointer, sizeof(self->stackPointer), MSG_WAITALL);
-	recv(socketfd, &self->stackContextPointer, sizeof(self->stackContextPointer), MSG_WAITALL);
-	recv(socketfd, &self->indexCodePointer, sizeof(self->indexCodePointer), MSG_WAITALL);
-	recv(socketfd, &self->labelIndexPointer, sizeof(self->labelIndexPointer), MSG_WAITALL);
+pcb_t* pcb_deserializer(int socketfd) {
+	pcb_t* self = malloc(sizeof(pcb_t));
+	recv(socketfd, &self->pid, sizeof(self->pid), MSG_WAITALL);
 	recv(socketfd, &self->programCounter, sizeof(self->programCounter), MSG_WAITALL);
-	recv(socketfd, &self->tamanioContexto, sizeof(self->tamanioContexto), MSG_WAITALL);
-	recv(socketfd, &self->tamanioIndiceEtiquetas, sizeof(self->tamanioIndiceEtiquetas), MSG_WAITALL);
+	recv(socketfd, &self->cantPaginasCodigo, sizeof(self->cantPaginasCodigo), MSG_WAITALL);
+	recv(socketfd, &self->exitCode, sizeof(self->exitCode), MSG_WAITALL);
+	recv(socketfd, &self->consolaFd, sizeof(self->consolaFd), MSG_WAITALL);
 	return self;
 }
 
@@ -379,10 +363,9 @@ codeIndex* codeIndex_deserializer(int socketfd){
 }
 
 
+char *paqueteEnviarAEjecutar_serializer(u_int16_t quantum, uint32_t retardo_quantum,pcb_t *pcb_proceso) {
 
-char *paqueteEnviarAEjecutar_serializer(u_int16_t quantum, uint32_t retardo_quantum,pcb *pcb_proceso) {
-
-	char *serialized = malloc(sizeof(quantum) + sizeof(retardo_quantum) + sizeof(pcb));
+	char *serialized = malloc(sizeof(quantum) + sizeof(retardo_quantum) + sizeof(pcb_t));
 	int offset = 0, tmp_size = 0;
 
 	memcpy(serialized, &quantum, tmp_size = sizeof(quantum));
@@ -391,35 +374,13 @@ char *paqueteEnviarAEjecutar_serializer(u_int16_t quantum, uint32_t retardo_quan
 	memcpy(serialized + offset, &retardo_quantum, tmp_size = sizeof(retardo_quantum));
 	offset += tmp_size;
 
-	memcpy(serialized + offset, pcb_proceso, tmp_size = sizeof(pcb));
+	memcpy(serialized + offset, pcb_proceso, tmp_size = sizeof(pcb_t));
 	offset += tmp_size;
 
 	return serialized;
 
 }
 
-t_segmento* segmento_deserializer(int socketfd) {
-	t_segmento* self = malloc(sizeof(t_segmento));
-	recv(socketfd, &self->id, sizeof(self->id), MSG_WAITALL);
-	recv(socketfd, &self->tamanio, sizeof(self->tamanio), MSG_WAITALL);
-	return self;
-}
-
-void* segmento_serializer(t_segmento *self, int16_t *length){
-
-	void *serialized = malloc(sizeof(char) + sizeof(u_int32_t));
-	int offset = 0, tmp_size = 0;
-
-	memcpy(serialized, &self->id, tmp_size = sizeof(self->id));
-	offset = tmp_size;
-
-	memcpy(serialized + offset, &self->tamanio, tmp_size = sizeof(self->tamanio));
-	offset += tmp_size;
-
-	*length = offset;
-
-	return serialized;
-}
 
 header_t crear_cabecera(int codigo, int length){
 

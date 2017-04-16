@@ -48,46 +48,23 @@ typedef struct {
 	u_int32_t  programCounter;
 }__attribute__((__packed__)) labelIndex;
 
-typedef struct {
-	u_int16_t  id;					   //Identificador único del Programa en el sistema
-	u_int32_t  codePointer;			   //Dirección del primer byte en la UMV del segmento de código
-	u_int32_t  stackPointer;		   //Dirección del primer byte en la UMV del segmento de stack
-	u_int32_t  stackContextPointer;    //Dirección del primer byte en la UMV del Contexto de Ejecución Actual
-	u_int32_t  indexCodePointer;	   //Dirección del primer byte en la UMV del Índice de Código
-	u_int32_t  labelIndexPointer; 	   //Dirección del primer byte en la UMV del Índice de Etiquetas
-	u_int32_t  programCounter;  	   //Número de la próxima instrucción a ejecutar
-	u_int32_t  tamanioContexto; 	   //Cantidad de variables (locales y parámetros) del Contexto de Ejecución Actual
-	u_int32_t  tamanioIndiceEtiquetas; //Cantidad de bytes que ocupa el Índice de etiquetas
-}__attribute__((__packed__)) pcb;
+typedef struct{
+	uint32_t pid;  //Identificador único del Programa en el sistema
+	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
+	uint32_t cantPaginasCodigo;
+	//t_intructions* indiceCodigo; Ver si es necesario
+	//char* etiquetas;  Verificar si es necesario
+	//t_list* indiceStack; Verificar si es necesario
+	int16_t exitCode; //Codigo de finalizacion
+	uint32_t consolaFd;
+
+}__attribute__((__packed__))pcb_t;
 
 typedef struct {
 	char      nombre;
 	int32_t valor;
 	u_int32_t direccion;
 }__attribute__((__packed__)) t_variable;
-
-typedef struct {
-	u_int32_t base;
-	u_int32_t offset;
-	u_int32_t tamanio;
-}__attribute__((__packed__)) t_request_umv;
-
-typedef struct {
-	u_int32_t base;
-	u_int32_t offset;
-	u_int32_t tamanio;
-	char*	  buffer;
-}__attribute__((__packed__)) t_envio_umv;
-
-typedef struct {
-	u_int16_t id;
-	u_int16_t tamanio;
-}__attribute__((__packed__)) t_segmento;
-
-typedef struct{
-	int8_t result;
-	u_int32_t base;
-}__attribute__((__packed__)) t_crear_segmento;
 
 enum enum_protocolo {// Si yo soy el kernel tengo que enviar handshake_kernel.
 	PEDIDO_INFO_CONEXION = 1,
@@ -218,23 +195,17 @@ int finalizarConexion(int socket);
 //
 // Serializadores y Deserializadores de mensajes.
 //
-
 char *program_serializer(char *codigo_programa);
 int deserializar_string(void* paquete, char** string);
 
 void* variable_serializer(t_variable* var, int16_t *length);
 t_variable* variable_deserializer(int socketfd);
 
-void* codeIndex_serializer(codeIndex *self, int16_t *length);
-codeIndex* codeIndex_deserializer(int socketfd);
 
-void* pcb_serializer(pcb* self, int16_t *length);
-pcb* pcb_deserializer(int socketfd);
+void* pcb_serializer(pcb_t* self, int16_t *length);
+pcb_t* pcb_deserializer(int socketfd);
 
-char *paqueteEnviarAEjecutar_serializer(u_int16_t quantum, uint32_t retardo_quantum,pcb *pcb_proceso);
-
-t_segmento* segmento_deserializer(int socketfd);
-void* segmento_serializer(t_segmento *self, int16_t *length);
+char *paqueteEnviarAEjecutar_serializer(u_int16_t quantum, uint32_t retardo_quantum,pcb_t *pcb_proceso);
 
 int sendAll(int fd, char *cosa, int size, int flags);
 int recvAll(int fd, char *buffer, int size, int flags);
