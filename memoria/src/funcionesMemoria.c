@@ -200,7 +200,6 @@ int framesLibres(){
 	return cant;
 }
 
-
 /* Busqueda secuencial, despues implementamos hash */
 int buscarFrame(int pid, int pag){
 
@@ -265,14 +264,14 @@ int escribir(int pid, int pag, int offset, char* contenido, int size){
 void increaseOpCount(){
 	op_count++;
 }
-bool hayEntradasLibres(){
-	int i;
+int cantEntradas(int pid){
+	int i, cant = 0;
 	for(i=0;i<cache_entradas;i++){
-		if(cache[i].pag == -1 || cache[i].pid == -1){
-			return true;
-		}
+		if(cache[i].pid == pid)
+			cant++;
 	}
-	return false;
+
+	return cant;
 }
 
 bool buscarEntrada(int pid, int pag){
@@ -285,8 +284,29 @@ bool buscarEntrada(int pid, int pag){
 	return -1;
 }
 
-int entradaAReemplazar(){
+int entradaAReemplazar(int pid){
 
+	if( cantEntradas(pid) == max_entradas ){
+		return reemplazoLocal(pid);
+	}else return reemplazoGlobal();
+}
+
+int reemplazoLocal(int pid){
+	int i;
+	int entrada; //A reemplazar
+	int minTime = ULONG_MAX;
+
+	for(i=0;i<cache_entradas;i++){
+		if( cache[i].time_used < minTime && cache[i].pid == pid){
+			entrada = i;
+			minTime = cache[i].time_used;
+		}
+	}
+
+	return entrada;
+}
+
+int reemplazoGlobal(){
 	//Recorro buscando una entrada libre
 	int i;
 	for(i=0;i<cache_entradas;i++){
@@ -333,7 +353,7 @@ void actualizarEntradaCache(int pid, int pag, char* frame){
 	if(entrada != -1){
 		memcpy(cache[entrada].content,frame,frame_size);
 	}else{ //tengo que reemplazar una entrada
-		entrada = entradaAReemplazar();
+		entrada = entradaAReemplazar(pid);
 		cache[entrada].pid = pid;
 		cache[entrada].pag = pag;
 		memcpy(cache[entrada].content,frame,frame_size);

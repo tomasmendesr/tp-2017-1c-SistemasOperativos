@@ -30,6 +30,7 @@
 #define cant_frames config->marcos
 #define frame_size config->marcos_Size
 #define cache_entradas config->entradas_Cache
+#define max_entradas config->cache_x_Proceso
 
 typedef struct{
         char* puerto;
@@ -73,12 +74,16 @@ int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve co
 
 //Funciones cache
 void increaseOpCount(); //Suma uno al opCount
-bool hayEntradasLibres(); //Utilizada por entradaAReemplazar
+/* Cuantas entradas tiene el pid */
+int cantEntradas(int pid);
 /* Busca la entrada con pid y pag. Si no existe retorna -1*/
 bool buscarEntrada(int pid, int pag);
 /* Esta funcion aplica el LRU y me dice que entrada debo reemplazar
- * en caso de que esten todas ocupadas.*/
-int entradaAReemplazar();
+ * en caso de que esten todas ocupadas. Necesita el pid para no pasarse
+ * del límite de entradas por proceso*/
+int entradaAReemplazar(int pid);
+int reemplazoLocal(int pid);
+int reemplazoGlobal();
 /* Busca la entrada que coincida con pid y pag, y devuelve el puntero contenido de la entrada
  * Devuelve 0 en caso de que exista la entrada, -1 en caso contrario*/
 int leerCache(int pid, int pag, char* contenido);
