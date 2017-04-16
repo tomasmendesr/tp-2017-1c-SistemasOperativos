@@ -18,10 +18,10 @@ void crearConfig(int argc, char* argv[]){
 	if(verificarExistenciaDeArchivo(pathConfig)){
 		config = levantarConfiguracionCPU(pathConfig);
 	}else{
-		printf("No se pudo levantar archivo de configuracion");
+		log_error(logger,"No se pudo levantar archivo de configuracion");
 		exit(EXIT_FAILURE);
 	}
-	printf("Configuracion levantada correctamente\n");
+	log_info(logger,"Configuracion levantada correctamente\n");
 	return;
 }
 
@@ -60,17 +60,17 @@ int conexionConKernel(){
 	recibir_paquete(socketConexionKernel, &paquete_vacio, &operacion);
 
 	if (operacion == HANDSHAKE_KERNEL) {
-		printf("Conexion con Kernel establecida! :D \n");
+		log_info(logger, "Conexion con Kernel establecida! :D \n");
 		return 0;
 	} else {
-		printf("El Kernel no devolvio handshake :( \n");
+		log_error(logger,"El Kernel no devolvio handshake :( \n");
 		return -1;
 	}
 }
 int conexionConMemoria(){
 	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
 	if (socketConexionMemoria != -1) {
-		printf("Cliente a Memoria creado\n");
+		log_info(logger, "Cliente a Memoria creado\n");
 	}else{
 		return -1;
 	}
@@ -83,10 +83,10 @@ int conexionConMemoria(){
 	recibir_paquete(socketConexionMemoria, &paquete_vacio, &operacion);
 
 	if (operacion == HANDSHAKE_MEMORIA) {
-		printf("Conexion con Memoria establecida! :D \n");
+		log_info(logger, "Conexion con Memoria establecida! :D \n");
 		return 0;
 	} else {
-		printf("La Memoria no devolvio handshake :( \n");
+		log_error(logger,"La Memoria no devolvio handshake :( \n");
 		return -1;
 	}
 }

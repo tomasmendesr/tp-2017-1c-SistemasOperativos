@@ -116,15 +116,15 @@ void requestHandlerKernel(int* fd){
 
 		switch(tipo_mensaje){
 		case INICIAR_PROGRAMA:
-			iniciarPrograma();
+//			iniciarPrograma();
 			break;
 
 		case FINALIZAR_PROGRAMA:
-			finalizarPrograma();
+//			finalizarPrograma();
 			break;
 
 		case ASIGNAR_PAGINAS:
-			asignarPaginas();
+//			asignarPaginas();
 			break;
 
 		default:
@@ -151,11 +151,11 @@ void requestHandlerCpu(int* fd){
 		switch(tipo_mensaje){
 
 			case SOLICITUD_BYTES:
-				solicitudBytes();
+//				solicitudBytes();
 				break;
 
 			case GRABAR_BYTES:
-				grabarBytes();
+//				grabarBytes();
 				break;
 
 			default:
@@ -371,7 +371,6 @@ void actualizarEntradaCache(int pid, int pag, char* frame){
 
 	cache[entrada].time_used = op_count;
 
-	return;
 }
 
 //funciones interfaz

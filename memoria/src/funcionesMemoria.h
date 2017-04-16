@@ -90,7 +90,7 @@ int leerCache(int pid, int pag, char** contenido);
 /* Se llena una entrada de la cache con los valores pasados por parametro.
  * Si ya existe la entrada, se usa esa misma. Sino, reemplaza una usando LRU.
  * El puntero frame apunta al comienzo del frame referenciado por pid y pag*/
-int actualizarEntradaCache(int pid, int pag, char* frame);
+void actualizarEntradaCache(int pid, int pag, char* frame);
 
  	 	 	 	 	 				/*Este thread maneja tanto cpus como kernel, porque la interfaz es una sola.*/
 void requestHandlerKernel(int* fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
