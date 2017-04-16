@@ -17,8 +17,8 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <commons/interface.h>
-#include <commons/sharedStructs.h>
 #include <commons/cosas.h>
+#include <commons/structsUtiles.h>
 #include <pthread.h>
 
 #define configuracionMemoria "confMemoria.init"

@@ -91,3 +91,56 @@ int conexionConMemoria(){
 	}
 }
 
+
+void atenderKernel(){
+	void* paquete;
+	int bytes;
+	int tipo_mensaje;
+
+	bytes = recibir_info(socketConexionKernel, &paquete, &tipo_mensaje);
+	if(bytes <= 0){
+		log_error(logger, "Desconexion del kernel. Terminando...");
+		close(socketConexionKernel);
+		exit(1);
+	}
+
+	switch (tipo_mensaje) {
+	// Mensajes del kernel
+	case TAMANIO_STACK_PARA_CPU:
+			recibirTamanioStack(paquete);
+			break;
+		case EXECUTE_PCB:
+			recibirPCB(paquete);
+			break;
+		case VALOR_VAR_COMPARTIDA:
+			recibirValorVariableCompartida(paquete);
+			break;
+		case ASIG_VAR_COMPARTIDA:
+			recibirAsignacionVariableCompartida(paquete);
+			break;
+		case SIGNAL_SEMAFORO:
+			recibirSignalSemaforo(paquete);
+			break;
+		// Mensajes de memoria
+		case ENVIAR_TAMANIO_PAGINA_A_CPU:
+			recibirTamanioPagina(paquete);
+			break;
+		case ENVIAR_INSTRUCCION_A_CPU:
+			recibirInstruccion(paquete);
+			break;
+		}
+}
+
+void recibirTamanioStack(void* paquete){}
+
+void recibirPCB(void* paquete){}
+
+void recibirValorVariableCompartida(void* paquete){}
+
+void recibirAsignacionVariableCompartida(void* paquete){}
+
+void recibirSignalSemaforo(void* paquete){}
+
+void recibirTamanioPagina(void* paquete){}
+
+void recibirInstruccion(void* paquete){}

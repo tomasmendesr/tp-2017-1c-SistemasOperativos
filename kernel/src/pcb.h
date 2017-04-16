@@ -25,6 +25,8 @@ typedef struct{
 
 }pcb_t;
 
+
+
 char* ansisop_a_string(char* path);
 
 //Prototipos de creacion y manejo de pcb
