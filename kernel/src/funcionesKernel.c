@@ -366,12 +366,15 @@ cpu_t* obtenerCpuLibre(){
 
 void planificarCortoPlazo(){
 
-	sem_wait(&semCPUs);
-	sem_wait(&mutex_cola_ready);
-	cpu_t* cpu = obtenerCpuLibre();
-	pcb_t* pcb = queue_pop(colaReady);
+	while(1){
 
-	//envio pcb a la cpu, aun no implementado
-	//enviarPCB(cpu, pcb);
+		sem_wait(&semCPUs);
+		sem_wait(&mutex_cola_ready);
+		cpu_t* cpu = obtenerCpuLibre();
+		pcb_t* pcb = queue_pop(colaReady);
+
+		//envio pcb a la cpu, aun no implementado
+		//enviarPCB(cpu, pcb);
+
+	}
 }
-

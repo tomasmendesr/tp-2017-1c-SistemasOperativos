@@ -101,7 +101,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 				//Admitido en el sistema con todas sus estructuras guardadas en memoria.
 				log_info(&logger_kernel,"Proceso creado correctamente %d",nuevoProceso->pid);
 				sem_wait(&mutex_cola_ready);
-				queue_push(ready,nuevoProceso);
+				queue_push(colaReady,nuevoProceso);
 				sem_post(&mutex_cola_ready);
 			}
 			break;
