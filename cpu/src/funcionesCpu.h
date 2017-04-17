@@ -25,32 +25,33 @@ typedef struct{
 	char* ip_Kernel;
 }t_config_cpu;
 
-typedef struct{
-	uint32_t pid;
-	uint32_t programCounter;
-	uint32_t cantPaginasCodigo;
-	t_intructions* indiceCodigo;
-	char* etiquetas;
-	t_list* indiceStack;
-	int16_t exitCode;
-	uint32_t consolaFd;
-}pcb_t;
-
-t_config_cpu* levantarConfiguracionCPU(char* archivo);
-void conexionConKernel();
-void conexionConMemoria();
-int crearLog();
-void crearConfig(int argc, char* argv[]);
-void freeConf(t_config_cpu* config);
-t_puntero definirVariable(t_nombre_variable nombre);
-void inicializarFunciones(void);
-void procesarProgramas(void);
-
 t_config_cpu* config;
 int socketConexionKernel;
 int socketConexionMemoria;
 t_log* logger;
 AnSISOP_funciones* funciones;
 AnSISOP_kernel* funcionesKernel;
+
+uint32_t tamanioStack;
+uint32_t tamanioPagina;
+uint32_t operacion;
+
+t_config_cpu* levantarConfiguracionCPU(char* archivo);
+int conexionConKernel(void);
+int conexionConMemoria(void);
+void freeConf(t_config_cpu* config);
+t_puntero definirVariable(t_nombre_variable nombre);
+void inicializarFunciones(void);
+void procesarProgramas(void);
+int crearLog(void);
+void crearConfig(int argc, char* argv[]);
+void atenderKernel();
+void recibirTamanioStack(void* paquete);
+void recibirPCB(void* paquete);
+void recibirValorVariableCompartida(void* paquete);
+void recibirAsignacionVariableCompartida(void* paquete);
+void recibirSignalSemaforo(void* paquete);
+void recibirTamanioPagina(void* paquete);
+void recibirInstruccion(void* paquete);
 
 #endif /* FUNCIONESCPU_H_ */

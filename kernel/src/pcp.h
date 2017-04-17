@@ -10,4 +10,10 @@
 
 void pcp();
 
+void procesarMensajeCPU(int socketCPU, int mensaje, char* package);
+
+void realizarSignal(int socketCPU, char* key);
+void realizarWait(int socketCPU, char* key);
+void enviarValorSemaforo(int socketCPU, int tipoMensaje, int valorSemaforo);
+
 #endif /* PCP_H_ */

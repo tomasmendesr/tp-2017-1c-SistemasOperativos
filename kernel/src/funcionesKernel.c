@@ -2,9 +2,9 @@
 
 void inicializarColas(){
 
-	new = queue_create();
-	ready = queue_create();
-	finished = queue_create();
+	colaNew = queue_create();
+	colaReady = queue_create();
+	colaFinished = queue_create();
 
 	max_pid = 0;
 }
@@ -147,97 +147,15 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         return conf;
 }
 
-void trabajarConexionConsola(){
 
-	int socket_servidor_kernel = createServer(IP,config->puerto_PROG,BACKLOG);
-
-	int numero_maximo_socket;
-	int newSocket;
-
-	fd_set read_fds;
-	fd_set socket_master;
-
-	FD_ZERO(&read_fds);
-	FD_ZERO(&socket_master);
-	FD_SET(socket_servidor_kernel,&socket_master);
-	numero_maximo_socket = socket_servidor_kernel;
-	int iterador_sockets;
-	void* paquete;
-
-	while(1){
-		read_fds = socket_master;
-
-		if(select(numero_maximo_socket + 1, &read_fds, NULL, NULL, NULL) == -1) {
-			perror("select");
-			exit(1);
-		}
-	for(iterador_sockets = 0; iterador_sockets <= numero_maximo_socket; iterador_sockets++) {
-		if(FD_ISSET(iterador_sockets, &read_fds)) {
-			if(iterador_sockets == socket_servidor_kernel) {
-
-				newSocket = acceptSocket(socket_servidor_kernel);
-
-				if(newSocket == -1) {
-					perror("Error al aceptar");
-				} else {
-					FD_SET(newSocket, &socket_master);
-					if(newSocket > numero_maximo_socket) numero_maximo_socket = newSocket;
-				}
-			} else {
-				//Gestiono cada conexi�n -> Recibo los programas y creo sus PCB.
-				int tipo_mensaje; //Para que la funcion recibir_string lo reciba
-				int check = recibir_info(iterador_sockets, &paquete, &tipo_mensaje);
-
-				//Chequeo de errores
-				if (check == 0) {
-					printf("Se cerro el socket %d\n", iterador_sockets);
-					close(iterador_sockets);
-					FD_CLR(iterador_sockets, &socket_master);
-				}
-
-				if(check == -1){
-					perror("recv");
-					close(iterador_sockets);
-					FD_CLR(iterador_sockets, &socket_master);
-				}
-				// Fin chequeo de errores
-
-				if(check > 0) {
-					procesarMensajeConsola(iterador_sockets,tipo_mensaje, (void*)paquete);
-				}
-			}
-		}
-	}
-	}
-}
-
-void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
-
-	switch(mensaje){
-		case HANDSHAKE_PROGRAMA:
-			printf("Conexion con la consola establecida\n");
-			enviar_paquete_vacio(HANDSHAKE_KERNEL,consola_fd);
-			break;
-
-		case ENVIO_CODIGO:
-			crearProceso(consola_fd, package);
-			break;
-
-		default: printf("Se recibio un codigo no valido\n");
-		break;
-	}
-}
-
-void crearProceso(int consola_fd, char* source){
+pcb_t* crearProceso(int consola_fd, char* source){
 
 	printf("Archivo recibido:\n\n%s", source);
 
 	pcb_t* pcb = crearPCB(source, asignarPid() );
 	pcb->consolaFd = consola_fd;
 
-	queue_push(new, pcb);
-
-	return;
+	return pcb;
 }
 
 int asignarPid(){
@@ -353,6 +271,21 @@ void modificarValorDiccionario(t_dictionary* dic, char* key, void* data){
 	previo = data;
 }
 
+int leerVariableGlobal(t_dictionary* dic, char* key){
+	if(dictionary_has_key(dic, key)){
+		int* valor = dictionary_get(dic, key);
+		return valor;
+	}
+	return NULL;
+}
+
+void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor){
+	if(dictionary_has_key(dic, key)){
+		dictionary_remove_and_destroy(dic, key, free);
+		dictionary_put(dic, key, nuevoValor);
+	}
+}
+
 int semaforoSignal(t_dictionary* dic, char* key){
 	int* previo = dictionary_get(dic, key);
 	*previo = *previo + 1;
@@ -384,4 +317,64 @@ void killProcess(char* comando, char* param){
 }
 void stopPlanification(char* comando, char* param){
         printf("stopPlanification\n");
+}
+
+void agregarNuevaCPU(t_list* lista, int socketCPU){
+	cpu_t* nuevaCPU = malloc(sizeof(cpu_t));
+	nuevaCPU->socket = socketCPU;
+	nuevaCPU->pcb = NULL;
+
+	list_add(lista, nuevaCPU);
+}
+
+void liberarCPU(cpu_t* cpu){
+	//no implementado todavia
+	//liberarPCB(cpu->pcb);
+
+	free(cpu);
+}
+
+void eliminarCPU(t_list* lista, int socketCPU){
+
+	bool condicion(cpu_t* cpu){
+		return cpu->socket == socketCPU ? true : false;
+	}
+
+	list_remove_and_destroy_by_condition(lista, condicion, liberarCPU);
+}
+
+void actualizarReferenciaPCB(int id, pcb_t* pcb){
+
+	bool condicion(cpu_t* cpu){
+		return cpu->socket == id ? true : false;
+	}
+
+	cpu_t* cpu = list_find(listaCPUs, condicion);
+	cpu->pcb = pcb;
+}
+
+
+cpu_t* obtenerCpuLibre(){
+
+	bool estaLibre(cpu_t* cpu){
+		return cpu->pcb == NULL ? true : false;
+	}
+
+	return list_find(listaCPUs, estaLibre);
+
+}
+
+void planificarCortoPlazo(){
+
+	while(1){
+
+		sem_wait(&semCPUs);
+		sem_wait(&mutex_cola_ready);
+		cpu_t* cpu = obtenerCpuLibre();
+		pcb_t* pcb = queue_pop(colaReady);
+
+		//envio pcb a la cpu, aun no implementado
+		//enviarPCB(cpu, pcb);
+
+	}
 }

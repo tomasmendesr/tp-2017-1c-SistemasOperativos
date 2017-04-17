@@ -64,8 +64,9 @@ void inicializarMemoria(){
 	//Inicializo la cache
 	for(i=0;i<config->entradas_Cache;i++){
 		cache[i].pid = -1;
-		//cache[i].pag = -1; no alcanza con el pid?
-		cache[i].content = malloc(config->marcos_Size);
+		cache[i].pag = -1;
+		cache[i].content = malloc(frame_size);
+		cache[i].time_used = 0;
 		if(cache[i].content == NULL) noEspacioCache = true;
 	}
 
@@ -80,7 +81,7 @@ void inicializarMemoria(){
 
 	//Creo las entradas de la tabla invertida
 	for(i=0;i<config->marcos;i++){
-//		((t_entrada_tabla*)memoria)[i].pag = -1; con el pid no alcanza?
+		((t_entrada_tabla*)memoria)[i].pag = -1;
 		((t_entrada_tabla*)memoria)[i].pid = -1;
 	}
 
@@ -115,15 +116,15 @@ void requestHandlerKernel(int* fd){
 
 		switch(tipo_mensaje){
 		case INICIAR_PROGRAMA:
-
+//			iniciarPrograma();
 			break;
 
 		case FINALIZAR_PROGRAMA:
-
+//			finalizarPrograma();
 			break;
 
 		case ASIGNAR_PAGINAS:
-
+//			asignarPaginas();
 			break;
 
 		default:
@@ -150,15 +151,15 @@ void requestHandlerCpu(int* fd){
 		switch(tipo_mensaje){
 
 			case SOLICITUD_BYTES:
-
-			break;
+//				solicitudBytes();
+				break;
 
 			case GRABAR_BYTES:
+//				grabarBytes();
+				break;
 
-			break;
-
-		default:
-			log_warning(logger, "Mensaje Recibido Incorrecto");
+			default:
+				log_warning(logger, "Mensaje Recibido Incorrecto");
 		}
 	}
 }
@@ -191,7 +192,7 @@ int grabarBytes(int pid, int pag, int offset, int size, void* buff){
 int framesLibres(){
 
 	int i, cant = 0;
-	for(i=0;i<config->marcos;i++){
+	for(i=0;i<cant_frames;i++){
 		if( ((t_entrada_tabla*)memoria)[i].pid == -1 &&
 			((t_entrada_tabla*)memoria)[i].pag == -1  )
 			cant++;
@@ -199,19 +200,7 @@ int framesLibres(){
 	return cant;
 }
 
-int framesLibresCache(){
-
-	int i, cant = 0;
-	for(i=0;i<config->entradas_Cache;i++){
-		if( cache[i].pid == -1 &&
-			cache[i].pag == -1  )
-			cant++;
-	}
-	return cant;
-}
-
 /* Busqueda secuencial, despues implementamos hash */
-
 int buscarFrame(int pid, int pag){
 
 	int i;
@@ -231,16 +220,24 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 	int frame;
 	int cant_leida = 0;
 	int cant_a_leer;
+	char* pos_leer;
 
 	while(cant_leida < size){
 
-		frame = buscarFrame(pid,pag);
-		if(frame == -1)
-			return -1;
+		if( leerCache(pid,pag,&pos_leer) == -1 ){//No Esta en cache, debo leer de memoria
+			frame = buscarFrame(pid,pag);
+			if(frame == -1)
+				return -1;
 
-		//Me fijo cuanto tengo que leer y copio lo que esta en memoria en resultado
+			pos_leer = memoria + frame * frame_size;
+
+			actualizarEntradaCache(pid, pag, pos_leer);
+		}/* Al salir de este if pos_leer apunta o bien al frame de donde tengo que leer,
+		  * o a donde esta cacheado el frame */
+
+		//Me fijo cuanto tengo que leer y copio lo que esta en memoria/cache en resultado
 		cant_a_leer = min(size - cant_leida, frame_size - offset);
-		memcpy(resultado + cant_leida, memoria + frame * frame_size + offset, cant_a_leer);
+		memcpy(resultado + cant_leida, pos_leer + offset, cant_a_leer);
 
 		offset = 0;
 		pag++;
@@ -264,11 +261,116 @@ int escribir(int pid, int pag, int offset, char* contenido, int size){
 		cant_a_escribir = min(size - cant_escrita, frame_size - offset);
 		memcpy(memoria + frame * frame_size + offset, contenido + cant_escrita, cant_a_escribir);
 
+		actualizarEntradaCache(pid, pag, memoria + frame * frame_size);
+
 		offset = 0;
 		pag++;
 	}
 
 	return 0;
+}
+
+//Funciones Cache
+void increaseOpCount(){
+	op_count++;
+}
+int cantEntradas(int pid){
+	int i, cant = 0;
+	for(i=0;i<cache_entradas;i++){
+		if(cache[i].pid == pid)
+			cant++;
+	}
+
+	return cant;
+}
+
+bool buscarEntrada(int pid, int pag){
+	int i;
+	for(i=0;i<cache_entradas;i++){
+		if(cache[i].pid == pid && cache[i].pag == pag){
+			return i;
+		}
+	}
+	return -1;
+}
+
+int entradaAReemplazar(int pid){
+
+	if( cantEntradas(pid) == max_entradas ){
+		return reemplazoLocal(pid);
+	}else return reemplazoGlobal();
+}
+
+int reemplazoLocal(int pid){
+	int i;
+	int entrada; //A reemplazar
+	int minTime = ULONG_MAX;
+
+	for(i=0;i<cache_entradas;i++){
+		if( cache[i].time_used < minTime && cache[i].pid == pid){
+			entrada = i;
+			minTime = cache[i].time_used;
+		}
+	}
+
+	return entrada;
+}
+
+int reemplazoGlobal(){
+	//Recorro buscando una entrada libre
+	int i;
+	for(i=0;i<cache_entradas;i++){
+		if(cache[i].pid == -1 || cache[i].pag -1){
+			return i;
+		}
+	}
+
+	//Sali del for => no hay entrada libre. Debo reemplazar
+	int entrada; //A reemplazar
+	int minTime = ULONG_MAX;
+
+	for(i=0;i<cache_entradas;i++){
+		if( cache[i].time_used < minTime){
+			entrada = i;
+			minTime = cache[i].time_used;
+		}
+	}
+
+	return entrada;
+}
+
+int leerCache(int pid, int pag, char** contenido){
+
+	increaseOpCount();
+
+	int i;
+	for(i=0;i<cache_entradas;i++){//Si alguna entrada coincide, pongo el valor de content en contenido
+		if(cache[i].pid == pid && cache[i].pag == pag){
+			*contenido = cache[i].content;
+			cache[i].time_used = op_count;
+			return 0;
+		}
+	}
+	return -1;
+}
+
+void actualizarEntradaCache(int pid, int pag, char* frame){
+
+	increaseOpCount();
+
+	int entrada = buscarEntrada(pid, pag);
+
+	if(entrada != -1){
+		memcpy(cache[entrada].content,frame,frame_size);
+	}else{ //tengo que reemplazar una entrada
+		entrada = entradaAReemplazar(pid);
+		cache[entrada].pid = pid;
+		cache[entrada].pag = pag;
+		memcpy(cache[entrada].content,frame,frame_size);
+	}
+
+	cache[entrada].time_used = op_count;
+
 }
 
 //funciones interfaz

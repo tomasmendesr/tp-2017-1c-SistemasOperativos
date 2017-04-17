@@ -25,10 +25,8 @@ int main(int argc, char** argv){
 void esperarConexionKernel(){
 	socketEscucha = createServer(IP, conf->puertoEscucha, BACKLOG);
 	if(socketEscucha != -1){
-		printf("Esperando conexion del kernel...\n");
 		log_info(logger,"Esperando conexion del kernel...");
 	}else{
-		printf("Error al levantar el servidor\n");
 		log_error(logger,"Error al levantar el servidor");
 	}
 
@@ -38,7 +36,6 @@ void esperarConexionKernel(){
 	int tipo_mensaje;
 
 	if(recibir_info(socketConexionKernel, &paquete, &tipo_mensaje)){
-		printf("Conexion con kernel establecida\n");
 		log_info(logger, "Conexion con kernel establecida");
 	}
 }

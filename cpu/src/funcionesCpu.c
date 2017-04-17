@@ -29,7 +29,6 @@ void crearConfig(int argc, char* argv[]){
 		log_error(logger,"No pudo levantarse el archivo de configuracion");
 		exit(EXIT_FAILURE);
 	}
-	return;
 }
 
 t_config_cpu* levantarConfiguracionCPU(char* archivo) {
@@ -59,7 +58,7 @@ void freeConf(t_config_cpu* config){
 	free(config);
 }
 
-void conexionConKernel(void){
+int conexionConKernel(void){
 
 	int operacion;
 	void* paquete_vacio;
@@ -68,7 +67,7 @@ void conexionConKernel(void){
 
 	if(socketConexionKernel == -1){
 		log_error(logger,"No pudo conectarse a Kernel");
-		exit(EXIT_FAILURE);
+		return -1;
 	}else{
 		log_info(logger,"Cliente a Kernel creado");
 	}
@@ -80,11 +79,12 @@ void conexionConKernel(void){
 		log_info(logger,"Conexion establecida con Kernel! :D");
 	}else{
 		log_info(logger,"El Kernel no devolvio handshake :(");
-		exit(EXIT_FAILURE);
+		return -1;
 	}
+	return 0;
 }
 
-void conexionConMemoria(void){
+int conexionConMemoria(void){
 
 	int operacion;
 	void* paquete_vacio;
@@ -92,18 +92,20 @@ void conexionConMemoria(void){
 	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
 	if(socketConexionMemoria == -1){
 		log_error(logger,"No pudo conectarse a Memoria");
-		exit(EXIT_FAILURE);
+		return -1;
 	}else{
 		log_info(logger,"Cliente a Memoria creado");
 	}
 	enviar_paquete_vacio(HANDSHAKE_CPU, socketConexionMemoria);
 	recibir_paquete(socketConexionMemoria, &paquete_vacio, &operacion);
+
 	if(operacion == HANDSHAKE_MEMORIA){
 		log_info(logger,"Conexion establecida con Memoria! :D");
 	}else{
 		log_info(logger,"La Memoria no devolvio handshake :(");
-		exit(EXIT_FAILURE);
+		return -1;
 	}
+	return 0;
 }
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
@@ -186,27 +188,30 @@ void wait(t_nombre_semaforo identificador_semaforo){
 
 void inicializarFunciones(void){
 
-	funciones[0] = asignar;
-	funciones[1] = asignarValorCompartida;
-	funciones[2] = definirVariable;
-	funciones[3] = dereferenciar;
-	funciones[4] = finalizar;
-	funciones[5] = irAlLabel;
-	funciones[6] = llamarConRetorno;
-	funciones[7] = llamarSinRetorno;
-	funciones[8] = obtenerPosicionVariable;
-	funciones[9] = obtenerValorCompartida;
-	funciones[10] = retornar;
-	funcionesKernel[11] = abrir;
-	funcionesKernel[12] = borrar;
-	funcionesKernel[13] = cerrar;
-	funcionesKernel[14] = escribir;
-	funcionesKernel[15] = leer;
-	funcionesKernel[16] = liberar;
-	funcionesKernel[17] = moverCursor;
-	funcionesKernel[18] = reservar;
-	funcionesKernel[19] = signal;
-	funcionesKernel[20] = wait;
+	funciones = malloc(sizeof(AnSISOP_funciones));
+	funcionesKernel = malloc(sizeof(AnSISOP_funciones));
+
+	funciones->AnSISOP_asignar = asignar;
+	funciones->AnSISOP_asignarValorCompartida = asignarValorCompartida;
+	funciones->AnSISOP_definirVariable = definirVariable;
+	funciones->AnSISOP_dereferenciar = dereferenciar;
+	funciones->AnSISOP_finalizar = finalizar;
+	funciones->AnSISOP_irAlLabel = irAlLabel;
+	funciones->AnSISOP_llamarConRetorno = llamarConRetorno;
+	funciones->AnSISOP_llamarSinRetorno = llamarSinRetorno;
+	funciones->AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable;
+	funciones->AnSISOP_obtenerValorCompartida = obtenerValorCompartida;
+	funciones->AnSISOP_retornar = retornar;
+	funcionesKernel->AnSISOP_abrir = abrir;
+	funcionesKernel->AnSISOP_borrar = borrar;
+	funcionesKernel->AnSISOP_cerrar = cerrar;
+	funcionesKernel->AnSISOP_escribir = escribir;
+	funcionesKernel->AnSISOP_leer = leer;
+	funcionesKernel->AnSISOP_liberar = liberar;
+	funcionesKernel->AnSISOP_moverCursor = moverCursor;
+	funcionesKernel->AnSISOP_reservar = reservar;
+	funcionesKernel->AnSISOP_signal = signal;
+	funcionesKernel->AnSISOP_wait = wait;
 }
 
 void procesarProgramas(void){
@@ -214,3 +219,56 @@ void procesarProgramas(void){
 
 
 }
+
+void atenderKernel(){
+	void* paquete;
+	int bytes;
+	int tipo_mensaje;
+
+	bytes = recibir_info(socketConexionKernel, &paquete, &tipo_mensaje);
+	if(bytes <= 0){
+		log_error(logger, "Desconexion del kernel. Terminando...");
+		close(socketConexionKernel);
+		exit(1);
+	}
+
+	switch (tipo_mensaje) {
+	// Mensajes del kernel
+	case TAMANIO_STACK_PARA_CPU:
+			recibirTamanioStack(paquete);
+			break;
+		case EXECUTE_PCB:
+			recibirPCB(paquete);
+			break;
+		case VALOR_VAR_COMPARTIDA:
+			recibirValorVariableCompartida(paquete);
+			break;
+		case ASIG_VAR_COMPARTIDA:
+			recibirAsignacionVariableCompartida(paquete);
+			break;
+		case SIGNAL_SEMAFORO:
+			recibirSignalSemaforo(paquete);
+			break;
+		// Mensajes de memoria
+		case ENVIAR_TAMANIO_PAGINA_A_CPU:
+			recibirTamanioPagina(paquete);
+			break;
+		case ENVIAR_INSTRUCCION_A_CPU:
+			recibirInstruccion(paquete);
+			break;
+		}
+}
+
+void recibirTamanioStack(void* paquete){}
+
+void recibirPCB(void* paquete){}
+
+void recibirValorVariableCompartida(void* paquete){}
+
+void recibirAsignacionVariableCompartida(void* paquete){}
+
+void recibirSignalSemaforo(void* paquete){}
+
+void recibirTamanioPagina(void* paquete){}
+
+void recibirInstruccion(void* paquete){}

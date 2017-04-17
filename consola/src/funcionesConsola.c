@@ -74,9 +74,8 @@ int enviarArchivo(int kernel_fd, char* path){
  	header.type = ENVIO_CODIGO;
  	header.length = file_size;
 
- 	memcpy(buffer, &(header.type), offset += sizeof(header.type));
- 	memcpy(buffer + offset, &(header.length), sizeof(header.length));
- 	offset += sizeof(header.length);
+ 	memcpy(buffer, &(header.type),sizeof(header.type)); offset+=sizeof(header.type);
+ 	memcpy(buffer + offset, &(header.length),sizeof(header.length)); offset+=sizeof(header.length);
 
  	if( fread(buffer + offset,file_size,1,file) < file_size){
  		log_error(logger, "No pude leer el archivo");
@@ -132,8 +131,8 @@ void iniciarPrograma(char* comando, char* param) {
 	if(verificarExistenciaDeArchivo(param))
 		printf("Su proceso se inicializo");
 	else{
-		log_error(logger, "no existe el archivo");
-		exit(1);
+		log_warning(logger, "no existe el archivo");
+		return;
 	}
 	socket_cliente = createClient(config->ip_Kernel, config->puerto_Kernel);
 	if (socket_cliente != -1) {

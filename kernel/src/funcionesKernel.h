@@ -47,8 +47,13 @@ typedef struct {
 
 } t_config_kernel;
 
-void inicializarColas();
+typedef struct{
+	int socket; //funciona como id del cpu
+	pcb_t* pcb;
+} cpu_t;
 
+void inicializarColas();
+void inicializaciones();
 void crearConfig(int argc, char* argv[]);
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
 void destruirConfiguracionKernel(t_config_kernel* config);
@@ -57,6 +62,8 @@ t_dictionary* crearDiccionario(char** array);
 void modificarValorDiccionario(t_dictionary* dic, char* key, void* data);
 int semaforoSignal(t_dictionary* dic, char* key);
 int semaforoWait(t_dictionary* dic, char* key);
+int leerVariableGlobal(t_dictionary* dic, char* key);
+void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor);
 
 void establecerConexiones();
 int conexionConFileSystem();
@@ -66,7 +73,7 @@ void trabajarConexionCPU();
 //Mensajes con consola
 void trabajarConexionConsola();
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
-void crearProceso(int consola_fd, char* package);
+pcb_t* crearProceso(int consola_fd, char* package);
 int asignarPid();
 
 //Funciones de interfaz
@@ -78,13 +85,25 @@ void gradoMultiprogramacion(char* comando, char* param);
 void killProcess(char*,char*);
 void stopPlanification(char*,char*);
 
+//Funciones de manejo de CPUs
+void agregarNuevaCPU(t_list* lista, int socketCPU);
+void liberarCPU(cpu_t* cpu);
+void eliminarCPU(t_list* lista, int socketCPU);
+void actualizarReferenciaPCB(int id, pcb_t* pcb);
+cpu_t* obtenerCpuLibre();
+
 //Variables Globales
 t_config_kernel* config;
 int socketConexionFS;
 int socketConexionMemoria;
 int max_pid;
+t_log logger_kernel;
+sem_t mutex_cola_ready;
+sem_t mutex_cola_new;
+sem_t semCPUs;
+t_list* listaCPUs;
 
 //Colas procesos
-t_queue *new, *ready, *finished;
+t_queue *colaNew, *colaReady, *colaFinished;
 
 #endif /* FUNCIONESKERNEL_H_ */

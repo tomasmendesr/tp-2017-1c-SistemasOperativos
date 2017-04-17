@@ -10,21 +10,27 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <commons/config.h>
 #include <commons/sockets.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <commons/interface.h>
-#include <commons/sharedStructs.h>
 #include <commons/cosas.h>
+#include <commons/structsUtiles.h>
 #include <pthread.h>
 
 #define configuracionMemoria "confMemoria.init"
 #define MAX_LEN_PUERTO 6
-#define frame_size config->marcos_Size
 #define IP "127.0.0.1"
 #define BACKLOG 10
+
+//Defines para escribir menos
+#define cant_frames config->marcos
+#define frame_size config->marcos_Size
+#define cache_entradas config->entradas_Cache
+#define max_entradas config->cache_x_Proceso
 
 typedef struct{
         char* puerto;
@@ -45,6 +51,7 @@ typedef struct{
 	int pid;
 	int pag;
 	char* content;
+	unsigned long int time_used; //Cual fue la ultima vez que se utilizo
 }t_entrada_cache;
 
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
@@ -60,11 +67,30 @@ void esperarConexionKernel();
 void inicializarMemoria();
 
 //Funciones administracion memoria
-int framesLibresCache();
 int framesLibres();
 int buscarFrame(int pid, int pag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
+
+//Funciones cache
+void increaseOpCount(); //Suma uno al opCount
+/* Cuantas entradas tiene el pid */
+int cantEntradas(int pid);
+/* Busca la entrada con pid y pag. Si no existe retorna -1*/
+bool buscarEntrada(int pid, int pag);
+/* Esta funcion aplica el LRU y me dice que entrada debo reemplazar
+ * en caso de que esten todas ocupadas. Necesita el pid para no pasarse
+ * del límite de entradas por proceso*/
+int entradaAReemplazar(int pid);
+int reemplazoLocal(int pid);
+int reemplazoGlobal();
+/* Busca la entrada que coincida con pid y pag, y devuelve el puntero contenido de la entrada
+ * Devuelve 0 en caso de que exista la entrada, -1 en caso contrario*/
+int leerCache(int pid, int pag, char** contenido);
+/* Se llena una entrada de la cache con los valores pasados por parametro.
+ * Si ya existe la entrada, se usa esa misma. Sino, reemplaza una usando LRU.
+ * El puntero frame apunta al comienzo del frame referenciado por pid y pag*/
+void actualizarEntradaCache(int pid, int pag, char* frame);
 
  	 	 	 	 	 				/*Este thread maneja tanto cpus como kernel, porque la interfaz es una sola.*/
 void requestHandlerKernel(int* fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
@@ -94,5 +120,8 @@ char* memoria; /*Este va a ser el bloque que simula la memoria principal.
 				Uso char* porque sizeof(char) = 1 y facilita la aritmetica,
 				pero no tiene nada que ver con caracteres*/
 t_entrada_cache* cache;
+
+unsigned long int op_count; /*Esto vendría a ser nuestro tiempo de referencia para el algoritmo LRU.
+ 	 	 	 			 Cada vez que se realiza una operación en memoria, se incrementa.*/
 
 #endif /* FUNCIONESMEMORIA_H_ */

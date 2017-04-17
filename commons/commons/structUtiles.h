@@ -49,5 +49,21 @@ typedef struct indiceCodigo{
 	uint32_t start;
 }t_indice_codigo;
 
+typedef enum {
+	ERROR, NOTHING, SUCCESS
+} opciones_generales_ops;
+
+typedef struct{
+	int pid;
+	int pag;
+	int offset;
+	int size;
+}t_operacion_bytes;
+
+typedef struct{
+	int pid;
+	int cantPag;
+}t_operacion_pag;
+
 #endif /* STRUCTSUTILES_H_ */
 
