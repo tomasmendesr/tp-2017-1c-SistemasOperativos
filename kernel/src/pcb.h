@@ -23,17 +23,17 @@ typedef struct{
 	int16_t exitCode;
 	uint32_t consolaFd;
 
-}pcb_t;
+}t_pcb;
 
 
 
 char* ansisop_a_string(char* path);
 
 //Prototipos de creacion y manejo de pcb
-pcb_t* crearPCB(char* codigo, int id);
+t_pcb* crearPCB(char* codigo, int id);
 t_stack* crearPosicionStack();
-void insertarNuevoStack(pcb_t* pcb);
-void eliminarUltimaPosicionStack(pcb_t* pcb);
+void insertarNuevoStack(t_pcb* pcb);
+void eliminarUltimaPosicionStack(t_pcb* pcb);
 void destruirPosicionStack(t_stack* stack);
 t_var_local* crearVariableStack(char* id, uint32_t pagina, uint32_t offset, uint32_t size);
 void destruirVariableStack(t_var_local* var);

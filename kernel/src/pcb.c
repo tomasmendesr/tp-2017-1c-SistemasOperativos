@@ -18,8 +18,8 @@ char* ansisop_a_string(char* path){
 	return codigo;
 }
 
-pcb_t* crearPCB(char* codigo, int id){
-	pcb_t* pcb = malloc(sizeof(pcb));
+t_pcb* crearPCB(char* codigo, int id){
+	t_pcb* pcb = malloc(sizeof(pcb));
 
 	t_metadata_program* metadata = metadata_desde_literal(codigo);
 
@@ -41,12 +41,12 @@ pcb_t* crearPCB(char* codigo, int id){
 	return pcb;
 }
 
-void insertarNuevoStack(pcb_t* pcb){
+void insertarNuevoStack(t_pcb* pcb){
 	t_stack* nuevo = crearPosicionStack();
 	list_add(pcb->indiceStack, nuevo);
 }
 
-void eliminarUltimaPosicionStack(pcb_t* pcb){
+void eliminarUltimaPosicionStack(t_pcb* pcb){
 	int cantElementos = list_size(pcb->indiceStack);
 	list_remove_and_destroy_element(pcb->indiceStack, cantElementos - 1, destruirPosicionStack);
 }
