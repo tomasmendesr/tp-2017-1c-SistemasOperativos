@@ -132,8 +132,7 @@ enum protocolo_a_memoria{
 	CAMBIO_PROCESO_ACTIVO = 62,
 	CREAR_SEGMENTO = 63,
 	DESTRUIR_SEGMENTOS = 64,
-	INICIAR_PROGRAMA = 65,
-	FINALIZAR_PROGRAMA = 66,
+	INICIAR_PROGRAMA = 65
 };
 
 //Mensajes que la memoria le envia el resto de los procesos.
@@ -163,7 +162,8 @@ enum protocolo_kernel_programa{
 enum protocolo_programa_a_kernel{
 	CODIGO_PROGRAMA = 120,
 	HANDSHAKE_PROGRAMA = 121,
-	ENVIO_CODIGO = 122
+	ENVIO_CODIGO = 122,
+	FINALIZAR_PROGRAMA = 123
 };
 
 

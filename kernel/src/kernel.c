@@ -14,6 +14,7 @@
 int main(int argc, char** argv){
 
 	crearConfig(argc,argv);
+	inicializaciones();
 
 	//Tiramos 2 hilos porque necesitamos escuchar conexiones y desconexion de sockets por puertos diferentes
 	//Planificador de largo plazo
@@ -42,5 +43,9 @@ int main(int argc, char** argv){
 	pthread_join(hilo_plp, NULL);
 	destruirConfiguracionKernel(config);
 	return EXIT_SUCCESS;
+}
+void inicializaciones(){
+	sem_init(&mutex_cola_ready,0,1);
+	sem_init(&mutex_cola_ready,0,1);
 }
 

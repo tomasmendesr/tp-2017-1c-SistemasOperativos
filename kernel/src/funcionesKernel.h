@@ -48,7 +48,7 @@ typedef struct {
 } t_config_kernel;
 
 void inicializarColas();
-
+void inicializaciones();
 void crearConfig(int argc, char* argv[]);
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
 void destruirConfiguracionKernel(t_config_kernel* config);
@@ -66,7 +66,7 @@ void trabajarConexionCPU();
 //Mensajes con consola
 void trabajarConexionConsola();
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
-void crearProceso(int consola_fd, char* package);
+pcb* crearProceso(int consola_fd, char* package);
 int asignarPid();
 
 //Funciones de interfaz
@@ -83,6 +83,9 @@ t_config_kernel* config;
 int socketConexionFS;
 int socketConexionMemoria;
 int max_pid;
+t_log logger_kernel;
+sem_t mutex_cola_ready;
+sem_t mutex_cola_new;
 
 //Colas procesos
 t_queue *new, *ready, *finished;
