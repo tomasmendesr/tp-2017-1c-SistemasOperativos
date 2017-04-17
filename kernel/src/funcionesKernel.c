@@ -2,9 +2,9 @@
 
 void inicializarColas(){
 
-	new = queue_create();
-	ready = queue_create();
-	finished = queue_create();
+	colaNew = queue_create();
+	colaReady = queue_create();
+	colaFinished = queue_create();
 
 	max_pid = 0;
 }
@@ -318,3 +318,60 @@ void killProcess(char* comando, char* param){
 void stopPlanification(char* comando, char* param){
         printf("stopPlanification\n");
 }
+
+void agregarNuevaCPU(t_list* lista, int socketCPU){
+	cpu_t* nuevaCPU = malloc(sizeof(cpu_t));
+	nuevaCPU->socket = socketCPU;
+	nuevaCPU->pcb = NULL;
+
+	list_add(lista, nuevaCPU);
+}
+
+void liberarCPU(cpu_t* cpu){
+	//no implementado todavia
+	//liberarPCB(cpu->pcb);
+
+	free(cpu);
+}
+
+void eliminarCPU(t_list* lista, int socketCPU){
+
+	bool condicion(cpu_t* cpu){
+		return cpu->socket == socketCPU ? true : false;
+	}
+
+	list_remove_and_destroy_by_condition(lista, condicion, liberarCPU);
+}
+
+void actualizarReferenciaPCB(int id, pcb_t* pcb){
+
+	bool condicion(cpu_t* cpu){
+		return cpu->socket == id ? true : false;
+	}
+
+	cpu_t* cpu = list_find(listaCPUs, condicion);
+	cpu->pcb = pcb;
+}
+
+
+cpu_t* obtenerCpuLibre(){
+
+	bool estaLibre(cpu_t* cpu){
+		return cpu->pcb == NULL ? true : false;
+	}
+
+	return list_find(listaCPUs, estaLibre);
+
+}
+
+void planificarCortoPlazo(){
+
+	sem_wait(&semCPUs);
+	sem_wait(&mutex_cola_ready);
+	cpu_t* cpu = obtenerCpuLibre();
+	pcb_t* pcb = queue_pop(colaReady);
+
+	//envio pcb a la cpu, aun no implementado
+	//enviarPCB(cpu, pcb);
+}
+

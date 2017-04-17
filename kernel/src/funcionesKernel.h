@@ -47,6 +47,11 @@ typedef struct {
 
 } t_config_kernel;
 
+typedef struct{
+	int socket; //funciona como id del cpu
+	pcb_t* pcb;
+} cpu_t;
+
 void inicializarColas();
 void inicializaciones();
 void crearConfig(int argc, char* argv[]);
@@ -80,6 +85,13 @@ void gradoMultiprogramacion(char* comando, char* param);
 void killProcess(char*,char*);
 void stopPlanification(char*,char*);
 
+//Funciones de manejo de CPUs
+void agregarNuevaCPU(t_list* lista, int socketCPU);
+void liberarCPU(cpu_t* cpu);
+void eliminarCPU(t_list* lista, int socketCPU);
+void actualizarReferenciaPCB(int id, pcb_t* pcb);
+cpu_t* obtenerCpuLibre();
+
 //Variables Globales
 t_config_kernel* config;
 int socketConexionFS;
@@ -88,8 +100,10 @@ int max_pid;
 t_log logger_kernel;
 sem_t mutex_cola_ready;
 sem_t mutex_cola_new;
+sem_t semCPUs;
+t_list* listaCPUs;
 
 //Colas procesos
-t_queue *new, *ready, *finished;
+t_queue *colaNew, *colaReady, *colaFinished;
 
 #endif /* FUNCIONESKERNEL_H_ */

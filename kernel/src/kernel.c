@@ -44,8 +44,12 @@ int main(int argc, char** argv){
 	destruirConfiguracionKernel(config);
 	return EXIT_SUCCESS;
 }
+
 void inicializaciones(){
 	sem_init(&mutex_cola_ready,0,1);
 	sem_init(&mutex_cola_new,0,1);
+	sem_init(&semCPUs, 0, 0);
+
+	listaCPUs = list_create();
 }
 
