@@ -8,8 +8,8 @@
 #ifndef PCB_H_
 #define PCB_H_
 
+#include <commons/structUtiles.h>
 #include <parser/metadata_program.h>
-#include <commons/structsUtiles.h>
 #include <sys/stat.h>
 #include <parser/parser.h>
 
