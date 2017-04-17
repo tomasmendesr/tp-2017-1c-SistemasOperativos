@@ -271,14 +271,19 @@ void modificarValorDiccionario(t_dictionary* dic, char* key, void* data){
 	previo = data;
 }
 
-int leerVariableGlobanl(t_dictionary* dic, char* key){
-	int* valor = dictionary_get(dic, key);
-	return atoi(valor);
+int leerVariableGlobal(t_dictionary* dic, char* key){
+	if(dictionary_has_key(dic, key)){
+		int* valor = dictionary_get(dic, key);
+		return valor;
+	}
+	return NULL;
 }
 
 void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor){
-	int* valor = dictionary_get(dic, key);
-	memcpy(valor, nuevoValor, 10);
+	if(dictionary_has_key(dic, key)){
+		dictionary_remove_and_destroy(dic, key, free);
+		dictionary_put(dic, key, nuevoValor);
+	}
 }
 
 int semaforoSignal(t_dictionary* dic, char* key){

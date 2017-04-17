@@ -57,7 +57,7 @@ t_dictionary* crearDiccionario(char** array);
 void modificarValorDiccionario(t_dictionary* dic, char* key, void* data);
 int semaforoSignal(t_dictionary* dic, char* key);
 int semaforoWait(t_dictionary* dic, char* key);
-int leerVariableGlobanl(t_dictionary* dic, char* key);
+int leerVariableGlobal(t_dictionary* dic, char* key);
 void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor);
 
 void establecerConexiones();
