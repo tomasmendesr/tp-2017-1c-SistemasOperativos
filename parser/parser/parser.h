@@ -67,7 +67,8 @@
 		/*
 		 * DEFINIR VARIABLE
 		 *
-		 * Reserva en el Contexto de Ejecución Actual el espacio necesario para una variable llamada identificador_variable y la registra tanto en el Stack como en el Diccionario de Variables. Retornando la posición del valor de esta nueva variable del stack
+		 * Reserva en el Contexto de Ejecución Actual el espacio necesario para una variable llamada identificador_variable y la registra tanto en el Stack como en el Diccionario
+		 * de Variables. Retornando la posición del valor de esta nueva variable del stack
 		 * El valor de la variable queda indefinido: no deberá inicializarlo con ningún valor default.
 		 * Esta función se invoca una vez por variable, a pesar que este varias veces en una línea.
 		 * Ej: Evaluar "variables a, b, c" llamará tres veces a esta función con los parámetros "a", "b" y "c"

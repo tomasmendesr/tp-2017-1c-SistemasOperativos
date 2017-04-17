@@ -17,6 +17,7 @@
 #include <commons/collections/queue.h>
 #include <commons/config.h>
 #include <commons/log.h>
+#include <commons/collections/dictionary.h>
 
 typedef struct{
 	uint32_t pagina;
@@ -26,7 +27,7 @@ typedef struct{
 
 typedef struct{
 	uint32_t pagina;
-	uint32_t offset;
+	uint32_t offset; //start
 	uint32_t size;
 }t_argumento;
 
@@ -35,7 +36,9 @@ typedef struct stack{
 	t_list* variables;
 	uint32_t direcretorno;
 	t_argumento * retVar;
-}t_stack;
+}t_entrada_stack;
+
+t_dictionary* etiquetas;
 
 typedef struct{
 	char idVariable;
@@ -46,8 +49,22 @@ typedef struct{
 
 typedef struct indiceCodigo{
 	uint32_t offset;
-	uint32_t start;
+	uint32_t size;
 }t_indice_codigo;
+
+
+typedef struct{
+	uint32_t pid;  //Identificador único del Programa en el sistema
+	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
+	uint32_t cantPaginasCodigo;
+	t_list* indiceCodigo;
+	t_list* stack;
+	t_dictionary* etiquetas;
+	int16_t exitCode;
+	uint32_t consolaFd;
+
+}__attribute__((__packed__))pcb;
+
 
 typedef enum {
 	ERROR, NOTHING, SUCCESS

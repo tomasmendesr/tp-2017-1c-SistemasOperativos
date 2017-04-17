@@ -14,8 +14,6 @@ int main(int argc, char** argv) {
 	crearLog();
 	crearConfig(argc,argv);
 
-//	freeConf(config);
-
 	// Conecta con memoria
 	if(conexionConMemoria() == -1){
 		log_error(logger, "No se pudo conectar con la memoria");
@@ -30,10 +28,9 @@ int main(int argc, char** argv) {
 	while(true){
 		log_info(logger, "Esperando mensajes del Kernel...");
 		atenderKernel();
-//		procesarProgramas();
 	}
 
-//	free(config);
+	freeConf(config);
 	finalizarConexion(socketConexionKernel);
 	finalizarConexion(socketConexionMemoria);
 	return EXIT_SUCCESS;

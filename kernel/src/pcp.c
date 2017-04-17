@@ -27,8 +27,6 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		break;
 	case ASIG_VAR_COMPARTIDA:
 		break;
-	case IO:
-		break;
 
 	default:
 		log_warning(&logger_kernel,"Se recibio un codigo de operacion invalido.");

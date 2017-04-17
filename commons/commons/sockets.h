@@ -48,11 +48,13 @@ typedef struct {
 	u_int32_t  programCounter;
 }__attribute__((__packed__)) labelIndex;
 
+
+/*Me lo llevo para structUtiles*/
 typedef struct{
 	uint32_t pid;  //Identificador único del Programa en el sistema
 	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
 	uint32_t cantPaginasCodigo;
-	//t_intructions* indiceCodigo; Ver si es necesario
+//	t_intructions* indiceCodigo;
 	//char* etiquetas;  Verificar si es necesario
 	//t_list* indiceStack; Verificar si es necesario
 	int16_t exitCode; //Codigo de finalizacion
@@ -104,7 +106,7 @@ enum protocolo_cpu_a_kernel{
 	GRABAR_VARIABLE_COMPARTIDA = 44,
 	OBTENER_VALOR_VARIABLE_COMPARTIDA = 45,
 	IMPRIMIR = 46,
-//	IMPRIMIR_TEXTO = 47,
+	IMPRIMIR_TEXTO = 47,
 	FINALIZACION_PROCESO = 48,
 	ENVIO_PCB = 49,
 	MUERTE_CPU = 50,
@@ -113,13 +115,10 @@ enum protocolo_cpu_a_kernel{
 	QUANTUM = 123,
 	EXIT = 124,
 	IMPRIMIR_VALOR = 125,
-	IMPRIMIR_TEXTO = 126,
 	LEER_VAR_COMPARTIDA = 127,
 	ASIG_VAR_COMPARTIDA = 128,
 	WAIT = 129,
 	SIGNAL = 130,
-	SIGUSR = 131,
-	IO = 132,
 	FINALIZO_POR_ERROR_MEMORIA = 133,
 	STACKOVERFLOW = 134,
 };
@@ -142,9 +141,6 @@ enum protocolo_memoria_a_cualquiera{
 	MEMORY_OVERLOAD = 82,
 	SEGMENTO_CREADO = 83,
 	OVERFLOW = 84,
-	// AGREGADAS (Despues hago una limpieza)
-	ENVIAR_TAMANIO_PAGINA_A_CPU = 141,
-	ENVIAR_INSTRUCCION_A_CPU = 142,
 };
 
 //Mensajes entre Kernel y Programa
