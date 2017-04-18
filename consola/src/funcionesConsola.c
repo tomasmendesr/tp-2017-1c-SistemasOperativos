@@ -144,7 +144,7 @@ void iniciarPrograma(char* comando, char* param) {
 	int operacion = 0;
 	void* paquete_vacio;
 
-	recibir_info(socket_cliente, &paquete_vacio, &operacion);
+	recibir_paquete(socket_cliente, &paquete_vacio, &operacion);
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		printf("Conexion con Kernel establecida! :D \n");

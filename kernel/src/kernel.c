@@ -16,33 +16,111 @@ int main(int argc, char** argv){
 	crearConfig(argc,argv);
 	inicializaciones();
 
-	//Tiramos 2 hilos porque necesitamos escuchar conexiones y desconexion de sockets por puertos diferentes
-	//Planificador de largo plazo
-	//Planificador de corto plazo
-	pthread_t hilo_plp, hilo_pcp;
+	//me conecto con los servidores (memoria y file system)
+	//conectarConServidores();
 
-	int resultado_creacion_plp, resultado_creacion_pcp;
+	FD_ZERO(&master);
+	FD_ZERO(&setCPUs);
+	FD_ZERO(&setConsolas);
 
-	// Lanzar hilo PLP - conexion memoria, fs y consola
-	resultado_creacion_plp = pthread_create(&hilo_plp, NULL, (void*)plp, NULL);
+	socketEscuchaCPUs = createServer(IP,config->puerto_CPU,BACKLOG);
+	socketEscuchaConsolas = createServer(IP,config->puerto_PROG,BACKLOG);
 
-	// Se valida que se haya creado el hilo, pthread_create devuelve 0 en caso de que NO haya errores
-	if(resultado_creacion_plp){
-		printf("Se produjo un error al crear el hilo plp, codigo de error: %d\n", resultado_creacion_plp);
-		exit(EXIT_FAILURE);
+	max_fd = max(socketEscuchaCPUs, socketEscuchaConsolas);
+
+	FD_SET(socketEscuchaCPUs, &master);
+	FD_SET(socketEscuchaConsolas, &master);
+	fd_set read_fd;
+	int iterador_sockets, resultadoHilo;
+
+	while(1){
+		read_fd = master;
+
+		if(select(max_fd + 1, &read_fd, NULL, NULL, NULL) == -1){
+			perror("select");
+			exit(1);
+		}
+		if(FD_ISSET(socketEscuchaCPUs, &read_fd)){ //una cpu quiere conectarses
+			aceptarNuevaConexion(socketEscuchaCPUs, &setCPUs);
+			printf("nueva cpu conectada\n");
+		}
+
+		if(FD_ISSET(socketEscuchaConsolas, &read_fd)){ //una consola quiere conectarse
+			aceptarNuevaConexion(socketEscuchaConsolas, &setConsolas);
+			printf("nueva consola conectada\n");
+		}
+
+		for(iterador_sockets = 0; iterador_sockets <= max_fd; iterador_sockets++) {
+
+			if(FD_ISSET(iterador_sockets, &setCPUs)){ //una cpu realiza una operacion
+				pthread_t hilo;
+				resultadoHilo = pthread_create(&hilo, NULL, (void*)trabajarMensajeCPU, iterador_sockets);
+				if(resultadoHilo) return EXIT_FAILURE;
+			}
+
+			if(FD_ISSET(iterador_sockets, &setConsolas)){ //una consola realiza una operacion
+				pthread_t hilo;
+				resultadoHilo = pthread_create(&hilo, NULL, (void*)trabajarMensajeConsola, iterador_sockets);
+				if(resultadoHilo) return EXIT_FAILURE;
+			}
+
+
+		}
+
 	}
-	// Lanzar hilo PCP - conexion CPU
-	resultado_creacion_pcp = pthread_create(&hilo_pcp, NULL, (void*)pcp, NULL);
 
-	if(resultado_creacion_pcp){
-		printf("Se produjo un error al crear el hilo pcp, codigo de error: %d\n", resultado_creacion_pcp);
-		exit(EXIT_FAILURE);
-	}
-
-	pthread_join(hilo_pcp, NULL);
-	pthread_join(hilo_plp, NULL);
 	destruirConfiguracionKernel(config);
 	return EXIT_SUCCESS;
+}
+
+void aceptarNuevaConexion(int socketEscucha, fd_set* set){
+
+	int newSocket = acceptSocket(socketEscucha);
+
+	if(newSocket == -1) {
+		perror("Error al aceptar");
+	} else {
+		FD_SET(newSocket, &master);
+		FD_SET(newSocket, set);
+		if(newSocket > max_fd) max_fd = newSocket;
+	}
+
+}
+
+void trabajarMensajeCPU(int socketCPU){
+	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	void* paquete;
+
+	int check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
+
+	//Chequeo de errores
+	if (check <= 0) {
+		printf("Se cerro el socket %d\n", socketCPU);
+		close(socketCPU);
+		FD_CLR(socketCPU, &master);
+		FD_CLR(socketCPU, &setCPUs);
+	}else{
+		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
+	}
+
+}
+
+void trabajarMensajeConsola(int socketConsola){
+	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	void* paquete;
+
+	int check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
+
+	//Chequeo de errores
+	if (check <= 0) {
+		printf("Se cerro el socket %d\n", socketConsola);
+		close(socketConsola);
+		FD_CLR(socketConsola, &master);
+		FD_CLR(socketConsola, &setConsolas);
+	}else{
+		procesarMensajeConsola(socketConsola, tipo_mensaje, paquete);
+	}
+
 }
 
 void inicializaciones(){

@@ -92,6 +92,11 @@ void eliminarCPU(t_list* lista, int socketCPU);
 void actualizarReferenciaPCB(int id, pcb_t* pcb);
 cpu_t* obtenerCpuLibre();
 
+//nuevas funciones de la reestructuracion
+void aceptarNuevaConexion(int socketEscucha, fd_set* set);
+void trabajarMensajeCPU(int socketCPU);
+void trabajarMensajeConsola(int socketConsola);
+
 //Variables Globales
 t_config_kernel* config;
 int socketConexionFS;
@@ -102,6 +107,13 @@ sem_t mutex_cola_ready;
 sem_t mutex_cola_new;
 sem_t semCPUs;
 t_list* listaCPUs;
+
+fd_set master;
+fd_set setConsolas;
+fd_set setCPUs;
+int socketEscuchaCPUs;
+int socketEscuchaConsolas;
+int max_fd;
 
 //Colas procesos
 t_queue *colaNew, *colaReady, *colaFinished;
