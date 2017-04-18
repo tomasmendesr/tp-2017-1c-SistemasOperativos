@@ -9,6 +9,7 @@
 #define PRIMITIVAS_H_
 
 #include <parser/parser.h>
+#include <ctype.h>
 #include <commons/structUtiles.h>
 #include "funcionesCpu.h"
 #define TAMANIO_VARIABLE 4
