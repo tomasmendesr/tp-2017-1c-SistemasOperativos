@@ -58,12 +58,16 @@ typedef struct{
 	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
 	uint32_t cantPaginasCodigo;
 	t_list* indiceCodigo;
-	t_list* stack;
-	t_dictionary* etiquetas;
+	t_list* indiceStack;
 	int16_t exitCode;
 	uint32_t consolaFd;
 
-}__attribute__((__packed__))pcb;
+	char* etiquetas;
+	uint32_t stackPointer; // el ultimo offset
+	uint32_t tamanioEtiquetas;
+	uint32_t codigo; // cant de instrucciones
+
+} t_pcb_;
 
 
 typedef enum {

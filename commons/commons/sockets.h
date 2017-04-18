@@ -141,6 +141,8 @@ enum protocolo_memoria_a_cualquiera{
 	MEMORY_OVERLOAD = 82,
 	SEGMENTO_CREADO = 83,
 	OVERFLOW = 84,
+	ENVIAR_TAMANIO_PAGINA_A_CPU = 160
+
 };
 
 //Mensajes entre Kernel y Programa

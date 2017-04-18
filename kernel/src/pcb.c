@@ -42,7 +42,7 @@ t_pcb* crearPCB(char* codigo, int id){
 }
 
 void insertarNuevoStack(t_pcb* pcb){
-	t_stack* nuevo = crearPosicionStack();
+	t_entrada_stack* nuevo = crearPosicionStack();
 	list_add(pcb->indiceStack, nuevo);
 }
 
@@ -51,8 +51,8 @@ void eliminarUltimaPosicionStack(t_pcb* pcb){
 	list_remove_and_destroy_element(pcb->indiceStack, cantElementos - 1, destruirPosicionStack);
 }
 
-t_stack* crearPosicionStack(){
-	t_stack* stack = malloc(sizeof(t_stack));
+t_entrada_stack* crearPosicionStack(){
+	t_entrada_stack* stack = malloc(sizeof(t_entrada_stack));
 
 	stack->argumentos = list_create();
 	stack->variables = list_create();
@@ -61,7 +61,7 @@ t_stack* crearPosicionStack(){
 	return stack;
 }
 
-void destruirPosicionStack(t_stack* stack){
+void destruirPosicionStack(t_entrada_stack* stack){
 	free(stack->retVar);
 	list_destroy_and_destroy_elements(stack->argumentos, destruirArgumentoStack);
 	list_destroy_and_destroy_elements(stack->variables, destruirVariableStack);
@@ -98,11 +98,11 @@ void destruirArgumentoStack(t_argumento* arg){
 	free(arg);
 }
 
-void agregarVariable(t_stack* stack, t_var_local* variable){
+void agregarVariable(t_entrada_stack* stack, t_var_local* variable){
 	list_add(stack->variables, variable);
 }
 
-void agregarArgumento(t_stack* stack, t_argumento* argumento){
+void agregarArgumento(t_entrada_stack* stack, t_argumento* argumento){
 	list_add(stack->variables, argumento);
 }
 

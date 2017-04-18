@@ -31,15 +31,15 @@ char* ansisop_a_string(char* path);
 
 //Prototipos de creacion y manejo de pcb
 t_pcb* crearPCB(char* codigo, int id);
-t_stack* crearPosicionStack();
+t_entrada_stack* crearPosicionStack();
 void insertarNuevoStack(t_pcb* pcb);
 void eliminarUltimaPosicionStack(t_pcb* pcb);
-void destruirPosicionStack(t_stack* stack);
+void destruirPosicionStack(t_entrada_stack* stack);
 t_var_local* crearVariableStack(char* id, uint32_t pagina, uint32_t offset, uint32_t size);
 void destruirVariableStack(t_var_local* var);
 t_argumento* crearArgumentoStack(uint32_t pagina, uint32_t offset, uint32_t size);
 void destruirArgumentoStack(t_argumento* arg);
-void agregarVariable(t_stack* stack, t_var_local* variable);
-void agregarArgumento(t_stack* stack, t_argumento* argumento);
+void agregarVariable(t_entrada_stack* stack, t_var_local* variable);
+void agregarArgumento(t_entrada_stack* stack, t_argumento* argumento);
 
 #endif /* PCB_H_ */

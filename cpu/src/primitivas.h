@@ -9,10 +9,16 @@
 #define PRIMITIVAS_H_
 
 #include <parser/parser.h>
+#include <commons/structUtiles.h>
+#include "funcionesCpu.h"
+#define TAMANIO_VARIABLE 4
 
+extern bool huboStackOver;
+t_pcb_* pcb;
 AnSISOP_funciones* funciones;
 AnSISOP_kernel* funcionesKernel;
 
+void setPCB(t_pcb_* pcb);
 void asignar(t_puntero direccion_variable, t_valor_variable valor);
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor);
 t_puntero definirVariable(t_nombre_variable identificador_variable);
@@ -34,5 +40,6 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
 t_puntero reservar(t_valor_variable espacio);
 void signal(t_nombre_semaforo identificador_semaforo);
 void wait(t_nombre_semaforo identificador_semaforo);
+bool esArgumento(t_nombre_variable identificador_variable);
 
 #endif /* PRIMITIVAS_H_ */

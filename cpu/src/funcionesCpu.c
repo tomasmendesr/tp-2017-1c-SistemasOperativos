@@ -1,5 +1,8 @@
 #include "funcionesCpu.h"
 
+bool cerrarCPU = false;
+bool huboStackOver = false;
+
 int crearLog(void){
 	logger = log_create(getenv("/home/utnso/tp-2017-1c-Dirty-Cow/cpu/logCpu"),"cpu", 1, 0);
 	if(logger)
@@ -110,7 +113,7 @@ int conexionConMemoria(void){
 
 void procesarProgramas(void){
 	inicializarFunciones();
-	levantarArchivo("facil.ansisop");
+	levantarArchivo("facil.ansisop"); // leo programa y me cargo un pcb a lo villero
 	analizadorLinea("variables a", funciones, funcionesKernel);
 }
 
@@ -141,6 +144,9 @@ void atenderKernel(){
 			recibirSignalSemaforo(paquete);
 			break;
 		// Mensajes de memoria
+		case ENVIAR_TAMANIO_PAGINA_A_CPU:
+				recibirTamanioPagina(paquete);
+				break;
 	}
 }
 
@@ -153,6 +159,8 @@ void recibirValorVariableCompartida(void* paquete){}
 void recibirAsignacionVariableCompartida(void* paquete){}
 
 void recibirSignalSemaforo(void* paquete){}
+
+void recibirTamanioPagina(void* paquete){}
 
 void levantarArchivo(char*path){
 		FILE* file;
@@ -168,9 +176,64 @@ void levantarArchivo(char*path){
 	 	char* buffer = malloc(file_size+1);
 	 	memset(buffer, '\0',file_size+1);
 	 	fread(buffer,file_size,1,file);
+	 	pcb = crearPCB(buffer);
+}
+
+t_pcb_* crearPCB(char* programa) {
+	log_debug(logger, "Se crea un PCB para el Programa Solicitado.");
+	t_metadata_program* datos;
+
+	//Obtengo la metadata utilizando el preprocesador del parser
+	datos = metadata_desde_literal(programa);
+
+	uint32_t tamanioPCB = 11 * sizeof(uint32_t);
+	tamanioPCB += datos->instrucciones_size
+			* (sizeof(t_puntero_instruccion) + sizeof(size_t));
+	tamanioPCB += tamanioStack;
+	if (datos->cantidad_de_etiquetas == 0
+			&& datos->cantidad_de_funciones == 0) {
+	} else {
+		tamanioPCB += datos->etiquetas_size;
+	}
+	t_pcb_* pcb = malloc(tamanioPCB);
+
+	pcb->pid = 1;
+
+		pcb->stackPointer = 0;
+		pcb->programCounter = datos->instruccion_inicio;
+		pcb->codigo = datos->instrucciones_size;
+		t_list * pcbStack = list_create();
+		pcb->indiceStack = pcbStack;
+		pcb->tamanioEtiquetas = datos->etiquetas_size;
+		//Cargo Indice de Codigo
+		t_list * listaIndCodigo = llenarLista(datos->instrucciones_serializado,
+				datos->instrucciones_size);
+		pcb->indiceCodigo = listaIndCodigo;
+		if (datos->cantidad_de_etiquetas > 0
+				|| datos->cantidad_de_funciones > 0) {
+			char* indiceEtiquetas = malloc(datos->etiquetas_size);
+			indiceEtiquetas = datos->etiquetas;
+			pcb->etiquetas = indiceEtiquetas;
+		} else {
+
+			pcb->etiquetas = NULL;
+		}
+		free(datos);
+		free(programa);
+
+		return pcb;
+}
 
 
-	 	t_metadata_program* metadata = metadata_desde_literal(buffer);
-	 	log_info(logger, "%s", metadata->etiquetas);
+t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc) {
+	t_list * lista = list_create();
+	int b = 0;
+	for (b = 0; b < cantInstruc; b++) {
+		t_indice_codigo* linea = malloc(sizeof(t_indice_codigo));
+		linea->offset = indiceCodigo[b].start;
+		linea->size = indiceCodigo[b].offset;
+		list_add(lista, linea);
+	}
+	return lista;
 }
 

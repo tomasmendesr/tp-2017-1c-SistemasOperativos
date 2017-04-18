@@ -34,8 +34,9 @@ t_log* logger;
 
 uint32_t tamanioStack;
 uint32_t tamanioPagina;
-uint32_t operacion;
 
+t_pcb_* crearPCB(char* buf);
+t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
 void levantarArchivo(char*path);
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
 int conexionConKernel(void);
@@ -52,5 +53,6 @@ void recibirPCB(void* paquete);
 void recibirValorVariableCompartida(void* paquete);
 void recibirAsignacionVariableCompartida(void* paquete);
 void recibirSignalSemaforo(void* paquete);
+void recibirTamanioPagina(void* paquete);
 
 #endif /* FUNCIONESCPU_H_ */
