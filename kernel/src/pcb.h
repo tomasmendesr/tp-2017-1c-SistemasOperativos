@@ -22,7 +22,8 @@ typedef struct{
 	t_list* indiceStack;
 	int16_t exitCode;
 	uint32_t consolaFd;
-
+	uint32_t indice_codigo;
+	uint32_t stackPointer;
 }t_pcb;
 
 
