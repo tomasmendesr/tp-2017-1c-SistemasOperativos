@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include "primitivas.h"
 #define configuracionCPU "../confCpu.init"
+#define TAM_PAG 256 //se recibe desde memoria
 
 typedef struct{
 	char* puerto_Memoria;
@@ -33,7 +34,10 @@ int socketConexionMemoria;
 t_log* logger;
 
 uint32_t tamanioStack;
+/*lo manda memoria*/
 uint32_t tamanioPagina;
+
+
 
 t_pcb_* crearPCB(char* buf);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);

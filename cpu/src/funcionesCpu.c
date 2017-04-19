@@ -113,8 +113,8 @@ int conexionConMemoria(void){
 
 void procesarProgramas(void){
 	inicializarFunciones();
-	levantarArchivo("facil.ansisop"); // leo programa y me cargo un pcb a lo villero
-	analizadorLinea("variables a", funciones, funcionesKernel);
+	levantarArchivo("completo.ansisop"); // leo programa y me cargo un pcb a lo villero
+//	analizadorLinea("variables a", funciones, funcionesKernel);
 }
 
 void atenderKernel(){
@@ -180,50 +180,39 @@ void levantarArchivo(char*path){
 }
 
 t_pcb_* crearPCB(char* programa) {
+
 	log_debug(logger, "Se crea un PCB para el Programa Solicitado.");
 	t_metadata_program* datos;
+	char* indiceEtiquetas;
 
 	//Obtengo la metadata utilizando el preprocesador del parser
 	datos = metadata_desde_literal(programa);
 
-	uint32_t tamanioPCB = 11 * sizeof(uint32_t);
-	tamanioPCB += datos->instrucciones_size
-			* (sizeof(t_puntero_instruccion) + sizeof(size_t));
-	tamanioPCB += tamanioStack;
-	if (datos->cantidad_de_etiquetas == 0
-			&& datos->cantidad_de_funciones == 0) {
-	} else {
-		tamanioPCB += datos->etiquetas_size;
-	}
-	t_pcb_* pcb = malloc(tamanioPCB);
+	t_pcb_* pcb = malloc(sizeof(t_pcb_));
 
 	pcb->pid = 1;
+	pcb->stackPointer = 0;
+	pcb->programCounter = datos->instruccion_inicio;
+	pcb->codigo = datos->instrucciones_size;
+	t_list * pcbStack = list_create();
+	pcb->indiceStack = pcbStack;
+	pcb->tamanioEtiquetas = datos->etiquetas_size;
+	t_list * listaIndCodigo = llenarLista(datos->instrucciones_serializado,
+			datos->instrucciones_size);
+	pcb->indiceCodigo = listaIndCodigo;
+	if (datos->cantidad_de_etiquetas > 0
+			|| datos->cantidad_de_funciones > 0) {
+		indiceEtiquetas = malloc(datos->etiquetas_size);
+		indiceEtiquetas = datos->etiquetas;
+		pcb->etiquetas = indiceEtiquetas;
+	} else {
+		pcb->etiquetas = NULL;
+	}
+	metadata_destruir(datos);
+	free(programa);
 
-		pcb->stackPointer = 0;
-		pcb->programCounter = datos->instruccion_inicio;
-		pcb->codigo = datos->instrucciones_size;
-		t_list * pcbStack = list_create();
-		pcb->indiceStack = pcbStack;
-		pcb->tamanioEtiquetas = datos->etiquetas_size;
-		//Cargo Indice de Codigo
-		t_list * listaIndCodigo = llenarLista(datos->instrucciones_serializado,
-				datos->instrucciones_size);
-		pcb->indiceCodigo = listaIndCodigo;
-		if (datos->cantidad_de_etiquetas > 0
-				|| datos->cantidad_de_funciones > 0) {
-			char* indiceEtiquetas = malloc(datos->etiquetas_size);
-			indiceEtiquetas = datos->etiquetas;
-			pcb->etiquetas = indiceEtiquetas;
-		} else {
-
-			pcb->etiquetas = NULL;
-		}
-		free(datos);
-		free(programa);
-
-		return pcb;
+	return pcb;
 }
-
 
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc) {
 	t_list * lista = list_create();
