@@ -149,7 +149,6 @@ void requestHandlerCpu(int* fd){
 		}
 
 		switch(tipo_mensaje){
-
 			case SOLICITUD_BYTES:
 //				solicitudBytes();
 				break;
