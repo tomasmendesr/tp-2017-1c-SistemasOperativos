@@ -15,5 +15,9 @@ typedef struct{
 	uint32_t size;
 }t_pedido_memoria;
 
+typedef struct{
+	uint32_t pid;
+	uint32_t cant_pag;
+}t_pedido_iniciar;
 
 #endif /* PETICIONES_H_ */

@@ -91,6 +91,12 @@ void inicializarMemoria(){
 
 	printf("\n--------------------\ncantidad de frames ocupados por tabla: %i\n", cantEntradas);
 
+	//Setteo las paginas ocupadas por la tabla como ya usadas
+	for(i=0;i<cantEntradas;i++){
+		((t_entrada_tabla*)memoria)[i].pag = 0;
+		((t_entrada_tabla*)memoria)[i].pid = 0;
+	}
+
 	/*Imprimo el contenido de la memoria en un archivo dump
 	FILE* memFile = fopen("memDump","w");
 	for(i=0;i<memSize;i++){
@@ -163,7 +169,12 @@ void requestHandlerCpu(int fd){
 	}
 }
 
-int iniciarPrograma(int pid, int cantPag){
+int iniciarPrograma(t_pedido_iniciar* pedido){
+
+	if( framesLibres() > pedido->cant_pag + stack_size ){
+		//Se puede iniciar el programa
+
+	}
 
 	return 0;
 }
