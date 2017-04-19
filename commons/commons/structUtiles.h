@@ -23,35 +23,26 @@ typedef struct{
 	uint32_t pagina;
 	uint32_t offset;
 	uint32_t size;
-}t_posicion_stack;
+}t_posicion;
 
 typedef struct{
-	uint32_t pagina;
-	uint32_t offset; //start
-	uint32_t size;
-}t_argumento;
+	char idVariable;
+	t_posicion posicion;
+}t_var_local;
 
 typedef struct stack{
 	t_list* argumentos;
 	t_list* variables;
 	uint32_t direcretorno;
-	t_argumento * retVar;
+	t_posicion * retVar;
 }t_entrada_stack;
 
-t_dictionary* etiquetas;
-
-typedef struct{
-	char idVariable;
-	uint32_t pagina;
-	uint32_t offset;
-	uint32_t size;
-}t_var_local;
+//t_dictionary* etiquetas;
 
 typedef struct indiceCodigo{
 	uint32_t offset;
 	uint32_t size;
 }t_indice_codigo;
-
 
 typedef struct{
 	uint32_t pid;  //Identificador único del Programa en el sistema
@@ -61,30 +52,14 @@ typedef struct{
 	t_list* indiceStack;
 	int16_t exitCode;
 	uint32_t consolaFd;
-
 	char* etiquetas;
 	uint32_t stackPointer; // el ultimo offset
 	uint32_t tamanioEtiquetas;
 	uint32_t codigo; // cant de instrucciones
-
 } t_pcb_;
-
 
 typedef enum {
 	ERROR, NOTHING, SUCCESS
 } opciones_generales_ops;
 
-typedef struct{
-	int pid;
-	int pag;
-	int offset;
-	int size;
-}t_operacion_bytes;
-
-typedef struct{
-	int pid;
-	int cantPag;
-}t_operacion_pag;
-
 #endif /* STRUCTSUTILES_H_ */
-
