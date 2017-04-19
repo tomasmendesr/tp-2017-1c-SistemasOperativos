@@ -20,6 +20,7 @@
 #include <commons/cosas.h>
 #include <commons/structUtiles.h>
 #include <pthread.h>
+#include "peticiones.h"
 
 #define configuracionMemoria "confMemoria.init"
 #define MAX_LEN_PUERTO 6
@@ -72,7 +73,7 @@ int buscarFrame(int pid, int pag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
 
-bool pedidoIncorrecto(t_pedido_memoria);
+bool pedidoIncorrecto(t_pedido_memoria*);
 
 //Funciones cache
 void increaseOpCount(); //Suma uno al opCount
@@ -104,8 +105,8 @@ int asignarPaginas(int pid, int cantPag);
 int finalizarPrograma(int pid);
 
 //Pedidos cpu
-int solicitudBytes(int fd, t_pedido_memoria pedido);
-int grabarBytes(int fd, t_pedido_memoria pedido);
+int solicitudBytes(int fd, t_pedido_memoria* pedido);
+int grabarBytes(int fd, t_pedido_memoria* pedido);
 
 //Respuestas status
 void enviarRespuesta(int fd, int respuesta);

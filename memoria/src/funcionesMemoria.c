@@ -107,10 +107,10 @@ void requestHandlerKernel(int fd){
 	int tipo_mensaje;
 
 	for(;;){
-		bytes = recibir_info(*fd, &paquete, &tipo_mensaje);
+		bytes = recibir_info(fd, &paquete, &tipo_mensaje);
 		if(bytes <= 0){
 			log_error(logger, "Desconexion del kernel. Terminando...");
-			close(*fd);
+			close(fd);
 			exit(1);
 		}
 
@@ -141,20 +141,20 @@ void requestHandlerCpu(int fd){
 
 	for(;;){
 		//Recibo mensajes de cpu y hago el switch
-		bytes = recibir_info(*fd, &paquete, &tipo_mensaje);
+		bytes = recibir_info(fd, &paquete, &tipo_mensaje);
 		if(bytes <= 0){
 			log_error(logger, "Desconexion del Cpu. Terminando...");
-			close(*fd);
+			close(fd);
 			exit(1);
 		}
 
 		switch(tipo_mensaje){
 			case SOLICITUD_BYTES:
-				solicitudBytes(paquete);
+				solicitudBytes(fd, (t_pedido_memoria*)paquete);
 				break;
 
 			case GRABAR_BYTES:
-				grabarBytes(paquete);
+				grabarBytes(fd, (t_pedido_memoria*)paquete);
 				break;
 
 			default:
@@ -178,12 +178,14 @@ int finalizarPrograma(int pid){
 	return 0;
 }
 
-int solicitudBytes(int fd, t_pedido_memoria pedido){
+int solicitudBytes(int fd, t_pedido_memoria* pedido){
 
-	if(pedidoIncorrecto(pedido))
+	if(pedidoIncorrecto(pedido)){
+		enviarRespuesta(fd, SEGMENTATION_FAULT);
 		return -1;
+	}
 
-	char* buf = malloc(pedido.size);
+	char* buf = malloc(pedido->size);
 
 	if(buf == NULL){
 		log_error(logger,"no pude reservar memoria");
@@ -191,10 +193,10 @@ int solicitudBytes(int fd, t_pedido_memoria pedido){
 		return -1;
 	}
 
-	if( leer(pedido.pid,pedido.pag,pedido.offset,pedido.size,buf) == 0 ){
+	if( leer(pedido->pid,pedido->pag,pedido->offset,pedido->size,buf) == 0 ){
 		header_t header;
 		header.type = RESPUESTA_BYTES;
-		header.length = pedido.size;
+		header.length = pedido->size;
 
 		if( sendSocket(fd, &header, buf) <= 0 ){
 			log_error(logger,"error al enviar respuesta");
@@ -210,16 +212,17 @@ int solicitudBytes(int fd, t_pedido_memoria pedido){
 	}
 
 	free(buf);
-	enviarRespuesta(fd, OP_OK);
 	return 0;
 }
 
-int grabarBytes(int fd, t_pedido_memoria pedido){
+int grabarBytes(int fd, t_pedido_memoria* pedido){
 
-	if(pedidoIncorrecto(pedido))
+	if(pedidoIncorrecto(pedido)){
+		enviarRespuesta(fd, SEGMENTATION_FAULT);
 		return -1;
+	}
 
-	char* buf = malloc(pedido.size);
+	char* buf = malloc(pedido->size);
 
 	if(buf == NULL){
 		log_error(logger,"no pude reservar memoria");
@@ -227,15 +230,15 @@ int grabarBytes(int fd, t_pedido_memoria pedido){
 		return -1;
 	}
 
-	if( recvAll(fd,buf,pedido.size,0) <= 0 ){
-		log_error("Error al recibir info a escribir");
+	if( recvAll(fd,buf,pedido->size,0) <= 0 ){
+		log_error(logger, "Error al recibir info a escribir");
 		free(buf);
 		enviarRespuesta(fd, SEGMENTATION_FAULT);
 		return -1;
 	}
 
-	if( escribir(pedido.pid,pedido.pag,pedido.offset,pedido.size,buf) == -1){
-		log_error("Error al intentar escribir en memoria");
+	if( escribir(pedido->pid,pedido->pag,pedido->offset,buf,pedido->size) == -1){
+		log_error(logger, "Error al intentar escribir en memoria");
 		free(buf);
 		enviarRespuesta(fd, SEGMENTATION_FAULT);
 		return -1;
@@ -255,8 +258,8 @@ void enviarRespuesta(int fd, int respuesta){
 	sendSocket(fd, &header, &header);
 }
 
-bool pedidoIncorrecto(t_pedido_memoria pedido){
-	return pedido.offset > frame_size;
+bool pedidoIncorrecto(t_pedido_memoria* pedido){
+	return pedido->offset > frame_size;
 }
 
 int framesLibres(){
