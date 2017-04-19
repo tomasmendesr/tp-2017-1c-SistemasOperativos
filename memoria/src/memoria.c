@@ -57,7 +57,7 @@ void esperarConexionKernel(){
 		printf("Conexion con el kernel establecido\n");
 		enviar_paquete_vacio(HANDSHAKE_MEMORIA,socketConexionKernel);
 		pthread_t threadKernel;
-		pthread_create(&threadKernel, NULL, (void*)requestHandlerKernel, &socketConexionKernel);
+		pthread_create(&threadKernel, NULL, (void*)requestHandlerKernel, socketConexionKernel);
 		pthread_detach(threadKernel);
 	}else{
 		exit(1);
@@ -66,7 +66,6 @@ void esperarConexionKernel(){
 }
 
 void esperarConexiones(){
-
 
 	int newSocket;
 	void* paquete;
@@ -99,7 +98,7 @@ void esperarConexiones(){
 				printf("Conexion con la CPU establecido\n");
 				enviar_paquete_vacio(HANDSHAKE_MEMORIA,newSocket);
 				pthread_t threadCpu;
-				pthread_create(&threadCpu, NULL, (void*)requestHandlerCpu, &newSocket);
+				pthread_create(&threadCpu, NULL, (void*)requestHandlerCpu, newSocket);
 				pthread_detach(threadCpu);
 
 			}else{

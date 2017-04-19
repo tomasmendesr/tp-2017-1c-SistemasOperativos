@@ -100,7 +100,7 @@ void inicializarMemoria(){
 
 }
 
-void requestHandlerKernel(int* fd){
+void requestHandlerKernel(int fd){
 
 	void* paquete;
 	int bytes;
@@ -108,7 +108,7 @@ void requestHandlerKernel(int* fd){
 
 	for(;;){
 		bytes = recibir_info(*fd, &paquete, &tipo_mensaje);
-		if(bytes < 0){
+		if(bytes <= 0){
 			log_error(logger, "Desconexion del kernel. Terminando...");
 			close(*fd);
 			exit(1);
@@ -133,7 +133,7 @@ void requestHandlerKernel(int* fd){
 	}
 }
 
-void requestHandlerCpu(int* fd){
+void requestHandlerCpu(int fd){
 
 	void* paquete;
 	int tipo_mensaje;
@@ -150,11 +150,11 @@ void requestHandlerCpu(int* fd){
 
 		switch(tipo_mensaje){
 			case SOLICITUD_BYTES:
-//				solicitudBytes();
+				solicitudBytes(paquete);
 				break;
 
 			case GRABAR_BYTES:
-//				grabarBytes();
+				grabarBytes(paquete);
 				break;
 
 			default:
@@ -178,14 +178,85 @@ int finalizarPrograma(int pid){
 	return 0;
 }
 
-int solicitudBytes(int pid, int pag, int offset, int size, void* buff){
+int solicitudBytes(int fd, t_pedido_memoria pedido){
 
+	if(pedidoIncorrecto(pedido))
+		return -1;
+
+	char* buf = malloc(pedido.size);
+
+	if(buf == NULL){
+		log_error(logger,"no pude reservar memoria");
+		enviarRespuesta(fd, QUILOMBO);
+		return -1;
+	}
+
+	if( leer(pedido.pid,pedido.pag,pedido.offset,pedido.size,buf) == 0 ){
+		header_t header;
+		header.type = RESPUESTA_BYTES;
+		header.length = pedido.size;
+
+		if( sendSocket(fd, &header, buf) <= 0 ){
+			log_error(logger,"error al enviar respuesta");
+			enviarRespuesta(fd, SEGMENTATION_FAULT);
+			free(buf);
+			return -1;
+		}
+	}else{
+		log_error(logger,"No se pudo leer de memoria");
+		enviarRespuesta(fd, SEGMENTATION_FAULT);
+		free(buf);
+		return -1;
+	}
+
+	free(buf);
+	enviarRespuesta(fd, OP_OK);
 	return 0;
 }
 
-int grabarBytes(int pid, int pag, int offset, int size, void* buff){
+int grabarBytes(int fd, t_pedido_memoria pedido){
 
+	if(pedidoIncorrecto(pedido))
+		return -1;
+
+	char* buf = malloc(pedido.size);
+
+	if(buf == NULL){
+		log_error(logger,"no pude reservar memoria");
+		enviarRespuesta(fd, QUILOMBO);
+		return -1;
+	}
+
+	if( recvAll(fd,buf,pedido.size,0) <= 0 ){
+		log_error("Error al recibir info a escribir");
+		free(buf);
+		enviarRespuesta(fd, SEGMENTATION_FAULT);
+		return -1;
+	}
+
+	if( escribir(pedido.pid,pedido.pag,pedido.offset,pedido.size,buf) == -1){
+		log_error("Error al intentar escribir en memoria");
+		free(buf);
+		enviarRespuesta(fd, SEGMENTATION_FAULT);
+		return -1;
+	}
+
+	free(buf);
+	enviarRespuesta(fd, OP_OK);
 	return 0;
+}
+
+void enviarRespuesta(int fd, int respuesta){
+
+	header_t header;
+	header.type = respuesta;
+	header.length = 0;
+
+	sendSocket(fd, &header, &header);
+}
+
+bool pedidoIncorrecto(t_pedido_memoria pedido){
+	return pedido.offset > frame_size;
 }
 
 int framesLibres(){
