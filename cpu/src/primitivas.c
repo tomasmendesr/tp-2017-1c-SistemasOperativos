@@ -38,25 +38,25 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 			nuevaVar->idVariable = identificador_variable;
 			t_indice_codigo* indCodigo = list_get(pcb->indiceCodigo,  pcb->indiceCodigo->elements_count-1);
 			uint32_t paginaActual = indCodigo->offset / tamanioPagina;
-			nuevaVar->posicion.pagina = paginaActual+1;
-			nuevaVar->posicion.size = TAMANIO_VARIABLE;
-			nuevaVar->posicion.offset = 0;
+			nuevaVar->pagina = paginaActual+1;
+			nuevaVar->size = TAMANIO_VARIABLE;
+			nuevaVar->offset = 0;
 			pcb->stackPointer = TAMANIO_VARIABLE;
 			list_add(lineaStack->variables, nuevaVar);
 		}else{
 			nuevaVar->idVariable = identificador_variable;
 			t_indice_codigo* indCodigo = list_get(pcb->indiceCodigo,  pcb->indiceCodigo->elements_count-1);
 			uint32_t paginaActual = indCodigo->offset / tamanioPagina;
-			nuevaVar->posicion.pagina = paginaActual;
-			nuevaVar->posicion.size = TAMANIO_VARIABLE;
-			nuevaVar->posicion.offset = pcb->stackPointer;
+			nuevaVar->pagina = paginaActual;
+			nuevaVar->size = TAMANIO_VARIABLE;
+			nuevaVar->offset = pcb->stackPointer;
 			pcb->stackPointer+=TAMANIO_VARIABLE;
 			list_add(lineaStack->variables, nuevaVar);
 		}
 		//calculo el desplazamiento desde la primer pagina del stack hasta donde arranca mi nueva variable
-		uint32_t posicionRet = (nuevaVar->posicion.pagina * tamanioPagina) + nuevaVar->posicion.offset;
-		log_debug(logger, "%c %i %i %i", nuevaVar->idVariable, nuevaVar->posicion.pagina,
-				nuevaVar->posicion.offset, nuevaVar->posicion.size);
+		uint32_t posicionRet = (nuevaVar->pagina * tamanioPagina) + nuevaVar->offset;
+		log_debug(logger, "%c %i %i %i", nuevaVar->idVariable, nuevaVar->pagina,
+				nuevaVar->offset, nuevaVar->size);
 		return posicionRet;
 		}
 	}else{
@@ -75,24 +75,24 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 			if(pcb->stackPointer + TAMANIO_VARIABLE > tamanioPagina){
 				t_indice_codigo* indCodigo = list_get(pcb->indiceCodigo,  pcb->indiceCodigo->elements_count -1);
 				uint32_t paginaActual = indCodigo->offset / tamanioPagina;
-				nuevoArg->posicion.pagina = paginaActual+1;
-				nuevoArg->posicion.size = TAMANIO_VARIABLE;
-				nuevoArg->posicion.offset = 0;
+				nuevoArg->pagina = paginaActual+1;
+				nuevoArg->size = TAMANIO_VARIABLE;
+				nuevoArg->offset = 0;
 				pcb->stackPointer = TAMANIO_VARIABLE;
 				list_add(lineaStack->argumentos, nuevoArg);
 			}else{
 				t_indice_codigo* indCodigo = list_get(pcb->indiceCodigo,  pcb->indiceCodigo->elements_count -1);
 				uint32_t paginaActual = indCodigo->offset / tamanioPagina;
-				nuevoArg->posicion.pagina = paginaActual;
-				nuevoArg->posicion.size = TAMANIO_VARIABLE;
-				nuevoArg->posicion.offset = pcb->stackPointer;
+				nuevoArg->pagina = paginaActual;
+				nuevoArg->size = TAMANIO_VARIABLE;
+				nuevoArg->offset = pcb->stackPointer;
 				pcb->stackPointer += TAMANIO_VARIABLE;
 				list_add(lineaStack->argumentos, nuevoArg);
 			}
 			//calculo el desplazamiento desde la primer pagina del stack hasta donde arranca mi nueva variable
-			uint32_t posicionRet = (nuevoArg->posicion.pagina * tamanioPagina) + nuevoArg->posicion.offset;
-			log_debug(logger, "%c %i %i %i", identificador_variable, nuevoArg->posicion.pagina,
-					nuevoArg->posicion.offset, nuevoArg->posicion.size);
+			uint32_t posicionRet = (nuevoArg->pagina * tamanioPagina) + nuevoArg->offset;
+			log_debug(logger, "%c %i %i %i", identificador_variable, nuevoArg->pagina,
+					nuevoArg->offset, nuevoArg->size);
 			return posicionRet;
 		}
 	}

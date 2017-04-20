@@ -23,6 +23,12 @@ typedef struct{
 	uint32_t pagina;
 	uint32_t offset;
 	uint32_t size;
+}t_argumento;
+
+typedef struct{
+	uint32_t pagina;
+	uint32_t offset;
+	uint32_t size;
 }t_posicion;
 
 typedef struct{
@@ -34,7 +40,9 @@ typedef struct{
 
 typedef struct{
 	char idVariable;
-	t_posicion posicion;
+	uint32_t pagina;
+	uint32_t offset;
+	uint32_t size;
 }t_var_local;
 
 typedef struct stack{
