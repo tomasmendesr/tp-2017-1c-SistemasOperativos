@@ -37,8 +37,6 @@ uint32_t tamanioStack;
 /*lo manda memoria*/
 uint32_t tamanioPagina;
 
-
-
 t_pcb_* crearPCB(char* buf);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
 void levantarArchivo(char*path);

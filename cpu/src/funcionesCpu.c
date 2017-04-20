@@ -114,10 +114,11 @@ int conexionConMemoria(void){
 void procesarProgramas(void){
 	inicializarFunciones();
 	levantarArchivo("completo.ansisop"); // leo programa y me cargo un pcb a lo villero
+
 //	analizadorLinea("variables a", funciones, funcionesKernel);
 }
 
-void atenderKernel(){
+void atenderKernel(void){
 	void* paquete;
 	int bytes;
 	int tipo_mensaje;
@@ -163,9 +164,11 @@ void recibirSignalSemaforo(void* paquete){}
 void recibirTamanioPagina(void* paquete){}
 
 void levantarArchivo(char*path){
+
 		FILE* file;
 	 	int file_fd, file_size;
 	 	struct stat stats;
+	 	char* buffer;
 
 	 	file = fopen(path, "r");
 	 	file_fd = fileno(file);
@@ -173,7 +176,12 @@ void levantarArchivo(char*path){
 	 	fstat(file_fd, &stats);
 	 	file_size = stats.st_size;
 
-	 	char* buffer = malloc(file_size+1);
+
+	 	buffer = malloc(file_size+1);
+	 	if(buffer == NULL) {
+	 		log_error(logger, "archivo no levantado");
+	 		exit(1);
+	 	}
 	 	memset(buffer, '\0',file_size+1);
 	 	fread(buffer,file_size,1,file);
 	 	pcb = crearPCB(buffer);
@@ -203,9 +211,9 @@ t_pcb_* crearPCB(char* programa) {
 	if (datos->cantidad_de_etiquetas > 0
 			|| datos->cantidad_de_funciones > 0) {
 		indiceEtiquetas = malloc(datos->etiquetas_size);
-		indiceEtiquetas = datos->etiquetas;
+		memcpy(indiceEtiquetas,datos->etiquetas,datos->etiquetas_size);
 		pcb->etiquetas = indiceEtiquetas;
-	} else {
+	}else{
 		pcb->etiquetas = NULL;
 	}
 	metadata_destruir(datos);
