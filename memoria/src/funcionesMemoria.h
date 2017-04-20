@@ -33,6 +33,9 @@
 #define cache_entradas config->entradas_Cache
 #define max_entradas config->cache_x_Proceso
 
+//Define temporal
+#define stack_size 10
+
 typedef struct{
         char* puerto;
         int marcos;
@@ -72,6 +75,7 @@ int framesLibres();
 int buscarFrame(int pid, int pag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
+void reservarFrame(int pid, int pag);
 
 bool pedidoIncorrecto(t_pedido_memoria*);
 
