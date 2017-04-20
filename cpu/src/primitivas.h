@@ -15,11 +15,11 @@
 #define TAMANIO_VARIABLE 4
 
 extern bool huboStackOver;
-t_pcb_* pcb;
+t_pcb* pcb;
 AnSISOP_funciones* funciones;
 AnSISOP_kernel* funcionesKernel;
 
-void setPCB(t_pcb_* pcb);
+void setPCB(t_pcb* pcb);
 void asignar(t_puntero direccion_variable, t_valor_variable valor);
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor);
 t_puntero definirVariable(t_nombre_variable identificador_variable);

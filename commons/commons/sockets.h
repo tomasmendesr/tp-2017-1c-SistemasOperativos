@@ -56,7 +56,7 @@ typedef struct{
 	uint32_t cantPaginasCodigo;
 //	t_intructions* indiceCodigo;
 	//char* etiquetas;  Verificar si es necesario
-	//t_list* indiceStack; Verificar si es necesario
+	//t_list* indiceStack;
 	int16_t exitCode; //Codigo de finalizacion
 	uint32_t consolaFd;
 
@@ -81,46 +81,43 @@ enum enum_protocolo {// Si yo soy el kernel tengo que enviar handshake_kernel.
 
 //Mensajes que el kernel le envia al CPU
 enum protocolo_kernel_a_cpu{
-	EJECUTAR_QUANTUM = 20,
-	VALOR_VARIABLE_COMPARTIDA = 21,
-	RESPUESTA_WAIT_SEGUIR_EJECUTANDO = 22,
-	RESPUESTA_WAIT_DETENER_EJECUCION = 23,
-	RESPUESTA_SIGNAL_OK = 24,
-	RESPUESTA_GRABAR_VARIABLE_COMPARTIDA_OK = 25,
-	RESPUESTA_IMPRIMIR_TEXTO_OK = 26,
-	RESPUESTA_IMPRIMIR_VARIABLE_OK = 27,
-	EXECUTE_PCB = 135,
-	VAR_COMPARTIDA_ASIGNADA = 136,
-	VALOR_VAR_COMPARTIDA = 137,
-	SIGNAL_SEMAFORO = 138,
-	TAMANIO_STACK_PARA_CPU = 139,
-	TAMANIO_PAGINAS_NUCLEO = 140
+
+	EXEC_PCB = 10,
+	EXEC_QUANTUM = 11,
+	VALOR_VAR_COMPARTIDA = 12,
+	RESPUESTA_WAIT_SEGUIR_EJECUCION = 13,
+	RESPUESTA_WAIT_DETENER_EJECUCION = 14,
+	TAMANIO_STACK_PARA_CPU = 19,
+	TAMANIO_PAGINAS_NUCLEO = 20,
+	/*estas se podrian reemplazar por un OK*/
+	RESPUESTA_SIGNAL_OK = 15,
+	RESPUESTA_ASIG_VAR_COMPARTIDA_OK = 16,
+	RESPUESTA_IMPRIMIR_TEXTO_OK = 17,
+	RESPUESTA_IMPRIMIR_VARIABLE_OK = 18
 };
 
 //Mensajes que el CPU le envia al kernel
 enum protocolo_cpu_a_kernel{
-	FINALIZACION_QUANTUM = 40,
-	SEMAFORO_WAIT = 41,
-	SEMAFORO_SIGNAL = 42,
-	ENTRADA_SALIDA = 43,
-	GRABAR_VARIABLE_COMPARTIDA = 44,
-	OBTENER_VALOR_VARIABLE_COMPARTIDA = 45,
-	IMPRIMIR = 46,
-	IMPRIMIR_TEXTO = 47,
-	FINALIZACION_PROCESO = 48,
-	ENVIO_PCB = 49,
-	MUERTE_CPU = 50,
-	SENIAL_SIGUSR1 = 51,
-	// AGREGADAS (Despues hago una limpieza)
-	QUANTUM = 123,
-	EXIT = 124,
-	IMPRIMIR_VALOR = 125,
-	LEER_VAR_COMPARTIDA = 127,
-	ASIG_VAR_COMPARTIDA = 128,
-	WAIT = 129,
-	SIGNAL = 130,
-	FINALIZO_POR_ERROR_MEMORIA = 133,
-	STACKOVERFLOW = 134,
+	ENVIO_PCB = 30,
+	SEM_WAIT = 31,
+	SEM_SIGNAL = 32,
+	LEER_VAR_COMPARTIDA = 33,
+	ASIG_VAR_COMPARTIDA = 34,
+	IMPRIMIR_VALOR = 35,
+	IMPRIMIR_TEXTO = 36,
+	FIN_EJECUCION = 37,
+	FIN_PROCESO = 38,
+	DESCONEXION_CPU = 39,
+	RESERVAR_MEMORIA = 40,
+	LIBERAR_MEMORIA = 41,
+	ABRIR_ARCHIVO = 42,
+	CERRAR_ARCHIVO = 43,
+	BORRAR_ARCHIVO = 44,
+	LEER_ARCHIVO = 45,
+	ESCRIBIR_ARCHIVO = 46,
+	/*Finalizaciones irregulares*/
+	FIN_ERROR_MEMORIA = 47,
+	STACKOVERFLOW = 48,
 };
 
 //Mensajes que se le envian a la memoria.
@@ -136,12 +133,12 @@ enum protocolo_a_memoria{
 
 //Mensajes que la memoria le envia el resto de los procesos.
 enum protocolo_memoria_a_cualquiera{
+	ENVIAR_TAMANIO_PAGINA = 79,
 	RESPUESTA_BYTES = 80,
 	SEGMENTATION_FAULT = 81,
 	MEMORY_OVERLOAD = 82,
 	SEGMENTO_CREADO = 83,
 	OVERFLOW = 84,
-	ENVIAR_TAMANIO_PAGINA_A_CPU = 160,
 	OP_OK = 85,
 	QUILOMBO = 86,
 	SIN_ESPACIO = 87

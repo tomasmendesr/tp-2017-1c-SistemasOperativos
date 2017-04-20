@@ -26,6 +26,13 @@ typedef struct{
 }t_posicion;
 
 typedef struct{
+	uint32_t pid;
+	uint32_t pag;
+	uint32_t offset;
+	uint32_t size;
+}pedido_bytes_t;
+
+typedef struct{
 	char idVariable;
 	t_posicion posicion;
 }t_var_local;
@@ -56,9 +63,9 @@ typedef struct{
 	uint32_t stackPointer; // el ultimo offset
 	uint32_t tamanioEtiquetas;
 	uint32_t codigo; // cant de instrucciones
-} t_pcb_;
+}t_pcb;
 
-typedef enum {
+typedef enum{
 	ERROR, NOTHING, SUCCESS
 } opciones_generales_ops;
 

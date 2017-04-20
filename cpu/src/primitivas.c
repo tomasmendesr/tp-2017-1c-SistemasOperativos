@@ -6,7 +6,7 @@
  */
 #include "primitivas.h"
 
-void setPCB(t_pcb_ * pcbDeCPU) {
+void setPCB(t_pcb * pcbDeCPU){
 	pcb = pcbDeCPU;
 }
 
@@ -26,9 +26,6 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 			return -1;
 		}else{
 			if(lineaStack == NULL){
-				//el tamaño de la linea del stack seria de los 4 ints mas
-//				uint32_t tamLineaStack = 7*sizeof(uint32_t)+1;
-//				lineaStack = malloc(tamLineaStack);
 				lineaStack = malloc(sizeof(t_entrada_stack));
 				lineaStack->retVar = NULL;
 				lineaStack->direcretorno = 0;
@@ -142,7 +139,6 @@ void retornar(t_valor_variable retorno){
 	printf("retornar!\n");
 	return;
 }
-
 t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	printf("abrir!\n");
 	return 0;

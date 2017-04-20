@@ -84,7 +84,10 @@ int conexionConKernel(void){
 		log_info(logger,"El Kernel no devolvio handshake :(");
 		return -1;
 	}
-	return 0;
+
+	recibirPCB(paquete_vacio);
+
+	return EXIT_SUCCESS;
 }
 
 int conexionConMemoria(void){
@@ -108,67 +111,208 @@ int conexionConMemoria(void){
 		log_info(logger,"La Memoria no devolvio handshake :(");
 		return -1;
 	}
-	return 0;
+
+	recibirTamanioPagina(paquete_vacio);
+
+	return EXIT_SUCCESS;
 }
 
-void procesarProgramas(void){
+void ejecutarPrograma(void){
+	char*content;
 	inicializarFunciones();
-	levantarArchivo("completo.ansisop"); // leo programa y me cargo un pcb a lo villero
+	levantarArchivo(ansisop,&content);
+	pcb = crearPCB(content, 1); //en realidad se recibe desde el kernel
 
 //	analizadorLinea("variables a", funciones, funcionesKernel);
 }
 
-void atenderKernel(void){
-	void* paquete;
+int16_t recibirPCB(void* paquete){
+
 	int bytes;
 	int tipo_mensaje;
 
-	procesarProgramas();
-	bytes = recibir_info(socketConexionKernel, &paquete, &tipo_mensaje);
+	bytes = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
 	if(bytes <= 0){
 		log_error(logger, "Desconexion del kernel. Terminando...");
 		close(socketConexionKernel);
 		exit(1);
 	}
-	switch (tipo_mensaje) {
-	// Mensajes del kernel
-	case TAMANIO_STACK_PARA_CPU:
-			recibirTamanioStack(paquete);
-			break;
-		case EXECUTE_PCB:
-			recibirPCB(paquete);
-			break;
-		case VALOR_VAR_COMPARTIDA:
-			recibirValorVariableCompartida(paquete);
-			break;
-		case SIGNAL_SEMAFORO:
-			recibirSignalSemaforo(paquete);
-			break;
-		// Mensajes de memoria
-		case ENVIAR_TAMANIO_PAGINA_A_CPU:
-				recibirTamanioPagina(paquete);
-				break;
+	if(tipo_mensaje==EXEC_PCB){
+//		deserializarPCB(paquete);
+		enviar_paquete_vacio(OK,socketConexionKernel);
+	}
+	else{
+		enviar_paquete_vacio(ERROR,socketConexionKernel);
+		return -1;
+	}
+	return 0;
+}
+
+
+int16_t recibirTamanioPagina(void* paquete){
+	int bytes;
+	int tipo_mensaje;
+
+	bytes = recibir_paquete(socketConexionMemoria, &paquete, &tipo_mensaje);
+	if(bytes <= 0){
+		log_error(logger, "Desconexion de la memoria. Terminando...");
+		close(socketConexionKernel);
+		exit(1);
+	}
+	if(tipo_mensaje==ENVIAR_TAMANIO_PAGINA){
+
+		tamanioPagina=*(int*)paquete;
+		enviar_paquete_vacio(OK,socketConexionMemoria);
+	}
+	else{
+		enviar_paquete_vacio(ERROR,socketConexionMemoria);
+		return -1;
+	}
+	return 0;
+}
+
+int16_t recibirTamanioStack(void* paquete){
+
+	return EXIT_SUCCESS;
+}
+
+int16_t leerCompartida(void* paquete){
+
+	int tipo;
+	int var;
+	//verificar envio
+	enviar_paquete_vacio(LEER_VAR_COMPARTIDA,socketConexionKernel);
+	//verificar recepcion
+	recibir_paquete(socketConexionKernel,&paquete,&tipo);
+	if(tipo==VALOR_VAR_COMPARTIDA){
+		var=*(int*)paquete;
+	}
+	else{
+		return EXIT_FAILURE;
+	}
+	return var;
+}
+
+int16_t asignarCompartida(void* paquete, int valor){
+
+	int tipo;
+	header_t* header=malloc(sizeof(header_t));
+	header->type=ASIG_VAR_COMPARTIDA;
+	header->length=sizeof(valor);
+	//verificar envio
+	sendSocket(socketConexionKernel,header,&valor);
+	//verificar recepcion
+	recibir_paquete(socketConexionKernel,&paquete,&tipo);
+	if(tipo==OK){
+		free(header);
+		return EXIT_SUCCESS;
+	}
+	else{
+		free(header);
+		return EXIT_FAILURE;
 	}
 }
 
-void recibirTamanioStack(void* paquete){}
+int16_t waitSemaforo(void* paquete, char* sem){
 
-void recibirPCB(void* paquete){}
+	int tipo;
+	header_t* header = malloc(sizeof(header_t));
+	header->type=SEM_WAIT;
+	header->length=strlen(sem);
+	sendSocket(socketConexionKernel,header,&sem);
+	recibir_paquete(socketConexionKernel,&paquete,&tipo);
+	switch(tipo){
+		case RESPUESTA_WAIT_DETENER_EJECUCION:
+			/*expulsarPCB()*/
+			break;
+		case RESPUESTA_WAIT_SEGUIR_EJECUCION:
+			/*seguir ejecutando*/
+			break;
+		default:
+			/*manejar errores*/
+			free(header);
+			return EXIT_FAILURE;
+	}
+	free(header);
+	return EXIT_SUCCESS;
+}
 
-void recibirValorVariableCompartida(void* paquete){}
+int16_t signalSemaforo(void* paquete, char* sem){
+	int tipo;
+	header_t* header = malloc(sizeof(header_t));
+	header->type=SEM_SIGNAL;
+	header->length=strlen(sem);
+	sendSocket(socketConexionKernel,header,&sem);
+	recibir_paquete(socketConexionKernel,&paquete,&tipo);
 
-void recibirAsignacionVariableCompartida(void* paquete){}
+	if(tipo==RESPUESTA_SIGNAL_OK){
+		free(header);
+		return EXIT_SUCCESS;
+	}
+	else{
+		free(header);
+		return EXIT_FAILURE;
+	}
+}
 
-void recibirSignalSemaforo(void* paquete){}
+int16_t solicitarBytes(pedido_bytes_t* pedido, void** paquete){
 
-void recibirTamanioPagina(void* paquete){}
+	int tipo;
+	header_t header;
+	header.type=SOLICITUD_BYTES;
+	header.length=sizeof(pedido_bytes_t);
 
-void levantarArchivo(char*path){
+	//verificar envio
+	sendSocket(socketConexionMemoria,&header,(void*)pedido);
+	//verificar recepcion
+	recibir_paquete(socketConexionMemoria,paquete,&tipo);
+	switch(tipo){
+		case OP_OK:
+			return EXIT_SUCCESS;
+		case SEGMENTATION_FAULT: /*se podria hacer la logica de terminacion aca*/
+			enviar_paquete_vacio(FIN_ERROR_MEMORIA,socketConexionKernel);
+			return EXIT_FAILURE;
+		default:
+			/*otros errores*/
+			enviar_paquete_vacio(ERROR,socketConexionKernel);
+			return EXIT_FAILURE;
+	}
+}
+
+int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
+
+	int tipo;
+	char*buffer;
+	int size;
+	header_t header;
+	size = sizeof(pedido_bytes_t);
+	header.type=GRABAR_BYTES;
+	header.length=size+pedido->size;
+	buffer=malloc(header.length);
+	memcpy(buffer,pedido,size);
+	memcpy(buffer+size,paquete,pedido->size);
+	//verificar envio
+	sendSocket(socketConexionMemoria,&header,(void*)buffer);
+	//verificar recepcion
+	recibir_paquete(socketConexionMemoria,paquete,&tipo);
+	switch(tipo){
+		case OP_OK:
+			return EXIT_SUCCESS;
+		case SEGMENTATION_FAULT: /*se podria hacer la logica de terminacion aca*/
+			enviar_paquete_vacio(FIN_ERROR_MEMORIA,socketConexionKernel);
+			return EXIT_FAILURE;
+		default:
+			/*otros errores*/
+			enviar_paquete_vacio(ERROR,socketConexionKernel);
+			return EXIT_FAILURE;
+	}
+}
+
+void levantarArchivo(char*path, char** buffer){
 
 		FILE* file;
 	 	int file_fd, file_size;
 	 	struct stat stats;
-	 	char* buffer;
 
 	 	file = fopen(path, "r");
 	 	file_fd = fileno(file);
@@ -176,18 +320,16 @@ void levantarArchivo(char*path){
 	 	fstat(file_fd, &stats);
 	 	file_size = stats.st_size;
 
-
-	 	buffer = malloc(file_size+1);
-	 	if(buffer == NULL) {
+	 	*buffer = malloc(file_size+1);
+	 	if(*buffer == NULL) {
 	 		log_error(logger, "archivo no levantado");
 	 		exit(1);
 	 	}
-	 	memset(buffer, '\0',file_size+1);
-	 	fread(buffer,file_size,1,file);
-	 	pcb = crearPCB(buffer);
+	 	memset(*buffer, '\0',file_size+1);
+	 	fread(*buffer,file_size,1,file);
 }
 
-t_pcb_* crearPCB(char* programa) {
+t_pcb* crearPCB(char* programa, int pid) {
 
 	log_debug(logger, "Se crea un PCB para el Programa Solicitado.");
 	t_metadata_program* datos;
@@ -196,16 +338,16 @@ t_pcb_* crearPCB(char* programa) {
 	//Obtengo la metadata utilizando el preprocesador del parser
 	datos = metadata_desde_literal(programa);
 
-	t_pcb_* pcb = malloc(sizeof(t_pcb_));
+	t_pcb* pcb = malloc(sizeof(t_pcb));
 
-	pcb->pid = 1;
+	pcb->pid = pid;
 	pcb->stackPointer = 0;
 	pcb->programCounter = datos->instruccion_inicio;
 	pcb->codigo = datos->instrucciones_size;
-	t_list * pcbStack = list_create();
+	t_list *pcbStack = list_create();
 	pcb->indiceStack = pcbStack;
 	pcb->tamanioEtiquetas = datos->etiquetas_size;
-	t_list * listaIndCodigo = llenarLista(datos->instrucciones_serializado,
+	t_list *listaIndCodigo = llenarLista(datos->instrucciones_serializado,
 			datos->instrucciones_size);
 	pcb->indiceCodigo = listaIndCodigo;
 	if (datos->cantidad_de_etiquetas > 0
