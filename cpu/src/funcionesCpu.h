@@ -57,6 +57,6 @@ int16_t leerCompartida(void* paquete);
 int16_t asignarCompartida(void* paquete, int valor);
 int16_t waitSemaforo(void* paquete, char* sem);
 int16_t signalSemaforo(void* paquete, char* sem);
-int16_t recibirTamanioPagina(void* paquete);
+int16_t recibirTamanioPagina();
 
 #endif /* FUNCIONESCPU_H_ */

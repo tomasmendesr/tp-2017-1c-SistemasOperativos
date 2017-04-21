@@ -162,7 +162,8 @@ void requestHandlerCpu(int fd){
 			case GRABAR_BYTES:
 				grabarBytes(fd, (t_pedido_memoria*)paquete);
 				break;
-
+			case OK:
+				break;
 			default:
 				log_warning(logger, "Mensaje Recibido Incorrecto");
 		}

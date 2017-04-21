@@ -89,7 +89,7 @@ void trabajarConexionCPU(){
 							enviarTamanioStack(iterador_sockets);
 							break;
 						}
-						default:{ printf("Se recibio un codigo no valido");
+						default:{ printf("Se recibio un codigo no valido\n");
 							break;
 						}
 					}

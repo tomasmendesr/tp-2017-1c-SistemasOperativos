@@ -19,11 +19,11 @@ int main(int argc, char** argv) {
 	if(conexionConKernel() == -1 || conexionConMemoria() == -1){
 		return EXIT_FAILURE;
 	}
+	ejecutarPrograma();
 
 	while(true){
 		log_info(logger, "Comenzando ejecucion...");
-		if(atenderKernel() != 0) return -1;
-		ejecutarPrograma();
+//		if(atenderKernel() != 0) return -1;
 	}
 
 	freeConf(config);

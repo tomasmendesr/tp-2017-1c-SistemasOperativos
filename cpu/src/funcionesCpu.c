@@ -62,7 +62,6 @@ void freeConf(t_config_cpu* config){
 }
 
 int conexionConKernel(void){
-
 	int operacion;
 	void* paquete_vacio;
 
@@ -111,9 +110,7 @@ int conexionConMemoria(void){
 		log_info(logger,"La Memoria no devolvio handshake :(");
 		return -1;
 	}
-
-	recibirTamanioPagina(paquete_vacio);
-
+	recibirTamanioPagina();
 	return EXIT_SUCCESS;
 }
 
@@ -122,8 +119,7 @@ void ejecutarPrograma(void){
 	inicializarFunciones();
 	levantarArchivo(ansisop,&content);
 	pcb = crearPCB(content, 1); //en realidad se recibe desde el kernel
-
-	analizadorLinea("variables a", funciones, funcionesKernel);
+	analizadorLinea("variables a, b, c, d, e", funciones, funcionesKernel);
 }
 
 int16_t atenderKernel(){
@@ -148,8 +144,9 @@ int16_t atenderKernel(){
 }
 
 
-int16_t recibirTamanioPagina(void* paquete){
+int16_t recibirTamanioPagina(){
 	int bytes;
+	void* paquete;
 	int tipo_mensaje;
 
 	log_debug(logger, "Esperando tamaño de pagina...");
@@ -160,15 +157,20 @@ int16_t recibirTamanioPagina(void* paquete){
 		exit(1);
 	}
 	if(tipo_mensaje==ENVIAR_TAMANIO_PAGINA){
-		tamanioPagina=*(int*)paquete;
+		printf("entre al if\n");
+		tamanioPagina=*(uint32_t*)paquete;
+		printf("asigne tamanio pagina\n");
 		log_info(logger, "Tamaño de pagina: %d", tamanioPagina);
 		enviar_paquete_vacio(OK,socketConexionMemoria);
+		printf("envio ok\n");
 	}
 	else{
 		log_error(logger, "Error al recibir tamanio de pagina");
-		enviar_paquete_vacio(ERROR,socketConexionMemoria);
+//		enviar_paquete_vacio(ERROR,socketConexionMemoria);
 		return -1;
 	}
+
+	printf("salgo cheto de recibir pag");
 	return 0;
 }
 
@@ -186,12 +188,12 @@ int16_t recibirTamanioStack(void* paquete){
 	}
 
 	if(tipo_mensaje==TAMANIO_STACK_PARA_CPU){
-		tamanioStack=*(int*)paquete;
+		tamanioStack=*(uint32_t*)paquete;
 		log_info(logger, "Tamanio stack: %d", tamanioStack);
-		enviar_paquete_vacio(OK,socketConexionKernel);
+//		enviar_paquete_vacio(OK,socketConexionKernel);
 	}else{
 		log_error(logger, "Error al recibir tamanio de stack");
-		enviar_paquete_vacio(ERROR,socketConexionKernel);
+//		enviar_paquete_vacio(ERROR,socketConexionKernel);
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;

@@ -62,8 +62,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		list_add(lineaStack->argumentos, nuevoArg);
 		pcb->stackPointer += TAMANIO_VARIABLE;
 
-		log_info(logger, "%c %i %i %i", identificador_variable, nuevoArg->pagina,
-				nuevoArg->offset, nuevoArg->size);
+		log_info(logger, "%c %i %i %i", identificador_variable, nuevoArg->pagina, nuevoArg->offset, nuevoArg->size);
 		log_info(logger, "Posicion absoluta de %c: %i", identificador_variable, pcb->stackPointer-TAMANIO_VARIABLE );
 		return pcb->stackPointer-TAMANIO_VARIABLE;
 	}
