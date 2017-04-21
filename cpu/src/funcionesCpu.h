@@ -40,7 +40,7 @@ int quantum;
 /*desde memoria*/
 uint32_t tamanioPagina;
 
-t_pcb* crearPCB(char* buf, int pid);
+pcb_t* crearPCB(char* buf, int pid);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
 void levantarArchivo(char*path,char**content);
 t_config_cpu* levantarConfiguracionCPU(char* archivo);

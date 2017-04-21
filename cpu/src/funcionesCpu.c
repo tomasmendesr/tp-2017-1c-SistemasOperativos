@@ -339,7 +339,7 @@ void levantarArchivo(char*path, char** buffer){
 	 	fread(*buffer,file_size,1,file);
 }
 
-t_pcb* crearPCB(char* programa, int pid) {
+pcb_t* crearPCB(char* programa, int pid) {
 
 	log_debug(logger, "Se crea un PCB para el Programa Solicitado.");
 	t_metadata_program* datos;
@@ -348,7 +348,7 @@ t_pcb* crearPCB(char* programa, int pid) {
 	//Obtengo la metadata utilizando el preprocesador del parser
 	datos = metadata_desde_literal(programa);
 
-	t_pcb* pcb = malloc(sizeof(t_pcb));
+	pcb_t* pcb = malloc(sizeof(pcb_t));
 
 	pcb->pid = pid;
 	pcb->stackPointer = 0;

@@ -6,7 +6,7 @@
  */
 #include "primitivas.h"
 
-void setPCB(t_pcb * pcbDeCPU){
+void setPCB(pcb_t * pcbDeCPU){
 	pcb = pcbDeCPU;
 }
 

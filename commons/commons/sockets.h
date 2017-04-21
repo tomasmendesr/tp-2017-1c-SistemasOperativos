@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include "collections/list.h"
+#include "structUtiles.h"
 #include <stdlib.h>
 #include <string.h>
 #include "string.h"
@@ -50,17 +51,18 @@ typedef struct {
 
 
 /*Me lo llevo para structUtiles*/
-typedef struct{
-	uint32_t pid;  //Identificador único del Programa en el sistema
-	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
-	uint32_t cantPaginasCodigo;
-//	t_intructions* indiceCodigo;
-	//char* etiquetas;  Verificar si es necesario
-	//t_list* indiceStack;
-	int16_t exitCode; //Codigo de finalizacion
-	uint32_t consolaFd;
 
-}__attribute__((__packed__))pcb_t;
+//typedef struct{
+//	uint32_t pid;  //Identificador único del Programa en el sistema
+//	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
+//	uint32_t cantPaginasCodigo;
+////	t_intructions* indiceCodigo;
+//	//char* etiquetas;  Verificar si es necesario
+//	//t_list* indiceStack;
+//	int16_t exitCode; //Codigo de finalizacion
+//	uint32_t consolaFd;
+//
+//}__attribute__((__packed__))pcb_t;
 
 typedef struct {
 	char      nombre;

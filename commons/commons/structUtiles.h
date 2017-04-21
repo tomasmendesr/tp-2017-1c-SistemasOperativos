@@ -13,11 +13,11 @@
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <commons/collections/list.h>
-#include <commons/collections/queue.h>
-#include <commons/config.h>
-#include <commons/log.h>
-#include <commons/collections/dictionary.h>
+#include "collections/list.h"
+#include "collections/queue.h"
+#include "config.h"
+#include "log.h"
+#include "collections/dictionary.h"
 
 typedef struct{
 	uint32_t pagina;
@@ -71,7 +71,7 @@ typedef struct{
 	uint32_t stackPointer; // el ultimo offset
 	uint32_t tamanioEtiquetas;
 	uint32_t codigo; // cant de instrucciones
-}t_pcb;
+}pcb_t;
 
 typedef enum{
 	ERROR, NOTHING, SUCCESS
