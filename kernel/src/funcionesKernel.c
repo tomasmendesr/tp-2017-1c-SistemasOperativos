@@ -9,6 +9,17 @@ void inicializarColas(){
 	max_pid = 0;
 }
 
+void conectarConServidores() {
+	if(conexionConMemoria() == -1){
+		log_error(&logger_kernel,"No se pudo establecer la conexion con la memoria.");
+		exit(1);
+	}
+	if(conexionConFileSystem() == -1){
+		log_error(&logger_kernel,"No se pudo establecer la conexion con el File System.");
+		exit(1);
+	}
+}
+
 void crearConfig(int argc, char* argv[]){
 	char* pathConfig=string_new();
 

@@ -17,8 +17,15 @@ int main(int argc, char** argv){
 	inicializaciones();
 
 	//me conecto con los servidores (memoria y file system)
-	//conectarConServidores();
+	conectarConServidores();
 
+	escucharConexiones();
+
+	destruirConfiguracionKernel(config);
+	return EXIT_SUCCESS;
+}
+
+void escucharConexiones(){
 	FD_ZERO(&master);
 	FD_ZERO(&setCPUs);
 	FD_ZERO(&setConsolas);
@@ -55,22 +62,19 @@ int main(int argc, char** argv){
 			if(FD_ISSET(iterador_sockets, &setCPUs)){ //una cpu realiza una operacion
 				pthread_t hilo;
 				resultadoHilo = pthread_create(&hilo, NULL, (void*)trabajarMensajeCPU, iterador_sockets);
-				if(resultadoHilo) return EXIT_FAILURE;
+				if(resultadoHilo) exit(1);
 			}
 
 			if(FD_ISSET(iterador_sockets, &setConsolas)){ //una consola realiza una operacion
 				pthread_t hilo;
 				resultadoHilo = pthread_create(&hilo, NULL, (void*)trabajarMensajeConsola, iterador_sockets);
-				if(resultadoHilo) return EXIT_FAILURE;
+				if(resultadoHilo) exit(1);
 			}
 
 
 		}
 
 	}
-
-	destruirConfiguracionKernel(config);
-	return EXIT_SUCCESS;
 }
 
 void aceptarNuevaConexion(int socketEscucha, fd_set* set){
@@ -87,42 +91,6 @@ void aceptarNuevaConexion(int socketEscucha, fd_set* set){
 
 }
 
-void trabajarMensajeCPU(int socketCPU){
-	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
-	void* paquete;
-
-	int check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
-
-	//Chequeo de errores
-	if (check <= 0) {
-		printf("Se cerro el socket %d\n", socketCPU);
-		close(socketCPU);
-		FD_CLR(socketCPU, &master);
-		FD_CLR(socketCPU, &setCPUs);
-	}else{
-		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
-	}
-
-}
-
-void trabajarMensajeConsola(int socketConsola){
-	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
-	void* paquete;
-
-	int check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
-
-	//Chequeo de errores
-	if (check <= 0) {
-		printf("Se cerro el socket %d\n", socketConsola);
-		close(socketConsola);
-		FD_CLR(socketConsola, &master);
-		FD_CLR(socketConsola, &setConsolas);
-	}else{
-		procesarMensajeConsola(socketConsola, tipo_mensaje, paquete);
-	}
-
-}
-
 void inicializaciones(){
 	sem_init(&mutex_cola_ready,0,1);
 	sem_init(&mutex_cola_new,0,1);
@@ -130,4 +98,3 @@ void inicializaciones(){
 	inicializarColas();
 	listaCPUs = list_create();
 }
-

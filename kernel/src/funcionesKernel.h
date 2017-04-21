@@ -26,9 +26,8 @@
 #include <commons/collections/list.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include "plp.h"
-#include "pcp.h"
 #include "pcb.h"
+
 
 typedef struct {
 	char* puerto_PROG;
@@ -54,6 +53,7 @@ typedef struct{
 
 void inicializarColas();
 void inicializaciones();
+void conectarConServidores();
 void crearConfig(int argc, char* argv[]);
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
 void destruirConfiguracionKernel(t_config_kernel* config);
