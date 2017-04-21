@@ -9,6 +9,7 @@
 #define PCB_H_
 
 #include <commons/structUtiles.h>
+#include "funcionesKernel.h"
 #include <parser/metadata_program.h>
 #include <sys/stat.h>
 #include <parser/parser.h>
@@ -22,7 +23,8 @@ typedef struct{
 	t_list* indiceStack;
 	int16_t exitCode;
 	uint32_t consolaFd;
-
+	uint32_t indice_codigo;
+	uint32_t stackPointer;
 }t_pcb;
 
 

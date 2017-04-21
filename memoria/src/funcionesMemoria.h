@@ -20,6 +20,7 @@
 #include <commons/cosas.h>
 #include <commons/structUtiles.h>
 #include <pthread.h>
+#include "peticiones.h"
 
 #define configuracionMemoria "confMemoria.init"
 #define MAX_LEN_PUERTO 6
@@ -31,6 +32,9 @@
 #define frame_size config->marcos_Size
 #define cache_entradas config->entradas_Cache
 #define max_entradas config->cache_x_Proceso
+
+//Define temporal
+#define stack_size 10
 
 typedef struct{
         char* puerto;
@@ -71,6 +75,9 @@ int framesLibres();
 int buscarFrame(int pid, int pag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
+void reservarFrame(int pid, int pag);
+
+bool pedidoIncorrecto(t_pedido_memoria*);
 
 //Funciones cache
 void increaseOpCount(); //Suma uno al opCount
@@ -93,14 +100,20 @@ int leerCache(int pid, int pag, char** contenido);
 void actualizarEntradaCache(int pid, int pag, char* frame);
 
  	 	 	 	 	 				/*Este thread maneja tanto cpus como kernel, porque la interfaz es una sola.*/
-void requestHandlerKernel(int* fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
-void requestHandlerCpu(int* fd);		/* asi que validamos eso solo*/
+void requestHandlerKernel(int fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
+void requestHandlerCpu(int fd);		/* asi que validamos eso solo*/
 
-int iniciarPrograma(int pid, int cantPag);
+//Pedidos de Kernel
+int iniciarPrograma(t_pedido_iniciar* pedido);
 int asignarPaginas(int pid, int cantPag);
 int finalizarPrograma(int pid);
-int solicitudBytes(int pid, int pag, int offset, int size, void*buff);
-int grabarBytes(int pid, int pag, int offset, int size,void* buff);
+
+//Pedidos cpu
+int solicitudBytes(int fd, t_pedido_memoria* pedido);
+int grabarBytes(int fd, t_pedido_memoria* pedido);
+
+//Respuestas status
+void enviarRespuesta(int fd, int respuesta);
 
 //Funciones de interfaz
 void levantarInterfaz();

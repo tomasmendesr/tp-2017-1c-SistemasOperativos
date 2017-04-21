@@ -19,6 +19,9 @@
 #include <sys/stat.h>
 #include "primitivas.h"
 #define configuracionCPU "../confCpu.init"
+#define ansisop "facil.ansisop"
+#define TAM_PAG 256 //se recibe desde memoria
+#define TAM_STACK 2
 
 typedef struct{
 	char* puerto_Memoria;
@@ -27,32 +30,35 @@ typedef struct{
 	char* ip_Kernel;
 }t_config_cpu;
 
-t_config_cpu* config;
 int socketConexionKernel;
 int socketConexionMemoria;
+t_config_cpu* config;
 t_log* logger;
-
+/*desde kernel*/
 uint32_t tamanioStack;
+int quantum;
+/*desde memoria*/
 uint32_t tamanioPagina;
 
-t_pcb_* crearPCB(char* buf);
+pcb_t* crearPCB(char* buf, int pid);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
-void levantarArchivo(char*path);
+void levantarArchivo(char*path,char**content);
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
 int conexionConKernel(void);
 int conexionConMemoria(void);
 void freeConf(t_config_cpu* config);
 t_puntero definirVariable(t_nombre_variable nombre);
 void inicializarFunciones(void);
-void procesarProgramas(void);
+void ejecutarPrograma(void);
 int crearLog(void);
 void crearConfig(int argc, char* argv[]);
-void atenderKernel();
-void recibirTamanioStack(void* paquete);
-void recibirPCB(void* paquete);
-void recibirValorVariableCompartida(void* paquete);
-void recibirAsignacionVariableCompartida(void* paquete);
-void recibirSignalSemaforo(void* paquete);
-void recibirTamanioPagina(void* paquete);
+int16_t atenderKernel();
+int16_t recibirTamanioStack(void* paquete);
+int16_t recibirPCB(void* paquete);
+int16_t leerCompartida(void* paquete);
+int16_t asignarCompartida(void* paquete, int valor);
+int16_t waitSemaforo(void* paquete, char* sem);
+int16_t signalSemaforo(void* paquete, char* sem);
+int16_t recibirTamanioPagina(void* paquete);
 
 #endif /* FUNCIONESCPU_H_ */

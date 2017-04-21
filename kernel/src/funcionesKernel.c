@@ -150,8 +150,6 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 
 pcb_t* crearProceso(int consola_fd, char* source){
 
-	printf("Archivo recibido:\n\n%s", source);
-
 	pcb_t* pcb = crearPCB(source, asignarPid() );
 	pcb->consolaFd = consola_fd;
 

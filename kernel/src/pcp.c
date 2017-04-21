@@ -17,10 +17,10 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	switch(mensaje){
 	case ENVIO_PCB:
 		break;
-	case SIGNAL:
+	case SEM_SIGNAL:
 		realizarSignal(socketCPU, package);
 		break;
-	case WAIT:
+	case SEM_WAIT:
 		realizarWait(socketCPU, package);
 		break;
 	case LEER_VAR_COMPARTIDA:
@@ -37,13 +37,13 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 void realizarSignal(int socketCPU, char* key){
 	int valorSemaforo = semaforoSignal(config->semaforos, key);
 
-	enviarValorSemaforo(socketCPU, SIGNAL, valorSemaforo);
+	enviarValorSemaforo(socketCPU, SEM_SIGNAL, valorSemaforo);
 }
 
 void realizarWait(int socketCPU, char* key){
 	int valorSemaforo = semaforoWait(config->semaforos, key);
 
-	enviarValorSemaforo(socketCPU, WAIT, valorSemaforo);
+	enviarValorSemaforo(socketCPU, SEM_WAIT, valorSemaforo);
 }
 
 void enviarValorSemaforo(int socketCPU, int tipoMensaje, int valorSemaforo){
