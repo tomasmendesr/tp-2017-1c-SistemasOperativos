@@ -21,7 +21,7 @@
 #define configuracionCPU "../confCpu.init"
 #define ansisop "facil.ansisop"
 #define TAM_PAG 256 //se recibe desde memoria
-#define TAM_STACK 256
+#define TAM_STACK 2
 
 typedef struct{
 	char* puerto_Memoria;
@@ -30,15 +30,15 @@ typedef struct{
 	char* ip_Kernel;
 }t_config_cpu;
 
-t_config_cpu* config;
 int socketConexionKernel;
 int socketConexionMemoria;
+t_config_cpu* config;
 t_log* logger;
-
+/*desde kernel*/
 uint32_t tamanioStack;
-/*lo manda memoria*/
-uint32_t tamanioPagina;
 int quantum;
+/*desde memoria*/
+uint32_t tamanioPagina;
 
 t_pcb* crearPCB(char* buf, int pid);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
@@ -52,7 +52,7 @@ void inicializarFunciones(void);
 void ejecutarPrograma(void);
 int crearLog(void);
 void crearConfig(int argc, char* argv[]);
-void atenderKernel(void);
+int16_t atenderKernel(void* paquete);
 int16_t recibirTamanioStack(void* paquete);
 int16_t recibirPCB(void* paquete);
 int16_t leerCompartida(void* paquete);

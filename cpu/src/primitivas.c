@@ -17,7 +17,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		t_var_local* nuevaVar = malloc(sizeof(t_var_local));
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count-1);
 
-		if(pcb->stackPointer + TAMANIO_VARIABLE > TAM_STACK){
+		if(pcb->stackPointer + TAMANIO_VARIABLE > TAM_STACK*TAM_PAG){
 			/*esta verificacion me hace ruido*/
 			if(!huboStackOver){
 				log_error(logger, "StackOverflow. Se finaliza el proceso");
@@ -50,7 +50,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		log_debug(logger, "Definir variable - argumento %c", identificador_variable);
 		t_argumento* nuevoArg = malloc(sizeof(t_argumento));
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count -1);
-		if(pcb->stackPointer + TAMANIO_VARIABLE > TAM_STACK){
+		if(pcb->stackPointer + TAMANIO_VARIABLE > TAM_STACK*TAM_PAG){
 			if(!huboStackOver){
 				log_error(logger, "StackOverflow. Se finaliza el proceso");
 				huboStackOver = true;

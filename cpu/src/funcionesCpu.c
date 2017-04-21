@@ -85,7 +85,7 @@ int conexionConKernel(void){
 		return -1;
 	}
 
-	recibirPCB(paquete_vacio);
+	if(atenderKernel(paquete_vacio) != 0) return -1;
 
 	return EXIT_SUCCESS;
 }
@@ -126,24 +126,34 @@ void ejecutarPrograma(void){
 //	analizadorLinea("variables a", funciones, funcionesKernel);
 }
 
-int16_t recibirPCB(void* paquete){
+int16_t atenderKernel(void* paquete){
 
-	int bytes;
 	int tipo_mensaje;
 
-	bytes = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
-	if(bytes <= 0){
+	if(recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje) <= 0){
 		log_error(logger, "Desconexion del kernel. Terminando...");
 		close(socketConexionKernel);
-		exit(1);
+		return EXIT_FAILURE;
 	}
 	if(tipo_mensaje==EXEC_PCB){
 //		deserializarPCB(paquete);
 		enviar_paquete_vacio(OK,socketConexionKernel);
-	}
-	else{
+	}else{
 		enviar_paquete_vacio(ERROR,socketConexionKernel);
-		return -1;
+		return EXIT_FAILURE;
+	}
+
+	if(recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje) <= 0){
+		log_error(logger, "Desconexion del kernel. Terminando...");
+		close(socketConexionKernel);
+		EXIT_FAILURE;
+	}
+	if(tipo_mensaje==TAMANIO_STACK_PARA_CPU){
+		tamanioStack=*(int*)paquete;
+		enviar_paquete_vacio(OK,socketConexionKernel);
+	}else{
+		enviar_paquete_vacio(ERROR,socketConexionKernel);
+		EXIT_FAILURE;
 	}
 	return 0;
 }
