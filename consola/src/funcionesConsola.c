@@ -127,13 +127,14 @@ void levantarInterfaz() {
 void iniciarPrograma(char* comando, char* param) {
 
 	int socket_cliente;
+	int* pidAsignado;
 
-	if(verificarExistenciaDeArchivo(param))
-		printf("Su proceso se inicializo");
-	else{
+	if(!verificarExistenciaDeArchivo(param)){
 		log_warning(logger, "no existe el archivo");
+		printf("El archivo no se encuentra\n");
 		return;
 	}
+
 	socket_cliente = createClient(config->ip_Kernel, config->puerto_Kernel);
 	if (socket_cliente != -1) {
 		printf("Cliente creado satisfactoriamente.\n");
@@ -155,18 +156,86 @@ void iniciarPrograma(char* comando, char* param) {
 
 	if((enviarArchivo(socket_cliente, param))==-1){
 		log_error(logger,"No se pudo mandar el archivo");
-		exit(1);
+		printf("No pudo enviarse el archivo\n");
+		return;
 	}
 	log_info(logger,"Archivo enviado correctamente");
 
 	if(recibir_info(socket_cliente, &paquete_vacio, &operacion)==0){
 		log_error(logger, "El kernel se desconecto");
-		exit(1);
+		return;
 	}
+
+	switch(operacion){
+	case PROCESO_RECHAZADO:
+		printf("El kernel rechazo el proceso\n");
+		log_error(logger, "El kernel rechazo el proceso");
+		return;
+		break;
+	case PID_PROGRAMA:
+		pidAsignado = (int*)paquete_vacio;
+		break;
+	default:
+		printf("Se recibio una operacion invalida\n");
+		break;
+	}
+
+	pthread_t threadPrograma;
+	pthread_create(&threadPrograma, NULL, (void*)threadPrograma, socket_cliente);
+	pthread_detach(threadPrograma);
+
+	//creo y agrego proceso a la lista
+	crearProceso(socket_cliente, pidAsignado, threadPrograma);
+
+}
+
+void crearProceso(int socketProceso, int pidAsignado, pthread_t threadPrograma){
+	t_proceso* proc = malloc(sizeof(t_proceso));
+	proc->socket = socketProceso;
+	proc->pid = pidAsignado;
+	proc->thread = threadPrograma;
+
+	list_add(procesos, proc);
+}
+
+bool esNumero(char* string){
+	int size = strlen(string);
+	int i;
+
+	for (i=0 ; i < size ; i++){
+		if(!isdigit(string[i])) return false;
+	}
+	return true;
+}
+
+void threadPrograma(int socketProceso){
+
 }
 
 void finalizarPrograma(char* comando, char* param){
-	printf("finalizarPrograma\n");
+
+	if(!esNumero(param)){
+		printf("Valor de pid invalido\n");
+		return;
+	}
+
+	int pid = strtol(param, NULL, 10);
+
+	bool buscarProceso(t_proceso* p){
+		return p->pid == pid? true : false;
+	}
+
+	t_proceso* proceso = list_find(procesos, buscarProceso);
+	if(proceso == NULL){
+		printf("Ese proceso no se encuentra en el sistema\n");
+		return;
+	}
+
+	list_remove_by_condition(procesos, buscarProceso);
+	//evaluar si debo avisar al kernel o si al desconectarse el socket el kernel lo maneje solo
+	pthread_cancel(proceso->thread);
+
+	printf("Proceso finalizado\n");
 }
 
 void desconectarConsola(char* comando, char* param) {
@@ -176,7 +245,8 @@ void desconectarConsola(char* comando, char* param) {
 }
 
 void limpiarMensajes(char* comando, char* param) {
-	printf("limpiarMensajes");
+	//me doy asco por usar system
+	system("clear");
 }
 
 int crearLog() {

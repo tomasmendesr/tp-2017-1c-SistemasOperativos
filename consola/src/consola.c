@@ -17,8 +17,14 @@ int main(int argc, char** argv){
 
 	crearConfig(argc,argv);
 
+	inicializacion();
+
 	levantarInterfaz();
 
 	pthread_join(threadInterfaz,NULL);
 	return EXIT_SUCCESS;
+}
+
+void inicializacion(){
+	procesos = list_create();
 }
