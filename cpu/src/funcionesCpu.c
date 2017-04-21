@@ -316,7 +316,10 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	memcpy(buffer,pedido,size);
 	memcpy(buffer+size,paquete,pedido->size);
 	//verificar envio
-	sendSocket(socketConexionMemoria,&header,(void*)buffer);
+	if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
+		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
+		return EXIT_FAILURE;
+	}
 	//verificar recepcion
 	recibir_paquete(socketConexionMemoria,paquete,&tipo);
 	switch(tipo){
