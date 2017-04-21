@@ -210,6 +210,40 @@ bool esNumero(char* string){
 
 void threadPrograma(int socketProceso){
 
+	int operacion;
+	void* paquete;
+	bool procesoActivo = true;
+
+	bool* buscar(t_proceso* proc){
+		return proc->socket == socketProceso ? true : false;
+	}
+
+	while(procesoActivo){
+
+		if(recibir_info(socketProceso, &paquete, &operacion)==0){
+			log_error(logger, "El kernel se desconecto");
+			return;
+		}else{
+
+			switch (operacion) {
+			case FINALIZAR_EJECUCION:
+				procesoActivo = false;
+				list_remove_and_destroy_by_condition(procesos, buscar, free);
+				break;
+			case IMPRIMIR_TEXTO_PROGRAMA:
+				printf("%s\n", (char*)paquete);
+				break;
+			case IMPRIMIR_VARIABLE_PROGRAMA:
+				printf("%d\n", (int)paquete);
+				break;
+			default:
+				break;
+			}
+
+		}
+
+	}
+
 }
 
 void finalizarPrograma(char* comando, char* param){
@@ -231,17 +265,22 @@ void finalizarPrograma(char* comando, char* param){
 		return;
 	}
 
-	list_remove_by_condition(procesos, buscarProceso);
+	t_proceso* proc = list_find(procesos, buscarProceso);
 	//evaluar si debo avisar al kernel o si al desconectarse el socket el kernel lo maneje solo
-	pthread_cancel(proceso->thread);
+	terminarProceso(proc);
 
 	printf("Proceso finalizado\n");
 }
 
 void desconectarConsola(char* comando, char* param) {
-	//Aca va a tener que ir toda la logica de limpiar variables finalizar proceso o algo
-	//AL menos que se la prueba del cierre Total de los programas.
+	list_destroy_and_destroy_elements(procesos,terminarProceso);
+
 	exit(1);
+}
+
+void terminarProceso(t_proceso* proc){
+	pthread_cancel(proc->thread);
+	free(proc);
 }
 
 void limpiarMensajes(char* comando, char* param) {

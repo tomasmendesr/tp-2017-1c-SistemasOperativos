@@ -25,7 +25,7 @@
 #define MAX_COMMAND_SIZE 256
 
 #define IniciarProceso "iniciarProceso"
-#define configuracionConsola "confConsola.init"
+#define configuracionConsola "../confConsola.init"
 
 typedef struct{
 	char* ip_Kernel;
@@ -48,6 +48,7 @@ int enviarArchivo(int kernel_fd, char* path);
 void crearProceso(int socketProceso, int pidAsignado, pthread_t threadPrograma);
 bool esNumero(char* string);
 void threadPrograma(int socketProceso);
+void terminarProceso(t_proceso* proc);
 
 //Funciones de interfaz
 void levantarInterfaz();
