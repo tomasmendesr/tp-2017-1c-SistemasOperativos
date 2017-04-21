@@ -47,7 +47,7 @@ t_pcb* crearPCB(char* codigo, int id){
 
 	//Reservo el espacio para el codigo y almaceno el codigo
 	u_int32_t direccion_segmento = guardarEnMemoria(socketConexionMemoria,strlen(codigo),pcb->pid);
-	pcb.indice_codigo = direccion_segmento;
+	pcb->indice_codigo = direccion_segmento;
 
 	if(direccion_segmento == 0){
 		pcb->pid = 0; // Hubo un error al querer reservar espacio de memoria

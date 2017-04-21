@@ -9,6 +9,7 @@
 #define PCB_H_
 
 #include <commons/structUtiles.h>
+#include "funcionesKernel.h"
 #include <parser/metadata_program.h>
 #include <sys/stat.h>
 #include <parser/parser.h>

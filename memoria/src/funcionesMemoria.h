@@ -104,7 +104,7 @@ void requestHandlerKernel(int fd);		/* Solo una de las operaciones esta restring
 void requestHandlerCpu(int fd);		/* asi que validamos eso solo*/
 
 //Pedidos de Kernel
-int iniciarPrograma(int pid, int cantPag);
+int iniciarPrograma(t_pedido_iniciar* pedido);
 int asignarPaginas(int pid, int cantPag);
 int finalizarPrograma(int pid);
 
