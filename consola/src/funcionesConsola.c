@@ -185,7 +185,7 @@ void iniciarPrograma(char* comando, char* param) {
 	pthread_detach(threadPrograma);
 
 	//creo y agrego proceso a la lista
-	crearProceso(socket_cliente, pidAsignado, threadPrograma);
+	crearProceso(socket_cliente, (*pidAsignado), threadPrograma);
 
 }
 
