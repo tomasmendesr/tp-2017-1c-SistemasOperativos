@@ -11,7 +11,7 @@ void setPCB(pcb_t * pcbDeCPU){
 }
 
 t_puntero definirVariable(t_nombre_variable identificador_variable){
-
+	tamanioPagina = TAM_PAG; // hardcode
 	if(pcb->stackPointer + TAMANIO_VARIABLE > TAM_STACK*TAM_PAG){
 		/*esta verificacion me hace ruido*/
 		if(!huboStackOver){
@@ -63,8 +63,9 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		list_add(lineaStack->argumentos, nuevoArg);
 		pcb->stackPointer += TAMANIO_VARIABLE;
 
-		log_debug(logger, "%c %i %i %i", identificador_variable, nuevoArg->pagina,
+		log_info(logger, "%c %i %i %i", identificador_variable, nuevoArg->pagina,
 				nuevoArg->offset, nuevoArg->size);
+		log_info(logger, "Posicion absoluta de %c: %i", identificador_variable, pcb->stackPointer-TAMANIO_VARIABLE );
 		return pcb->stackPointer-TAMANIO_VARIABLE;
 	}
 }

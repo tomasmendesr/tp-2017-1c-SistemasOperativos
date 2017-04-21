@@ -70,7 +70,7 @@ int conexionConKernel(void){
 
 	if(socketConexionKernel == -1){
 		log_error(logger,"No pudo conectarse a Kernel");
-		return -1;
+		return EXIT_FAILURE;
 	}else{
 		log_info(logger,"Cliente a Kernel creado");
 	}
@@ -82,10 +82,8 @@ int conexionConKernel(void){
 		log_info(logger,"Conexion establecida con Kernel! :D");
 	}else{
 		log_info(logger,"El Kernel no devolvio handshake :(");
-		return -1;
+		return EXIT_FAILURE;
 	}
-
-	if(atenderKernel(paquete_vacio) != 0) return -1;
 
 	return EXIT_SUCCESS;
 }
@@ -98,7 +96,7 @@ int conexionConMemoria(void){
 	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
 	if(socketConexionMemoria == -1){
 		log_error(logger,"No pudo conectarse a Memoria");
-		return -1;
+		return EXIT_FAILURE;
 	}else{
 		log_info(logger,"Cliente a Memoria creado");
 	}
@@ -109,7 +107,7 @@ int conexionConMemoria(void){
 		log_info(logger,"Conexion establecida con Memoria! :D");
 	}else{
 		log_info(logger,"La Memoria no devolvio handshake :(");
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	recibirTamanioPagina(paquete_vacio);
@@ -123,12 +121,13 @@ void ejecutarPrograma(void){
 	levantarArchivo(ansisop,&content);
 	pcb = crearPCB(content, 1); //en realidad se recibe desde el kernel
 
-//	analizadorLinea("variables a", funciones, funcionesKernel);
+	analizadorLinea("variables a", funciones, funcionesKernel);
 }
 
-int16_t atenderKernel(void* paquete){
+int16_t atenderKernel(){
 
 	int tipo_mensaje;
+	void* paquete;
 
 	if(recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje) <= 0){
 		log_error(logger, "Desconexion del kernel. Terminando...");
@@ -148,6 +147,8 @@ int16_t atenderKernel(void* paquete){
 		close(socketConexionKernel);
 		EXIT_FAILURE;
 	}
+
+	log_debug(logger, "Esperando tamaño del stack...");
 	if(tipo_mensaje==TAMANIO_STACK_PARA_CPU){
 		tamanioStack=*(int*)paquete;
 		enviar_paquete_vacio(OK,socketConexionKernel);
@@ -163,6 +164,7 @@ int16_t recibirTamanioPagina(void* paquete){
 	int bytes;
 	int tipo_mensaje;
 
+	log_debug(logger, "Esperando tamaño de pagina...");
 	bytes = recibir_paquete(socketConexionMemoria, &paquete, &tipo_mensaje);
 	if(bytes <= 0){
 		log_error(logger, "Desconexion de la memoria. Terminando...");
@@ -172,6 +174,7 @@ int16_t recibirTamanioPagina(void* paquete){
 	if(tipo_mensaje==ENVIAR_TAMANIO_PAGINA){
 
 		tamanioPagina=*(int*)paquete;
+		log_info(logger, "Tamaño de pagina: %d", tamanioPagina);
 		enviar_paquete_vacio(OK,socketConexionMemoria);
 	}
 	else{

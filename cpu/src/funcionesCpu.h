@@ -52,7 +52,7 @@ void inicializarFunciones(void);
 void ejecutarPrograma(void);
 int crearLog(void);
 void crearConfig(int argc, char* argv[]);
-int16_t atenderKernel(void* paquete);
+int16_t atenderKernel();
 int16_t recibirTamanioStack(void* paquete);
 int16_t recibirPCB(void* paquete);
 int16_t leerCompartida(void* paquete);

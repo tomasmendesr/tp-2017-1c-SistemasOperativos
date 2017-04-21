@@ -15,19 +15,12 @@ int main(int argc, char** argv) {
 
 	crearConfig(argc,argv);
 
-	// Conecta con kernel
-	if(conexionConKernel() == -1){
-		log_error(logger, "No se pudo conectar con el kernel");
-		return EXIT_FAILURE;
-	}
-	// Conecta con memoria
-	if(conexionConMemoria() == -1){
-		log_error(logger, "No se pudo conectar con la memoria");
-		return EXIT_FAILURE;
-	}
+	conexionConKernel(); // Conecta con kernel
+	conexionConMemoria(); // Conecta con memoria y se queda esperando a que le diga el tamaño de pagina
 
 	while(true){
 		log_info(logger, "Comenzando ejecucion...");
+		if(atenderKernel() != 0) return -1;
 		ejecutarPrograma();
 	}
 
