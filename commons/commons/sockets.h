@@ -125,6 +125,7 @@ enum protocolo_cpu_a_kernel{
 //Mensajes que se le envian a la memoria.
 enum protocolo_a_memoria{
 	ASIGNAR_PAGINAS = 59,
+	LEER_VAR = 203,
 	SOLICITUD_BYTES = 60,
 	GRABAR_BYTES = 61,
 	CAMBIO_PROCESO_ACTIVO = 62,

@@ -21,10 +21,10 @@ int main(int argc, char** argv) {
 	}
 	ejecutarPrograma();
 
-	while(true){
-		log_info(logger, "Comenzando ejecucion...");
+//	while(true){
+//		log_info(logger, "Comenzando ejecucion...");
 //		if(atenderKernel() != 0) return -1;
-	}
+//	}
 
 	freeConf(config);
 	finalizarConexion(socketConexionKernel);

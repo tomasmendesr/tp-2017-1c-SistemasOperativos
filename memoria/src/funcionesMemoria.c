@@ -266,7 +266,6 @@ void enviarRespuesta(int fd, int respuesta){
 	header_t header;
 	header.type = respuesta;
 	header.length = 0;
-
 	sendSocket(fd, &header, &header);
 }
 

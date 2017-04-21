@@ -41,6 +41,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 		log_debug(logger, "%c %i %i %i", nuevaVar->idVariable, nuevaVar->pagina,
 				nuevaVar->offset, nuevaVar->size);
+		log_debug(logger, "Posicion absoluta de %c: %i", identificador_variable, pcb->stackPointer-TAMANIO_VARIABLE );
 		return pcb->stackPointer-TAMANIO_VARIABLE;
 
 	}else{
@@ -62,25 +63,65 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		list_add(lineaStack->argumentos, nuevoArg);
 		pcb->stackPointer += TAMANIO_VARIABLE;
 
-		log_info(logger, "%c %i %i %i", identificador_variable, nuevoArg->pagina, nuevoArg->offset, nuevoArg->size);
-		log_info(logger, "Posicion absoluta de %c: %i", identificador_variable, pcb->stackPointer-TAMANIO_VARIABLE );
+		log_debug(logger, "%c %i %i %i", identificador_variable, nuevoArg->pagina, nuevoArg->offset, nuevoArg->size);
+		log_debug(logger, "Posicion absoluta de %c: %i", identificador_variable, pcb->stackPointer-TAMANIO_VARIABLE );
 		return pcb->stackPointer-TAMANIO_VARIABLE;
 	}
 }
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
-	printf("asignar!\n");
-	return;
+	log_debug(logger, "Asignar. Posicion %d - Valor %d", direccion_variable, valor);
+		//calculo el la posicion de la variable en el stack mediante el desplazamiento
+		pedido_bytes_t* enviar = malloc(sizeof(uint32_t) * 4);
+		enviar->pag = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
+		enviar->offset = direccion_variable % tamanioPagina;
+		enviar->size = TAMANIO_VARIABLE;
+		enviar->pid = pcb->pid;
+		char* buffer = malloc(sizeof(uint32_t));
+		sprintf(buffer, "%d", valor);
+
+		if(almacenarBytes(enviar, (void*)buffer) != 0){
+			log_error(logger, "La variable no pudo asignarse. Se finaliza el Proceso.");
+			free(enviar);
+			free(buffer);
+			return;
+		}else{
+			log_info(logger, "Variable asignada");
+		}
+		free(buffer);
+		free(enviar);
+		return;
 }
+
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
 	printf("asignarVariableCompartida!\n");
 	return 0;
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable){
-	printf("dereferenciar!\n");
+	//calculo el la posicion de la variable en el stack mediante el desplazamiento
+	t_posicion posicionRet;
+	posicionRet.pagina = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
+	posicionRet.offset = direccion_variable % tamanioPagina;
+	posicionRet.size = TAMANIO_VARIABLE;
+	t_valor_variable valor = 0;
+	log_debug(logger, "Dereferenciar %d", direccion_variable);
+	pedido_bytes_t* solicitar = malloc(sizeof(pedido_bytes_t));
+	solicitar->pag = posicionRet.pagina;
+	solicitar->size = TAMANIO_VARIABLE;
+	solicitar->offset = posicionRet.offset;
+
+	//serializarPedido
+	//enviarAMemoria
+	//recibirPaqueteMmemoria
+	//DeserialziarPaquete
+	//verificarError
+	//retornar con atoi
 	return 0;
+
 }
+
+
 void finalizar(void){
 	printf("finalizar!\n");
 	return;

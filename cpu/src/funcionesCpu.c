@@ -120,6 +120,7 @@ void ejecutarPrograma(void){
 	levantarArchivo(ansisop,&content);
 	pcb = crearPCB(content, 1); //en realidad se recibe desde el kernel
 	analizadorLinea("variables a, b, c, d, e", funciones, funcionesKernel);
+	analizadorLinea("a = 1", funciones, funcionesKernel);
 }
 
 int16_t atenderKernel(){
@@ -157,12 +158,9 @@ int16_t recibirTamanioPagina(){
 		exit(1);
 	}
 	if(tipo_mensaje==ENVIAR_TAMANIO_PAGINA){
-		printf("entre al if\n");
 		tamanioPagina=*(uint32_t*)paquete;
-		printf("asigne tamanio pagina\n");
 		log_info(logger, "Tamaño de pagina: %d", tamanioPagina);
 		enviar_paquete_vacio(OK,socketConexionMemoria);
-		printf("envio ok\n");
 	}
 	else{
 		log_error(logger, "Error al recibir tamanio de pagina");
@@ -170,7 +168,6 @@ int16_t recibirTamanioPagina(){
 		return -1;
 	}
 
-	printf("salgo cheto de recibir pag");
 	return 0;
 }
 
