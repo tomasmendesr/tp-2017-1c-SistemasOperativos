@@ -17,7 +17,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		t_var_local* nuevaVar = malloc(sizeof(t_var_local));
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count-1);
 
-		if(pcb->stackPointer + TAMANIO_VARIABLE > tamanioStack){
+		if(pcb->stackPointer + TAMANIO_VARIABLE > TAM_STACK){
 			/*esta verificacion me hace ruido*/
 			if(!huboStackOver){
 				log_error(logger, "StackOverflow. Se finaliza el proceso");
@@ -41,7 +41,6 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		list_add(lineaStack->variables, nuevaVar);
 		pcb->stackPointer+=TAMANIO_VARIABLE;
 
-		//calculo el desplazamiento desde la primer pagina del stack hasta donde arranca mi nueva variable
 		log_debug(logger, "%c %i %i %i", nuevaVar->idVariable, nuevaVar->pagina,
 				nuevaVar->offset, nuevaVar->size);
 		return pcb->stackPointer-TAMANIO_VARIABLE;
@@ -51,7 +50,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		log_debug(logger, "Definir variable - argumento %c", identificador_variable);
 		t_argumento* nuevoArg = malloc(sizeof(t_argumento));
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count -1);
-		if(pcb->stackPointer + TAMANIO_VARIABLE > tamanioStack){
+		if(pcb->stackPointer + TAMANIO_VARIABLE > TAM_STACK){
 			if(!huboStackOver){
 				log_error(logger, "StackOverflow. Se finaliza el proceso");
 				huboStackOver = true;
@@ -62,7 +61,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 			if(lineaStack == NULL){
 				lineaStack = malloc(sizeof(t_entrada_stack));
 				lineaStack->retVar = NULL;
-				lineaStack->direcretorno = -1;
+				lineaStack->direcretorno = pcb->programCounter;
 				lineaStack->argumentos = list_create();
 				lineaStack->variables = list_create();
 				list_add(pcb->indiceStack, lineaStack);
@@ -71,11 +70,9 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 			nuevoArg->pagina = pcb->stackPointer / tamanioPagina;
 			nuevoArg->offset = pcb->stackPointer % tamanioPagina;
 			nuevoArg->size = TAMANIO_VARIABLE;
-			lineaStack->direcretorno = pcb->programCounter;
 			list_add(lineaStack->argumentos, nuevoArg);
 			pcb->stackPointer += TAMANIO_VARIABLE;
 
-			//calculo el desplazamiento desde la primer pagina del stack hasta donde arranca mi nueva variable
 			uint32_t posicionRet = pcb->stackPointer-TAMANIO_VARIABLE;
 			log_debug(logger, "%c %i %i %i", identificador_variable, nuevoArg->pagina,
 					nuevoArg->offset, nuevoArg->size);

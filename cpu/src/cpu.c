@@ -26,9 +26,8 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
-	/*para que no muera, por ahora*/
 	while(true){
-		log_info(logger, "Esperando mensajes del Kernel...");
+		log_info(logger, "Comenzando ejecucion...");
 		ejecutarPrograma();
 	}
 
