@@ -70,7 +70,7 @@ int conexionConKernel(void){
 
 	if(socketConexionKernel == -1){
 		log_error(logger,"No pudo conectarse a Kernel");
-		return EXIT_FAILURE;
+		return -1;
 	}else{
 		log_info(logger,"Cliente a Kernel creado");
 	}
@@ -82,8 +82,10 @@ int conexionConKernel(void){
 		log_info(logger,"Conexion establecida con Kernel! :D");
 	}else{
 		log_info(logger,"El Kernel no devolvio handshake :(");
-		return EXIT_FAILURE;
+		return -1;
 	}
+
+	recibirTamanioStack(paquete_vacio);
 
 	return EXIT_SUCCESS;
 }
@@ -96,7 +98,7 @@ int conexionConMemoria(void){
 	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
 	if(socketConexionMemoria == -1){
 		log_error(logger,"No pudo conectarse a Memoria");
-		return EXIT_FAILURE;
+		return -1;
 	}else{
 		log_info(logger,"Cliente a Memoria creado");
 	}
@@ -107,7 +109,7 @@ int conexionConMemoria(void){
 		log_info(logger,"Conexion establecida con Memoria! :D");
 	}else{
 		log_info(logger,"La Memoria no devolvio handshake :(");
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	recibirTamanioPagina(paquete_vacio);
@@ -142,20 +144,6 @@ int16_t atenderKernel(){
 		return EXIT_FAILURE;
 	}
 
-	if(recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje) <= 0){
-		log_error(logger, "Desconexion del kernel. Terminando...");
-		close(socketConexionKernel);
-		EXIT_FAILURE;
-	}
-
-	log_debug(logger, "Esperando tamaño del stack...");
-	if(tipo_mensaje==TAMANIO_STACK_PARA_CPU){
-		tamanioStack=*(int*)paquete;
-		enviar_paquete_vacio(OK,socketConexionKernel);
-	}else{
-		enviar_paquete_vacio(ERROR,socketConexionKernel);
-		EXIT_FAILURE;
-	}
 	return 0;
 }
 
@@ -168,24 +156,44 @@ int16_t recibirTamanioPagina(void* paquete){
 	bytes = recibir_paquete(socketConexionMemoria, &paquete, &tipo_mensaje);
 	if(bytes <= 0){
 		log_error(logger, "Desconexion de la memoria. Terminando...");
-		close(socketConexionKernel);
+		close(socketConexionMemoria);
 		exit(1);
 	}
 	if(tipo_mensaje==ENVIAR_TAMANIO_PAGINA){
-
 		tamanioPagina=*(int*)paquete;
 		log_info(logger, "Tamaño de pagina: %d", tamanioPagina);
 		enviar_paquete_vacio(OK,socketConexionMemoria);
 	}
 	else{
+		log_error(logger, "Error al recibir tamanio de pagina");
 		enviar_paquete_vacio(ERROR,socketConexionMemoria);
 		return -1;
 	}
 	return 0;
 }
 
-int16_t recibirTamanioStack(void* paquete){
 
+int16_t recibirTamanioStack(void* paquete){
+	int bytes;
+	int tipo_mensaje;
+
+	log_debug(logger, "Esperando tamaño del stack...");
+	bytes = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
+	if(bytes <= 0){
+		log_error(logger, "Desconexion del kernel. Terminando...");
+		close(socketConexionKernel);
+		return EXIT_FAILURE;
+	}
+
+	if(tipo_mensaje==TAMANIO_STACK_PARA_CPU){
+		tamanioStack=*(int*)paquete;
+		log_info(logger, "Tamanio stack: %d", tamanioStack);
+		enviar_paquete_vacio(OK,socketConexionKernel);
+	}else{
+		log_error(logger, "Error al recibir tamanio de stack");
+		enviar_paquete_vacio(ERROR,socketConexionKernel);
+		return EXIT_FAILURE;
+	}
 	return EXIT_SUCCESS;
 }
 
@@ -213,7 +221,11 @@ int16_t asignarCompartida(void* paquete, int valor){
 	header->type=ASIG_VAR_COMPARTIDA;
 	header->length=sizeof(valor);
 	//verificar envio
-	sendSocket(socketConexionKernel,header,&valor);
+	if( sendSocket(socketConexionKernel,header,&valor) <= 0 ){
+		log_error(logger,"error al asignar valor a var compartida");
+		free(valor);
+		return -1;
+	}
 	//verificar recepcion
 	recibir_paquete(socketConexionKernel,&paquete,&tipo);
 	if(tipo==OK){
@@ -321,6 +333,7 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	}
 }
 
+
 void levantarArchivo(char*path, char** buffer){
 
 		FILE* file;
@@ -357,8 +370,8 @@ pcb_t* crearPCB(char* programa, int pid) {
 	pcb->stackPointer = 0;
 	pcb->programCounter = datos->instruccion_inicio;
 	pcb->codigo = datos->instrucciones_size;
-	pcb->cantPaginasCodigo = strlen(programa) / TAM_PAG;
-	if(strlen(programa)%TAM_PAG != 0) pcb->cantPaginasCodigo++;
+	pcb->cantPaginasCodigo = strlen(programa) / tamanioPagina;
+	if(strlen(programa)%tamanioPagina != 0) pcb->cantPaginasCodigo++;
 	t_list *pcbStack = list_create();
 	pcb->indiceStack = pcbStack;
 	pcb->tamanioEtiquetas = datos->etiquetas_size;

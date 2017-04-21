@@ -65,6 +65,8 @@ void destruirConfiguracionMemoria(t_config_memoria* config);
 //Funciones de conexionado
 void esperarConexiones();
 void esperarConexionKernel();
+void esperarConexionKernel();
+
 /* Esta funcion hace la creacion de la memoria y todas las estructuras
  * administrativas necesarias para que el sistema arranque
  */
@@ -102,6 +104,7 @@ void actualizarEntradaCache(int pid, int pag, char* frame);
  	 	 	 	 	 				/*Este thread maneja tanto cpus como kernel, porque la interfaz es una sola.*/
 void requestHandlerKernel(int fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
 void requestHandlerCpu(int fd);		/* asi que validamos eso solo*/
+void enviarTamanioPagina(int fd);
 
 //Pedidos de Kernel
 int iniciarPrograma(t_pedido_iniciar* pedido);

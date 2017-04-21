@@ -44,7 +44,7 @@ t_pcb* crearPCB(char* codigo, int id){
 
 	pcb->indiceStack = list_create();
 	insertarNuevoStack(pcb);
-
+/*
 	//Reservo el espacio para el codigo y almaceno el codigo
 	u_int32_t direccion_segmento = guardarEnMemoria(socketConexionMemoria,strlen(codigo),pcb->pid);
 	pcb->indice_codigo = direccion_segmento;
@@ -61,7 +61,7 @@ t_pcb* crearPCB(char* codigo, int id){
 		pcb->pid = 0;
 		return pcb;
 	}
-
+*/
 	metadata_destruir(metadata);
 	return pcb;
 }

@@ -69,6 +69,8 @@ void establecerConexiones();
 int conexionConFileSystem();
 int conexionConMemoria();
 void trabajarConexionCPU();
+void enviarTamanioStack(int fd);
+
 
 //Mensajes con consola
 void trabajarConexionConsola();

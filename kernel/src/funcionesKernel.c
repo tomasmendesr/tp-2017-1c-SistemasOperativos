@@ -86,6 +86,7 @@ void trabajarConexionCPU(){
 						case HANDSHAKE_CPU:{
 							printf("conexion con cpu establecida");
 							enviar_paquete_vacio(HANDSHAKE_KERNEL,iterador_sockets);
+							enviarTamanioStack(iterador_sockets);
 							break;
 						}
 						default:{ printf("Se recibio un codigo no valido");
@@ -145,6 +146,13 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 
         config_destroy(configKernel);
         return conf;
+}
+
+void enviarTamanioStack(int fd){
+	header_t* header=malloc(sizeof(header_t));
+	header->type=TAMANIO_STACK_PARA_CPU;
+	header->length=sizeof(config->stack_Size);
+	sendSocket(fd,header,&config->stack_Size);
 }
 
 

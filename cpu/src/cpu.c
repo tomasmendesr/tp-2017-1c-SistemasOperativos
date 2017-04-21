@@ -15,8 +15,10 @@ int main(int argc, char** argv) {
 
 	crearConfig(argc,argv);
 
-	conexionConKernel(); // Conecta con kernel
-	conexionConMemoria(); // Conecta con memoria y se queda esperando a que le diga el tamaño de pagina
+	// Conecta y obtiene tamanio de pagina (memoria) y de stack (kernel).
+	if(conexionConKernel() == -1 || conexionConMemoria() == -1){
+		return EXIT_FAILURE;
+	}
 
 	while(true){
 		log_info(logger, "Comenzando ejecucion...");

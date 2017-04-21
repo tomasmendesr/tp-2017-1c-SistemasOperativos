@@ -20,8 +20,6 @@
 #include "primitivas.h"
 #define configuracionCPU "../confCpu.init"
 #define ansisop "facil.ansisop"
-#define TAM_PAG 256 //se recibe desde memoria
-#define TAM_STACK 2
 
 typedef struct{
 	char* puerto_Memoria;

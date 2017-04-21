@@ -11,8 +11,7 @@ void setPCB(pcb_t * pcbDeCPU){
 }
 
 t_puntero definirVariable(t_nombre_variable identificador_variable){
-	tamanioPagina = TAM_PAG; // hardcode
-	if(pcb->stackPointer + TAMANIO_VARIABLE > TAM_STACK*TAM_PAG){
+	if(pcb->stackPointer + TAMANIO_VARIABLE > tamanioStack*tamanioPagina){
 		/*esta verificacion me hace ruido*/
 		if(!huboStackOver){
 			log_error(logger, "StackOverflow. Se finaliza el proceso");

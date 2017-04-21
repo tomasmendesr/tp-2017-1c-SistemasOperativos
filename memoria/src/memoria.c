@@ -97,6 +97,7 @@ void esperarConexiones(){
 
 				printf("Conexion con la CPU establecido\n");
 				enviar_paquete_vacio(HANDSHAKE_MEMORIA,newSocket);
+				enviarTamanioPagina(newSocket);
 				pthread_t threadCpu;
 				pthread_create(&threadCpu, NULL, (void*)requestHandlerCpu, newSocket);
 				pthread_detach(threadCpu);
@@ -107,5 +108,12 @@ void esperarConexiones(){
 			}
 		}
 	}
+}
+
+void enviarTamanioPagina(int fd){
+	header_t* header=malloc(sizeof(header_t));
+	header->type=ENVIAR_TAMANIO_PAGINA;
+	header->length=sizeof(config->marcos_Size);
+	sendSocket(fd,header,&config->marcos_Size);
 }
 
