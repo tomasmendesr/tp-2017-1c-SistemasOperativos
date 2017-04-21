@@ -4,17 +4,7 @@ int main(int argc, char** argv){
 
 	logger = log_create(getenv("../logFS"),"FS", 1, 0);
 
-	char* pathConfig = string_new();
-
-	if (argc>1)string_append(&pathConfig, argv[1]);
-		else string_append(&pathConfig, configuracionFS);
-	if(verificarExistenciaDeArchivo(configuracionFS))
-		conf = levantarConfiguracion(configuracionFS);
-	else {
-		log_error(logger, "No pudo levantarse el archivo de configuracion");
-		exit(EXIT_FAILURE);
-	}
-	printf("Configuracion levantada correctamente\n");
+	crearConfig(argc, argv);
 
 	esperarConexionKernel();
 
