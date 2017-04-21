@@ -45,10 +45,10 @@ typedef struct{
 	uint32_t size;
 }t_var_local;
 
-typedef struct stack{
+typedef struct{
 	t_list* argumentos;
 	t_list* variables;
-	uint32_t direcretorno;
+	int32_t direcretorno;
 	t_posicion * retVar;
 }t_entrada_stack;
 
