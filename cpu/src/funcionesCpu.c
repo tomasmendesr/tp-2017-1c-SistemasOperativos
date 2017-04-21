@@ -354,6 +354,8 @@ pcb_t* crearPCB(char* programa, int pid) {
 	pcb->stackPointer = 0;
 	pcb->programCounter = datos->instruccion_inicio;
 	pcb->codigo = datos->instrucciones_size;
+	pcb->cantPaginasCodigo = strlen(programa) / TAM_PAG;
+	if(strlen(programa)%TAM_PAG != 0) pcb->cantPaginasCodigo++;
 	t_list *pcbStack = list_create();
 	pcb->indiceStack = pcbStack;
 	pcb->tamanioEtiquetas = datos->etiquetas_size;

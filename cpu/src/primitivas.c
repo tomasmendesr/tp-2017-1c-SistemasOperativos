@@ -34,7 +34,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 			list_add(pcb->indiceStack, lineaStack);
 		}
 		nuevaVar->idVariable = identificador_variable;
-		nuevaVar->pagina = pcb->stackPointer / tamanioPagina + pcb->cantPaginasCodigo;
+		nuevaVar->pagina = pcb->stackPointer / tamanioPagina + pcb->cantPaginasCodigo; /*por la posicion en memoria*/
 		nuevaVar->offset = pcb->stackPointer % tamanioPagina;
 		nuevaVar->size = TAMANIO_VARIABLE;
 		list_add(lineaStack->variables, nuevaVar);
