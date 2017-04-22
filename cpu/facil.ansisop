@@ -1,6 +1,5 @@
 #!/usr/bin/ansisop
 begin
-	variables a, b
-	:etiqueta
-	a = a + 1
+    variables a, b
+    a = b + 2
 end

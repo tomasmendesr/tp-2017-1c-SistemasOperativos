@@ -120,6 +120,7 @@ enum protocolo_cpu_a_kernel{
 	/*Finalizaciones irregulares*/
 	FIN_ERROR_MEMORIA = 47,
 	STACKOVERFLOW = 48,
+	FIN_SEGMENTATION_FAULT = 49
 };
 
 //Mensajes que se le envian a la memoria.

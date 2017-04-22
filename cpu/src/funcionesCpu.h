@@ -45,18 +45,19 @@ t_config_cpu* levantarConfiguracionCPU(char* archivo);
 int conexionConKernel(void);
 int conexionConMemoria(void);
 void freeConf(t_config_cpu* config);
+int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete);
+int16_t solicitarBytes(pedido_bytes_t* pedido, void** paquete);
 t_puntero definirVariable(t_nombre_variable nombre);
 void inicializarFunciones(void);
 void ejecutarPrograma(void);
 int crearLog(void);
 void crearConfig(int argc, char* argv[]);
-int16_t atenderKernel();
-int16_t recibirTamanioStack(void* paquete);
-int16_t recibirPCB(void* paquete);
+int16_t recibirTamanioStack(void);
+int16_t recibirPCB(void);
 int16_t leerCompartida(void* paquete);
 int16_t asignarCompartida(void* paquete, int valor);
 int16_t waitSemaforo(void* paquete, char* sem);
 int16_t signalSemaforo(void* paquete, char* sem);
-int16_t recibirTamanioPagina();
+int16_t recibirTamanioPagina(void);
 
 #endif /* FUNCIONESCPU_H_ */

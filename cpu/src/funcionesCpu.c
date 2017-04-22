@@ -62,6 +62,7 @@ void freeConf(t_config_cpu* config){
 }
 
 int conexionConKernel(void){
+
 	int operacion;
 	void* paquete_vacio;
 
@@ -84,7 +85,7 @@ int conexionConKernel(void){
 		return -1;
 	}
 
-	recibirTamanioStack(paquete_vacio);
+	if(recibirTamanioStack() != 0) return -1;
 
 	return EXIT_SUCCESS;
 }
@@ -110,7 +111,8 @@ int conexionConMemoria(void){
 		log_info(logger,"La Memoria no devolvio handshake :(");
 		return -1;
 	}
-	recibirTamanioPagina();
+	if(recibirTamanioPagina() != 0) return -1;
+
 	return EXIT_SUCCESS;
 }
 
@@ -119,11 +121,12 @@ void ejecutarPrograma(void){
 	inicializarFunciones();
 	levantarArchivo(ansisop,&content);
 	pcb = crearPCB(content, 1); //en realidad se recibe desde el kernel
-	analizadorLinea("variables a, b, c, d, e", funciones, funcionesKernel);
-	analizadorLinea("a = 1", funciones, funcionesKernel);
+	analizadorLinea("variables a, b, c, d", funciones, funcionesKernel);
+	analizadorLinea("c = 1", funciones, funcionesKernel);
 }
 
-int16_t atenderKernel(){
+//por ahora no la estamos usando
+int16_t recibirPCB(void){
 
 	int tipo_mensaje;
 	void* paquete;
@@ -135,55 +138,54 @@ int16_t atenderKernel(){
 	}
 	if(tipo_mensaje==EXEC_PCB){
 //		deserializarPCB(paquete);
-		enviar_paquete_vacio(OK,socketConexionKernel);
+		/*el kernel no esta esperando el OK de confirmacion*/
+//		enviar_paquete_vacio(OK,socketConexionKernel);
 	}else{
-		enviar_paquete_vacio(ERROR,socketConexionKernel);
+//		enviar_paquete_vacio(ERROR,socketConexionKernel);
 		return EXIT_FAILURE;
 	}
-
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
-int16_t recibirTamanioPagina(){
-	int bytes;
+int16_t recibirTamanioPagina(void){
+
 	void* paquete;
 	int tipo_mensaje;
 
 	log_debug(logger, "Esperando tamaño de pagina...");
-	bytes = recibir_paquete(socketConexionMemoria, &paquete, &tipo_mensaje);
-	if(bytes <= 0){
+
+	if(recibir_paquete(socketConexionMemoria, &paquete, &tipo_mensaje) <= 0){
 		log_error(logger, "Desconexion de la memoria. Terminando...");
 		close(socketConexionMemoria);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	if(tipo_mensaje==ENVIAR_TAMANIO_PAGINA){
 		tamanioPagina=*(uint32_t*)paquete;
 		log_info(logger, "Tamaño de pagina: %d", tamanioPagina);
-		enviar_paquete_vacio(OK,socketConexionMemoria);
+		/*la memoria no esta esperando el OK de confirmacion*/
+//		enviar_paquete_vacio(OK,socketConexionMemoria);
 	}
 	else{
 		log_error(logger, "Error al recibir tamanio de pagina");
 //		enviar_paquete_vacio(ERROR,socketConexionMemoria);
 		return -1;
 	}
-
-	return 0;
+	return EXIT_SUCCESS;
 }
 
+int16_t recibirTamanioStack(void){
 
-int16_t recibirTamanioStack(void* paquete){
-	int bytes;
 	int tipo_mensaje;
+	void* paquete;
 
 	log_debug(logger, "Esperando tamaño del stack...");
-	bytes = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
-	if(bytes <= 0){
+
+	if(recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje) <= 0){
 		log_error(logger, "Desconexion del kernel. Terminando...");
 		close(socketConexionKernel);
 		return EXIT_FAILURE;
 	}
-
 	if(tipo_mensaje==TAMANIO_STACK_PARA_CPU){
 		tamanioStack=*(uint32_t*)paquete;
 		log_info(logger, "Tamanio stack: %d", tamanioStack);
@@ -222,7 +224,7 @@ int16_t asignarCompartida(void* paquete, int valor){
 	//verificar envio
 	if( sendSocket(socketConexionKernel,header,&valor) <= 0 ){
 		log_error(logger,"error al asignar valor a var compartida");
-		free(valor);
+		free(header);
 		return -1;
 	}
 	//verificar recepcion
@@ -315,22 +317,59 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	buffer=malloc(header.length);
 	memcpy(buffer,pedido,size);
 	memcpy(buffer+size,paquete,pedido->size);
-	//verificar envio
-	if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
+
+	/*
+	 * Esta la version si mandamos solo un mensaje con
+	 * mensaje = header + pedido + valor de la variable a guardar
+	 * todo junto en un mismo mensaje
+	 *
+	 */
+//	if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
+//		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
+//		free(buffer);
+//		return EXIT_FAILURE;
+//	}
+
+
+	/*
+	 * Esta la version respetando la interfaz de comunicacion en memoria
+	 * Memoria esta recibiendo primero el pedido y despues el valor de la variable
+	 * que queremos guardar, en dos mensajes diferentes
+	 *
+	 */
+	if(enviar_info(socketConexionMemoria,GRABAR_BYTES,size,(void*)pedido) <= 0 ){
 		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
+		free(buffer);
 		return EXIT_FAILURE;
 	}
+	if(enviar_info(socketConexionMemoria,GRABAR_BYTES,pedido->size,paquete) <= 0 ){
+		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
+		free(buffer);
+		return EXIT_FAILURE;
+	}
+
+	free(buffer);
 	//verificar recepcion
-	recibir_paquete(socketConexionMemoria,paquete,&tipo);
+	recibir_paquete(socketConexionMemoria,(void*)&buffer,&tipo);
 	switch(tipo){
 		case OP_OK:
+			free(buffer);
+			log_debug(logger, "Valor guardado correctamente");
 			return EXIT_SUCCESS;
 		case SEGMENTATION_FAULT: /*se podria hacer la logica de terminacion aca*/
+			enviar_paquete_vacio(FIN_SEGMENTATION_FAULT,socketConexionKernel);
+			log_debug(logger, "Segmentation Fault");
+			free(buffer);
+			return EXIT_FAILURE;
+		case ERROR:
 			enviar_paquete_vacio(FIN_ERROR_MEMORIA,socketConexionKernel);
+			log_debug(logger, "Error de memoria");
+			free(buffer);
 			return EXIT_FAILURE;
 		default:
 			/*otros errores*/
-			enviar_paquete_vacio(ERROR,socketConexionKernel);
+//			enviar_paquete_vacio(ERROR,socketConexionKernel);
+//			free(buffer);
 			return EXIT_FAILURE;
 	}
 }
