@@ -324,7 +324,7 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	 * todo junto en un mismo mensaje
 	 *
 	 */
-//	if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
+	if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
 //		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
 //		free(buffer);
 //		return EXIT_FAILURE;
@@ -349,6 +349,8 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	}
 
 	free(buffer);
+}
+
 	//verificar recepcion
 	recibir_paquete(socketConexionMemoria,(void*)&buffer,&tipo);
 	switch(tipo){
@@ -445,3 +447,90 @@ t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc) {
 	return lista;
 }
 
+void revisarSigusR1(int signo){
+	if (signo == SIGUSR1) {
+		log_info(logger, "Se recibe SIGUSR1");
+		cerrarCPU = true;
+		enviar_paquete_vacio(SIGURSR, socketConexionKernel);
+		log_debug(logger, "Termina la rafaga actual y luego se cierra esta CPU.");
+	}
+}
+
+void revisarFinalizarCPU() {
+	if (cerrarCPU) {
+		log_debug(logger, "Cerrando CPU");
+		finalizarConexion(socketConexionKernel);
+		finalizarConexion(socketConexionMemoria);
+		log_info(logger, "CPU cerrada");
+		log_destroy(logger);
+		config_destroy(config);
+		return;
+	}
+}
+
+//ejemplo de comenzarPRograma
+//void comenzarEjecucionDePrograma() {
+//	log_info(ptrLog, "Recibo PCB id: %i", pcb->pcb_id);
+//	int contador = 1;
+//
+//	while (contador <= pcb->quantum) {
+//		char* proximaInstruccion = solicitarProximaInstruccionAUMC();
+//		limpiarInstruccion(proximaInstruccion);
+//		if (pcb->PC >= (pcb->codigo - 1) && (strcmp(proximaInstruccion, "end") == 0)) {
+//			finalizarEjecucionPorExit();
+//			revisarFinalizarCPU();
+//			return;
+//		} else {
+//
+//			if (proximaInstruccion != NULL) {
+//				if (strcmp(proximaInstruccion, "FINALIZAR") == 0) {
+//					log_error(ptrLog, "Instruccion no pudo leerse. Hay que finalizar el Proceso.");
+//					finalizarProcesoPorErrorEnUMC();
+//					return;
+//				} else {
+//					log_debug(ptrLog, "Instruccion recibida: %s", proximaInstruccion);
+//					if (strcmp(proximaInstruccion, "end") == 0) {
+//						log_debug(ptrLog, "Finalizo la ejecucion del programa");
+//						finalizarEjecucionPorExit();
+//						revisarFinalizarCPU();
+//						return;
+//					}
+//					analizadorLinea(proximaInstruccion, &functions,
+//							&kernel_functions);
+//					if (huboStackOver) {
+//						finalizarProcesoPorStackOverflow();
+//						revisarFinalizarCPU();
+//						return;
+//					}
+//					contador++;
+//					pcb->PC = (pcb->PC) + 1;
+//					switch (operacion) {
+//					case IO:
+//						log_debug(ptrLog, "Finalizo ejecucion por operacion I/O");
+//						finalizarEjecucionPorIO();
+//						revisarFinalizarCPU();
+//						return;
+//					case WAIT:
+//						log_debug(ptrLog, "Finalizo ejecucion por un Wait.");
+//						finalizarEjecucionPorWait();
+//						revisarFinalizarCPU();
+//						return;
+//					default:
+//						break;
+//					}
+//					usleep(pcb->quantumSleep * 1000);
+//				}
+//			} else {
+//				log_info(ptrLog, "No se pudo recibir la instruccion de UMC. Cierro la conexion");
+//				finalizarConexion(socketUMC);
+//				return;
+//			}
+//		}
+//
+//	}
+//	log_debug(ptrLog, "Finalizo ejecucion por fin de Quantum");
+//	finalizarEjecucionPorQuantum();
+//
+//	free(pcb);
+//	revisarFinalizarCPU();
+//}

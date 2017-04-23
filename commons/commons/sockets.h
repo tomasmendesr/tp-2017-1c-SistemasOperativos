@@ -117,6 +117,7 @@ enum protocolo_cpu_a_kernel{
 	BORRAR_ARCHIVO = 44,
 	LEER_ARCHIVO = 45,
 	ESCRIBIR_ARCHIVO = 46,
+	SIGURSR = 303,
 	/*Finalizaciones irregulares*/
 	FIN_ERROR_MEMORIA = 47,
 	STACKOVERFLOW = 48,

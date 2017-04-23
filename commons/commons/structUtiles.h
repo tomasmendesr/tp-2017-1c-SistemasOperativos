@@ -23,41 +23,41 @@ typedef struct{
 	uint32_t pagina;
 	uint32_t offset;
 	uint32_t size;
-}t_argumento;
+}__attribute__((__packed__)) t_argumento;
 
 typedef struct{
 	uint32_t pagina;
 	uint32_t offset;
 	uint32_t size;
-}t_posicion;
+}__attribute__((__packed__)) t_posicion;
 
 typedef struct{
 	uint32_t pid;
 	uint32_t pag;
 	uint32_t offset;
 	uint32_t size;
-}pedido_bytes_t;
+}__attribute__((__packed__)) pedido_bytes_t;
 
 typedef struct{
 	char idVariable;
 	uint32_t pagina;
 	uint32_t offset;
 	uint32_t size;
-}t_var_local;
+}__attribute__((__packed__)) t_var_local;
 
 typedef struct{
 	t_list* argumentos;
 	t_list* variables;
 	int32_t direcretorno;
 	t_posicion * retVar;
-}t_entrada_stack;
+}__attribute__((__packed__)) t_entrada_stack;
 
 //t_dictionary* etiquetas;
 
 typedef struct indiceCodigo{
 	uint32_t offset;
 	uint32_t size;
-}t_indice_codigo;
+}__attribute__((__packed__)) t_indice_codigo;
 
 typedef struct{
 	uint32_t pid;  //Identificador único del Programa en el sistema
@@ -71,7 +71,7 @@ typedef struct{
 	uint32_t stackPointer; // el ultimo offset
 	uint32_t tamanioEtiquetas;
 	uint32_t codigo; // cant de instrucciones
-}pcb_t;
+}__attribute__((__packed__)) pcb_t;
 
 typedef enum{
 	ERROR, NOTHING, SUCCESS

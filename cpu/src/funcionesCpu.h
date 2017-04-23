@@ -18,6 +18,8 @@
 #include <parser/parser.h>
 #include <sys/stat.h>
 #include "primitivas.h"
+#include <signal.h>
+
 #define configuracionCPU "../confCpu.init"
 #define ansisop "facil.ansisop"
 
@@ -59,5 +61,6 @@ int16_t asignarCompartida(void* paquete, int valor);
 int16_t waitSemaforo(void* paquete, char* sem);
 int16_t signalSemaforo(void* paquete, char* sem);
 int16_t recibirTamanioPagina(void);
-
+void revisarFinalizarCPU();
+void revisarSigusR1(int signo);
 #endif /* FUNCIONESCPU_H_ */

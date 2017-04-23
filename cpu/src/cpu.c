@@ -20,11 +20,14 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 	ejecutarPrograma();
-
-//	while(true){
-//		log_info(logger, "Comenzando ejecucion...");
+	/*
+	 * Manejo de la interrupcion SIGUSR1
+	 */
+	signal(SIGUSR1, revisarSigusR1);
+	while(true){
+		log_info(logger, "Comenzando ejecucion...");
 //		if(atenderKernel() != 0) return -1;
-//	}
+	}
 
 	freeConf(config);
 	finalizarConexion(socketConexionKernel);
