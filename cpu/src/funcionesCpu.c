@@ -198,12 +198,17 @@ int16_t recibirTamanioStack(void){
 	return EXIT_SUCCESS;
 }
 
-int16_t leerCompartida(void* paquete){
+int16_t leerCompartida(void* paquete, char* variable){
 
-	int tipo;
-	int var;
+	int tipo, var;
+
+	header_t header;
+	header.type = LEER_VAR_COMPARTIDA;
+	header.length = sizeof(variable);
+
 	//verificar envio
-	enviar_paquete_vacio(LEER_VAR_COMPARTIDA,socketConexionKernel);
+	sendSocket(socketConexionKernel, header, variable);
+
 	//verificar recepcion
 	recibir_paquete(socketConexionKernel,&paquete,&tipo);
 	if(tipo==VALOR_VAR_COMPARTIDA){
@@ -215,26 +220,37 @@ int16_t leerCompartida(void* paquete){
 	return var;
 }
 
-int16_t asignarCompartida(void* paquete, int valor){
+int16_t asignarCompartida(void* paquete, int valor, char* variable){
 
-	int tipo;
-	header_t* header=malloc(sizeof(header_t));
-	header->type=ASIG_VAR_COMPARTIDA;
-	header->length=sizeof(valor);
+	int tipo,offset = 0;
+	int sizeVariable = strlen(variable);
+	int sizeTotal = sizeof(sizeVariable) + sizeVariable + sizeof(valor) + 1;
+	header_t* header = malloc(sizeof(header_t));
+	header->type = ASIG_VAR_COMPARTIDA;
+	header->length = sizeTotal;
+
+	void* buffer = malloc(sizeTotal);
+	memcpy(buffer, *sizeVariable, sizeof(sizeVariable));
+	offset += sizeof(sizeVariable);
+	memcpy(buffer+offset, variable, strlen(variable)+1);
+	offset += strlen(variable)+1;
+	memcpy(buffer+offset, *valor, sizeof(valor));
+
 	//verificar envio
-	if( sendSocket(socketConexionKernel,header,&valor) <= 0 ){
+	if( sendSocket(socketConexionKernel,header, buffer) <= 0 ){
 		log_error(logger,"error al asignar valor a var compartida");
 		free(header);
 		return -1;
 	}
 	//verificar recepcion
 	recibir_paquete(socketConexionKernel,&paquete,&tipo);
+	free(header);
+	free(buffer);
+
 	if(tipo==OK){
-		free(header);
 		return EXIT_SUCCESS;
 	}
 	else{
-		free(header);
 		return EXIT_FAILURE;
 	}
 }

@@ -77,18 +77,43 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		realizarWait(socketCPU, package);
 		break;
 	case LEER_VAR_COMPARTIDA:
+		leerVarCompartida(socketCPU, package);
 		break;
 	case ASIG_VAR_COMPARTIDA:
+		asignarVarCompartida(socketCPU, package);
 		break;
 	default:
 		log_warning(&logger_kernel,"Se recibio un codigo de operacion invalido.");
 	}
 }
 
+void leerVarCompartida(int socketCPU, char* variable){
+	int valor = leerVariableGlobal(config->variablesGlobales, variable);
+
+	header_t* header = malloc(sizeof(header_t));
+	header->type = VALOR_VAR_COMPARTIDA;
+	header->length = sizeof(valor);
+
+	sendSocket(socketCPU, header, &valor);
+}
+
+void asignarVarCompartida(int socketCPU, void* buffer){
+	char* variable;
+	int valor, sizeVariable;
+
+	memcpy(&sizeVariable, buffer, 4);
+	memcpy(variable, buffer+4, sizeVariable);
+	memcpy(&valor, buffer+4+sizeVariable, 4);
+
+	escribirVariableGlobal(config->variablesGlobales, variable, &valor);
+
+	enviar_paquete_vacio(OK, socketCPU);
+}
+
 void realizarSignal(int socketCPU, char* key){
 	semaforoSignal(config->semaforos, key);
 
-	enviarValorSemaforo(socketCPU, RESPUESTA_SIGNAL_OK);
+	enviar_paquete_vacio(RESPUESTA_SIGNAL_OK, socketCPU);
 }
 
 void realizarWait(int socketCPU, char* key){
@@ -101,12 +126,6 @@ void realizarWait(int socketCPU, char* key){
 		resultado = RESPUESTA_WAIT_SEGUIR_EJECUCION;
 	}
 
-	enviarValorSemaforo(socketCPU, resultado);
+	enviar_paquete_vacio(resultado, socketCPU);
 }
 
-void enviarValorSemaforo(int socketCPU, int tipoMensaje){
-	header_t header;
-	header.type = tipoMensaje;
-	header.length = sizeof(int);
-	enviar_paquete_vacio(tipoMensaje, socketCPU);
-}
