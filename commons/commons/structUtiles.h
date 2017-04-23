@@ -59,6 +59,7 @@ typedef struct indiceCodigo{
 	uint32_t size;
 }__attribute__((__packed__)) t_indice_codigo;
 
+
 typedef struct{
 	uint32_t pid;  //Identificador único del Programa en el sistema
 	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
@@ -76,5 +77,19 @@ typedef struct{
 typedef enum{
 	ERROR, NOTHING, SUCCESS
 } opciones_generales_ops;
+
+
+//Auxiliares
+typedef struct {
+	uint32_t tamanioBuffer;
+	char *buffer;
+}__attribute__((__packed__))  t_buffer_tamanio;
+
+typedef struct {
+	uint32_t tamanioStack;
+	void * stack;
+}__attribute__((__packed__)) t_tamanio_stack_stack;
+
+
 
 #endif /* STRUCTSUTILES_H_ */

@@ -194,7 +194,6 @@ int enviar_paquete_vacio_a_cpu(int codigo_operacion, int socket);
 bool recibirHanshake(int socket, int handshakeRecibir, int handshakeRespuesta);
 bool enviarHandshake(int socket, int handshakeEnviar, int handshakeRespuesta);
 int finalizarConexion(int socket);
-
 //
 // Serializadores y Deserializadores de mensajes.
 //
@@ -203,6 +202,18 @@ int deserializar_string(void* paquete, char** string);
 
 void* variable_serializer(t_variable* var, int16_t *length);
 t_variable* variable_deserializer(int socketfd);
+
+
+//************* NUEVOS **************
+t_list* deserializarIndiceStack(char* buffer);
+t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack);
+
+t_list* deserializarIndiceCodigo(char* indice, uint32_t tam);
+t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack);
+
+pcb_t* deserializar_pcb(char* package);
+t_buffer_tamanio* serializar_pcb(pcb_t* pcb);
+//***********************************
 
 
 void* pcb_serializer(pcb_t* self, int16_t *length);
