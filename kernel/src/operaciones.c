@@ -86,20 +86,27 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 }
 
 void realizarSignal(int socketCPU, char* key){
-	int valorSemaforo = semaforoSignal(config->semaforos, key);
+	semaforoSignal(config->semaforos, key);
 
-	enviarValorSemaforo(socketCPU, SEM_SIGNAL, valorSemaforo);
+	enviarValorSemaforo(socketCPU, RESPUESTA_SIGNAL_OK);
 }
 
 void realizarWait(int socketCPU, char* key){
 	int valorSemaforo = semaforoWait(config->semaforos, key);
+	int resultado;
 
-	enviarValorSemaforo(socketCPU, SEM_WAIT, valorSemaforo);
+	if(valorSemaforo <= 0){
+		resultado = RESPUESTA_WAIT_DETENER_EJECUCION;
+	}else{
+		resultado = RESPUESTA_WAIT_SEGUIR_EJECUCION;
+	}
+
+	enviarValorSemaforo(socketCPU, resultado);
 }
 
-void enviarValorSemaforo(int socketCPU, int tipoMensaje, int valorSemaforo){
+void enviarValorSemaforo(int socketCPU, int tipoMensaje){
 	header_t header;
 	header.type = tipoMensaje;
 	header.length = sizeof(int);
-	sendSocket(socketCPU, &header, &valorSemaforo);
+	enviar_paquete_vacio(tipoMensaje, socketCPU);
 }

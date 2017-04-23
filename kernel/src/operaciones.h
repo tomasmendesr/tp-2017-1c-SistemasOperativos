@@ -13,6 +13,6 @@ void trabajarMensajeCPU(int socketCPU);
 void procesarMensajeCPU(int socketCPU, int mensaje, char* package);
 void realizarSignal(int socketCPU, char* key);
 void realizarWait(int socketCPU, char* key);
-void enviarValorSemaforo(int socketCPU, int tipoMensaje, int valorSemaforo);
+void enviarValorSemaforo(int socketCPU, int tipoMensaje);
 
 #endif /* OPERACIONES_H_ */
