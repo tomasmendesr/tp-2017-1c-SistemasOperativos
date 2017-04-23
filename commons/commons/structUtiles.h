@@ -66,7 +66,7 @@ typedef struct{
 	uint32_t cantPaginasCodigo;
 	t_list* indiceCodigo;
 	t_list* indiceStack;
-	int16_t exitCode;
+	uint32_t exitCode;
 	uint32_t consolaFd;
 	char* etiquetas;
 	uint32_t stackPointer; // el ultimo offset
