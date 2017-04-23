@@ -26,9 +26,10 @@
 #include <commons/collections/list.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include "plp.h"
-#include "pcp.h"
+//#include "plp.h"
+//#include "pcp.h"
 #include "pcb.h"
+#include "operaciones.h"
 
 typedef struct {
 	char* puerto_PROG;
@@ -71,6 +72,9 @@ int conexionConMemoria();
 void trabajarConexionCPU();
 void enviarTamanioStack(int fd);
 
+void conectarConServidores();
+void escucharConexiones();
+void aceptarNuevaConexion(int socketEscucha, fd_set* set);
 
 //Mensajes con consola
 void trabajarConexionConsola();
@@ -104,6 +108,13 @@ sem_t mutex_cola_ready;
 sem_t mutex_cola_new;
 sem_t semCPUs;
 t_list* listaCPUs;
+
+fd_set master;
+fd_set setConsolas;
+fd_set setCPUs;
+int socketEscuchaCPUs;
+int socketEscuchaConsolas;
+int max_fd;
 
 //Colas procesos
 t_queue *colaNew, *colaReady, *colaFinished;
