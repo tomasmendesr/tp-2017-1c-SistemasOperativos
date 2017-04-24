@@ -338,8 +338,8 @@ t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack) {
 		tamanioTotalBuffer += sizeof(uint32_t); //tamanio de variable direcretorno
 		tamanioStackParticular += sizeof(uint32_t);
 
-		tamanioTotalBuffer += sizeof(t_argumento); //tamanio de retVar
-		tamanioStackParticular += sizeof(t_argumento);
+		tamanioTotalBuffer += sizeof(t_posicion); //tamanio de retVar
+		tamanioStackParticular += sizeof(t_posicion);
 
 		tamanioTotalBuffer += sizeof(uint32_t) * 3; //agrego 3 ints para indicar la cantidad de elemento de las 2 listas y los bytes de t_stack
 
