@@ -56,7 +56,7 @@ int crearLog(void);
 void crearConfig(int argc, char* argv[]);
 int16_t recibirTamanioStack(void);
 int16_t recibirPCB(void);
-int16_t leerCompartida(void* paquete, char* variable);
+int32_t leerCompartida(void* paquete, char* variable);
 int16_t asignarCompartida(void* paquete, int valor, char* variable);
 int16_t waitSemaforo(void* paquete, char* sem);
 int16_t signalSemaforo(void* paquete, char* sem);

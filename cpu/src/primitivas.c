@@ -187,9 +187,16 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 }
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
-	printf("obtenerValorCompartida!\n");
-	return 0;
+	void* paquete = malloc(sizeof(int32_t));
+	log_debug(logger, "ANSISOP_obtenerValorCompartida %s", variable);
+	t_valor_variable valor = leerCompartida(paquete,(char*) &variable);
+	if(valor == -1){
+		log_error(logger, "Error al obtener el valor de la variable compartida %s", variable);
+		return -1;
+	}
+	return valor;
 }
+
 void retornar(t_valor_variable retorno){
 	printf("retornar!\n");
 	return;

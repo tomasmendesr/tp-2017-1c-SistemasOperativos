@@ -198,9 +198,10 @@ int16_t recibirTamanioStack(void){
 	return EXIT_SUCCESS;
 }
 
-int16_t leerCompartida(void* paquete, char* variable){
+int32_t leerCompartida(void* paquete, char* variable){
 
-	int tipo, var;
+	int tipo;
+	int32_t var;
 
 	header_t header;
 	header.type = LEER_VAR_COMPARTIDA;
@@ -212,12 +213,12 @@ int16_t leerCompartida(void* paquete, char* variable){
 	//verificar recepcion
 	recibir_paquete(socketConexionKernel,&paquete,&tipo);
 	if(tipo==VALOR_VAR_COMPARTIDA){
-		var=*(int*)paquete;
+		var=*(int32_t*)paquete;
+		return var;
 	}
 	else{
 		return EXIT_FAILURE;
 	}
-	return var;
 }
 
 void requestHandlerKernel(){
