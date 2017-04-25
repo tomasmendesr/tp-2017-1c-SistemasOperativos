@@ -80,22 +80,17 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 		enviar->size = TAMANIO_VARIABLE;
 		enviar->pid = pcb->pid;
 
-//		void* buffer = malloc(sizeof(uint32_t));
-//		sprintf(buffer, "%d", valor);
-
 		if(almacenarBytes(enviar, &valor) != 0){
 			log_error(logger, "La variable no pudo asignarse. Se finaliza el Proceso.");
 			//por ahora pongo un error generico "error_memoria"
 			enviar_paquete_vacio(FIN_ERROR_MEMORIA,socketConexionKernel);
 			free(enviar);
-//			free(buffer);
 			//cambia de proceso antes de salir de aca
 			return;
 		}else{
 			log_info(logger, "Variable asignada");
 		}
 		free(enviar);
-//		free(buffer);
 		return;
 }
 
@@ -131,10 +126,34 @@ void finalizar(void){
 	printf("finalizar!\n");
 	return;
 }
-void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta){
-	printf("irAlLabel!\n");
-	return;
+
+void irAlLabel(t_nombre_etiqueta etiqueta){
+		log_debbug(logger,"irALabel. Etiqueta: %s", etiqueta);
+
+		if(etiqueta[strlen(etiqueta) - 1] == '\n'){
+			etiqueta[strlen(etiqueta) - 1] = '\0';
+			printf("Saco el barra n de la etiqueta.\n");
+		}
+
+		printf("ANSISOP_IR_A_LABEL: %s.\n",etiqueta);
+		fprintf(logger,"ANSISOP_IR_A_LABEL: %s.\n",etiqueta);
+		//Ya esta hecho :D
+		pcb->programCounter = metadata_buscar_etiqueta(etiqueta,
+							pcb->etiquetas,
+							pcb->tamanioEtiquetas);
+
+
+		printf("INSTRUCCION DEL IR A LABEL: %d.\n", pcb->programCounter);
+		fprintf(logger,"INSTRUCCION DEL IR A LABEL: %d.\n", pcb->programCounter);
+
+		if(pcb->programCounter == -1){
+			log_error(logger, "El indice de etiquetas devolvio -1.");
+			fprintf(logger,"ERORR INDICE DE ETIQUETAS DEVOLVIO -1.\n");
+		}
+
+		pcb->programCounter = pcb->programCounter--;
 }
+
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	printf("llamarConRetorno!\n");
 	return;
