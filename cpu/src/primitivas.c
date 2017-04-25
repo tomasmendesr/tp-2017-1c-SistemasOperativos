@@ -130,25 +130,13 @@ void finalizar(void){
 
 void irAlLabel(t_nombre_etiqueta etiqueta){
 		log_debug(logger,"ANSISOP_irALabel. Etiqueta: %s", etiqueta);
-
-		if(etiqueta[strlen(etiqueta) - 1] == '\n'){
-			etiqueta[strlen(etiqueta) - 1] = '\0';
-			printf("Saco el barra n de la etiqueta.\n");
+		t_puntero_instruccion numeroInstr = metadata_buscar_etiqueta(etiqueta, pcb->etiquetas, pcb->tamanioEtiquetas);
+		log_debug(logger, "Instruccion del irALAbel: d", numeroInstr);
+		if(numeroInstr == -1){
+			log_error(logger,"El indice de etiquetas devolvio -1");
 		}
-
-		//Ya esta hecho en el parser :D
-		pcb->programCounter = metadata_buscar_etiqueta(etiqueta,
-							pcb->etiquetas,
-							pcb->tamanioEtiquetas);
-
-
-		log_debug(logger, "Instruccion del irALabel: %d", pcb->programCounter);
-
-		if(pcb->programCounter == -1){
-			log_error(logger, "El indice de etiquetas devolvio -1.");
-		}
-
-		pcb->programCounter--;
+		pcb->programCounter = numeroInstr - 1;
+		return;
 }
 
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
