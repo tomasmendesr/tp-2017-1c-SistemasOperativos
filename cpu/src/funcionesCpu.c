@@ -207,7 +207,7 @@ int16_t leerCompartida(void* paquete, char* variable){
 	header.length = sizeof(variable);
 
 	//verificar envio
-	sendSocket(socketConexionKernel, header, variable);
+	sendSocket(socketConexionKernel, &header, variable);
 
 	//verificar recepcion
 	recibir_paquete(socketConexionKernel,&paquete,&tipo);
@@ -229,12 +229,12 @@ int16_t asignarCompartida(void* paquete, int valor, char* variable){
 	header->type = ASIG_VAR_COMPARTIDA;
 	header->length = sizeTotal;
 
-	void* buffer = malloc(sizeTotal);
-	memcpy(buffer, *sizeVariable, sizeof(sizeVariable));
+	void* buffer = malloc(sizeTotal); // TODO - revisar el strlen
+	memcpy(buffer, &sizeVariable, sizeof(sizeVariable));
 	offset += sizeof(sizeVariable);
 	memcpy(buffer+offset, variable, strlen(variable)+1);
 	offset += strlen(variable)+1;
-	memcpy(buffer+offset, *valor, sizeof(valor));
+	memcpy(buffer+offset, &valor, sizeof(valor));
 
 	//verificar envio
 	if( sendSocket(socketConexionKernel,header, buffer) <= 0 ){
@@ -479,7 +479,7 @@ void revisarFinalizarCPU() {
 		finalizarConexion(socketConexionMemoria);
 		log_info(logger, "CPU cerrada");
 		log_destroy(logger);
-		config_destroy(config);
+		freeConf(config);
 		return;
 	}
 }

@@ -251,10 +251,6 @@ int asignarPaginas(int pid, int cantPag){
 	return 0;
 }
 
-int finalizarPrograma(int pid){
-
-	return 0;
-}
 
 int solicitudBytes(int fd, t_pedido_memoria* pedido){
 
