@@ -21,7 +21,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		return -1;
 	}
 	if(!esArgumento(identificador_variable)){
-		log_debug(logger, "Definir variable %c", identificador_variable);
+		log_debug(logger, "ANSISOP_definirVariable %c", identificador_variable);
 		t_var_local* nuevaVar = malloc(sizeof(t_var_local));
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count-1);
 
@@ -46,7 +46,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		return pcb->stackPointer-TAMANIO_VARIABLE;
 
 	}else{
-		log_debug(logger, "Definir variable - argumento %c", identificador_variable);
+		log_debug(logger, "ANSISOP_definirVariable - argumento %c", identificador_variable);
 		t_argumento* nuevoArg = malloc(sizeof(t_argumento));
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count -1);
 
@@ -72,7 +72,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
 
-	log_debug(logger, "Asignar. Posicion %d - Valor %d", direccion_variable, valor);
+	log_debug(logger, "ANSISOP_asignar. Posicion %d - Valor %d", direccion_variable, valor);
 		//calculo la posicion de la variable en el stack mediante el desplazamiento
 		pedido_bytes_t* enviar = malloc(sizeof(uint32_t) * TAMANIO_VARIABLE);
 		enviar->pag = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
@@ -100,7 +100,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable){
-
+	log_debug(logger, "ANSISOP_dereferenciar %d", direccion_variable);
 	//calculo la posicion de la variable en el stack mediante el desplazamiento
 	t_posicion posicionRet;
 	void* paquete;
@@ -116,6 +116,7 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 	if(solicitarBytes(solicitar, &paquete)!=0){
 		free(solicitar);
+		log_error(logger, "Error al solicitar bytes a memoria.");
 		return -1;
 	}
 	free(solicitar);
@@ -128,30 +129,26 @@ void finalizar(void){
 }
 
 void irAlLabel(t_nombre_etiqueta etiqueta){
-		log_debbug(logger,"irALabel. Etiqueta: %s", etiqueta);
+		log_debug(logger,"ANSISOP_irALabel. Etiqueta: %s", etiqueta);
 
 		if(etiqueta[strlen(etiqueta) - 1] == '\n'){
 			etiqueta[strlen(etiqueta) - 1] = '\0';
 			printf("Saco el barra n de la etiqueta.\n");
 		}
 
-		printf("ANSISOP_IR_A_LABEL: %s.\n",etiqueta);
-		fprintf(logger,"ANSISOP_IR_A_LABEL: %s.\n",etiqueta);
-		//Ya esta hecho :D
+		//Ya esta hecho en el parser :D
 		pcb->programCounter = metadata_buscar_etiqueta(etiqueta,
 							pcb->etiquetas,
 							pcb->tamanioEtiquetas);
 
 
-		printf("INSTRUCCION DEL IR A LABEL: %d.\n", pcb->programCounter);
-		fprintf(logger,"INSTRUCCION DEL IR A LABEL: %d.\n", pcb->programCounter);
+		log_debug(logger, "Instruccion del irALabel: %d", pcb->programCounter);
 
 		if(pcb->programCounter == -1){
 			log_error(logger, "El indice de etiquetas devolvio -1.");
-			fprintf(logger,"ERORR INDICE DE ETIQUETAS DEVOLVIO -1.\n");
 		}
 
-		pcb->programCounter = pcb->programCounter--;
+		pcb->programCounter--;
 }
 
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){

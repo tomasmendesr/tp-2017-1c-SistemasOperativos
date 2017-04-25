@@ -58,12 +58,10 @@ void escucharConexiones(){
 		}
 		if(FD_ISSET(socketEscuchaCPUs, &read_fd)){ //una cpu quiere conectarses
 			aceptarNuevaConexion(socketEscuchaCPUs, &setCPUs);
-			printf("nueva cpu conectada\n");
 		}
 
 		if(FD_ISSET(socketEscuchaConsolas, &read_fd)){ //una consola quiere conectarse
 			aceptarNuevaConexion(socketEscuchaConsolas, &setConsolas);
-			printf("nueva consola conectada\n");
 		}
 
 		for(iterador_sockets = 0; iterador_sockets <= max_fd; iterador_sockets++) {
@@ -99,6 +97,45 @@ void aceptarNuevaConexion(int socketEscucha, fd_set* set){
 		FD_SET(newSocket, &master);
 		FD_SET(newSocket, set);
 		if(newSocket > max_fd) max_fd = newSocket;
+
+
+		/*-------------------- AGREGADO -----------------------------------------*/
+		// TODO - agrego handshakes
+		int tipo_mensaje;
+		void* paquete;
+		int check = recibir_paquete(newSocket, &paquete, &tipo_mensaje);
+
+		//Chequeo de errores
+		if (check == 0) {
+			printf("Se cerro el socket %d\n", newSocket);
+			close(newSocket);
+			FD_CLR(newSocket, &master);
+		}
+
+		if(check == -1){
+			perror("recv");
+			close(newSocket);
+			FD_CLR(newSocket, &master);
+		}
+		// Fin chequeo de errores
+
+		if(check > 0) {
+			switch(tipo_mensaje){
+				case HANDSHAKE_CPU:
+					printf("Conexion con nueva cpu establecida\n");
+					enviar_paquete_vacio(HANDSHAKE_KERNEL,newSocket);
+					enviarTamanioStack(newSocket);
+					break;
+				case HANDSHAKE_PROGRAMA:
+						enviar_paquete_vacio(HANDSHAKE_KERNEL,newSocket);
+						printf("Conexion con nueva consola establecida\n");
+						break;
+				default:
+					printf("Se recibio un codigo no valido\n");
+					break;
+				}
+			}
+	/* ------------------ FIN AGREGADO ----------------------- */
 	}
 }
 
