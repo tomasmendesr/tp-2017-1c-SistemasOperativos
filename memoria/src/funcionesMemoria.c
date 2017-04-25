@@ -108,7 +108,7 @@ void inicializarMemoria(){
 
 void requestHandlerKernel(int fd){
 
-	void* paquete;
+	void* paquete = NULL;
 	int bytes;
 	int tipo_mensaje;
 
@@ -122,7 +122,7 @@ void requestHandlerKernel(int fd){
 
 		switch(tipo_mensaje){
 		case INICIAR_PROGRAMA:
-//			iniciarPrograma();
+			iniciarPrograma(fd, (t_pedido_iniciar*)paquete);
 			break;
 
 		case FINALIZAR_PROGRAMA:
@@ -136,6 +136,9 @@ void requestHandlerKernel(int fd){
 		default:
 			log_warning(logger, "Mensaje Recibido Incorrecto");
 		}
+
+		free(paquete);
+		paquete = NULL;
 	}
 }
 
@@ -167,20 +170,70 @@ void requestHandlerCpu(int fd){
 			default:
 				log_warning(logger, "Mensaje Recibido Incorrecto");
 		}
+
+		free(paquete);
+		paquete = NULL;
 	}
 }
 
-int iniciarPrograma(t_pedido_iniciar* pedido){
+int iniciarPrograma(int fd, t_pedido_iniciar* pedido){
 
-	if( framesLibres() > pedido->cant_pag + stack_size ){
-		//Se puede iniciar el programa
+	if( asignarPaginas(pedido->pid,pedido->cant_pag) == -1){
+		//No se puede, aviso a kernel que no hay lugar
+		enviarRespuesta(fd, SIN_ESPACIO);
+		log_warning(logger, "No hay espacio");
+		return -1;
+	}
 
+	//Envio el ok al kernel y espero el resto del codigo
+	enviarRespuesta(fd, OP_OK);
+
+	char* codigo = NULL;
+	int tipo;
+
+	if( recibir_paquete(fd, &codigo, &tipo) <= 0 ){
+		log_error(logger, "Error al recibir el codigo");
+		free(codigo);
+		return -1;
+	}
+
+	//Recibi el codigo ok. Copio el codigo en las paginas correspondientes
+	int i;
+	for(i=0;i<pedido->cant_pag;i++){
+		memcpy(memoria + buscarFrame(pedido->pid,i)*frame_size,
+				codigo + i*frame_size,
+				frame_size);
 	}
 
 	return 0;
 }
 
+/* Asigna la cantidad de paginas al proceso especifico
+ * Devuelve 0 en caso de poder asignar las paginas
+ * -1 en caso de no haber frames disponibles para realizar la operacion */
 int asignarPaginas(int pid, int cantPag){
+
+	if(framesLibres() < cantPag)
+		return -1;
+
+	int maxPag = 0;
+	int i;
+
+	//Saco la max pagina de un frame
+	for(i=0;i<cant_frames;i++){
+		if(tabla_pag[i].pid == pid && tabla_pag[i].pag > maxPag)
+			maxPag = tabla_pag[i].pag;
+	}
+
+	//Asigno las paginas que me piden
+	for(i=0;i<cantPag;i++){
+
+		if(tabla_pag[i].pid == -1 || tabla_pag[i].pag == -1){
+			tabla_pag[i].pid = pid;
+			tabla_pag[i].pag = maxPag;
+			maxPag++;
+		}
+	}
 
 	return 0;
 }
@@ -277,8 +330,8 @@ int framesLibres(){
 
 	int i, cant = 0;
 	for(i=0;i<cant_frames;i++){
-		if( ((t_entrada_tabla*)memoria)[i].pid == -1 &&
-			((t_entrada_tabla*)memoria)[i].pag == -1  )
+		if( tabla_pag[i].pid == -1 &&
+			tabla_pag[i].pag == -1  )
 			cant++;
 	}
 	return cant;
@@ -289,8 +342,8 @@ int buscarFrame(int pid, int pag){
 
 	int i;
 	for(i=0;i<config->marcos;i++){
-		if( ((t_entrada_tabla*)memoria)[i].pid == pid &&
-			((t_entrada_tabla*)memoria)[i].pag == pag  )
+		if( tabla_pag[i].pid == pid &&
+			tabla_pag[i].pag == pag  )
 			return i;
 	}
 	return -1; //No encontro en la tabla de paginas la entrada
