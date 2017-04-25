@@ -126,7 +126,7 @@ void requestHandlerKernel(int fd){
 			break;
 
 		case FINALIZAR_PROGRAMA:
-//			finalizarPrograma();
+			finalizarPrograma((t_pedido_finalizar*)paquete);
 			break;
 
 		case ASIGNAR_PAGINAS:
@@ -203,6 +203,19 @@ int iniciarPrograma(int fd, t_pedido_iniciar* pedido){
 		memcpy(memoria + buscarFrame(pedido->pid,i)*frame_size,
 				codigo + i*frame_size,
 				frame_size);
+	}
+
+	return 0;
+}
+
+int finalizarPrograma(t_pedido_finalizar* pid){
+
+	int i;
+	for(i=0;i<cant_frames;i++){
+		if(tabla_pag[i].pid == *pid){
+			tabla_pag[i].pid = -1;
+			tabla_pag[i].pag = -1;
+		}
 	}
 
 	return 0;
