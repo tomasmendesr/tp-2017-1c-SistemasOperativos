@@ -21,7 +21,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		return -1;
 	}
 	if(!esArgumento(identificador_variable)){
-		log_debug(logger, "Definir variable %c", identificador_variable);
+		log_debug(logger, "ANSISOP_definirVariable %c", identificador_variable);
 		t_var_local* nuevaVar = malloc(sizeof(t_var_local));
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count-1);
 
@@ -46,7 +46,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		return pcb->stackPointer-TAMANIO_VARIABLE;
 
 	}else{
-		log_debug(logger, "Definir variable - argumento %c", identificador_variable);
+		log_debug(logger, "ANSISOP_definirVariable - argumento %c", identificador_variable);
 		t_argumento* nuevoArg = malloc(sizeof(t_argumento));
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count -1);
 
@@ -71,8 +71,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 }
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
-
-	log_debug(logger, "Asignar. Posicion %d - Valor %d", direccion_variable, valor);
+	log_debug(logger, "ANSISOP_asignar. Posicion %d - Valor %d", direccion_variable, valor);
 		//calculo la posicion de la variable en el stack mediante el desplazamiento
 		pedido_bytes_t* enviar = malloc(sizeof(uint32_t) * TAMANIO_VARIABLE);
 		enviar->pag = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
@@ -80,22 +79,17 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 		enviar->size = TAMANIO_VARIABLE;
 		enviar->pid = pcb->pid;
 
-//		void* buffer = malloc(sizeof(uint32_t));
-//		sprintf(buffer, "%d", valor);
-
 		if(almacenarBytes(enviar, &valor) != 0){
 			log_error(logger, "La variable no pudo asignarse. Se finaliza el Proceso.");
 			//por ahora pongo un error generico "error_memoria"
 			enviar_paquete_vacio(FIN_ERROR_MEMORIA,socketConexionKernel);
 			free(enviar);
-//			free(buffer);
 			//cambia de proceso antes de salir de aca
 			return;
 		}else{
 			log_info(logger, "Variable asignada");
 		}
 		free(enviar);
-//		free(buffer);
 		return;
 }
 
@@ -105,7 +99,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable){
-
+	log_debug(logger, "ANSISOP_dereferenciar %d", direccion_variable);
 	//calculo la posicion de la variable en el stack mediante el desplazamiento
 	t_posicion posicionRet;
 	void* paquete;
@@ -121,6 +115,7 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 	if(solicitarBytes(solicitar, &paquete)!=0){
 		free(solicitar);
+		log_error(logger, "Error al solicitar bytes a memoria.");
 		return -1;
 	}
 	free(solicitar);
@@ -131,10 +126,18 @@ void finalizar(void){
 	printf("finalizar!\n");
 	return;
 }
-void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta){
-	printf("irAlLabel!\n");
-	return;
+
+void irAlLabel(t_nombre_etiqueta etiqueta){
+		log_debug(logger,"ANSISOP_irALabel. Etiqueta: %s", etiqueta);
+		t_puntero_instruccion numeroInstr = metadata_buscar_etiqueta(etiqueta, pcb->etiquetas, pcb->tamanioEtiquetas);
+		log_debug(logger, "Instruccion del irALAbel: d", numeroInstr);
+		if(numeroInstr == -1){
+			log_error(logger,"El indice de etiquetas devolvio -1");
+		}
+		pcb->programCounter = numeroInstr - 1;
+		return;
 }
+
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	printf("llamarConRetorno!\n");
 	return;
@@ -145,7 +148,7 @@ void llamarSinRetorno(t_nombre_etiqueta etiqueta){
 }
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
-
+	log_debug(logger, "ANSISOP_obtenerPosicionVariable %c", identificador_variable);
 	uint32_t i;
 	t_entrada_stack* entrada;
 	t_var_local* var_local;
@@ -179,15 +182,21 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 			}
 		}
 	}
-
-	log_debug(logger, "la posicion absoluta de la variable es: %d", puntero);
+	log_debug(logger, "La posicion absoluta de %c es: %d",identificador_variable, puntero);
 	return puntero;
 }
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
-	printf("obtenerValorCompartida!\n");
-	return 0;
+	void* paquete = malloc(sizeof(int32_t));
+	log_debug(logger, "ANSISOP_obtenerValorCompartida %s", variable);
+	t_valor_variable valor = leerCompartida(paquete,(char*) &variable);
+	if(valor == -1){
+		log_error(logger, "Error al obtener el valor de la variable compartida %s", variable);
+		return -1;
+	}
+	return valor;
 }
+
 void retornar(t_valor_variable retorno){
 	printf("retornar!\n");
 	return;
@@ -218,7 +227,7 @@ t_puntero reservar(t_valor_variable espacio){
 	printf("reservar!\n");
 	return 0;
 }
-void signal(t_nombre_semaforo identificador_semaforo){
+void signalAux(t_nombre_semaforo identificador_semaforo){
 	printf("signal!\n");
 }
 void wait(t_nombre_semaforo identificador_semaforo){
@@ -248,7 +257,7 @@ void inicializarFunciones(void){
 	funcionesKernel->AnSISOP_liberar = liberar;
 	funcionesKernel->AnSISOP_moverCursor = moverCursor;
 	funcionesKernel->AnSISOP_reservar = reservar;
-	funcionesKernel->AnSISOP_signal = signal;
+	funcionesKernel->AnSISOP_signal = signalAux;
 	funcionesKernel->AnSISOP_wait = wait;
 }
 

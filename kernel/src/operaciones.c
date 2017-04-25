@@ -15,6 +15,8 @@ void trabajarMensajeConsola(int socketConsola){
 	}else{
 		procesarMensajeConsola(socketConsola, tipo_mensaje, paquete);
 	}
+
+	FD_SET(socketConsola, &master);
 }
 
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
@@ -55,7 +57,7 @@ void trabajarMensajeCPU(int socketCPU){
 
 	//Chequeo de errores
 	if (check <= 0) {
-		printf("Se cerro el socket %d\n", socketCPU);
+		log_info(&logger_kernel,"Se cerro el socket %d", socketCPU);
 		close(socketCPU);
 		FD_CLR(socketCPU, &master);
 		FD_CLR(socketCPU, &setCPUs);
@@ -63,11 +65,17 @@ void trabajarMensajeCPU(int socketCPU){
 		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
 	}
 
+	FD_SET(socketCPU, &master);
 }
 
 void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 
 	switch(mensaje){
+	case HANDSHAKE_CPU:
+		log_info(&logger_kernel,"Conexion con nueva CPU establecida");
+		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketCPU);
+		enviarTamanioStack(socketCPU);
+		break;
 	case ENVIO_PCB:
 		break;
 	case SEM_SIGNAL:

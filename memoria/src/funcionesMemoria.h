@@ -33,6 +33,8 @@
 #define cache_entradas config->entradas_Cache
 #define max_entradas config->cache_x_Proceso
 
+#define tabla_pag ((t_entrada_tabla*)memoria)
+
 //Define temporal
 #define stack_size 10
 
@@ -107,9 +109,9 @@ void requestHandlerCpu(int fd);		/* asi que validamos eso solo*/
 void enviarTamanioPagina(int fd);
 
 //Pedidos de Kernel
-int iniciarPrograma(t_pedido_iniciar* pedido);
+int iniciarPrograma(int fd, t_pedido_iniciar* pedido);
 int asignarPaginas(int pid, int cantPag);
-int finalizarPrograma(int pid);
+int finalizarPrograma(t_pedido_finalizar *pid);
 
 //Pedidos cpu
 int solicitudBytes(int fd, t_pedido_memoria* pedido);
