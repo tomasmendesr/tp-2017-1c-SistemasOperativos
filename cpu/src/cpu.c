@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 	signal(SIGUSR1, revisarSigusR1);
 	while(true){
 		log_info(logger, "Comenzando ejecucion...");
-//		if(atenderKernel() != 0) return -1;
+		if(requestHandlerKernel() != 0) return -1;
 	}
 
 	freeConf(config);

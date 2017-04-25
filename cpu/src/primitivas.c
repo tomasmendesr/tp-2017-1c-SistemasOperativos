@@ -248,7 +248,7 @@ void inicializarFunciones(void){
 	funcionesKernel->AnSISOP_liberar = liberar;
 	funcionesKernel->AnSISOP_moverCursor = moverCursor;
 	funcionesKernel->AnSISOP_reservar = reservar;
-	funcionesKernel->AnSISOP_signal = signal;
+	funcionesKernel->AnSISOP_signal = signalAux;
 	funcionesKernel->AnSISOP_wait = wait;
 }
 

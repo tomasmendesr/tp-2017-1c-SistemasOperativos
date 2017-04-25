@@ -220,6 +220,32 @@ int16_t leerCompartida(void* paquete, char* variable){
 	return var;
 }
 
+void requestHandlerKernel(){
+
+	void* paquete = NULL;
+	int bytes;
+	int tipo_mensaje;
+
+	for(;;){
+		bytes = recibir_info(socketConexionKernel, &paquete, &tipo_mensaje);
+		if(bytes <= 0){
+			log_error(logger, "Desconexion del kernel. Terminando...");
+			close(socketConexionKernel);
+			exit(1);
+		}
+
+		switch(tipo_mensaje){
+		case EXEC_PCB:
+			break;
+		default:
+			log_warning(logger, "Mensaje Recibido Incorrecto");
+		}
+
+		free(paquete);
+		paquete = NULL;
+	}
+}
+
 int16_t asignarCompartida(void* paquete, int valor, char* variable){
 
 	int tipo,offset = 0;
@@ -340,11 +366,11 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	 * todo junto en un mismo mensaje
 	 *
 	 */
-	if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
-//		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
-//		free(buffer);
-//		return EXIT_FAILURE;
-//	}
+	//if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
+	//		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
+	//		free(buffer);
+	//		return EXIT_FAILURE;
+	//	}
 
 
 	/*
@@ -365,7 +391,7 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	}
 
 	free(buffer);
-}
+	//}
 
 	//verificar recepcion
 	recibir_paquete(socketConexionMemoria,(void*)&buffer,&tipo);
