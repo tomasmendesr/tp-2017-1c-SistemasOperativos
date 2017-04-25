@@ -71,7 +71,6 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 }
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
-
 	log_debug(logger, "ANSISOP_asignar. Posicion %d - Valor %d", direccion_variable, valor);
 		//calculo la posicion de la variable en el stack mediante el desplazamiento
 		pedido_bytes_t* enviar = malloc(sizeof(uint32_t) * TAMANIO_VARIABLE);
@@ -149,7 +148,7 @@ void llamarSinRetorno(t_nombre_etiqueta etiqueta){
 }
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
-
+	log_debug(logger, "ANSISOP_obtenerPosicionVariable %c", identificador_variable);
 	uint32_t i;
 	t_entrada_stack* entrada;
 	t_var_local* var_local;
@@ -183,8 +182,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 			}
 		}
 	}
-
-	log_debug(logger, "la posicion absoluta de la variable es: %d", puntero);
+	log_debug(logger, "La posicion absoluta de %c es: %d",identificador_variable, puntero);
 	return puntero;
 }
 
