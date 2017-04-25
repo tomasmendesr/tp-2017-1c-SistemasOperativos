@@ -237,7 +237,7 @@ t_puntero reservar(t_valor_variable espacio){
 	printf("reservar!\n");
 	return 0;
 }
-void signal(t_nombre_semaforo identificador_semaforo){
+void signalAux(t_nombre_semaforo identificador_semaforo){
 	printf("signal!\n");
 }
 void wait(t_nombre_semaforo identificador_semaforo){
@@ -267,7 +267,7 @@ void inicializarFunciones(void){
 	funcionesKernel->AnSISOP_liberar = liberar;
 	funcionesKernel->AnSISOP_moverCursor = moverCursor;
 	funcionesKernel->AnSISOP_reservar = reservar;
-	funcionesKernel->AnSISOP_signal = signal;
+	funcionesKernel->AnSISOP_signal = signalAux;
 	funcionesKernel->AnSISOP_wait = wait;
 }
 

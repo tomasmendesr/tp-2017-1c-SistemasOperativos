@@ -15,6 +15,8 @@ void trabajarMensajeConsola(int socketConsola){
 	}else{
 		procesarMensajeConsola(socketConsola, tipo_mensaje, paquete);
 	}
+
+	FD_SET(socketConsola, &master);
 }
 
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
@@ -63,6 +65,7 @@ void trabajarMensajeCPU(int socketCPU){
 		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
 	}
 
+	FD_SET(socketCPU, &master);
 }
 
 void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
