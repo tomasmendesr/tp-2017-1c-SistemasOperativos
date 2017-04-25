@@ -69,12 +69,14 @@ void escucharConexiones(){
 		for(iterador_sockets = 0; iterador_sockets <= max_fd; iterador_sockets++) {
 
 			if(FD_ISSET(iterador_sockets, &setCPUs)){ //una cpu realiza una operacion
+				FD_CLR(iterador_sockets, &master);
 				pthread_t hilo;
 				resultadoHilo = pthread_create(&hilo, NULL, (void*)trabajarMensajeCPU, iterador_sockets);
 				if(resultadoHilo) exit(1);
 			}
 
 			if(FD_ISSET(iterador_sockets, &setConsolas)){ //una consola realiza una operacion
+				FD_CLR(iterador_sockets, &master);
 				pthread_t hilo;
 				resultadoHilo = pthread_create(&hilo, NULL, (void*)trabajarMensajeConsola, iterador_sockets);
 				if(resultadoHilo) exit(1);
