@@ -154,7 +154,7 @@ int createClient(char *addr, char *port) {
 
 /**
  * @NAME: sendallSocket
- * @DESC: procura enviar todo el paquete entero. Devuelve la cantidad de bytes enviados o -1 en caso de error.
+ * @DESC: procura enviar to-do el paquete entero. Devuelve la cantidad de bytes enviados o -1 en caso de error.
  *
  */
 int sendallSocket(int socket, void* paquete_a_enviar, int tamanio_paquete) {
@@ -803,7 +803,7 @@ int enviar_paquete_vacio_a_cpu(int codigo_operacion, int socket){
 
 }
 
-/* sendAll y recvAll: Te aseguran que se envio o recibio todo.
+/* sendAll y recvAll: Te aseguran que se envio o recibio tod-o.
  * Respetan la misma interfaz que send y recv originales*/
 int sendAll(int fd, char *cosa, int size, int flags){
 

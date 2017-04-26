@@ -58,12 +58,10 @@ void escucharConexiones(){
 		}
 		if(FD_ISSET(socketEscuchaCPUs, &read_fd)){ //una cpu quiere conectarses
 			aceptarNuevaConexion(socketEscuchaCPUs, &setCPUs);
-			printf("nueva cpu conectada\n");
 		}
 
 		if(FD_ISSET(socketEscuchaConsolas, &read_fd)){ //una consola quiere conectarse
 			aceptarNuevaConexion(socketEscuchaConsolas, &setConsolas);
-			printf("nueva consola conectada\n");
 		}
 
 		for(iterador_sockets = 0; iterador_sockets <= max_fd; iterador_sockets++) {
