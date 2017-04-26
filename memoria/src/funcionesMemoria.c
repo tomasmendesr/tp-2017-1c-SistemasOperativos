@@ -574,7 +574,33 @@ void dump(char* comando, char* param){
 	}
 }
 void dumpAll(){}
-void dumpCache(){}
+void dumpCache(){
+
+	FILE* dumpFile = fopen("cacheDump","a");
+
+	if(dumpFile == NULL){
+		log_error(logger, "No se pudo abrir el archivo de dump");
+		return;
+	}
+
+	//Escribo el header del dump
+	fprintf(dumpFile,"\n----Dump de cache: %s----\n",getTimeStamp());
+	fprintf(dumpFile,"Tiempo actual: %lu\n", op_count);
+
+	//Escribo el contenido de cada entrada
+	int i,j;
+	for(i=0;i<cache_entradas;i++){
+		fprintf(dumpFile,"entrada n°: %i, pid: %i, pag: %i, time_used: %lu\ncontenido: ",
+				cache[i].pid,cache[i].pag,cache[i].time_used);
+
+		for(j=0;j<frame_size;j++)
+			fputc(cache[i].content[j],dumpFile);
+		fputc("\n",dumpFile);
+	}
+
+	fclose(dumpFile);
+	return;
+}
 void dumpTable(){}
 void dumpMemory(int pid){}
 void flush(char* comando, char* param){
@@ -584,3 +610,12 @@ void size(char* comando, char* param){
         printf("size\n");
 }
 
+char* getTimeStamp(){
+	time_t rawtime;
+	struct tm *timeinfo;
+
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	return asctime(timeinfo);
+}

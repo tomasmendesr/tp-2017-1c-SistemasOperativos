@@ -130,6 +130,8 @@ void dumpMemory(int pid);
 void flush(char* comando, char* param);
 void size(char* comando, char* param);
 
+char* getTimeStamp();
+
 //Variables Globales
 t_log* logger;
 t_config_memoria* config;
