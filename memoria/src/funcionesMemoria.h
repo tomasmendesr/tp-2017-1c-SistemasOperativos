@@ -103,9 +103,8 @@ int leerCache(int pid, int pag, char** contenido);
  * El puntero frame apunta al comienzo del frame referenciado por pid y pag*/
 void actualizarEntradaCache(int pid, int pag, char* frame);
 
- 	 	 	 	 	 				/*Este thread maneja tanto cpus como kernel, porque la interfaz es una sola.*/
-void requestHandlerKernel(int fd);		/* Solo una de las operaciones esta restringida a Kernel,*/
-void requestHandlerCpu(int fd);		/* asi que validamos eso solo*/
+void requestHandlerKernel(int fd);
+void requestHandlerCpu(int fd);
 void enviarTamanioPagina(int fd);
 
 //Pedidos de Kernel
@@ -124,6 +123,10 @@ void enviarRespuesta(int fd, int respuesta);
 void levantarInterfaz();
 void retardo(char* comando, char* param);
 void dump(char* comando, char* param);
+void dumpAll();
+void dumpCache();
+void dumpTable();
+void dumpMemory(int pid);
 void flush(char* comando, char* param);
 void size(char* comando, char* param);
 

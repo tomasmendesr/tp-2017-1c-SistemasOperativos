@@ -251,11 +251,6 @@ int asignarPaginas(int pid, int cantPag){
 	return 0;
 }
 
-int finalizarPrograma(int pid){
-
-	return 0;
-}
-
 int solicitudBytes(int fd, t_pedido_memoria* pedido){
 
 	if(pedidoIncorrecto(pedido)){
@@ -555,8 +550,33 @@ void retardo(char* comando, char* param){
         printf("retardo\n");
 }
 void dump(char* comando, char* param){
-        printf("dump\n");
+	printf("dump\n");
+
+	if(strlen(param) == 0){
+		//Dump de todas las estructuras
+		dumpAll();
+	}
+
+	if( !strcmp(param, "cache") ){
+		//Dump de cache
+		dumpCache();
+	}
+
+	if( !strcmp(param,"tabla") ){
+		//Dump de tabla de paginas
+		dumpTable();
+	}
+
+	if( !strcmp(param,"memory") ){
+		//Dump de contenido de memoria
+		int pid;
+		dumpMemory(pid);
+	}
 }
+void dumpAll(){}
+void dumpCache(){}
+void dumpTable(){}
+void dumpMemory(int pid){}
 void flush(char* comando, char* param){
         printf("flush\n");
 }
