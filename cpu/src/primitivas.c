@@ -94,8 +94,13 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 }
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
-	printf("asignarVariableCompartida!\n");
-	return 0;
+	int16_t rta = asignarCompartida(NULL, (int32_t) valor, (char*) &variable); // todo - enviar null?
+	if(rta == -1){
+		log_error(logger, "No se pudo asignar el valor a la variable %s", variable);
+		return -1;
+	}
+	log_debug(logger, "Se asigno el valor %d a %s", valor, variable);
+	return valor;
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable){
@@ -194,6 +199,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 		log_error(logger, "Error al obtener el valor de la variable compartida %s", variable);
 		return -1;
 	}
+	log_debug(logger, "Valor de %s: %d", variable, valor);
 	return valor;
 }
 

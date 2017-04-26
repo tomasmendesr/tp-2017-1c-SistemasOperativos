@@ -251,7 +251,6 @@ int asignarPaginas(int pid, int cantPag){
 	return 0;
 }
 
-
 int solicitudBytes(int fd, t_pedido_memoria* pedido){
 
 	if(pedidoIncorrecto(pedido)){
@@ -551,7 +550,135 @@ void retardo(char* comando, char* param){
         printf("retardo\n");
 }
 void dump(char* comando, char* param){
-        printf("dump\n");
+	printf("dump\n");
+
+	if(strlen(param) == 0){
+		//Dump de todas las estructuras
+		dumpAll();
+		return;
+	}
+
+	if( !strcmp(param, "cache") ){
+		//Dump de cache
+		dumpCache();
+		return;
+	}
+
+	if( !strcmp(param,"tabla") ){
+		//Dump de tabla de paginas
+		dumpTable();
+		return;
+	}
+
+	//Creo un buffer para checkear con memory
+	char buf[7];
+	memcpy(buf,param,6);
+	buf[6] = '\n';
+
+	//Miro, si arranca con memory
+	if( !strcmp(buf, "memory") ){
+		//Ahora miro si hay un parametro numerico
+
+		if(param[6] == '-'){
+			//hay un numero
+			dumpMemory( atoi(param + 7) );
+		}else dumpMemory(-1);
+	}
+
+}
+void dumpAll(){
+	dumpCache();
+	dumpMemory(-1);
+	dumpTable();
+}
+void dumpCache(){
+
+	FILE* dumpFile = fopen("cacheDump","a");
+
+	if(dumpFile == NULL){
+		log_error(logger, "No se pudo abrir el archivo de dump");
+		return;
+	}
+
+	//Escribo el header del dump
+	fprintf(dumpFile,"\n----Dump de cache: %s----\n",getTimeStamp());
+	fprintf(dumpFile,"Tiempo actual: %lu\n", op_count);
+
+	//Escribo el contenido de cada entrada
+	int i,j;
+	for(i=0;i<cache_entradas;i++){
+		fprintf(dumpFile,"entrada n°: %i, pid: %i, pag: %i, time_used: %lu\ncontenido: ",
+				i,cache[i].pid,cache[i].pag,cache[i].time_used);
+
+		for(j=0;j<frame_size;j++)
+			fputc(cache[i].content[j],dumpFile);
+		fputc('\n',dumpFile);
+	}
+
+	fclose(dumpFile);
+	return;
+}
+void dumpTable(){
+
+	FILE* dumpFile = fopen("tableDump","a");
+
+	if(dumpFile == NULL){
+		log_error(logger, "No se pudo abrir el archivo de dump");
+		return;
+	}
+
+	//Escribo el header del dump
+	fprintf(dumpFile,"\n----Dump de tabla: %s----\n",getTimeStamp());
+
+	int i;
+	for(i=0;i<cant_frames;i++){
+		fprintf(dumpFile,"Entrada n°: %i, pid: %i, pag: %i\n",
+				i,tabla_pag[i].pid,tabla_pag[i].pag);
+	}
+
+	fclose(dumpFile);
+	return;
+}
+void dumpMemory(int pid){
+
+	printf("dump Memory pid: %i", pid);
+
+	FILE* dumpFile = fopen("memoryDump","a");
+
+	if(dumpFile == NULL){
+		log_error(logger, "No se pudo abrir el archivo de dump");
+		return;
+	}
+
+	//Escribo el header del dump
+	fprintf(dumpFile,"\n----Dump de memoria: %s----\n",getTimeStamp());
+
+	//Me fijo si tengo que imprimir todos los procesos o solo 1
+	bool todosLosProcesos;
+	if(pid==-1){
+		fprintf(dumpFile,"Dump de todos los procesos.\n");
+		todosLosProcesos = true;
+	}else{
+		fprintf(dumpFile,"Dump del proceso pid=%i.\n",pid);
+		todosLosProcesos = false;
+	}
+
+	int i,j;
+	for(i=0;i<cant_frames;i++){
+
+		if(tabla_pag[i].pid == pid || todosLosProcesos){
+			fprintf(dumpFile,"Frame n°: %i, pid: %i, pag: %i, contenido:\n",
+					i,tabla_pag[i].pid,tabla_pag[i].pid);
+
+			for(j=0;j<frame_size;j++){
+				fputc(memoria + i * frame_size + j, dumpFile);
+			}
+			fputc('\n',dumpFile);
+		}
+	}
+
+	fclose(dumpFile);
+	return;
 }
 void flush(char* comando, char* param){
         printf("flush\n");
@@ -560,3 +687,12 @@ void size(char* comando, char* param){
         printf("size\n");
 }
 
+char* getTimeStamp(){
+	time_t rawtime;
+	struct tm *timeinfo;
+
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	return asctime(timeinfo);
+}

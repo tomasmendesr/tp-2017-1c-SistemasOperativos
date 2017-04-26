@@ -217,7 +217,7 @@ int32_t leerCompartida(void* paquete, char* variable){
 		return var;
 	}
 	else{
-		return EXIT_FAILURE;
+		return -1;
 	}
 }
 
@@ -247,16 +247,16 @@ void requestHandlerKernel(){
 	}
 }
 
-int16_t asignarCompartida(void* paquete, int valor, char* variable){
+int16_t asignarCompartida(void* paquete, int32_t valor, char* variable){
 
 	int tipo,offset = 0;
-	int sizeVariable = strlen(variable);
-	int sizeTotal = sizeof(sizeVariable) + sizeVariable + sizeof(valor) + 1;
+	uint32_t sizeVariable = strlen(variable);
+	uint32_t sizeTotal = sizeof(sizeVariable) + sizeVariable + sizeof(valor) + 1;
 	header_t* header = malloc(sizeof(header_t));
 	header->type = ASIG_VAR_COMPARTIDA;
 	header->length = sizeTotal;
 
-	void* buffer = malloc(sizeTotal); // TODO - revisar el strlen
+	void* buffer = malloc(sizeTotal);
 	memcpy(buffer, &sizeVariable, sizeof(sizeVariable));
 	offset += sizeof(sizeVariable);
 	memcpy(buffer+offset, variable, strlen(variable)+1);
@@ -265,7 +265,7 @@ int16_t asignarCompartida(void* paquete, int valor, char* variable){
 
 	//verificar envio
 	if( sendSocket(socketConexionKernel,header, buffer) <= 0 ){
-		log_error(logger,"error al asignar valor a var compartida");
+		log_error(logger,"Error al asignar valor a var compartida");
 		free(header);
 		return -1;
 	}
