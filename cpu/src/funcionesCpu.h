@@ -70,6 +70,7 @@ char* solicitarProximaInstruccion();
 void finalizarEjecucionPorFinQuantum();
 void finalizarEjecucionPorFinPrograma();
 void finalizarProcesoPorStackOverflow();
+void finalizarProcesoPorSegmentationFault();
 int32_t requestHandlerKernel(void** paquete);
 int32_t requestHandlerMemoria();
 

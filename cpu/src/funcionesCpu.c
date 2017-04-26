@@ -170,13 +170,12 @@ int32_t requestHandlerMemoria(){
 		return EXIT_SUCCESS;
 	case ENVIAR_TAMANIO_PAGINA:
 		tamanioPagina=*(uint32_t*)paquete;
-		free(paquete);
 		log_info(logger, "Tamaño de pagina: %d", tamanioPagina);
 		return EXIT_SUCCESS;
 	case SEGMENTATION_FAULT: /*se podria hacer la logica de terminacion aca*/
 		enviar_paquete_vacio(FIN_SEGMENTATION_FAULT,socketConexionKernel);
 		free(paquete);
-		log_debug(logger, "Segmentation Fault");
+		log_error(logger, "Segmentation Fault");
 		return -1;
 	case ERROR:
 		enviar_paquete_vacio(FIN_ERROR_MEMORIA,socketConexionKernel);
@@ -191,15 +190,17 @@ int32_t requestHandlerMemoria(){
 }
 
 void ejecutarPrograma(void){
-	char*content;
+	char* content;
 	inicializarFunciones();
+	printf("inicializo funciones\n");
 	levantarArchivo(ansisop,&content);
+	printf("levanto archivo\n");
 	pcb = crearPCB(content, 1); //en realidad se recibe desde el kernel
+	printf("creo pcb\n");
 	analizadorLinea("variables a, b, c, d \n", funciones, funcionesKernel);
 	analizadorLinea("c = 1", funciones, funcionesKernel);
 }
 
-//por ahora no la estamos usando
 void recibirPCB(void* paquete){
 	pcb = deserializar_pcb(paquete);
 	free(paquete);
@@ -305,18 +306,17 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 }
 
 
-void levantarArchivo(char*path, char** buffer){
-
+void levantarArchivo(char* path, char** buffer){
+	printf("dentro de levantar archivo\n");
 		FILE* file;
 	 	int file_fd, file_size;
 	 	struct stat stats;
-
 	 	file = fopen(path, "r");
 	 	file_fd = fileno(file);
-
+	 	printf("post open\n");
 	 	fstat(file_fd, &stats);
 	 	file_size = stats.st_size;
-
+	 	printf("previo a malloc\n");
 	 	*buffer = malloc(file_size+1);
 	 	if(*buffer == NULL) {
 	 		log_error(logger, "archivo no levantado");
@@ -542,5 +542,18 @@ void finalizarProcesoPorStackOverflow() {
 	free(paquete);
 }
 
+void finalizarProcesoPorSegmentationFault(){
+	t_buffer_tamanio* paquete = serializar_pcb(pcb);
+	header_t header;
+	header.type= FIN_SEGMENTATION_FAULT;
+	header.length=sizeof(t_buffer_tamanio);
+	huboStackOver = false;
+	if( sendSocket(socketConexionKernel, &header, (void*) paquete) <= 0 ){
+		log_error(logger,"Error al devolver PCB por segmentation fault al kernel");
+		return;
+	}
+	free(paquete->buffer);
+	free(paquete);
+}
 
 
