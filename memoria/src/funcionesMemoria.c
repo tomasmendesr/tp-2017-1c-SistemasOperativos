@@ -591,11 +591,11 @@ void dumpCache(){
 	int i,j;
 	for(i=0;i<cache_entradas;i++){
 		fprintf(dumpFile,"entrada n°: %i, pid: %i, pag: %i, time_used: %lu\ncontenido: ",
-				cache[i].pid,cache[i].pag,cache[i].time_used);
+				i,cache[i].pid,cache[i].pag,cache[i].time_used);
 
 		for(j=0;j<frame_size;j++)
 			fputc(cache[i].content[j],dumpFile);
-		fputc("\n",dumpFile);
+		fputc('\n',dumpFile);
 	}
 
 	fclose(dumpFile);
