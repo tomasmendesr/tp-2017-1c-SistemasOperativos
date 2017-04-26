@@ -280,7 +280,7 @@ int deserializar_string(void* paquete, char** string){
 	return bytes_totales_leidos;
 
 }
-
+/*
 void* pcb_serializer(pcb_t* self, int16_t *length){
 
 	void *serialized = malloc(sizeof(pcb_t));
@@ -314,7 +314,7 @@ pcb_t* pcb_deserializer(int socketfd) {
 	recv(socketfd, &self->exitCode, sizeof(self->exitCode), MSG_WAITALL);
 	recv(socketfd, &self->consolaFd, sizeof(self->consolaFd), MSG_WAITALL);
 	return self;
-}
+} */
 
 t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack) {
 	int a;
@@ -571,7 +571,7 @@ t_buffer_tamanio* serializar_pcb(pcb_t* pcb) {
 	if (pcb->etiquetas != NULL && pcb->tamanioEtiquetas > 0) {
 		tamanioPCB += pcb->tamanioEtiquetas;
 	}
-	tamanioPCB += (sizeof(uint32_t) * 8); //Cantidad de uint32_t que tiene PCB
+	tamanioPCB += (sizeof(uint32_t) * 9); //Cantidad de uint32_t que tiene PCB
 	tamanioPCB += sizeof(uint32_t); //Para indicar tamanio de PCBs
 
 	//Comienzo serializacion
@@ -583,7 +583,7 @@ t_buffer_tamanio* serializar_pcb(pcb_t* pcb) {
 	memcpy(paqueteSerializado + offset, &tamanioPCB, tmp_size);
 	offset += tmp_size;
 
-	//Serializo los 8 uint32_t del PCB
+	//Serializo los 9 uint32_t del PCB
 	memcpy(paqueteSerializado + offset, &(pcb->pid), tmp_size);
 	offset += tmp_size;
 	memcpy(paqueteSerializado + offset, &(pcb->codigo), tmp_size);
@@ -602,6 +602,8 @@ t_buffer_tamanio* serializar_pcb(pcb_t* pcb) {
  	offset += tmp_size;
 	memcpy(paqueteSerializado, &(pcb->exitCode), tmp_size);
  	offset += tmp_size;
+ 	memcpy(paqueteSerializado, &(pcb->quantum), tmp_size);
+ 	 	offset += tmp_size;
 
 	//Serializo Indice de Codigo
 	memcpy(paqueteSerializado + offset, indcod->buffer, indcod->tamanioBuffer);
@@ -927,3 +929,19 @@ int recibir_info(int socket, void** paquete, int *tipo_mensaje){
 
 	return bytes_recibidos;
 }
+
+t_buffer_tamanio * serializarInstruccion(char* instruccion, int tamanioInstruccion) {
+	int offset = 0, tmp_size = sizeof(uint32_t);
+	char * buffer = malloc(tamanioInstruccion + 4);
+
+	memcpy(buffer, &tamanioInstruccion, tmp_size);
+	offset += tmp_size;
+	memcpy(buffer + offset, instruccion, tamanioInstruccion);
+	t_buffer_tamanio * buffer_tamanio;
+	buffer_tamanio = malloc(tamanioInstruccion + 8);
+	buffer_tamanio->tamanioBuffer = tmp_size + tamanioInstruccion;
+	buffer_tamanio->buffer = buffer;
+
+	return buffer_tamanio;
+}
+

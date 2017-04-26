@@ -55,7 +55,7 @@ void ejecutarPrograma(void);
 int crearLog(void);
 void crearConfig(int argc, char* argv[]);
 int16_t recibirTamanioStack(void);
-int16_t recibirPCB(void);
+void recibirPCB(void* paquete);
 int32_t leerCompartida(void* paquete, char* variable);
 int16_t asignarCompartida(void* paquete, int valor, char* variable);
 int16_t waitSemaforo(void* paquete, char* sem);
@@ -63,4 +63,8 @@ int16_t signalSemaforo(void* paquete, char* sem);
 int16_t recibirTamanioPagina(void);
 void revisarFinalizarCPU();
 void revisarSigusR1(int signo);
+void limpiarInstruccion(char * instruccion);
+void comenzarEjecucionDePrograma();
+char* solicitarProximaInstruccion();
+
 #endif /* FUNCIONESCPU_H_ */

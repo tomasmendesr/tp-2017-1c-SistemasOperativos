@@ -213,11 +213,13 @@ t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack);
 
 pcb_t* deserializar_pcb(char* package);
 t_buffer_tamanio* serializar_pcb(pcb_t* pcb);
+
+t_buffer_tamanio * serializarInstruccion(char* instruccion, int tamanioInstruccion);
 //***********************************
 
 
-void* pcb_serializer(pcb_t* self, int16_t *length);
-pcb_t* pcb_deserializer(int socketfd);
+//void* pcb_serializer(pcb_t* self, int16_t *length);
+//pcb_t* pcb_deserializer(int socketfd);
 
 char *paqueteEnviarAEjecutar_serializer(u_int16_t quantum, uint32_t retardo_quantum,pcb_t *pcb_proceso);
 

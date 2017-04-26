@@ -126,25 +126,12 @@ void ejecutarPrograma(void){
 }
 
 //por ahora no la estamos usando
-int16_t recibirPCB(void){
-
-	int tipo_mensaje;
-	void* paquete;
-
-	if(recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje) <= 0){
-		log_error(logger, "Desconexion del kernel. Terminando...");
-		close(socketConexionKernel);
-		return EXIT_FAILURE;
-	}
-	if(tipo_mensaje==EXEC_PCB){
-//		deserializarPCB(paquete);
-		/*el kernel no esta esperando el OK de confirmacion*/
-//		enviar_paquete_vacio(OK,socketConexionKernel);
-	}else{
-//		enviar_paquete_vacio(ERROR,socketConexionKernel);
-		return EXIT_FAILURE;
-	}
-	return EXIT_SUCCESS;
+void recibirPCB(void* paquete){
+	pcb = deserializar_pcb(paquete);
+	free(paquete);
+	setPCB(pcb);
+	//notificarAUMCElCambioDeProceso(pcb->pid);
+	comenzarEjecucionDePrograma();
 }
 
 
@@ -237,6 +224,7 @@ void requestHandlerKernel(){
 
 		switch(tipo_mensaje){
 		case EXEC_PCB:
+			recibirPCB(paquete);
 			break;
 		default:
 			log_warning(logger, "Mensaje Recibido Incorrecto");
@@ -511,69 +499,103 @@ void revisarFinalizarCPU() {
 	}
 }
 
-//ejemplo de comenzarPRograma
-//void comenzarEjecucionDePrograma() {
-//	log_info(ptrLog, "Recibo PCB id: %i", pcb->pcb_id);
-//	int contador = 1;
-//
-//	while (contador <= pcb->quantum) {
-//		char* proximaInstruccion = solicitarProximaInstruccionAUMC();
-//		limpiarInstruccion(proximaInstruccion);
-//		if (pcb->PC >= (pcb->codigo - 1) && (strcmp(proximaInstruccion, "end") == 0)) {
-//			finalizarEjecucionPorExit();
-//			revisarFinalizarCPU();
-//			return;
-//		} else {
-//
-//			if (proximaInstruccion != NULL) {
-//				if (strcmp(proximaInstruccion, "FINALIZAR") == 0) {
-//					log_error(ptrLog, "Instruccion no pudo leerse. Hay que finalizar el Proceso.");
-//					finalizarProcesoPorErrorEnUMC();
-//					return;
-//				} else {
-//					log_debug(ptrLog, "Instruccion recibida: %s", proximaInstruccion);
-//					if (strcmp(proximaInstruccion, "end") == 0) {
-//						log_debug(ptrLog, "Finalizo la ejecucion del programa");
-//						finalizarEjecucionPorExit();
-//						revisarFinalizarCPU();
-//						return;
-//					}
-//					analizadorLinea(proximaInstruccion, &functions,
-//							&kernel_functions);
-//					if (huboStackOver) {
-//						finalizarProcesoPorStackOverflow();
-//						revisarFinalizarCPU();
-//						return;
-//					}
-//					contador++;
-//					pcb->PC = (pcb->PC) + 1;
-//					switch (operacion) {
-//					case IO:
-//						log_debug(ptrLog, "Finalizo ejecucion por operacion I/O");
-//						finalizarEjecucionPorIO();
-//						revisarFinalizarCPU();
-//						return;
-//					case WAIT:
-//						log_debug(ptrLog, "Finalizo ejecucion por un Wait.");
-//						finalizarEjecucionPorWait();
-//						revisarFinalizarCPU();
-//						return;
-//					default:
-//						break;
-//					}
-//					usleep(pcb->quantumSleep * 1000);
-//				}
-//			} else {
-//				log_info(ptrLog, "No se pudo recibir la instruccion de UMC. Cierro la conexion");
-//				finalizarConexion(socketUMC);
-//				return;
-//			}
-//		}
-//
-//	}
-//	log_debug(ptrLog, "Finalizo ejecucion por fin de Quantum");
-//	finalizarEjecucionPorQuantum();
-//
-//	free(pcb);
-//	revisarFinalizarCPU();
-//}
+void comenzarEjecucionDePrograma() {
+	log_info(logger, "Recibo PCB id: %i", pcb->pid);
+	int i = 1;
+	int quatum = 3; // todo - recibirlo
+	while (i <= quantum) {
+		char* proximaInstruccion = solicitarProximaInstruccion();
+		limpiarInstruccion(proximaInstruccion);
+		if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(proximaInstruccion, "end") == 0)) {
+			//finalizarEjecucionPorExit();
+			revisarFinalizarCPU();
+			return;
+		} else {
+
+			if (proximaInstruccion != NULL) {
+				log_debug(logger, "Instruccion recibida: %s", proximaInstruccion);
+				if (strcmp(proximaInstruccion, "end") == 0) {
+					log_debug(logger, "Finalizo la ejecucion del programa");
+					//finalizarEjecucionPorExit();
+					revisarFinalizarCPU();
+					return;
+				}
+				analizadorLinea(proximaInstruccion, funciones, funcionesKernel);
+				if (huboStackOver) {
+					//finalizarProcesoPorStackOverflow();
+					revisarFinalizarCPU();
+					return;
+				}
+				i++;
+				pcb->programCounter++;
+				// usleep
+			}
+			else {
+				log_info(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
+				finalizarConexion(socketConexionMemoria);
+				return;
+			}
+		}
+
+	}
+	log_debug(logger, "Finalizo ejecucion por fin de Quantum");
+	//finalizarEjecucionPorQuantum();
+
+	free(pcb);
+	revisarFinalizarCPU();
+}
+
+void limpiarInstruccion(char * instruccion) {
+	char* instr = instruccion;
+	int a = 0;
+	while (*instruccion != '\0') {
+		if (*instruccion
+				!= '\t'&& *instruccion != '\n' && !iscntrl(*instruccion)) {
+			if (a == 0 && isdigit((int )*instruccion)) {
+				++instruccion;
+			} else {
+				*instr++ = *instruccion++;
+				a++;
+			}
+		} else {
+			++instruccion;
+		}
+	}
+	*instr = '\0';
+}
+
+char* solicitarProximaInstruccion() {
+	t_indice_codigo *indice = list_get(pcb->indiceCodigo, pcb->programCounter);
+	uint32_t requestStart = indice->offset;
+	uint32_t requestOffset = indice->size;
+
+	uint32_t i = 0;
+	while (requestStart >= (tamanioPagina + (tamanioPagina * i))) {
+		i++;
+	}
+	uint32_t paginaAPedir = i;
+	//pcb->paginaCodigoActual = paginaAPedir;
+	paginaAPedir = 1;
+	pedido_bytes_t* solicitar = malloc(sizeof(pedido_bytes_t));
+	solicitar->pag = paginaAPedir;
+	solicitar->offset = requestStart - (tamanioPagina * paginaAPedir);
+	solicitar->size = requestOffset;
+
+	log_info(logger, "Pido a Memoria -> Pagina: %d - Start: %d - Offset: %d",
+			paginaAPedir, requestStart - (tamanioPagina * paginaAPedir),
+			solicitar->offset);
+
+	void* paquete;
+	if(solicitarBytes(solicitar, &paquete) != 0 ){
+			free(solicitar);
+			log_error(logger, "Error al solicitar bytes a memoria.");
+			return NULL;
+	}
+
+	free(solicitar);
+
+
+	char* instruccion = NULL; //deserializarInstruccion(paquete);
+	free(paquete);
+	return instruccion;
+}
