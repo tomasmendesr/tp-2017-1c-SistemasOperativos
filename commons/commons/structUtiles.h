@@ -72,7 +72,6 @@ typedef struct{
 	uint32_t stackPointer; // el ultimo offset
 	uint32_t tamanioEtiquetas;
 	uint32_t codigo; // cant de instrucciones
-	uint32_t quantum;
 }__attribute__((__packed__)) pcb_t;
 
 typedef enum{

@@ -571,7 +571,7 @@ t_buffer_tamanio* serializar_pcb(pcb_t* pcb) {
 	if (pcb->etiquetas != NULL && pcb->tamanioEtiquetas > 0) {
 		tamanioPCB += pcb->tamanioEtiquetas;
 	}
-	tamanioPCB += (sizeof(uint32_t) * 9); //Cantidad de uint32_t que tiene PCB
+	tamanioPCB += (sizeof(uint32_t) * 8); //Cantidad de uint32_t que tiene PCB
 	tamanioPCB += sizeof(uint32_t); //Para indicar tamanio de PCBs
 
 	//Comienzo serializacion
@@ -583,7 +583,7 @@ t_buffer_tamanio* serializar_pcb(pcb_t* pcb) {
 	memcpy(paqueteSerializado + offset, &tamanioPCB, tmp_size);
 	offset += tmp_size;
 
-	//Serializo los 9 uint32_t del PCB
+	//Serializo los 8 uint32_t del PCB
 	memcpy(paqueteSerializado + offset, &(pcb->pid), tmp_size);
 	offset += tmp_size;
 	memcpy(paqueteSerializado + offset, &(pcb->codigo), tmp_size);
@@ -602,8 +602,6 @@ t_buffer_tamanio* serializar_pcb(pcb_t* pcb) {
  	offset += tmp_size;
 	memcpy(paqueteSerializado, &(pcb->exitCode), tmp_size);
  	offset += tmp_size;
- 	memcpy(paqueteSerializado, &(pcb->quantum), tmp_size);
- 	 	offset += tmp_size;
 
 	//Serializo Indice de Codigo
 	memcpy(paqueteSerializado + offset, indcod->buffer, indcod->tamanioBuffer);
