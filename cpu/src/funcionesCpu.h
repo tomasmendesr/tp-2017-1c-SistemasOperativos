@@ -30,6 +30,7 @@ typedef struct{
 	char* ip_Kernel;
 }t_config_cpu;
 
+void* paquete2;
 int socketConexionKernel;
 int socketConexionMemoria;
 t_config_cpu* config;
@@ -55,12 +56,22 @@ void ejecutarPrograma(void);
 int crearLog(void);
 void crearConfig(int argc, char* argv[]);
 int16_t recibirTamanioStack(void);
-int16_t recibirPCB(void);
+void recibirPCB(void* paquete);
 int32_t leerCompartida(void* paquete, char* variable);
-int16_t asignarCompartida(void* paquete, int valor, char* variable);
+int16_t asignarCompartida(int valor, char* variable);
 int16_t waitSemaforo(void* paquete, char* sem);
 int16_t signalSemaforo(void* paquete, char* sem);
 int16_t recibirTamanioPagina(void);
 void revisarFinalizarCPU();
 void revisarSigusR1(int signo);
+void limpiarInstruccion(char * instruccion);
+void comenzarEjecucionDePrograma();
+char* solicitarProximaInstruccion();
+void finalizarEjecucionPorFinQuantum();
+void finalizarEjecucionPorFinPrograma();
+void finalizarProcesoPorStackOverflow();
+int32_t requestHandlerKernel(void** paquete);
+int32_t requestHandlerMemoria();
+
+
 #endif /* FUNCIONESCPU_H_ */
