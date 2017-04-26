@@ -24,10 +24,7 @@ int main(int argc, char** argv) {
 	 * Manejo de la interrupcion SIGUSR1
 	 */
 	signal(SIGUSR1, revisarSigusR1);
-	/*while(true){
-		log_info(logger, "Comenzando ejecucion...");
-		if(requestHandlerKernel() != 0) return -1;
-	}*/
+	requestHandlerKernel(NULL);
 
 	freeConf(config);
 	finalizarConexion(socketConexionKernel);

@@ -943,3 +943,5 @@ t_buffer_tamanio * serializarInstruccion(char* instruccion, int tamanioInstrucci
 	return buffer_tamanio;
 }
 
+
+

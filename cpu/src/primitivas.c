@@ -11,7 +11,6 @@ void setPCB(pcb_t * pcbDeCPU){
 }
 
 t_puntero definirVariable(t_nombre_variable identificador_variable){
-
 	if(pcb->stackPointer + TAMANIO_VARIABLE > tamanioStack*tamanioPagina){
 		/*esta verificacion me hace ruido*/
 		if(!huboStackOver){
@@ -94,13 +93,28 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 }
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
-	int16_t rta = asignarCompartida(NULL, (int32_t) valor, (char*) &variable); // todo - enviar null?
-	if(rta == -1){
-		log_error(logger, "No se pudo asignar el valor a la variable %s", variable);
+	int tipo,offset = 0;
+	uint32_t sizeVariable = strlen(variable);
+	uint32_t sizeTotal = sizeof(sizeVariable) + sizeVariable + sizeof(valor) + 1;
+	header_t* header = malloc(sizeof(header_t));
+	header->type = ASIG_VAR_COMPARTIDA;
+	header->length = sizeTotal;
+
+	void* buffer = malloc(sizeTotal);
+	memcpy(buffer, &sizeVariable, sizeof(sizeVariable));
+	offset += sizeof(sizeVariable);
+	memcpy(buffer+offset, variable, strlen(variable)+1);
+	offset += strlen(variable)+1;
+	memcpy(buffer+offset, &valor, sizeof(valor));
+
+	//verificar envio
+	if( sendSocket(socketConexionKernel,header, buffer) <= 0 ){
+		log_error(logger,"Error al asignar valor a var compartida");
+		free(header);
 		return -1;
 	}
-	log_debug(logger, "Se asigno el valor %d a %s", valor, variable);
-	return valor;
+
+
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable){
@@ -192,14 +206,26 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 }
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
-	void* paquete = malloc(sizeof(int32_t));
 	log_debug(logger, "ANSISOP_obtenerValorCompartida %s", variable);
-	t_valor_variable valor = leerCompartida(paquete,(char*) &variable);
-	if(valor == -1){
-		log_error(logger, "Error al obtener el valor de la variable compartida %s", variable);
+
+	header_t header;
+	header.type = LEER_VAR_COMPARTIDA;
+	header.length = sizeof(variable);
+
+	//verificar envio
+	sendSocket(socketConexionKernel, &header, variable);
+
+	void* paquete = malloc(sizeof(int32_t));
+	int rta = requestHandlerKernel(&paquete);
+	if(rta == -1){
+		log_error(logger,"Error al asignar valor a var compartida");
 		return -1;
 	}
+	int32_t valor =*(int32_t*)paquete;
+	free(paquete);
+
 	log_debug(logger, "Valor de %s: %d", variable, valor);
+
 	return valor;
 }
 
