@@ -507,7 +507,7 @@ void comenzarEjecucionDePrograma() {
 		char* proximaInstruccion = solicitarProximaInstruccion();
 		limpiarInstruccion(proximaInstruccion);
 		if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(proximaInstruccion, "end") == 0)) {
-			//finalizarEjecucionPorExit();
+			finalizarEjecucionPorFinPrograma();
 			revisarFinalizarCPU();
 			return;
 		} else {
@@ -516,13 +516,13 @@ void comenzarEjecucionDePrograma() {
 				log_debug(logger, "Instruccion recibida: %s", proximaInstruccion);
 				if (strcmp(proximaInstruccion, "end") == 0) {
 					log_debug(logger, "Finalizo la ejecucion del programa");
-					//finalizarEjecucionPorExit();
+					finalizarEjecucionPorFinPrograma();
 					revisarFinalizarCPU();
 					return;
 				}
 				analizadorLinea(proximaInstruccion, funciones, funcionesKernel);
 				if (huboStackOver) {
-					//finalizarProcesoPorStackOverflow();
+					finalizarProcesoPorStackOverflow();
 					revisarFinalizarCPU();
 					return;
 				}
@@ -539,7 +539,7 @@ void comenzarEjecucionDePrograma() {
 
 	}
 	log_debug(logger, "Finalizo ejecucion por fin de Quantum");
-	//finalizarEjecucionPorQuantum();
+	finalizarEjecucionPorFinQuantum();
 
 	free(pcb);
 	revisarFinalizarCPU();
@@ -594,8 +594,59 @@ char* solicitarProximaInstruccion() {
 
 	free(solicitar);
 
-
 	char* instruccion = NULL; //deserializarInstruccion(paquete);
 	free(paquete);
 	return instruccion;
 }
+
+void finalizarEjecucionPorFinQuantum() {
+	t_buffer_tamanio* paquete = serializar_pcb(pcb);
+	header_t header;
+	header.type= FIN_EJECUCION; // todo - diferenciar fin por quantum de fin por end?
+	header.length=sizeof(t_buffer_tamanio);
+	if( sendSocket(socketConexionKernel, &header, (void*) paquete) <= 0 ){
+		log_error(logger,"Error al notificar kernel el fin de ejecucion");
+		return;
+	}
+	free(paquete->buffer);
+	free(paquete);
+}
+
+void finalizarEjecucionPorFinPrograma() {
+	t_buffer_tamanio* paquete = serializar_pcb(pcb);
+	header_t header;
+	header.type= FIN_EJECUCION;
+	header.length=sizeof(t_buffer_tamanio);
+	if( sendSocket(socketConexionKernel, &header, (void*) paquete) <= 0 ){
+		log_error(logger,"Error al notificar kernel el fin de programa");
+		return;
+	}
+	free(paquete->buffer);
+	free(paquete);
+	if (cerrarCPU) {
+		log_debug(logger, "Cerrando CPU");
+		finalizarConexion(socketConexionKernel);
+		finalizarConexion(socketConexionMemoria);
+		log_info(logger, "CPU cerrada");
+		log_destroy(logger);
+		freeConf(config);
+		return;
+	}
+}
+
+void finalizarProcesoPorStackOverflow() {
+	t_buffer_tamanio* paquete = serializar_pcb(pcb);
+	header_t header;
+	header.type= STACKOVERFLOW;
+	header.length=sizeof(t_buffer_tamanio);
+	huboStackOver = false;
+	if( sendSocket(socketConexionKernel, &header, (void*) paquete) <= 0 ){
+		log_error(logger,"Error al devolver PCB por StackOverflow al kernel");
+		return;
+	}
+	free(paquete->buffer);
+	free(paquete);
+}
+
+
+

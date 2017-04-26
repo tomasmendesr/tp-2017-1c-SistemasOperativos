@@ -66,5 +66,8 @@ void revisarSigusR1(int signo);
 void limpiarInstruccion(char * instruccion);
 void comenzarEjecucionDePrograma();
 char* solicitarProximaInstruccion();
+void finalizarEjecucionPorFinQuantum();
+void finalizarEjecucionPorFinPrograma();
+void finalizarProcesoPorStackOverflow();
 
 #endif /* FUNCIONESCPU_H_ */
