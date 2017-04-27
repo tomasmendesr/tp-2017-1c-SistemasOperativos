@@ -108,6 +108,11 @@ void eliminarCPU(t_list* lista, int socketCPU);
 void actualizarReferenciaPCB(int id, pcb_t* pcb);
 cpu_t* obtenerCpuLibre();
 
+//Planificacion Largo Plazo
+void planificarLargoPlazo();
+void aletarConsolaProcesoAceptado(int pid, int socketConsola);
+void envioCodigoMemoria(char* codigo);
+
 //Variables Globales
 t_config_kernel* config;
 int socketConexionFS;

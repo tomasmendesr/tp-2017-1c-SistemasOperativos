@@ -392,58 +392,69 @@ void planificarCortoPlazo(){
 
 void planificarLargoPlazo(){
 
-	sem_wait(&sem_cola_new); //si la cola esta vacio bloqueo
-	sem_wait(&mutex_cola_new);
-	proceso_en_espera_t* proc = queue_pop(colaNew);
-	sem_post(&mutex_cola_new);
+	while(1){
 
-	//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
-	//si acepta pongo en cola ready y creo pcb;
+		sem_wait(&sem_cola_new); //si la cola esta vacio bloqueo
+		sem_wait(&mutex_cola_new);
+		proceso_en_espera_t* proc = queue_pop(colaNew);
+		sem_post(&mutex_cola_new);
 
-	//creo el pedido para la memoria
-	t_pedido_iniciar pedido;
-	int pid = asignarPid();
-	pedido.pid = pid;
-	pedido.cant_pag = config->stack_Size;
+		//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
+		//si acepta pongo en cola ready y creo pcb;
 
-	header_t header;
-	header.type = INICIAR_PROGRAMA;
-	header.length = sizeof(t_pedido_iniciar);
-	sendSocket(socketConexionMemoria, &header, &pedido);
+		//creo el pedido para la memoria
+		t_pedido_iniciar pedido;
+		int pid = asignarPid();
+		pedido.pid = pid;
+		pedido.cant_pag = config->stack_Size;
 
-	void* paquete;
-	int resultado;
+		header_t header;
+		header.type = INICIAR_PROGRAMA;
+		header.length = sizeof(t_pedido_iniciar);
+		sendSocket(socketConexionMemoria, &header, &pedido);
 
-	//evaluo respuesta
-	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+		void* paquete;
+		int resultado;
 
-	if(resultado == SIN_ESPACIO){
-		//aviso a consola que se rechazo
-		enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
+		//evaluo respuesta
+		recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+
+		if(resultado == SIN_ESPACIO){
+			//aviso a consola que se rechazo
+			enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
+		}
+		if(resultado == OP_OK){
+			//aviso a consola que se acepto
+			aletarConsolaProcesoAceptado(pid, proc->socketConsola);
+
+			//mando a memoria el codigo
+			envioCodigoMemoria(proc->codigo);
+
+			//creo pcb y paso el proceso a ready
+			pcb_t* pcb = crearPCB(proc->codigo, pid);
+			sem_wait(&mutex_cola_ready);
+			queue_push(colaReady, pcb);
+			sem_post(&mutex_cola_ready);
+
+			//destruyo el proceso en espera;
+			free(proc->codigo);
+			free(proc);
+		}
 	}
-	if(resultado == OP_OK){
-		//aviso a consola que se acepto
-		header.type = PID_PROGRAMA;
-		header.length = sizeof(int);
-		memcpy(paquete, &pid, header.length);
-		sendSocket(proc->socketConsola, &header, paquete);
-
-		//mando a memoria el codigo
-		header.type = ENVIO_CODIGO;
-		header.length = strlen(proc->codigo);
-		memcpy(paquete, proc->codigo, header.length);
-		sendSocket(socketConexionMemoria, &header, paquete);
-
-		//creo pcb y paso el proceso a ready
-		pcb_t* pcb = crearPCB(proc->codigo, pid);
-		sem_wait(&mutex_cola_ready);
-		queue_push(colaReady, pcb);
-		sem_post(&mutex_cola_ready);
-
-		//destruyo el proceso en espera;
-		free(proc->codigo);
-		free(proc);
-	}
-
 }
 
+void aletarConsolaProcesoAceptado(int pid, int socketConsola){
+	header_t header;
+
+	header.type = PID_PROGRAMA;
+	header.length = sizeof(int);
+	sendSocket(socketConsola, &header, &pid);
+}
+
+void envioCodigoMemoria(char* codigo){
+	header_t header;
+
+	header.type = ENVIO_CODIGO;
+	header.length = strlen(codigo);
+	sendSocket(socketConexionMemoria, &header, codigo);
+}
