@@ -573,14 +573,18 @@ void dump(char* comando, char* param){
 	//Creo un buffer para checkear con memory
 	char buf[7];
 	memcpy(buf,param,6);
-	buf[6] = '\n';
+	buf[6] = 0;
 
 	//Miro, si arranca con memory
 	if( !strcmp(buf, "memory") ){
 		//Ahora miro si hay un parametro numerico
 
 		if(param[6] == '-'){
-			//hay un numero
+			//compruebo si hay numero
+			if(atoi(param + 7) == 0){
+				printf("Ingrese un valor valido para el numero de proceso\n");
+				return;
+			}else
 			dumpMemory( atoi(param + 7) );
 		}else dumpMemory(-1);
 	}
