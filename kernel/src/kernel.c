@@ -118,14 +118,14 @@ void lanzarHilosPlanificacion(){
 	resultado = pthread_create(&hiloPCP, NULL, (void*)planificarCortoPlazo, NULL);
 	if(resultado){
 		printf("El hilo de PCP no pudo crearse\n");
-		log_error(logger_kernel, "El hilo de PCP no pudo crearse");
+		log_error(&logger_kernel, "El hilo de PCP no pudo crearse");
 		exit(1);
 	}
 
 	resultado = pthread_create(&hiloPLP, NULL, (void*)planificarLargoPlazo, NULL);
 	if(resultado){
 		printf("El hilo de PLP no pudo crearse\n");
-		log_error(logger_kernel, "El hilo de PLP no pudo crearse");
+		log_error(&logger_kernel, "El hilo de PLP no pudo crearse");
 		exit(1);
 	}
 
