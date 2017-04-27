@@ -85,7 +85,12 @@ int conexionConKernel(void){
 		return -1;
 	}
 
-	if(recibirTamanioStack() == -1) return -1;
+	log_debug(logger, "Esperando tamaño del stack...");
+	int rta = requestHandlerKernel(&paquete2);
+	if(rta == -1){
+		log_error(logger, "Error al recibir tamanio de stack");
+		return -1;
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -110,7 +115,12 @@ int conexionConMemoria(void){
 		log_info(logger,"La Memoria no devolvio handshake :(");
 		return -1;
 	}
-	if(recibirTamanioPagina() == -1) return -1;
+	log_debug(logger, "Esperando tamaño de pagina...");
+	int rta = requestHandlerMemoria();
+	if(rta != 0){
+		log_error(logger, "Error al recibir tamanio de pagina");
+		return -1;
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -125,7 +135,6 @@ int32_t requestHandlerKernel(void** paquete){
 		close(socketConexionKernel);
 		exit(1);
 	}
-
 	switch(tipo_mensaje){
 		case EXEC_PCB:
 			recibirPCB(paquete);
@@ -139,7 +148,7 @@ int32_t requestHandlerKernel(void** paquete){
 			free(paquete);
 			return EXIT_SUCCESS;
 		case RESPUESTA_WAIT_DETENER_EJECUCION:
-	//		expulsarPCB();
+			expulsarPCB();
 			free(paquete);
 			return EXIT_FAILURE;
 		case VALOR_VAR_COMPARTIDA:
@@ -151,7 +160,7 @@ int32_t requestHandlerKernel(void** paquete){
 		}
 }
 
-int32_t requestHandlerMemoria(){
+int32_t requestHandlerMemoria(void){
 
 	void* paquete = NULL;
 	int bytes;
@@ -206,25 +215,6 @@ void recibirPCB(void* paquete){
 	free(paquete);
 	setPCB(pcb);
 	comenzarEjecucionDePrograma();
-}
-
-
-int16_t recibirTamanioPagina(void){
-	log_debug(logger, "Esperando tamaño de pagina...");
-	int rta = requestHandlerMemoria();
-	if(rta != 0){
-		log_error(logger, "Error al recibir tamanio de pagina");
-	}
-	return rta;
-}
-
-int16_t recibirTamanioStack(void){
-	log_debug(logger, "Esperando tamaño del stack...");
-	int rta = requestHandlerKernel(&paquete2);
-	if(rta == -1){
-		log_error(logger, "Error al recibir tamanio de stack");
-	}
-	return rta;
 }
 
 int16_t waitSemaforo(void* paquete, char* sem){
@@ -288,20 +278,21 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	if(enviar_info(socketConexionMemoria,GRABAR_BYTES,size,(void*)pedido) <= 0 ){
 		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
 		free(buffer);
-		return EXIT_FAILURE;
+		return -1;
 	}
 	if(enviar_info(socketConexionMemoria,GRABAR_BYTES,pedido->size,paquete) <= 0 ){
 		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
 		free(buffer);
-		return EXIT_FAILURE;
+		return -1;
 	}
 
 	free(buffer);
-	//}
+
 	int rta = requestHandlerMemoria();
 	if(rta == 0){
 		log_debug(logger, "Valor guardado correctamente");
 	}
+	else return -1;
 	return rta;
 }
 
@@ -379,7 +370,7 @@ void revisarSigusR1(int signo){
 	if (signo == SIGUSR1) {
 		log_info(logger, "Se recibe SIGUSR1");
 		cerrarCPU = true;
-		enviar_paquete_vacio(SIGURSR, socketConexionKernel);
+		enviar_paquete_vacio(DESCONEXION_CPU, socketConexionKernel);
 		log_debug(logger, "Termina la rafaga actual y luego se cierra esta CPU.");
 	}
 }
@@ -399,10 +390,11 @@ void revisarFinalizarCPU() {
 void comenzarEjecucionDePrograma() {
 	log_info(logger, "Recibo PCB id: %i", pcb->pid);
 	int i = 1;
-	int quatum = 3; // todo - recibirlo
+	quantum = 3; // todo - recibirlo
 	while (i <= quantum) {
 		char* proximaInstruccion = solicitarProximaInstruccion();
-		limpiarInstruccion(proximaInstruccion);
+		limpiarInstruccion(proximaInstruccion); //creo que no hace falta
+
 		if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(proximaInstruccion, "end") == 0)) {
 			finalizarEjecucionPorFinPrograma();
 			revisarFinalizarCPU();
@@ -424,7 +416,7 @@ void comenzarEjecucionDePrograma() {
 				}
 				i++;
 				pcb->programCounter++;
-				// usleep
+				// usleep -----------------> no se que es esto
 			}
 			else {
 				log_info(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
@@ -464,6 +456,7 @@ char* solicitarProximaInstruccion() {
 	void* paquete;
 	if(solicitarBytes(solicitar, &paquete) != 0 ){
 			free(solicitar);
+			free(paquete);
 			log_error(logger, "Error al solicitar bytes a memoria.");
 			return NULL;
 	}
@@ -557,3 +550,16 @@ void finalizarProcesoPorSegmentationFault(){
 }
 
 
+int32_t expulsarPCB(void){
+	t_buffer_tamanio* buffer;
+	void* paquete;
+	buffer = serializar_pcb(pcb);
+	enviar_info(socketConexionKernel, ENVIO_PCB, buffer->tamanioBuffer,buffer->buffer);
+	//me tiene que llegar otra pcb para ejecutar
+	if(requestHandlerKernel(&paquete)!=0) {
+		free(paquete);
+		return -1;
+	}
+	free(paquete);
+	return EXIT_SUCCESS;
+}

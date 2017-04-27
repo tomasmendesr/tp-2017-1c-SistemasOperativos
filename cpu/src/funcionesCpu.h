@@ -40,6 +40,7 @@ uint32_t tamanioStack;
 int quantum;
 /*desde memoria*/
 uint32_t tamanioPagina;
+int quamtum;
 
 pcb_t* crearPCB(char* buf, int pid);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
@@ -73,6 +74,7 @@ void finalizarProcesoPorStackOverflow();
 void finalizarProcesoPorSegmentationFault();
 int32_t requestHandlerKernel(void** paquete);
 int32_t requestHandlerMemoria();
+int32_t expulsarPCB(void);
 
 
 #endif /* FUNCIONESCPU_H_ */
