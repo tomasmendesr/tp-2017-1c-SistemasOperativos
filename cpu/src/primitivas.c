@@ -229,9 +229,36 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 }
 
 void retornar(t_valor_variable retorno){
-	printf("retornar!\n");
+	log_debug(logger, "ANSISOP_retornar");
+	//agarro contexto actual
+	t_entrada_stack* contextoEjecucionActual = list_get(pcb->indiceStack, pcb->indiceStack->elements_count-1);
+
+	//Limpio el contexto actual
+	int i = 0;
+	for(i = 0; i < list_size(contextoEjecucionActual->argumentos); i++){
+		t_argumento* arg = list_get(contextoEjecucionActual->argumentos, i);
+		pcb->stackPointer=pcb->stackPointer - TAMANIO_VARIABLE;
+		free(arg);
+	}
+	for(i = 0; i <list_size(contextoEjecucionActual->variables); i++){
+		t_variable* var = list_get(contextoEjecucionActual->variables, i);
+		pcb->stackPointer=pcb->stackPointer - TAMANIO_VARIABLE;
+		free(var);
+	}
+
+	//calculo la direccion a la que tengo que retornar mediante la direccion de pagina start y offset que esta en el campo retvar
+	t_posicion* retVar = contextoEjecucionActual->retVar;
+	t_puntero direcVariable = (retVar->pagina * tamanioPagina) + retVar->offset + pcb->cantPaginasCodigo ;
+	asignar(direcVariable, retorno);
+	//elimino el contexto actual del indice del stack
+	//Seteo el contexto de ejecucion actual en el anterior
+	pcb->programCounter =  contextoEjecucionActual->direcretorno;
+	free(contextoEjecucionActual);
+	list_remove(pcb->indiceStack, pcb->indiceStack->elements_count-1);
+	log_debug(logger, "Llamada a retornar");
 	return;
 }
+
 t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	printf("abrir!\n");
 	return 0;
