@@ -382,11 +382,18 @@ void planificarCortoPlazo(){
 		sem_wait(&semCPUs);
 		sem_wait(&sem_cola_ready);
 		cpu_t* cpu = obtenerCpuLibre();
+
+		sem_wait(&mutex_cola_ready);
 		pcb_t* pcb = queue_pop(colaReady);
+		sem_post(&mutex_cola_ready);
 
-		//envio pcb a la cpu, aun no implementado
-		//enviarPCB(cpu, pcb);
+		t_buffer_tamanio* buffer = serializar_pcb(pcb);
+		header_t header;
+		header.type = EXEC_PCB;
+		header.length = buffer->tamanioBuffer;
+		sendSocket(cpu->socket, &header, buffer);
 
+		cpu->pcb = pcb;
 	}
 }
 

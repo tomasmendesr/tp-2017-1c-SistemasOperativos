@@ -108,6 +108,14 @@ void eliminarCPU(t_list* lista, int socketCPU);
 void actualizarReferenciaPCB(int id, pcb_t* pcb);
 cpu_t* obtenerCpuLibre();
 
+//Planificacion
+void lanzarHilosPlanificacion();
+pthread_t hiloPLP;
+pthread_t hiloPCP;
+
+//Planificar Corto Plazo
+void planificarCortoPlazo();
+
 //Planificacion Largo Plazo
 void planificarLargoPlazo();
 void aletarConsolaProcesoAceptado(int pid, int socketConsola);

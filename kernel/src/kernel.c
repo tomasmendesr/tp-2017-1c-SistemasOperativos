@@ -17,6 +17,7 @@ int main(int argc, char** argv){
 	inicializaciones();
 
 	conectarConServidores();
+	lanzarHilosPlanificacion();
 	escucharConexiones();
 
 	destruirConfiguracionKernel(config);
@@ -108,5 +109,25 @@ void inicializaciones(){
 	sem_init(&mutex_cola_ready,0,1);
 	inicializarColas();
 	listaCPUs = list_create();
+}
+
+void lanzarHilosPlanificacion(){
+
+	int resultado;
+
+	resultado = pthread_create(&hiloPCP, NULL, (void*)planificarCortoPlazo, NULL);
+	if(resultado){
+		printf("El hilo de PCP no pudo crearse\n");
+		log_error(logger_kernel, "El hilo de PCP no pudo crearse");
+		exit(1);
+	}
+
+	resultado = pthread_create(&hiloPLP, NULL, (void*)planificarLargoPlazo, NULL);
+	if(resultado){
+		printf("El hilo de PLP no pudo crearse\n");
+		log_error(logger_kernel, "El hilo de PLP no pudo crearse");
+		exit(1);
+	}
+
 }
 
