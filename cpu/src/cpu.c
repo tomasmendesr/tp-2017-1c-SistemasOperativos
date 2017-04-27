@@ -11,6 +11,7 @@
 
 int main(int argc, char** argv) {
 
+	void * paquete;
 	crearLog();
 
 	crearConfig(argc,argv);
@@ -19,16 +20,16 @@ int main(int argc, char** argv) {
 	if(conexionConKernel() == -1 || conexionConMemoria() == -1){
 		return EXIT_FAILURE;
 	}
-	ejecutarPrograma();
+
+	//recibe el quantum
+
+	requestHandlerKernel(&paquete);
+	comenzarEjecucionDePrograma();
 	/*
 	 * Manejo de la interrupcion SIGUSR1
 	 */
 	signal(SIGUSR1, revisarSigusR1);
-	requestHandlerKernel(NULL);
 
-	freeConf(config);
-	finalizarConexion(socketConexionKernel);
-	finalizarConexion(socketConexionMemoria);
 	return EXIT_SUCCESS;
 }
 

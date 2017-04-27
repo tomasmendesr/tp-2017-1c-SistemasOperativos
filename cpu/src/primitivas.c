@@ -215,8 +215,8 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	//verificar envio
 	sendSocket(socketConexionKernel, &header, variable);
 
-	void* paquete = malloc(sizeof(int32_t));
-	int rta = requestHandlerKernel(&paquete);
+	void* paquete;
+	int rta = requestHandlerKernel(paquete);
 	if(rta == -1){
 		log_error(logger,"Error al asignar valor a var compartida");
 		return -1;
@@ -227,6 +227,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	log_debug(logger, "Valor de %s: %d", variable, valor);
 
 	return valor;
+	return 0;
 }
 
 void retornar(t_valor_variable retorno){

@@ -49,21 +49,6 @@ typedef struct {
 	u_int32_t  programCounter;
 }__attribute__((__packed__)) labelIndex;
 
-
-/*Me lo llevo para structUtiles*/
-
-//typedef struct{
-//	uint32_t pid;  //Identificador único del Programa en el sistema
-//	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
-//	uint32_t cantPaginasCodigo;
-////	t_intructions* indiceCodigo;
-//	//char* etiquetas;  Verificar si es necesario
-//	//t_list* indiceStack;
-//	int16_t exitCode; //Codigo de finalizacion
-//	uint32_t consolaFd;
-//
-//}__attribute__((__packed__))pcb_t;
-
 typedef struct {
 	char      nombre;
 	int32_t valor;
@@ -107,8 +92,11 @@ enum protocolo_cpu_a_kernel{
 	ASIG_VAR_COMPARTIDA = 34,
 	IMPRIMIR_VALOR = 35,
 	IMPRIMIR_TEXTO = 36,
+	/*finaliza la rafaga de cpu*/
 	FIN_EJECUCION = 37,
+	/*se ejecutaron todas las instrucciones del proceso*/
 	FIN_PROCESO = 38,
+	/*se desconecta por la señal SIGUSR1*/
 	DESCONEXION_CPU = 39,
 	RESERVAR_MEMORIA = 40,
 	LIBERAR_MEMORIA = 41,
@@ -117,11 +105,11 @@ enum protocolo_cpu_a_kernel{
 	BORRAR_ARCHIVO = 44,
 	LEER_ARCHIVO = 45,
 	ESCRIBIR_ARCHIVO = 46,
-	SIGURSR = 303,
 	/*Finalizaciones irregulares*/
 	FIN_ERROR_MEMORIA = 47,
 	STACKOVERFLOW = 48,
-	FIN_SEGMENTATION_FAULT = 49
+	FIN_SEGMENTATION_FAULT = 49,
+	PROC_BLOCKED = 50
 };
 
 //Mensajes que se le envian a la memoria.
