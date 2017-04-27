@@ -80,9 +80,8 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 
 		if(almacenarBytes(enviar, &valor) != 0){
 			log_error(logger, "La variable no pudo asignarse. Se finaliza el Proceso.");
-			//por ahora pongo un error generico "error_memoria"
-			enviar_paquete_vacio(FIN_ERROR_MEMORIA,socketConexionKernel);
 			free(enviar);
+			finalizarProcesoPorSegmentationFault();
 			//cambia de proceso antes de salir de aca
 			return;
 		}else{
@@ -93,7 +92,7 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 }
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
-	int tipo,offset = 0;
+	int offset = 0;
 	uint32_t sizeVariable = strlen(variable);
 	uint32_t sizeTotal = sizeof(sizeVariable) + sizeVariable + sizeof(valor) + 1;
 	header_t* header = malloc(sizeof(header_t));
@@ -114,6 +113,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 		return -1;
 	}
 
+	return valor;
 
 }
 
