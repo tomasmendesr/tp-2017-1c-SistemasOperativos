@@ -1,20 +1,26 @@
 #include "funcionesFs.h"
 
 void crearConfig(int argc, char* argv[]){
-	char* pathConfig = string_new();
-
 	if(argc>1){
-		string_append(&pathConfig,argv[1]);
+		if(verificarExistenciaDeArchivo(argv[1]))
+			conf=levantarConfiguracion(argv[1]);
+		else{
+			log_error(logger,"La ruta especificada es incorrecta");
+			exit(EXIT_FAILURE);
+		}
 	}
-		else string_append(&pathConfig,configuracionFS);
-	if(verificarExistenciaDeArchivo(pathConfig)){
-		conf = levantarConfiguracion(pathConfig);
-	}else{
-		log_info(logger,"No se pudo levantar archivo de configuracion\n");
+	else if(verificarExistenciaDeArchivo(configuracionFS)){
+		conf=levantarConfiguracion(configuracionFS);
+		log_info(logger,"Configuracion levantada correctamente");
+	}
+	else if(verificarExistenciaDeArchivo(string_substring_from(configuracionFS,3))){
+		conf=levantarConfiguracion(string_substring_from(configuracionFS,3));
+		log_info(logger,"Configuracion levantada correctamente");
+	}
+	else{
+		log_error(logger,"No pudo levantarse el archivo de configuracion");
 		exit(EXIT_FAILURE);
 	}
-	log_info(logger,"Se levanto la configuracion correctamente\n");
-	printf("Se levanto la configuracion correctamente\n");
 }
 
 t_config_FS* levantarConfiguracion(char* archivo){
