@@ -156,12 +156,17 @@ void enviarTamanioStack(int fd){
 }
 
 
-pcb_t* crearProceso(int consola_fd, char* source){
+proceso_en_espera_t* crearProceso(int consola_fd, char* source){
 
-	pcb_t* pcb = crearPCB(source, asignarPid() );
-	pcb->consolaFd = consola_fd;
+	proceso_en_espera_t* proc = malloc(sizeof(proceso_en_espera_t));
+	proc->socketConsola = consola_fd;
+	proc->codigo = malloc(strlen(source));
+	memcpy(proc->codigo, source, strlen(source));
 
-	return pcb;
+	//pcb_t* pcb = crearPCB(source, asignarPid() );
+	//pcb->consolaFd = consola_fd;
+
+	return proc;
 }
 
 int asignarPid(){
@@ -375,7 +380,7 @@ void planificarCortoPlazo(){
 	while(1){
 
 		sem_wait(&semCPUs);
-		sem_wait(&mutex_cola_ready);
+		sem_wait(&sem_cola_ready);
 		cpu_t* cpu = obtenerCpuLibre();
 		pcb_t* pcb = queue_pop(colaReady);
 
@@ -384,3 +389,61 @@ void planificarCortoPlazo(){
 
 	}
 }
+
+void planificarLargoPlazo(){
+
+	sem_wait(&sem_cola_new); //si la cola esta vacio bloqueo
+	sem_wait(&mutex_cola_new);
+	proceso_en_espera_t* proc = queue_pop(colaNew);
+	sem_post(&mutex_cola_new);
+
+	//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
+	//si acepta pongo en cola ready y creo pcb;
+
+	//creo el pedido para la memoria
+	t_pedido_iniciar pedido;
+	int pid = asignarPid();
+	pedido.pid = pid;
+	pedido.cant_pag = config->stack_Size;
+
+	header_t header;
+	header.type = INICIAR_PROGRAMA;
+	header.length = sizeof(t_pedido_iniciar);
+	sendSocket(socketConexionMemoria, &header, &pedido);
+
+	void* paquete;
+	int resultado;
+
+	//evaluo respuesta
+	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+
+	if(resultado == SIN_ESPACIO){
+		//aviso a consola que se rechazo
+		enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
+	}
+	if(resultado == OP_OK){
+		//aviso a consola que se acepto
+		header.type = PID_PROGRAMA;
+		header.length = sizeof(int);
+		memcpy(paquete, &pid, header.length);
+		sendSocket(proc->socketConsola, &header, paquete);
+
+		//mando a memoria el codigo
+		header.type = ENVIO_CODIGO;
+		header.length = strlen(proc->codigo);
+		memcpy(paquete, proc->codigo, header.length);
+		sendSocket(socketConexionMemoria, &header, paquete);
+
+		//creo pcb y paso el proceso a ready
+		pcb_t* pcb = crearPCB(proc->codigo, pid);
+		sem_wait(&mutex_cola_ready);
+		queue_push(colaReady, pcb);
+		sem_post(&mutex_cola_ready);
+
+		//destruyo el proceso en espera;
+		free(proc->codigo);
+		free(proc);
+	}
+
+}
+

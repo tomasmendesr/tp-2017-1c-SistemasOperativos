@@ -49,9 +49,19 @@ typedef struct {
 } t_config_kernel;
 
 typedef struct{
+	uint32_t pid;
+	uint32_t cant_pag;
+}t_pedido_iniciar;
+
+typedef struct{
 	int socket; //funciona como id del cpu
 	pcb_t* pcb;
 } cpu_t;
+
+typedef struct{
+	int socketConsola;
+	char* codigo;
+}proceso_en_espera_t;
 
 void inicializarColas();
 void inicializaciones();
@@ -79,7 +89,7 @@ void aceptarNuevaConexion(int socketEscucha, fd_set* set);
 //Mensajes con consola
 void trabajarConexionConsola();
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
-pcb_t* crearProceso(int consola_fd, char* package);
+proceso_en_espera_t* crearProceso(int consola_fd, char* package);
 int asignarPid();
 
 //Funciones de interfaz
@@ -104,6 +114,8 @@ int socketConexionFS;
 int socketConexionMemoria;
 int max_pid;
 t_log logger_kernel;
+sem_t sem_cola_ready;
+sem_t sem_cola_new;
 sem_t mutex_cola_ready;
 sem_t mutex_cola_new;
 sem_t semCPUs;

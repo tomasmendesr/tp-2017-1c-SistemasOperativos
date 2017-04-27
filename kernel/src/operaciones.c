@@ -21,7 +21,7 @@ void trabajarMensajeConsola(int socketConsola){
 
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 
-	pcb_t* nuevoProceso;
+	proceso_en_espera_t* nuevoProceso;
 
 	switch(mensaje){
 	case HANDSHAKE_PROGRAMA:
@@ -29,16 +29,14 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		log_info(&logger_kernel,"Conexion con la consola establecida");
 		break;
 	case ENVIO_CODIGO:
-	nuevoProceso = crearProceso(consola_fd, package);
-	if(nuevoProceso->pid == 0){
-		log_error(&logger_kernel,"Se produjo un error en intentar guardar los datos del proceso.");
-	}else{
-		//Admitido en el sistema con todas sus estructuras guardadas en memoria.
-		log_info(&logger_kernel,"Proceso creado correctamente %d",nuevoProceso->pid);
-		sem_wait(&mutex_cola_ready);
-		queue_push(colaReady,nuevoProceso);
-		sem_post(&mutex_cola_ready);
-	}
+		nuevoProceso = crearProceso(consola_fd, package);
+
+		sem_wait(&mutex_cola_new);
+		queue_push(colaNew, nuevoProceso);
+		sem_post(&mutex_cola_new);
+
+		log_info(&logger_kernel,"Proceso agregado a la cola New");
+
 	break;
 	case FINALIZAR_PROGRAMA:
 		//finalizarPrograma(consola_fd,package);
