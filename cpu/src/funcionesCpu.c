@@ -4,7 +4,7 @@ bool cerrarCPU = false;
 bool huboStackOver = false;
 
 int crearLog(void){
-	logger = log_create(getenv("/home/utnso/tp-2017-1c-Dirty-Cow/cpu/logCpu"),"cpu", 1, 0);
+	logger = log_create("logCpu","cpu", 1, LOG_LEVEL_TRACE);
 	if(logger)
 		return 1;
 	else

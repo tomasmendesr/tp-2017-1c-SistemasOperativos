@@ -126,7 +126,7 @@ t_config_kernel* config;
 int socketConexionFS;
 int socketConexionMemoria;
 int max_pid;
-t_log logger_kernel;
+t_log* logger;
 sem_t sem_cola_ready;
 sem_t sem_cola_new;
 sem_t mutex_cola_ready;
