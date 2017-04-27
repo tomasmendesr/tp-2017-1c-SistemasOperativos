@@ -26,7 +26,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 	switch(mensaje){
 	case HANDSHAKE_PROGRAMA:
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,consola_fd);
-		log_info(&logger_kernel,"Conexion con la consola establecida");
+		log_info(logger,"Conexion con la consola establecida");
 		break;
 	case ENVIO_CODIGO:
 		nuevoProceso = crearProceso(consola_fd, package);
@@ -35,13 +35,13 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		queue_push(colaNew, nuevoProceso);
 		sem_post(&mutex_cola_new);
 
-		log_info(&logger_kernel,"Proceso agregado a la cola New");
+		log_info(logger,"Proceso agregado a la cola New");
 
 	break;
 	case FINALIZAR_PROGRAMA:
 		//finalizarPrograma(consola_fd,package);
 		break;
-	default: log_warning(&logger_kernel,"Se recibio un codigo de operacion invalido.");
+	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	break;
 	}
 
@@ -55,7 +55,7 @@ void trabajarMensajeCPU(int socketCPU){
 
 	//Chequeo de errores
 	if (check <= 0) {
-		log_info(&logger_kernel,"Se cerro el socket %d", socketCPU);
+		log_info(logger,"Se cerro el socket %d", socketCPU);
 		close(socketCPU);
 		FD_CLR(socketCPU, &master);
 		FD_CLR(socketCPU, &setCPUs);
@@ -70,7 +70,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 
 	switch(mensaje){
 	case HANDSHAKE_CPU:
-		log_info(&logger_kernel,"Conexion con nueva CPU establecida");
+		log_info(logger,"Conexion con nueva CPU establecida");
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketCPU);
 		enviarTamanioStack(socketCPU);
 		break;
@@ -89,7 +89,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		asignarVarCompartida(socketCPU, package);
 		break;
 	default:
-		log_warning(&logger_kernel,"Se recibio un codigo de operacion invalido.");
+		log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	}
 }
 

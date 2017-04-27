@@ -4,7 +4,7 @@ bool cerrarCPU = false;
 bool huboStackOver = false;
 
 int crearLog(void){
-	logger = log_create(getenv("/home/utnso/tp-2017-1c-Dirty-Cow/cpu/logCpu"),"cpu", 1, 0);
+	logger = log_create("logCpu","cpu", 1, LOG_LEVEL_TRACE);
 	if(logger)
 		return 1;
 	else
@@ -197,6 +197,12 @@ int32_t requestHandlerMemoria(void** paquete){
 	case SEGMENTATION_FAULT:
 		enviar_paquete_vacio(FIN_SEGMENTATION_FAULT,socketConexionKernel);
 		log_error(logger, "Segmentation Fault");
+		// llamar a finalizarProcesoPorSegmentationFault(); en funcion
+		return -1;
+	case STACKOVERFLOW:
+		free(paquete);
+		log_error(logger, "Stack Overflow");
+		//finalizarProcesoPorStackOverflow();
 		return -1;
 	default:
 		log_warning(logger, "Mensaje Recibido Incorrecto");
@@ -208,24 +214,6 @@ void recibirPCB(void* paquete){
 	pcb = deserializar_pcb(paquete);
 	free(paquete);
 	setPCB(pcb);
-}
-
-int16_t waitSemaforo(void* paquete, char* sem){
-	header_t* header = malloc(sizeof(header_t));
-	header->type=SEM_WAIT;
-	header->length=strlen(sem);
-	sendSocket(socketConexionKernel,header,&sem);
-	free(header);
-	return requestHandlerKernel(paquete);
-}
-
-int16_t signalSemaforo(void* paquete, char* sem){
-	header_t* header = malloc(sizeof(header_t));
-	header->type=SEM_SIGNAL;
-	header->length=strlen(sem);
-	sendSocket(socketConexionKernel,header,&sem);
-	free(header);
-	return requestHandlerKernel(paquete);
 }
 
 int16_t solicitarBytes(pedido_bytes_t* pedido, void** paquete){
@@ -257,10 +245,10 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	free(buffer);
 
 	int rta = requestHandlerMemoria((void*)&buffer);
-	if(rta == 0){
-		log_debug(logger, "Valor guardado correctamente");
+	if(rta != 0){
+		log_error(logger, "La variable no pudo asignarse. Se finaliza el Proceso.");
+		return -1;
 	}
-	else return -1;
 	return rta;
 }
 
@@ -475,6 +463,16 @@ void finalizarProcesoPorStackOverflow(void) {
 		log_error(logger,"Error al devolver PCB por StackOverflow al kernel");
 		return;
 	}
+	free(paquete->buffer);
+	free(paquete);
+}
+
+void finalizarProcesoPorErrorEnMemoria(void) {
+	t_buffer_tamanio* paquete = serializar_pcb(pcb);
+	header_t header;
+	header.type= FIN_ERROR_MEMORIA;
+	header.length=sizeof(t_buffer_tamanio);
+	sendSocket(socketConexionKernel, &header, (void*) paquete);
 	free(paquete->buffer);
 	free(paquete);
 }

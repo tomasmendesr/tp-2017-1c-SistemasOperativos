@@ -12,7 +12,7 @@
 
 
 int main(int argc, char** argv){
-
+	logger = log_create("logKernel","kernel", 1, LOG_LEVEL_TRACE);
 	crearConfig(argc,argv);
 	inicializaciones();
 
@@ -26,11 +26,11 @@ int main(int argc, char** argv){
 
 void conectarConServidores(){
 	if(conexionConMemoria() == -1){
-		log_error(&logger_kernel,"No se pudo establecer la conexion con la memoria.");
+		log_error(logger,"No se pudo establecer la conexion con la memoria.");
 		exit(1);
 	}
 	if(conexionConFileSystem() == -1){
-		log_error(&logger_kernel,"No se pudo establecer la conexion con el File System.");
+		log_error(logger,"No se pudo establecer la conexion con el File System.");
 		exit(1);
 	}
 }
@@ -118,14 +118,14 @@ void lanzarHilosPlanificacion(){
 	resultado = pthread_create(&hiloPCP, NULL, (void*)planificarCortoPlazo, NULL);
 	if(resultado){
 		printf("El hilo de PCP no pudo crearse\n");
-		log_error(logger_kernel, "El hilo de PCP no pudo crearse");
+		log_error(logger, "El hilo de PCP no pudo crearse");
 		exit(1);
 	}
 
 	resultado = pthread_create(&hiloPLP, NULL, (void*)planificarLargoPlazo, NULL);
 	if(resultado){
 		printf("El hilo de PLP no pudo crearse\n");
-		log_error(logger_kernel, "El hilo de PLP no pudo crearse");
+		log_error(logger, "El hilo de PLP no pudo crearse");
 		exit(1);
 	}
 

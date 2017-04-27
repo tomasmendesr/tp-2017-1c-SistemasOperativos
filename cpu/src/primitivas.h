@@ -39,7 +39,7 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
 void liberar(t_puntero puntero);
 void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion);
 t_puntero reservar(t_valor_variable espacio);
-void signalAux(t_nombre_semaforo identificador_semaforo);
+void signalAnsisop(t_nombre_semaforo identificador_semaforo);
 void wait(t_nombre_semaforo identificador_semaforo);
 bool esArgumento(t_nombre_variable identificador_variable);
 
