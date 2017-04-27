@@ -60,8 +60,6 @@ int16_t recibirTamanioStack(void);
 void recibirPCB(void* paquete);
 int32_t leerCompartida(void* paquete, char* variable);
 int16_t asignarCompartida(int valor, char* variable);
-int16_t waitSemaforo(void* paquete, char* sem);
-int16_t signalSemaforo(void* paquete, char* sem);
 int16_t recibirTamanioPagina(void);
 void revisarFinalizarCPU();
 void revisarSigusR1(int signo);

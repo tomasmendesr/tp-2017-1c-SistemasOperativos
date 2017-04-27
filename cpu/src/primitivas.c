@@ -285,11 +285,32 @@ t_puntero reservar(t_valor_variable espacio){
 	printf("reservar!\n");
 	return 0;
 }
-void signalAux(t_nombre_semaforo identificador_semaforo){
-	printf("signal!\n");
+
+void signalAnsisop(t_nombre_semaforo identificador_semaforo){
+	log_debug(logger, "ANSISOP_signal. Semaforo '%s'", identificador_semaforo);
+	header_t* header=malloc(sizeof(header_t));
+	header->type=SEM_SIGNAL;
+	header->length = strlen(identificador_semaforo)+1;
+	sendSocket(socketConexionKernel, header, identificador_semaforo);
+	free(header);
 }
+
 void wait(t_nombre_semaforo identificador_semaforo){
-	printf("wait!\n");
+	log_debug(logger, "ANSISOP_wait. Semaforo '%s'", identificador_semaforo);
+
+	header_t* header = malloc(sizeof(header_t));
+	header->type=SEM_WAIT;
+	header->length=strlen(identificador_semaforo) + 1;
+	sendSocket(socketConexionKernel,header,identificador_semaforo);
+	free(header);
+
+	int rta = requestHandlerKernel(NULL);
+
+	if(rta != -1){
+		log_debug(logger,"Proceso no queda bloqueado por Semaforo '%s'", identificador_semaforo);
+	}else{
+		log_debug(logger,"Proceso bloqueado por Semaforo '%s'", identificador_semaforo);
+	}
 }
 
 void inicializarFunciones(void){
@@ -315,7 +336,7 @@ void inicializarFunciones(void){
 	funcionesKernel->AnSISOP_liberar = liberar;
 	funcionesKernel->AnSISOP_moverCursor = moverCursor;
 	funcionesKernel->AnSISOP_reservar = reservar;
-	funcionesKernel->AnSISOP_signal = signalAux;
+	funcionesKernel->AnSISOP_signal = signalAnsisop;
 	funcionesKernel->AnSISOP_wait = wait;
 }
 

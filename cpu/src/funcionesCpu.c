@@ -150,7 +150,7 @@ int32_t requestHandlerKernel(void** paquete){
 		case RESPUESTA_WAIT_DETENER_EJECUCION:
 			expulsarPCB();
 			free(paquete);
-			return EXIT_FAILURE;
+			return -1;
 		case VALOR_VAR_COMPARTIDA:
 			return EXIT_SUCCESS;
 		default:
@@ -217,24 +217,6 @@ void recibirPCB(void* paquete){
 	free(paquete);
 	setPCB(pcb);
 	comenzarEjecucionDePrograma();
-}
-
-int16_t waitSemaforo(void* paquete, char* sem){
-	header_t* header = malloc(sizeof(header_t));
-	header->type=SEM_WAIT;
-	header->length=strlen(sem);
-	sendSocket(socketConexionKernel,header,&sem);
-	free(header);
-	return requestHandlerKernel(NULL);
-}
-
-int16_t signalSemaforo(void* paquete, char* sem){
-	header_t* header = malloc(sizeof(header_t));
-	header->type=SEM_SIGNAL;
-	header->length=strlen(sem);
-	sendSocket(socketConexionKernel,header,&sem);
-	free(header);
-	return requestHandlerKernel(NULL);
 }
 
 int16_t solicitarBytes(pedido_bytes_t* pedido, void** paquete){
