@@ -70,6 +70,7 @@ void finalizarEjecucionPorFinQuantum();
 void finalizarEjecucionPorFinPrograma();
 void finalizarProcesoPorStackOverflow();
 void finalizarProcesoPorSegmentationFault();
+void finalizarProcesoPorErrorEnMemoria();
 int32_t requestHandlerKernel(void** paquete);
 int32_t requestHandlerMemoria();
 int32_t expulsarPCB(void);

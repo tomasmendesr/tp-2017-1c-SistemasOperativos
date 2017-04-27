@@ -516,6 +516,16 @@ void finalizarProcesoPorStackOverflow() {
 	free(paquete);
 }
 
+void finalizarProcesoPorErrorEnMemoria() {
+	t_buffer_tamanio* paquete = serializar_pcb(pcb);
+	header_t header;
+	header.type= FIN_ERROR_MEMORIA;
+	header.length=sizeof(t_buffer_tamanio);
+	sendSocket(socketConexionKernel, &header, (void*) paquete);
+	free(paquete->buffer);
+	free(paquete);
+}
+
 void finalizarProcesoPorSegmentationFault(){
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;

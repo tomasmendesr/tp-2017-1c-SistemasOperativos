@@ -81,7 +81,7 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 		if(almacenarBytes(enviar, &valor) != 0){
 			log_error(logger, "La variable no pudo asignarse. Se finaliza el Proceso.");
 			free(enviar);
-			finalizarProcesoPorSegmentationFault();
+			finalizarProcesoPorSegmentationFault(); // todo - o por error en memoria?
 			return;
 		}else{
 			log_info(logger, "Variable asignada");
@@ -133,7 +133,8 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 	if(solicitarBytes(solicitar, &paquete)!=0){
 		free(solicitar);
-		log_error(logger, "Error al solicitar bytes a memoria.");
+		log_error(logger, "La variable no pudo dereferenciarse. Se finaliza el Proceso.");
+		finalizarProcesoPorErrorEnMemoria();
 		return -1;
 	}
 	free(solicitar);
