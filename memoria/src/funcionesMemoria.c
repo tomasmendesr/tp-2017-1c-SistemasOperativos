@@ -152,23 +152,25 @@ void requestHandlerCpu(int fd){
 		//Recibo mensajes de cpu y hago el switch
 		bytes = recibir_info(fd, &paquete, &tipo_mensaje);
 		if(bytes <= 0){
-			log_error(logger, "Desconexion del Cpu. Terminando...");
+			log_error(logger, "Desconexion del Cpu. Se cerro el socket %d. Terminando...", fd);
 			close(fd);
-			exit(1);
-		}
+			return;
+			//exit(1);
+		}else{
 
-		switch(tipo_mensaje){
-			case SOLICITUD_BYTES:
-				solicitudBytes(fd, (t_pedido_memoria*)paquete);
-				break;
+			switch(tipo_mensaje){
+				case SOLICITUD_BYTES:
+					solicitudBytes(fd, (t_pedido_memoria*)paquete);
+					break;
 
-			case GRABAR_BYTES:
-				grabarBytes(fd, (t_pedido_memoria*)paquete);
-				break;
-			case OK:
-				break;
-			default:
-				log_warning(logger, "Mensaje Recibido Incorrecto");
+				case GRABAR_BYTES:
+					grabarBytes(fd, (t_pedido_memoria*)paquete);
+					break;
+				case OK:
+					break;
+				default:
+					log_warning(logger, "Mensaje Recibido Incorrecto");
+			}
 		}
 
 		free(paquete);

@@ -182,9 +182,14 @@ int32_t requestHandlerMemoria(void){
 		log_info(logger, "Tamaño de pagina: %d", tamanioPagina);
 		return EXIT_SUCCESS;
 	case SEGMENTATION_FAULT: /*se podria hacer la logica de terminacion aca*/
-		enviar_paquete_vacio(FIN_SEGMENTATION_FAULT,socketConexionKernel);
 		free(paquete);
 		log_error(logger, "Segmentation Fault");
+		// llamar a finalizarProcesoPorSegmentationFault(); en funcion
+		return -1;
+	case STACKOVERFLOW:
+		free(paquete);
+		log_error(logger, "Stack Overflow");
+		//finalizarProcesoPorStackOverflow();
 		return -1;
 	case ERROR:
 		enviar_paquete_vacio(FIN_ERROR_MEMORIA,socketConexionKernel);
@@ -201,11 +206,8 @@ int32_t requestHandlerMemoria(void){
 void ejecutarPrograma(void){
 	char* content;
 	inicializarFunciones();
-	printf("inicializo funciones\n");
 	levantarArchivo(ansisop,&content);
-	printf("levanto archivo\n");
 	pcb = crearPCB(content, 1); //en realidad se recibe desde el kernel
-	printf("creo pcb\n");
 	analizadorLinea("variables a, b, c, d \n", funciones, funcionesKernel);
 	analizadorLinea("c = 1", funciones, funcionesKernel);
 }
@@ -289,25 +291,22 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	free(buffer);
 
 	int rta = requestHandlerMemoria();
-	if(rta == 0){
-		log_debug(logger, "Valor guardado correctamente");
+	if(rta != 0){
+		log_error(logger, "La variable no pudo asignarse. Se finaliza el Proceso.");
+		return -1;
 	}
-	else return -1;
 	return rta;
 }
 
 
 void levantarArchivo(char* path, char** buffer){
-	printf("dentro de levantar archivo\n");
 		FILE* file;
 	 	int file_fd, file_size;
 	 	struct stat stats;
 	 	file = fopen(path, "r");
 	 	file_fd = fileno(file);
-	 	printf("post open\n");
 	 	fstat(file_fd, &stats);
 	 	file_size = stats.st_size;
-	 	printf("previo a malloc\n");
 	 	*buffer = malloc(file_size+1);
 	 	if(*buffer == NULL) {
 	 		log_error(logger, "archivo no levantado");

@@ -82,7 +82,6 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 			log_error(logger, "La variable no pudo asignarse. Se finaliza el Proceso.");
 			free(enviar);
 			finalizarProcesoPorSegmentationFault();
-			//cambia de proceso antes de salir de aca
 			return;
 		}else{
 			log_info(logger, "Variable asignada");
