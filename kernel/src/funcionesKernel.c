@@ -391,7 +391,7 @@ void planificarCortoPlazo(){
 		header_t header;
 		header.type = EXEC_PCB;
 		header.length = buffer->tamanioBuffer;
-		sendSocket(cpu->socket, &header, buffer);
+		sendSocket(cpu->socket, &header, buffer->buffer);
 
 		cpu->pcb = pcb;
 	}

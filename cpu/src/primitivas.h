@@ -16,8 +16,6 @@
 
 extern bool huboStackOver;
 pcb_t* pcb;
-AnSISOP_funciones* funciones;
-AnSISOP_kernel* funcionesKernel;
 
 void setPCB(pcb_t* pcb);
 void asignar(t_puntero direccion_variable, t_valor_variable valor);

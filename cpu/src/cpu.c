@@ -11,25 +11,17 @@
 
 int main(int argc, char** argv) {
 
-	void * paquete;
 	crearLog();
-
 	crearConfig(argc,argv);
-
 	// Conecta y obtiene tamanio de pagina (memoria) y de stack (kernel).
 	if(conexionConKernel() == -1 || conexionConMemoria() == -1){
 		return EXIT_FAILURE;
 	}
-
-	//recibe el quantum
-
-	requestHandlerKernel(&paquete);
 	comenzarEjecucionDePrograma();
 	/*
-	 * Manejo de la interrupcion SIGUSR1
+	 * Manejo de la interrupcion SigusR1
 	 */
 	signal(SIGUSR1, revisarSigusR1);
 
 	return EXIT_SUCCESS;
 }
-

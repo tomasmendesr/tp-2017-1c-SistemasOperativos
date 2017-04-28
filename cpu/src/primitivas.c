@@ -315,33 +315,6 @@ void wait(t_nombre_semaforo identificador_semaforo){
 	}
 }
 
-void inicializarFunciones(void){
-	funciones = malloc(sizeof(AnSISOP_funciones));
-	funcionesKernel = malloc(sizeof(AnSISOP_funciones));
-
-	funciones->AnSISOP_asignar = asignar;
-	funciones->AnSISOP_asignarValorCompartida = asignarValorCompartida;
-	funciones->AnSISOP_definirVariable = definirVariable;
-	funciones->AnSISOP_dereferenciar = dereferenciar;
-	funciones->AnSISOP_finalizar = finalizar;
-	funciones->AnSISOP_irAlLabel = irAlLabel;
-	funciones->AnSISOP_llamarConRetorno = llamarConRetorno;
-	funciones->AnSISOP_llamarSinRetorno = llamarSinRetorno;
-	funciones->AnSISOP_obtenerPosicionVariable = obtenerPosicionVariable;
-	funciones->AnSISOP_obtenerValorCompartida = obtenerValorCompartida;
-	funciones->AnSISOP_retornar = retornar;
-	funcionesKernel->AnSISOP_abrir = abrir;
-	funcionesKernel->AnSISOP_borrar = borrar;
-	funcionesKernel->AnSISOP_cerrar = cerrar;
-	funcionesKernel->AnSISOP_escribir = escribir;
-	funcionesKernel->AnSISOP_leer = leer;
-	funcionesKernel->AnSISOP_liberar = liberar;
-	funcionesKernel->AnSISOP_moverCursor = moverCursor;
-	funcionesKernel->AnSISOP_reservar = reservar;
-	funcionesKernel->AnSISOP_signal = signalAnsisop;
-	funcionesKernel->AnSISOP_wait = wait;
-}
-
 bool esArgumento(t_nombre_variable identificador_variable){
 	if(isdigit(identificador_variable)){
 		return true;
