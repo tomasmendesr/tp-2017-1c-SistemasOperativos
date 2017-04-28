@@ -51,7 +51,6 @@ int conexionConMemoria(void);
 void freeConf(t_config_cpu* config);
 int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete);
 int16_t solicitarBytes(pedido_bytes_t* pedido, void** paquete);
-t_puntero definirVariable(t_nombre_variable nombre);
 void inicializarFunciones(void);
 void ejecutarPrograma(void);
 int crearLog(void);

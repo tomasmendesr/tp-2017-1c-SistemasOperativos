@@ -36,7 +36,7 @@ void borrar(t_descriptor_archivo direccion);
 void cerrar(t_descriptor_archivo descriptor_archivo);
 void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio);
 void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valor_variable tamanio);
-void liberar(t_puntero puntero);
+void liberarMemoria(t_puntero puntero);
 void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion);
 t_puntero reservar(t_valor_variable espacio);
 void signalAnsisop(t_nombre_semaforo identificador_semaforo);
