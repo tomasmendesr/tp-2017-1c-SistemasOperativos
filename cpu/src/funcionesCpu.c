@@ -190,7 +190,7 @@ void conecFailKernel(int cant){
 void conecFailMemoria(int cant){
 	if(cant <= 0){
 		log_error(logger, "Memoria... Terminando...");
-		close(socketConexionKernel);
+		close(socketConexionMemoria);
 		finalizarCPU();
 		exit(1);
 	}
