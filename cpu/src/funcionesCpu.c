@@ -15,7 +15,7 @@ AnSISOP_funciones functions = { .AnSISOP_asignar = asignar,
 
 AnSISOP_kernel kernel_functions = { .AnSISOP_abrir =abrir, .AnSISOP_borrar = borrar,
 		.AnSISOP_cerrar = cerrar, .AnSISOP_escribir = escribir, .AnSISOP_leer = leer,
-		.AnSISOP_liberar=liberar, .AnSISOP_moverCursor = moverCursor,
+		.AnSISOP_liberar=liberarMemoria, .AnSISOP_moverCursor = moverCursor,
 		.AnSISOP_reservar=reservar, .AnSISOP_signal = signalAnsisop,
 		.AnSISOP_wait = wait
 };
@@ -497,7 +497,6 @@ void finalizarProcesoPorSegmentationFault(void){
 	header_t header;
 	header.type= FIN_SEGMENTATION_FAULT;
 	header.length=paquete->tamanioBuffer;
-	huboStackOver = false;
 	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
 		log_error(logger,"Error al devolver PCB por segmentation fault al kernel");
 		free(paquete->buffer);
@@ -508,20 +507,20 @@ void finalizarProcesoPorSegmentationFault(void){
 	free(paquete);
 }
 
-int32_t endBlockedProc(void){
+void endBlockedProc(void){
 	t_buffer_tamanio* buffer;
 	buffer=serializar_pcb(pcb);
-	if(enviar_info(socketConexionKernel,PROC_BLOCKED,buffer->tamanioBuffer,(void*)buffer->buffer) <= 0){
-		log_error(logger,"Error al notificar kernel el fin de ejecucion");
+	if(enviar_info(socketConexionKernel,PROC_BLOCKED,buffer->tamanioBuffer,(void*)buffer->buffer) <=0 ){
+		log_error(logger,"Error al notificar kernel");
 		free(buffer->buffer);
 		free(buffer);
-		return -1;
+		finalizarCPU();
 	}
 	free(buffer->buffer);
 	free(buffer);
-	return EXIT_SUCCESS;
 }
 
+//esto no esta bien
 void freePCB(pcb_t* pcb){
 	free(pcb->etiquetas);
 	list_destroy(pcb->indiceCodigo);

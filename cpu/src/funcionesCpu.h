@@ -71,7 +71,7 @@ void finalizarProcesoPorSegmentationFault(void);
 void finalizarProcesoPorErrorEnMemoria(void);
 int32_t requestHandlerKernel(void);
 int32_t requestHandlerMemoria(void);
-int32_t endBlockedProc(void);
+void endBlockedProc(void);
 void finalizarCPU(void);
 void freePCB(pcb_t* pcb);
 void conecFailKernel(int cant);
