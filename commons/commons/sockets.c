@@ -522,7 +522,7 @@ t_list* deserializarIndiceStack(char* buffer) {
 t_buffer_tamanio* serializarIndiceDeCodigo(t_list* indiceCodigo) {
 	uint32_t offset = 0, m = 0;
 	int tmp_size = sizeof(uint32_t);
-	char* bufferIndCod = malloc((list_size(indiceCodigo) * (2 * sizeof(uint32_t))) + sizeof(uint32_t));
+	char* bufferIndCod = malloc((list_size(indiceCodigo) * (2 * sizeof(uint32_t))) + sizeof(uint32_t)); // todo - borrar el ultimo sizeof(int)?
 	uint32_t itemsEnLista = list_size(indiceCodigo);
 
 	memcpy(bufferIndCod + offset, &itemsEnLista, tmp_size);
@@ -572,16 +572,16 @@ t_buffer_tamanio* serializar_pcb(pcb_t* pcb) {
 		tamanioPCB += pcb->tamanioEtiquetas;
 	}
 	tamanioPCB += (sizeof(uint32_t) * 8); //Cantidad de uint32_t que tiene PCB
-	tamanioPCB += sizeof(uint32_t); //Para indicar tamanio de PCBs
+	//tamanioPCB += sizeof(uint32_t); //Para indicar tamanio de PCBs
 
 	//Comienzo serializacion
 	char* paqueteSerializado = malloc(tamanioPCB);
 	uint32_t offset = 0;
 	uint32_t tmp_size = sizeof(uint32_t);
 
-	//Serializo tamanio de PCB
-	memcpy(paqueteSerializado + offset, &tamanioPCB, tmp_size);
-	offset += tmp_size;
+	//Serializo tamanio de PCB ------------- todo - lo comento porque este espacio va a ir en la estructura theader
+/*	memcpy(paqueteSerializado + offset, &tamanioPCB, tmp_size);
+	offset += tmp_size; */
 
 	//Serializo los 8 uint32_t del PCB
 	memcpy(paqueteSerializado + offset, &(pcb->pid), tmp_size);

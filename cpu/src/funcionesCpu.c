@@ -471,8 +471,8 @@ void finalizarEjecucionPorFinQuantum() {
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type= FIN_EJECUCION; // todo - diferenciar fin por quantum de fin por end?
-	header.length=sizeof(t_buffer_tamanio);
-	if( sendSocket(socketConexionKernel, &header, (void*) paquete) <= 0 ){
+	header.length=paquete->tamanioBuffer;
+	if( sendSocket(socketConexionKernel, &header,(void*) paquete->buffer) <= 0 ){
 		log_error(logger,"Error al notificar kernel el fin de ejecucion");
 		return;
 	}
@@ -484,8 +484,8 @@ void finalizarEjecucionPorFinPrograma() {
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type= FIN_EJECUCION;
-	header.length=sizeof(t_buffer_tamanio);
-	if( sendSocket(socketConexionKernel, &header, (void*) paquete) <= 0 ){
+	header.length=paquete->tamanioBuffer;
+	if( sendSocket(socketConexionKernel, &header, (void*) paquete.buffer) <= 0 ){
 		log_error(logger,"Error al notificar kernel el fin de programa");
 		return;
 	}
@@ -503,12 +503,12 @@ void finalizarEjecucionPorFinPrograma() {
 }
 
 void finalizarProcesoPorStackOverflow() {
+	huboStackOver = false;
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type= STACKOVERFLOW;
-	header.length=sizeof(t_buffer_tamanio);
-	huboStackOver = false;
-	if( sendSocket(socketConexionKernel, &header, (void*) paquete) <= 0 ){
+	header.length=paquete->tamanioBuffer;
+		if( sendSocket(socketConexionKernel, &header, (void*) paquete.buffer) <= 0 ){
 		log_error(logger,"Error al devolver PCB por StackOverflow al kernel");
 		return;
 	}
@@ -520,8 +520,8 @@ void finalizarProcesoPorErrorEnMemoria() {
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type= FIN_ERROR_MEMORIA;
-	header.length=sizeof(t_buffer_tamanio);
-	sendSocket(socketConexionKernel, &header, (void*) paquete);
+	header.length=paquete->tamanioBuffer;
+	sendSocket(socketConexionKernel, &header, (void*) paquete.buffer);
 	free(paquete->buffer);
 	free(paquete);
 }
@@ -530,9 +530,8 @@ void finalizarProcesoPorSegmentationFault(){
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type= FIN_SEGMENTATION_FAULT;
-	header.length=sizeof(t_buffer_tamanio);
-	huboStackOver = false;
-	if( sendSocket(socketConexionKernel, &header, (void*) paquete) <= 0 ){
+	header.length=paquete->tamanioBuffer;
+	if(sendSocket(socketConexionKernel, &header, (void*) paquete.buffer) <= 0){
 		log_error(logger,"Error al devolver PCB por segmentation fault al kernel");
 		return;
 	}
@@ -542,10 +541,13 @@ void finalizarProcesoPorSegmentationFault(){
 
 
 int32_t expulsarPCB(void){
-	t_buffer_tamanio* buffer;
 	void* paquete;
-	buffer = serializar_pcb(pcb);
-	enviar_info(socketConexionKernel, ENVIO_PCB, buffer->tamanioBuffer,buffer->buffer);
+	t_buffer_tamanio* buffer = serializar_pcb(pcb);;
+	header_t header;
+	header.type= FIN_SEGMENTATION_FAULT;
+	header.length=buffer->tamanioBuffer;
+	sendSocket(socketConexionKernel, &header, buffer->buffer);
+	//enviar_info(socketConexionKernel, ENVIO_PCB, buffer->tamanioBuffer,buffer);
 	//me tiene que llegar otra pcb para ejecutar
 	if(requestHandlerKernel(&paquete)!=0) {
 		free(paquete);
