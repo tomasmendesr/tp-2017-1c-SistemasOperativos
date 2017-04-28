@@ -243,7 +243,7 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	/*
 	 * Esta la version si mandamos solo un mensaje con
 	 * mensaje = header + pedido + valor de la variable a guardar
-	 * todo junto en un mismo mensaje
+	 * to do junto en un mismo mensaje
 	 *
 	 */
 	//if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
@@ -485,7 +485,7 @@ void finalizarEjecucionPorFinPrograma() {
 	header_t header;
 	header.type= FIN_EJECUCION;
 	header.length=paquete->tamanioBuffer;
-	if( sendSocket(socketConexionKernel, &header, (void*) paquete.buffer) <= 0 ){
+	if( sendSocket(socketConexionKernel, &header, (void*) paquete->buffer) <= 0 ){
 		log_error(logger,"Error al notificar kernel el fin de programa");
 		return;
 	}
@@ -508,7 +508,7 @@ void finalizarProcesoPorStackOverflow() {
 	header_t header;
 	header.type= STACKOVERFLOW;
 	header.length=paquete->tamanioBuffer;
-		if( sendSocket(socketConexionKernel, &header, (void*) paquete.buffer) <= 0 ){
+		if( sendSocket(socketConexionKernel, &header, (void*) paquete->buffer) <= 0 ){
 		log_error(logger,"Error al devolver PCB por StackOverflow al kernel");
 		return;
 	}
@@ -521,7 +521,7 @@ void finalizarProcesoPorErrorEnMemoria() {
 	header_t header;
 	header.type= FIN_ERROR_MEMORIA;
 	header.length=paquete->tamanioBuffer;
-	sendSocket(socketConexionKernel, &header, (void*) paquete.buffer);
+	sendSocket(socketConexionKernel, &header, (void*) paquete->buffer);
 	free(paquete->buffer);
 	free(paquete);
 }
@@ -531,7 +531,7 @@ void finalizarProcesoPorSegmentationFault(){
 	header_t header;
 	header.type= FIN_SEGMENTATION_FAULT;
 	header.length=paquete->tamanioBuffer;
-	if(sendSocket(socketConexionKernel, &header, (void*) paquete.buffer) <= 0){
+	if(sendSocket(socketConexionKernel, &header, (void*) paquete->buffer) <= 0){
 		log_error(logger,"Error al devolver PCB por segmentation fault al kernel");
 		return;
 	}

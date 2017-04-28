@@ -158,9 +158,26 @@ void irAlLabel(t_nombre_etiqueta etiqueta){
 }
 
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
-	printf("llamarConRetorno!\n");
-	return;
+	log_debug(logger, "ANSISOP_llamarConRetorno etiqueta: %s, retornar: %d", etiqueta, donde_retornar);
+	uint32_t tamLineaStack = sizeof(uint32_t) + sizeof(t_posicion) + 2 * sizeof(t_list);
+	t_entrada_stack * nuevaLineaStackEjecucionActual;
+	t_posicion* varRetorno = malloc(sizeof(t_posicion));
+	varRetorno->pagina = ( donde_retornar/ tamanioPagina) + pcb->cantPaginasCodigo;
+	varRetorno->offset = donde_retornar % tamanioPagina;
+	varRetorno->size = TAMANIO_VARIABLE;
+
+	nuevaLineaStackEjecucionActual = malloc(tamLineaStack);
+	nuevaLineaStackEjecucionActual->argumentos = list_create();
+	nuevaLineaStackEjecucionActual->variables = list_create();
+	nuevaLineaStackEjecucionActual->retVar = varRetorno;
+	nuevaLineaStackEjecucionActual->direcretorno = pcb->programCounter;
+
+	// La agrego a la lista, se encuentra en la ultima posicion.
+	list_add(pcb->indiceStack, nuevaLineaStackEjecucionActual);
+
+	irAlLabel(etiqueta);
 }
+
 void llamarSinRetorno(t_nombre_etiqueta etiqueta){
 	printf("llamarSinRetorno!\n");
 	return;
