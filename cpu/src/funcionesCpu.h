@@ -34,13 +34,14 @@ int socketConexionKernel;
 int socketConexionMemoria;
 t_config_cpu* config;
 t_log* logger;
+char*bytes;
 /*desde kernel*/
 uint32_t tamanioStack;
 int quantum;
 /*desde memoria*/
 uint32_t tamanioPagina;
 
-pcb_t* crearPCB(char* buf, int pid);
+pcb_t* new_PCB(char* buf, int pid);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
 void levantarArchivo(char*path,char**content);
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
@@ -49,7 +50,7 @@ int conexionConMemoria(void);
 void recibirRafaga(void);
 void freeConf(t_config_cpu* config);
 int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete);
-int16_t solicitarBytes(pedido_bytes_t* pedido, void* paquete);
+int16_t solicitarBytes(pedido_bytes_t* pedido);
 t_puntero definirVariable(t_nombre_variable nombre);
 int crearLog(void);
 void crearConfig(int argc, char* argv[]);
@@ -68,8 +69,8 @@ void finalizarEjecucionPorFinPrograma(void);
 void finalizarProcesoPorStackOverflow(void);
 void finalizarProcesoPorSegmentationFault(void);
 void finalizarProcesoPorErrorEnMemoria(void);
-int32_t requestHandlerKernel(void* paquete);
-int32_t requestHandlerMemoria(void* paquete);
+int32_t requestHandlerKernel(void);
+int32_t requestHandlerMemoria(void);
 int32_t endBlockedProc(void);
 void finalizarCPU(void);
 void freePCB(pcb_t* pcb);

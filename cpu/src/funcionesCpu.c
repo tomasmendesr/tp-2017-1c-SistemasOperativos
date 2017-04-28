@@ -52,10 +52,8 @@ void crearConfig(int argc, char* argv[]){
 }
 
 t_config_cpu* levantarConfiguracionCPU(char* archivo) {
-
         t_config_cpu* conf = malloc(sizeof(t_config_cpu));
         t_config* configCPU;
-
         configCPU = config_create(archivo);
         conf->puerto_Kernel = malloc(strlen(config_get_string_value(configCPU, "PUERTO_KERNEL"))+1);
         strcpy(conf->puerto_Kernel, config_get_string_value(configCPU, "PUERTO_KERNEL"));
@@ -66,7 +64,6 @@ t_config_cpu* levantarConfiguracionCPU(char* archivo) {
         conf->ip_Kernel = malloc(strlen(config_get_string_value(configCPU, "IP_KERNEL"))+1);
         strcpy(conf->ip_Kernel, config_get_string_value(configCPU, "IP_KERNEL"));
         config_destroy(configCPU);
-
         return conf;
 }
 
@@ -79,23 +76,18 @@ void freeConf(t_config_cpu* config){
 }
 
 int conexionConKernel(void){
-
+	int rta;
 	int operacion;
-	void* paquete;
 	void* paquete_vacio;
-
 	socketConexionKernel=createClient(config->ip_Kernel,config->puerto_Kernel);
-
 	if(socketConexionKernel == -1){
 		log_error(logger,"No pudo conectarse a Kernel");
 		return -1;
 	}else{
 		log_info(logger,"Cliente a Kernel creado");
 	}
-
 	enviar_paquete_vacio(HANDSHAKE_CPU, socketConexionKernel);
 	recibir_paquete(socketConexionKernel, &paquete_vacio, &operacion);
-
 	if(operacion==HANDSHAKE_KERNEL){
 		log_info(logger,"Conexion establecida con Kernel! :D");
 	}else{
@@ -103,21 +95,18 @@ int conexionConKernel(void){
 		return -1;
 	}
 	log_debug(logger, "Esperando tamaño del stack...");
-	paquete=NULL;
-	int rta = requestHandlerKernel(paquete);
+	rta = requestHandlerKernel();
 	if(rta == -1){
-		log_error(logger, "Error al recibir tamanio de stack");
+		log_error(logger,"Error al recibir tamanio de stack");
 		return -1;
 	}
-
 	return EXIT_SUCCESS;
 }
 
 int conexionConMemoria(void){
+	int rta;
 	int operacion;
-	void* paquete;
 	void* paquete_vacio;
-
 	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
 	if(socketConexionMemoria == -1){
 		log_error(logger,"No pudo conectarse a Memoria");
@@ -135,22 +124,20 @@ int conexionConMemoria(void){
 		return -1;
 	}
 	log_debug(logger, "Esperando tamaño de pagina...");
-	paquete=NULL;
-	int rta = requestHandlerMemoria(paquete);
+	rta = requestHandlerMemoria();
 	if(rta != 0){
 		log_error(logger, "Error al recibir tamanio de pagina");
 		return -1;
 	}
-
 	return EXIT_SUCCESS;
 }
 
-int32_t requestHandlerKernel(void* paquete){
-
-	int tipo_mensaje;
-	conecFailKernel(recibir_info(socketConexionKernel,paquete,&tipo_mensaje));
-
-	switch(tipo_mensaje){
+int32_t requestHandlerKernel(void){
+	header_t header;
+	char* paquete;
+	paquete=NULL;
+	conecFailKernel(recvMsj(socketConexionKernel,paquete,&header));
+	switch(header.type){
 		case EXEC_PCB:
 			recibirPCB(paquete);
 			break;
@@ -165,14 +152,20 @@ int32_t requestHandlerKernel(void* paquete){
 			break;
 		case RESPUESTA_SIGNAL_OK:
 		case RESPUESTA_WAIT_SEGUIR_EJECUCION:
+			log_debug(logger,"proceso no queda bloqueado");
 			break;
 		case RESPUESTA_WAIT_DETENER_EJECUCION:
+			log_debug(logger,"proceso queda bloqueado");
 			endBlockedProc();
 			break;
 		case VALOR_VAR_COMPARTIDA:
+			bytes=malloc(header.length);
+			memcpy(bytes,paquete,header.length);
+			break;
+		case RESPUESTA_ASIG_VAR_COMPARTIDA_OK:
 			break;
 		default:
-			log_warning(logger, "Mensaje Recibido Incorrecto");
+			log_error(logger, "Mensaje Recibido Incorrecto");
 			return -1;
 		}
 	return EXIT_SUCCESS;
@@ -183,51 +176,55 @@ void conecFailKernel(int cant){
 		log_error(logger, "Kernel caido... Terminando...");
 		close(socketConexionKernel);
 		finalizarCPU();
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 }
 
 void conecFailMemoria(int cant){
 	if(cant <= 0){
-		log_error(logger, "Memoria... Terminando...");
+		log_error(logger, "Memoria se vino abajo... Terminando...");
 		close(socketConexionMemoria);
 		finalizarCPU();
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 }
 
-int32_t requestHandlerMemoria(void* paquete){
-
-	int tipo_mensaje;
-	conecFailMemoria(recibir_info(socketConexionMemoria,paquete,&tipo_mensaje));
-
-	switch(tipo_mensaje){
-	// respuesta grabarBytes - asignarCompartida
+int32_t requestHandlerMemoria(void){
+	header_t header;
+	void* paquete;
+	paquete=NULL;
+	conecFailMemoria(recvMsj(socketConexionMemoria,paquete,&header));
+	switch(header.type){
+		// respuesta grabarBytes - asignarCompartida
 	case OP_OK:
-	// aca no quiero hacer un free del paquete porque lo voy a usar. hacer free en la funcion que pide el paquete
-	//respuesta de solicitarBytes
+		// aca no quiero hacer un free del paquete porque lo voy a usar. hacer free en la funcion que pide el paquete
+		break;
 	case RESPUESTA_BYTES:
-		return EXIT_SUCCESS;
+		bytes=malloc(header.length);
+		memcpy(bytes,paquete,header.length);
+		free(paquete);
+		break;
 	case ENVIAR_TAMANIO_PAGINA:
 		tamanioPagina=*(uint32_t*)paquete;
-		log_info(logger, "Tamaño de pagina: %d", tamanioPagina);
+		log_info(logger,"Tamaño de pagina: %d",tamanioPagina);
 		free(paquete);
-		return EXIT_SUCCESS;
+		break;
 	//respuestas de operaciones fallidas
 	case SEGMENTATION_FAULT:
 		enviar_paquete_vacio(FIN_SEGMENTATION_FAULT,socketConexionKernel);
-		log_error(logger, "Segmentation Fault");
+		log_error(logger,"Segmentation Fault");
 		finalizarProcesoPorSegmentationFault();
-		return -1;
+		break;
 	case STACKOVERFLOW:
 		enviar_paquete_vacio(STACKOVERFLOW,socketConexionKernel);
 		log_error(logger, "Stack Overflow");
 		finalizarProcesoPorStackOverflow();
-		return -1;
+		break;
 	default:
-		log_warning(logger, "Mensaje Recibido Incorrecto");
+		log_error(logger, "Mensaje Recibido Incorrecto");
 		return -1;
 	}
+	return EXIT_SUCCESS;
 }
 
 void recibirPCB(void* paquete){
@@ -236,18 +233,21 @@ void recibirPCB(void* paquete){
 	setPCB(pcb);
 }
 
-int16_t solicitarBytes(pedido_bytes_t* pedido, void* paquete){
+int16_t solicitarBytes(pedido_bytes_t* pedido){
 	header_t header;
 	header.type=SOLICITUD_BYTES;
 	header.length=sizeof(pedido_bytes_t);
-
-	sendSocket(socketConexionMemoria,&header,(void*)pedido);
-	return requestHandlerMemoria(paquete);
+	if(sendSocket(socketConexionMemoria,&header,(void*)pedido) <= 0 ){
+		log_error(logger,"Error al enviar. Desconexion...");
+		finalizarCPU();
+	}
+	return requestHandlerMemoria();
 }
 
 int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	char*buffer;
-	int size;
+	int16_t rta;
+	uint32_t size;
 	header_t header;
 	size = sizeof(pedido_bytes_t);
 	header.type=GRABAR_BYTES;
@@ -255,24 +255,20 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	buffer=malloc(header.length);
 	memcpy(buffer,pedido,size);
 	memcpy(buffer+size,paquete,pedido->size);
-
 	if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
 		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
 		free(buffer);
-		return EXIT_FAILURE;
+		finalizarCPU();
 	}
-
 	free(buffer);
-
-	int rta = requestHandlerMemoria((void*)&buffer);
-	if(rta != 0){
-		log_error(logger, "La variable no pudo asignarse. Se finaliza el Proceso.");
-		return -1;
+	rta=requestHandlerMemoria();
+	if(rta!=0){
+		log_error(logger,"la variable no pudo asignarse");
 	}
 	return rta;
 }
 
-pcb_t* crearPCB(char* programa, int pid) {
+pcb_t* new_PCB(char* programa, int pid) {
 
 	log_debug(logger, "Se crea un PCB para el Programa Solicitado.");
 	t_metadata_program* datos;
@@ -280,7 +276,6 @@ pcb_t* crearPCB(char* programa, int pid) {
 
 	//Obtengo la metadata utilizando el preprocesador del parser
 	datos = metadata_desde_literal(programa);
-
 	pcb_t* pcb = malloc(sizeof(pcb_t));
 
 	pcb->pid = pid;
@@ -338,7 +333,7 @@ void revisarFinalizarCPU(void){
 	log_destroy(logger);
 	freeConf(config);
 	}
-
+	exit(EXIT_SUCCESS);
 }
 
 void comenzarEjecucionDePrograma(void){
@@ -348,11 +343,10 @@ void comenzarEjecucionDePrograma(void){
 //	int res;
 
 	for(;;){
-	requestHandlerKernel(paquete);
-	if(paquete) free(paquete);
+	requestHandlerKernel();
 
 	int i = 1;
-	while (i <= quantum) {
+	while(i <= quantum){
 		if(solicitarProximaInstruccion(paquete) != 0)
 			return;
 		//creo que no hace falta
@@ -388,7 +382,6 @@ void comenzarEjecucionDePrograma(void){
 	}
 	log_debug(logger, "Finalizo ejecucion por fin de Quantum");
 	finalizarEjecucionPorFinQuantum();
-
 	freePCB(pcb);
 	revisarFinalizarCPU();
 	}
@@ -398,7 +391,6 @@ int16_t solicitarProximaInstruccion(void* paquete) {
 	t_indice_codigo *indice = list_get(pcb->indiceCodigo, pcb->programCounter);
 	uint32_t requestStart = indice->offset;
 	uint32_t requestSize = indice->size;
-
 	uint32_t i = 0;
 	while (requestStart >= (tamanioPagina + (tamanioPagina * i++)));
 	uint32_t paginaAPedir = --i;
@@ -407,15 +399,13 @@ int16_t solicitarProximaInstruccion(void* paquete) {
 	solicitar->offset = requestStart - (tamanioPagina * paginaAPedir);
 	solicitar->size = requestSize;
 	solicitar->pid = pcb->pid;
-
 	log_info(logger, "Pido a Memoria -> Pagina: %d - Start: %d - Offset: %d",
-			paginaAPedir, requestStart - (tamanioPagina * paginaAPedir),
-			solicitar->offset);
-
-	if(solicitarBytes(solicitar, paquete) != 0 ){
-			free(solicitar);
-			log_error(logger, "Error al solicitar bytes a memoria.");
-			return -1;
+		paginaAPedir, requestStart - (tamanioPagina * paginaAPedir),
+		solicitar->offset);
+	if(solicitarBytes(solicitar) != 0 ){
+		free(solicitar);
+		log_error(logger, "Error al solicitar bytes a memoria.");
+		return -1;
 	}
 	free(solicitar);
 	return EXIT_SUCCESS;
@@ -440,6 +430,7 @@ void limpiarInstruccion(char * instruccion) {
 	*instr = '\0';
 }
 
+//son todas iguales
 void finalizarEjecucionPorFinQuantum(void) {
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
@@ -458,9 +449,9 @@ void finalizarEjecucionPorFinQuantum(void) {
 void finalizarEjecucionPorFinPrograma(void) {
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
-	header.type= FIN_PROCESO;
+	header.type=FIN_PROCESO;
 	header.length=paquete->tamanioBuffer;
-	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
+	if(sendSocket(socketConexionKernel,&header,(void*)paquete->buffer) <= 0){
 		log_error(logger,"Error al notificar kernel el fin de programa");
 		free(paquete->buffer);
 		free(paquete);
@@ -517,10 +508,9 @@ void finalizarProcesoPorSegmentationFault(void){
 	free(paquete);
 }
 
-
 int32_t endBlockedProc(void){
 	t_buffer_tamanio* buffer;
-	buffer = serializar_pcb(pcb);
+	buffer=serializar_pcb(pcb);
 	if(enviar_info(socketConexionKernel,PROC_BLOCKED,buffer->tamanioBuffer,(void*)buffer->buffer) <= 0){
 		log_error(logger,"Error al notificar kernel el fin de ejecucion");
 		free(buffer->buffer);
@@ -543,11 +533,11 @@ void recibirRafaga(void){
 	void*paquete;
 	int buffer;
 	int type_msj;
-	buffer = sizeof(uint32_t);
-	recvAll(socketConexionKernel, (char*)&type_msj, buffer, MSG_WAITALL);
-	if(type_msj == EXEC_QUANTUM){
-		recvAll(socketConexionKernel, (char*)&paquete, buffer, MSG_WAITALL);
-		recvAll(socketConexionKernel, (char*)&quantum, buffer, MSG_WAITALL);
+	buffer=sizeof(uint32_t);
+	recvAll(socketConexionKernel,(char*)&type_msj,buffer,MSG_WAITALL);
+	if(type_msj==EXEC_QUANTUM){
+		recvAll(socketConexionKernel,(char*)&paquete,buffer,MSG_WAITALL);
+		recvAll(socketConexionKernel,(char*)&quantum,buffer,MSG_WAITALL);
 	}
 	free(paquete);
 }
@@ -558,4 +548,5 @@ void finalizarCPU(void){
 	log_info(logger, "CPU desconectada!");
 	log_destroy(logger);
 	freeConf(config);
+	exit(EXIT_FAILURE);
 }

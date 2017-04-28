@@ -928,6 +928,21 @@ int recibir_info(int socket, void* paquete, int *tipo_mensaje){
 	return bytes_recibidos;
 }
 
+int recvMsj(int socket, void* paquete, header_t *header){
+
+	int bytes;
+	bytes=recvAll(socket, (char*)&header, sizeof(header_t), MSG_WAITALL);
+	if(bytes == 0) return 0;
+	if(bytes == -1) return -1;
+	if(header->length){
+		paquete = malloc(header->length);
+		bytes = recvAll(socket, (char*)paquete, header->length, MSG_WAITALL);
+		if(bytes == 0) return 0;
+		if(bytes == -1) return -1;
+	}
+	return bytes;
+}
+
 t_buffer_tamanio * serializarInstruccion(char* instruccion, int tamanioInstruccion) {
 	int offset = 0, tmp_size = sizeof(uint32_t);
 	char * buffer = malloc(tamanioInstruccion + 4);

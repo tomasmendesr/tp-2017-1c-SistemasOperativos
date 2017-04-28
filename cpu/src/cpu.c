@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 	crearConfig(argc,argv);
 	// Conecta y obtiene tamanio de pagina (memoria) y de stack (kernel).
 	if(conexionConKernel() == -1 || conexionConMemoria() == -1){
-		return EXIT_FAILURE;
+		finalizarCPU();
 	}
 	comenzarEjecucionDePrograma();
 	/*
