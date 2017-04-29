@@ -211,12 +211,12 @@ int32_t requestHandlerMemoria(void){
 		break;
 	//respuestas de operaciones fallidas
 	case SEGMENTATION_FAULT:
-		enviar_paquete_vacio(FIN_SEGMENTATION_FAULT,socketConexionKernel);
+		//enviar_paquete_vacio(FIN_SEGMENTATION_FAULT,socketConexionKernel);
 		log_error(logger,"Segmentation Fault");
 		finalizarProcesoPorSegmentationFault();
 		break;
 	case STACKOVERFLOW:
-		enviar_paquete_vacio(STACKOVERFLOW,socketConexionKernel);
+		//enviar_paquete_vacio(STACKOVERFLOW,socketConexionKernel);
 		log_error(logger, "Stack Overflow");
 		finalizarProcesoPorStackOverflow();
 		break;
@@ -327,11 +327,11 @@ void revisarSigusR1(int signo){
 
 void revisarFinalizarCPU(void){
 	if(cerrarCPU){
-	finalizarConexion(socketConexionKernel);
-	finalizarConexion(socketConexionMemoria);
-	log_info(logger, "CPU cerrada. Adios!");
-	log_destroy(logger);
-	freeConf(config);
+		finalizarConexion(socketConexionKernel);
+		finalizarConexion(socketConexionMemoria);
+		log_info(logger, "CPU cerrada. Adios!");
+		log_destroy(logger);
+		freeConf(config);
 	}
 	exit(EXIT_SUCCESS);
 }
