@@ -213,12 +213,12 @@ int32_t requestHandlerMemoria(void){
 	case SEGMENTATION_FAULT:
 		//enviar_paquete_vacio(FIN_SEGMENTATION_FAULT,socketConexionKernel);
 		log_error(logger,"Segmentation Fault");
-		finalizarProcesoPorSegmentationFault();
+		finalizarPor(SEGMENTATION_FAULT);
 		break;
 	case STACKOVERFLOW:
 		//enviar_paquete_vacio(STACKOVERFLOW,socketConexionKernel);
 		log_error(logger, "Stack Overflow");
-		finalizarProcesoPorStackOverflow();
+		finalizarPor(STACKOVERFLOW);
 		break;
 	default:
 		log_error(logger, "Mensaje Recibido Incorrecto");
@@ -353,7 +353,7 @@ void comenzarEjecucionDePrograma(void){
 		limpiarInstruccion(paquete);
 
 		if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(paquete, "end") == 0)) {
-			finalizarEjecucionPorFinPrograma();
+			finalizarPor(FIN_PROCESO);
 			revisarFinalizarCPU();
 			return;
 		} else {
@@ -361,13 +361,14 @@ void comenzarEjecucionDePrograma(void){
 				log_debug(logger, "Instruccion recibida: %s", paquete);
 //				if (strcmp(paquete, "end") == 0) {
 //					log_debug(logger, "Finalizo la ejecucion del programa");
-//					finalizarEjecucionPorFinPrograma();
+//					finalizarEjecucion(FIN_PROCESO);
 //					revisarFinalizarCPU();
 //					return;
 //				}
 				analizadorLinea(paquete, &functions, &kernel_functions);
-				if (huboStackOver)
-				finalizarProcesoPorStackOverflow();
+				if (huboStackOver){
+					finalizarPor(STACKOVERFLOW);
+				}
 				revisarFinalizarCPU();
 				i++;
 				pcb->programCounter++;
@@ -381,7 +382,7 @@ void comenzarEjecucionDePrograma(void){
 		}
 	}
 	log_debug(logger, "Finalizo ejecucion por fin de Quantum");
-	finalizarEjecucionPorFinQuantum();
+	finalizarPor(FIN_EJECUCION);
 	freePCB(pcb);
 	revisarFinalizarCPU();
 	}
@@ -430,78 +431,13 @@ void limpiarInstruccion(char * instruccion) {
 	*instr = '\0';
 }
 
-//son todas iguales
-void finalizarEjecucionPorFinQuantum(void) {
+void finalizarPor(int type) {
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type= FIN_EJECUCION;
 	header.length=paquete->tamanioBuffer;
 	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
 		log_error(logger,"Error al notificar kernel el fin de ejecucion");
-		free(paquete->buffer);
-		free(paquete);
-		return;
-	}
-	free(paquete->buffer);
-	free(paquete);
-}
-
-void finalizarEjecucionPorFinPrograma(void) {
-	t_buffer_tamanio* paquete = serializar_pcb(pcb);
-	header_t header;
-	header.type=FIN_PROCESO;
-	header.length=paquete->tamanioBuffer;
-	if(sendSocket(socketConexionKernel,&header,(void*)paquete->buffer) <= 0){
-		log_error(logger,"Error al notificar kernel el fin de programa");
-		free(paquete->buffer);
-		free(paquete);
-		return;
-	}
-	free(paquete->buffer);
-	free(paquete);
-}
-
-void finalizarProcesoPorStackOverflow(void) {
-	t_buffer_tamanio* paquete = serializar_pcb(pcb);
-	header_t header;
-	header.type=STACKOVERFLOW;
-	header.length=paquete->tamanioBuffer;
-	huboStackOver = false;
-	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
-		log_error(logger,"Error al devolver PCB por StackOverflow al kernel");
-		free(paquete->buffer);
-		free(paquete);
-		return;
-	}
-	free(paquete->buffer);
-	free(paquete);
-}
-
-void finalizarProcesoPorErrorEnMemoria(void) {
-	t_buffer_tamanio* paquete = serializar_pcb(pcb);
-	header_t header;
-	header.type= FIN_ERROR_MEMORIA;
-	header.length=paquete->tamanioBuffer;
-	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
-		log_error(logger,"Error al devolver PCB por StackOverflow al kernel");
-		free(paquete->buffer);
-		free(paquete);
-		return;
-	}
-	free(paquete->buffer);
-	free(paquete);
-}
-
-void finalizarProcesoPorSegmentationFault(void){
-	t_buffer_tamanio* paquete = serializar_pcb(pcb);
-	header_t header;
-	header.type= FIN_SEGMENTATION_FAULT;
-	header.length=paquete->tamanioBuffer;
-	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
-		log_error(logger,"Error al devolver PCB por segmentation fault al kernel");
-		free(paquete->buffer);
-		free(paquete);
-		return;
 	}
 	free(paquete->buffer);
 	free(paquete);

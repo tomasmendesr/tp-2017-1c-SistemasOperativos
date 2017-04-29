@@ -222,7 +222,7 @@ void finalizar(void){ // TODO
 	free(contexto);
 	free(retVar);
 	if(!list_size(pcb->indiceStack))
-		finalizarEjecucionPorFinPrograma();
+		finalizarPor(FIN_PROCESO);
 	else{
 		pcb->programCounter=contexto->direcretorno;
 	}
