@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define command_size 20
+#define command_size 50
 #define buffer_size command_size * 2
 
 typedef struct{

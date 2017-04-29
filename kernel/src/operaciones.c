@@ -1,12 +1,9 @@
 #include "operaciones.h"
 
 void trabajarMensajeConsola(int socketConsola){
-
 	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
 	int check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
-
-	//Chequeo de errores
 	if (check <= 0) {
 		printf("Se cerro el socket %d\n", socketConsola);
 		close(socketConsola);
@@ -20,15 +17,16 @@ void trabajarMensajeConsola(int socketConsola){
 }
 
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
-
 	proceso_en_espera_t* nuevoProceso;
 
 	switch(mensaje){
 	case HANDSHAKE_PROGRAMA:
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,consola_fd);
 		log_info(logger,"Conexion con la consola establecida");
+		printf("\n");
 		break;
 	case ENVIO_CODIGO:
+		log_info(logger, "recibo codigo");
 		nuevoProceso = crearProceso(consola_fd, package);
 
 		sem_wait(&mutex_cola_new);

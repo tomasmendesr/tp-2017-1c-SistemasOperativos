@@ -73,11 +73,10 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	header.type = ENVIO_CODIGO;
  	header.length = file_size;
-
  	memcpy(buffer, &(header.type),sizeof(header.type)); offset+=sizeof(header.type);
  	memcpy(buffer + offset, &(header.length),sizeof(header.length)); offset+=sizeof(header.length);
 
- 	if( fread(buffer + offset,file_size,1,file) < file_size){
+ 	if( fread(buffer + offset,file_size,1,file) < 1){
  		log_error(logger, "No pude leer el archivo");
  		free(buffer);
  		fclose(file);
@@ -161,6 +160,7 @@ void iniciarPrograma(char* comando, char* param) {
 	}
 	log_info(logger,"Archivo enviado correctamente");
 
+	// quiero mi respuesta
 	if(recibir_info(socket_cliente, &paquete_vacio, &operacion)==0){
 		log_error(logger, "El kernel se desconecto");
 		return;
