@@ -22,7 +22,7 @@
 #include <pthread.h>
 #include "peticiones.h"
 
-#define configuracionMemoria "confMemoria.init"
+#define configuracionMemoria "../confMemoria.init"
 #define MAX_LEN_PUERTO 6
 #define IP "127.0.0.1"
 #define BACKLOG 10
@@ -114,7 +114,7 @@ int finalizarPrograma(t_pedido_finalizar *pid);
 
 //Pedidos cpu
 int solicitudBytes(int fd, t_pedido_memoria* pedido);
-int grabarBytes(int fd, t_pedido_memoria* pedido);
+int grabarBytes(int fd, char* paquete);
 
 //Respuestas status
 void enviarRespuesta(int fd, int respuesta);
