@@ -677,7 +677,7 @@ void dumpMemory(int pid){
 					i,tabla_pag[i].pid,tabla_pag[i].pid);
 
 			for(j=0;j<frame_size;j++){
-				fputc(memoria + i * frame_size + j, dumpFile);
+				fputc(memoria[i * frame_size + j], dumpFile);
 			}
 			fputc('\n',dumpFile);
 		}
