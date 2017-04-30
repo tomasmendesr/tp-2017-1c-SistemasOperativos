@@ -164,7 +164,7 @@ void requestHandlerCpu(int fd){
 					break;
 
 				case GRABAR_BYTES:
-					grabarBytes(fd, (t_pedido_memoria*)paquete);
+					grabarBytes(fd, paquete);
 					break;
 				case OK:
 					break;
@@ -290,14 +290,17 @@ int solicitudBytes(int fd, t_pedido_memoria* pedido){
 	return 0;
 }
 
-int grabarBytes(int fd, t_pedido_memoria* pedido){
+int grabarBytes(int fd, char* paquete){
+
+	t_pedido_memoria* pedido = paquete;
+	char* buf = paquete + sizeof(t_pedido_memoria);
 
 	if(pedidoIncorrecto(pedido)){
 		enviarRespuesta(fd, SEGMENTATION_FAULT);
 		return -1;
 	}
 
-	char* buf = malloc(pedido->size);
+/*	char* buf = malloc(pedido->size);
 
 	if(buf == NULL){
 		log_error(logger,"no pude reservar memoria");
@@ -310,16 +313,14 @@ int grabarBytes(int fd, t_pedido_memoria* pedido){
 		free(buf);
 		enviarRespuesta(fd, SEGMENTATION_FAULT);
 		return -1;
-	}
+	}*/
 
 	if( escribir(pedido->pid,pedido->pag,pedido->offset,buf,pedido->size) == -1){
 		log_error(logger, "Error al intentar escribir en memoria");
-		free(buf);
 		enviarRespuesta(fd, SEGMENTATION_FAULT);
 		return -1;
 	}
 
-	free(buf);
 	enviarRespuesta(fd, OP_OK);
 	return 0;
 }
