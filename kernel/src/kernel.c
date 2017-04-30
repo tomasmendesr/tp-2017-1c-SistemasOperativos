@@ -16,7 +16,7 @@ int main(int argc, char** argv){
 	crearConfig(argc,argv);
 	inicializaciones();
 
-	conectarConServidores();
+	//conectarConServidores();
 	lanzarHilosPlanificacion();
 	escucharConexiones();
 
@@ -69,14 +69,14 @@ void escucharConexiones(){
 		for(iterador_sockets = 0; iterador_sockets <= max_fd; iterador_sockets++) {
 
 			if(FD_ISSET(iterador_sockets, &setCPUs) && FD_ISSET(iterador_sockets,&read_fd)){ //una cpu realiza una operacion
-				FD_CLR(iterador_sockets, &master);
+				FD_CLR(iterador_sockets, &setCPUs);
 				pthread_t hilo;
 				resultadoHilo = pthread_create(&hilo, NULL, (void*)trabajarMensajeCPU, iterador_sockets);
 				if(resultadoHilo) exit(1);
 			}
 
 			if(FD_ISSET(iterador_sockets, &setConsolas) && FD_ISSET(iterador_sockets,&read_fd)){ //una consola realiza una operacion
-				FD_CLR(iterador_sockets, &master);
+				FD_CLR(iterador_sockets, &setConsolas);
 				pthread_t hilo;
 				resultadoHilo = pthread_create(&hilo, NULL, (void*)trabajarMensajeConsola, iterador_sockets);
 				if(resultadoHilo) exit(1);
@@ -107,7 +107,7 @@ void inicializaciones(){
 	sem_init(&sem_cola_new,0,config->grado_MultiProg);
 	sem_init(&semCPUs, 0, 0);
 	sem_init(&mutex_cola_ready,0,1);
-	sem_init(&mutex_cola_ready,0,1);
+	sem_init(&mutex_cola_new,0,1);
 	inicializarColas();
 	listaCPUs = list_create();
 }

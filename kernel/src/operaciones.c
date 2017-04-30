@@ -1,9 +1,13 @@
 #include "operaciones.h"
 
 void trabajarMensajeConsola(int socketConsola){
+
 	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
 	int check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
+
+	FD_SET(socketConsola, &setConsolas);
+
 	if (check <= 0) {
 		printf("Se cerro el socket %d\n", socketConsola);
 		close(socketConsola);
@@ -13,7 +17,6 @@ void trabajarMensajeConsola(int socketConsola){
 		procesarMensajeConsola(socketConsola, tipo_mensaje, paquete);
 	}
 
-	FD_SET(socketConsola, &master);
 }
 
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
@@ -61,7 +64,7 @@ void trabajarMensajeCPU(int socketCPU){
 		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
 	}
 
-	FD_SET(socketCPU, &master);
+	FD_SET(socketCPU, &setCPUs);
 }
 
 void procesarMensajeCPU(int socketCPU, int mensaje, char* package){

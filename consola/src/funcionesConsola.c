@@ -60,7 +60,7 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	fstat(file_fd, &stats);
  	file_size = stats.st_size;
-
+ 	printf("el tamaño del archivo es de %d\n", file_size);
  	header_t header;
  	char* buffer = malloc(file_size + sizeof(header_t));
  	int offset = 0;
@@ -126,7 +126,6 @@ void levantarInterfaz() {
 void iniciarPrograma(char* comando, char* param) {
 
 	int socket_cliente;
-	int* pidAsignado;
 
 	if(!verificarExistenciaDeArchivo(param)){
 		log_warning(logger, "no existe el archivo");
@@ -144,7 +143,7 @@ void iniciarPrograma(char* comando, char* param) {
 	int operacion = 0;
 	void* paquete_vacio;
 
-	recibir_info(socket_cliente, &paquete_vacio, &operacion);
+	recibir_paquete(socket_cliente, &paquete_vacio, &operacion);
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		printf("Conexion con Kernel establecida! :D \n");
@@ -153,46 +152,24 @@ void iniciarPrograma(char* comando, char* param) {
 		printf("El Kernel no devolvio handshake :( \n");
 	}
 
-	if((enviarArchivo(socket_cliente, param))==-1){
-		log_error(logger,"No se pudo mandar el archivo");
-		printf("No pudo enviarse el archivo\n");
-		return;
-	}
-	log_info(logger,"Archivo enviado correctamente");
+	dataHilo* data = malloc(sizeof(dataHilo));
+	data->pathAnsisop = malloc(strlen(param));
+	memcpy(data->pathAnsisop, param, strlen(param));
+	data->socket = socket_cliente;
 
-	// quiero mi respuesta
-	if(recibir_info(socket_cliente, &paquete_vacio, &operacion)==0){
-		log_error(logger, "El kernel se desconecto");
-		return;
-	}
+	pthread_t thread;
+	pthread_create(&thread, NULL, (void*)threadPrograma, data);
 
-	switch(operacion){
-	case PROCESO_RECHAZADO:
-		printf("El kernel rechazo el proceso\n");
-		log_error(logger, "El kernel rechazo el proceso");
-		return;
-		break;
-	case PID_PROGRAMA:
-		pidAsignado = (int*)paquete_vacio;
-		break;
-	default:
-		printf("Se recibio una operacion invalida\n");
-		break;
-	}
-
-	pthread_t threadPrograma;
-	pthread_create(&threadPrograma, NULL, (void*)threadPrograma, socket_cliente);
-	pthread_detach(threadPrograma);
+	pthread_detach(thread);
 
 	//creo y agrego proceso a la lista
-	crearProceso(socket_cliente, (*pidAsignado), threadPrograma);
+	crearProceso(socket_cliente, thread);
 
 }
 
-void crearProceso(int socketProceso, int pidAsignado, pthread_t threadPrograma){
+void crearProceso(int socketProceso, pthread_t threadPrograma){
 	t_proceso* proc = malloc(sizeof(t_proceso));
 	proc->socket = socketProceso;
-	proc->pid = pidAsignado;
 	proc->thread = threadPrograma;
 
 	list_add(procesos, proc);
@@ -208,13 +185,43 @@ bool esNumero(char* string){
 	return true;
 }
 
-void threadPrograma(int socketProceso){
+void threadPrograma(dataHilo* data){
 
 	int operacion;
 	void* paquete;
 	bool procesoActivo = true;
+	int* pidAsignado;
+	int socketProceso = data->socket;
 
-	bool* buscar(t_proceso* proc){
+	printf("voy a enviar el archivo\n");
+	if((enviarArchivo(socketProceso, data->pathAnsisop))==-1){
+		log_error(logger,"No se pudo mandar el archivo");
+		printf("No pudo enviarse el archivo\n");
+		return;
+	}
+	log_info(logger,"Archivo enviado correctamente");
+
+	// quiero mi respuesta
+	if(recibir_info(socketProceso, &paquete, &operacion)==0){
+		log_error(logger, "El kernel se desconecto");
+		return;
+	}
+
+	switch(operacion){
+	case PROCESO_RECHAZADO:
+		printf("El kernel rechazo el proceso\n");
+		log_error(logger, "El kernel rechazo el proceso");
+		return;
+		break;
+	case PID_PROGRAMA:
+		pidAsignado = (int*)paquete;
+		break;
+	default:
+		printf("Se recibio una operacion invalida\n");
+		break;
+	}
+
+	bool buscar(t_proceso* proc){
 		return proc->socket == socketProceso ? true : false;
 	}
 
@@ -229,6 +236,7 @@ void threadPrograma(int socketProceso){
 			case FINALIZAR_EJECUCION:
 				procesoActivo = false;
 				list_remove_and_destroy_by_condition(procesos, buscar, free);
+				free(data);
 				break;
 			case IMPRIMIR_TEXTO_PROGRAMA:
 				printf("%s\n", (char*)paquete);
