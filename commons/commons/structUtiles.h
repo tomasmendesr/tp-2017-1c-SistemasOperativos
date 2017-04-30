@@ -13,6 +13,7 @@
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include "collections/list.h"
 #include "collections/queue.h"
 #include "config.h"
@@ -59,14 +60,14 @@ typedef struct indiceCodigo{
 	uint32_t size;
 }__attribute__((__packed__)) t_indice_codigo;
 
-
 typedef struct{
 	uint32_t pid;  //Identificador único del Programa en el sistema
 	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
 	uint32_t cantPaginasCodigo;
 	t_list* indiceCodigo;
+//	t_intructions* indiceCodigo;
 	t_list* indiceStack;
-	uint32_t exitCode;
+	int16_t exitCode;
 	uint32_t consolaFd;
 	char* etiquetas;
 	uint32_t stackPointer; // el ultimo offset
@@ -77,7 +78,6 @@ typedef struct{
 typedef enum{
 	ERROR, NOTHING, SUCCESS
 } opciones_generales_ops;
-
 
 //Auxiliares
 typedef struct {
@@ -90,6 +90,17 @@ typedef struct {
 	void * stack;
 }__attribute__((__packed__)) t_tamanio_stack_stack;
 
+t_entrada_stack* crearPosicionStack();
+void insertarNuevoStack(pcb_t* pcb);
+void eliminarUltimaPosicionStack(pcb_t* pcb);
+void destruirPosicionStack(t_entrada_stack* stack);
+t_var_local* crearVariableStack(char id, uint32_t pagina, uint32_t offset, uint32_t size);
+void destruirVariableStack(t_var_local* var);
+t_argumento* crearArgumentoStack(uint32_t pagina, uint32_t offset, uint32_t size);
+void destruirArgumentoStack(t_argumento* arg);
+void agregarVariable(t_entrada_stack* stack, t_var_local* variable);
+void agregarArgumento(t_entrada_stack* stack, t_argumento* argumento);
 
+char* ansisop_a_string(char* path);
 
 #endif /* STRUCTSUTILES_H_ */

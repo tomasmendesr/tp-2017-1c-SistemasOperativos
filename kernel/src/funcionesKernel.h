@@ -24,6 +24,7 @@
 #include <commons/interface.h>
 #include <commons/config.h>
 #include <commons/collections/list.h>
+#include <commons/cosas.h>
 #include <stdbool.h>
 #include <pthread.h>
 //#include "plp.h"
@@ -34,17 +35,17 @@
 typedef struct {
 	char* puerto_PROG;
 	char* puerto_CPU;
-        char* ip_Memoria;
-        char* puerto_Memoria;
-        char* ip_FS;
-        char* puerto_FS;
-        int quantum;
-        int quantum_Sleep;
-        char* algoritmo;
-        int grado_MultiProg;
-        t_dictionary* semaforos;
-        t_dictionary* variablesGlobales;
-        int stack_Size;
+	char* ip_Memoria;
+	char* puerto_Memoria;
+	char* ip_FS;
+	char* puerto_FS;
+	int quantum;
+	int quantum_Sleep;
+	char* algoritmo;
+	int grado_MultiProg;
+	t_dictionary* semaforos;
+	t_dictionary* variablesGlobales;
+	int stack_Size;
 
 } t_config_kernel;
 
@@ -140,6 +141,8 @@ fd_set setCPUs;
 int socketEscuchaCPUs;
 int socketEscuchaConsolas;
 int max_fd;
+
+int pageSize;
 
 //Colas procesos
 t_queue *colaNew, *colaReady, *colaFinished;

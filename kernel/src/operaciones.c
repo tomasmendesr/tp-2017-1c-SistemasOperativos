@@ -110,10 +110,12 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 	int valor, sizeVariable;
 
 	memcpy(&sizeVariable, buffer, 4);
+	variable = malloc(sizeof(sizeVariable));
 	memcpy(variable, buffer+4, sizeVariable);
 	memcpy(&valor, buffer+4+sizeVariable, 4);
 
 	escribirVariableGlobal(config->variablesGlobales, variable, &valor);
+	free(variable);
 
 	enviar_paquete_vacio(OK, socketCPU);
 }
