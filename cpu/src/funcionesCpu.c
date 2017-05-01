@@ -159,8 +159,8 @@ int32_t requestHandlerKernel(void){
 			endBlockedProc();
 			break;
 		case VALOR_VAR_COMPARTIDA:
-			bytes=malloc(header.length);
-			memcpy(bytes,paquete,header.length);
+			paqueteGlobal=malloc(header.length);
+			memcpy(paqueteGlobal,paquete,header.length);
 			break;
 		case RESPUESTA_ASIG_VAR_COMPARTIDA_OK:
 			break;
@@ -200,8 +200,8 @@ int32_t requestHandlerMemoria(void){
 		// aca no quiero hacer un free del paquete porque lo voy a usar. hacer free en la funcion que pide el paquete
 		break;
 	case RESPUESTA_BYTES:
-		bytes=malloc(header.length);
-		memcpy(bytes,paquete,header.length);
+		paqueteGlobal=malloc(header.length);
+		memcpy(paqueteGlobal,paquete,header.length);
 		free(paquete);
 		break;
 	case ENVIAR_TAMANIO_PAGINA:
@@ -231,6 +231,7 @@ void recibirPCB(void* paquete){
 	pcb = deserializar_pcb(paquete);
 	free(paquete);
 	setPCB(pcb);
+	log_info(logger, "Recibo PCB id: %i", pcb->pid);
 }
 
 int16_t solicitarBytes(pedido_bytes_t* pedido){
@@ -337,35 +338,24 @@ void revisarFinalizarCPU(void){
 }
 
 void comenzarEjecucionDePrograma(void){
-	log_info(logger, "Recibo PCB id: %i", pcb->pid);
-	void* paquete;
-	paquete = NULL;
-//	int res;
-
 	for(;;){
 	requestHandlerKernel();
 
 	int i = 1;
 	while(i <= quantum){
-		if(solicitarProximaInstruccion(paquete) != 0)
+		if(solicitarProximaInstruccion() != 0){ /// carga la instruccion en el paquete globan bytes
 			return;
-		//creo que no hace falta
-		limpiarInstruccion(paquete);
+		}
+		limpiarInstruccion(paqueteGlobal);
 
-		if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(paquete, "end") == 0)) {
+		if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(paqueteGlobal, "end") == 0)) {
 			finalizarPor(FIN_PROCESO);
 			revisarFinalizarCPU();
 			return;
 		} else {
-			if (paquete) {
-				log_debug(logger, "Instruccion recibida: %s", paquete);
-//				if (strcmp(paquete, "end") == 0) {
-//					log_debug(logger, "Finalizo la ejecucion del programa");
-//					finalizarEjecucion(FIN_PROCESO);
-//					revisarFinalizarCPU();
-//					return;
-//				}
-				analizadorLinea(paquete, &functions, &kernel_functions);
+			if (paqueteGlobal) {
+				log_debug(logger, "Instruccion recibida: %s", paqueteGlobal);
+				analizadorLinea(paqueteGlobal, &functions, &kernel_functions);
 				if (huboStackOver){
 					finalizarPor(STACKOVERFLOW);
 				}
@@ -375,7 +365,7 @@ void comenzarEjecucionDePrograma(void){
 				// usleep -----------------> no se que es esto
 			}
 			else {
-				log_info(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
+				log_error(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
 				finalizarConexion(socketConexionMemoria);
 				return;
 			}
@@ -388,7 +378,7 @@ void comenzarEjecucionDePrograma(void){
 	}
 }
 
-int16_t solicitarProximaInstruccion(void* paquete) {
+int16_t solicitarProximaInstruccion() {
 	t_indice_codigo *indice = list_get(pcb->indiceCodigo, pcb->programCounter);
 	uint32_t requestStart = indice->offset;
 	uint32_t requestSize = indice->size;

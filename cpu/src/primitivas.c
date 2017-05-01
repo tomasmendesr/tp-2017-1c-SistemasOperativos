@@ -189,7 +189,7 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	}
 	free(solicitar);
 	log_info(logger, "Variable dereferenciada!");
-	return *(t_valor_variable*)bytes;
+	return *(t_valor_variable*)paqueteGlobal;
 }
 
 /*
@@ -375,8 +375,8 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	sendSocket(socketConexionKernel, &header, variable);
 	requestHandlerKernel();
 	log_info(logger,"asignado valor a compartida");
-	valor=*(int32_t*)bytes;
-	free(bytes);
+	valor=*(int32_t*)paqueteGlobal;
+	free(paqueteGlobal);
 	log_debug(logger, "Valor de %s: %d", variable, valor);
 	return valor;
 }

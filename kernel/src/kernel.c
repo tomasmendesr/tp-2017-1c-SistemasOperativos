@@ -15,7 +15,7 @@ int main(int argc, char** argv){
 	crearConfig(argc,argv);
 	inicializaciones();
 
-	//conectarConServidores();
+	conectarConServidores();
 	lanzarHilosPlanificacion();
 	escucharConexiones();
 
