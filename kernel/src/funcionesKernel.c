@@ -284,7 +284,7 @@ void modificarValorDiccionario(t_dictionary* dic, char* key, void* data){
 int leerVariableGlobal(t_dictionary* dic, char* key){
 	if(dictionary_has_key(dic, key)){
 		int* valor = dictionary_get(dic, key);
-		return* valor;
+		return valor;
 	}
 	return NULL;
 }
@@ -297,17 +297,17 @@ void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor){
 }
 
 int semaforoSignal(t_dictionary* dic, char* key){
-	int* previo = dictionary_get(dic, key);
+	char* previo = dictionary_get(dic, key);
 	*previo = *previo + 1;
 
-	return *previo;
+	return atoi(previo);
 }
 
 int semaforoWait(t_dictionary* dic, char* key){
-	int* previo = dictionary_get(dic, key);
+	char* previo = dictionary_get(dic, key);
 	*previo = *previo - 1;
 
-	return *previo;
+	return atoi(previo);
 }
 
 void listProcesses(char* comando, char* param){
