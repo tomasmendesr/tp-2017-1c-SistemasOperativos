@@ -730,5 +730,8 @@ char* getTimeStamp(){
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 
-	return asctime(timeinfo);
+	char* string = asctime(timeinfo);
+	string[strlen(string) - 1] = '\0'; //saco el \n del string
+
+	return string;
 }
