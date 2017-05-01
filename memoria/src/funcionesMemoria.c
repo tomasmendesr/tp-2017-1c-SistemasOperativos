@@ -688,10 +688,39 @@ void dumpMemory(int pid){
 	return;
 }
 void flush(char* comando, char* param){
-        printf("flush\n");
+
+        int i;
+        for(i=0;i<cache_entradas;i++){
+        	cache[i].pag = -1;
+        	cache[i].pid = -1;
+        	cache[i].time_used = 0;
+        }
+
+        printf("Flush exitoso.\n");
+
+        return;
 }
 void size(char* comando, char* param){
-        printf("size\n");
+
+	if( !strcmp(param,"memory") ){
+		int free = framesLibres();
+
+		printf("Size memory: Cant frames: %d (%d bytes), framesOcupados: %d (%d bytes), framesLibres: %d (%d bytes).\n",
+				cant_frames,cant_frames * frame_size,
+				cant_frames - free, (cant_frames - free) * frame_size,
+				free, free * frame_size);
+		return;
+	}
+
+	int pid = atoi(param);
+	int i, cant = 0;
+	for(i=0;i<cant_frames;i++){
+		if( tabla_pag[i].pid == pid  )
+			cant++;
+	}
+
+	printf("Cantidad de marcos ocupados por el proceso n° %d: %d (%d bytes)", pid, cant, cant * cant_frames);
+	return;
 }
 
 char* getTimeStamp(){
