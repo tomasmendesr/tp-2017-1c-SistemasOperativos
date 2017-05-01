@@ -65,6 +65,14 @@ typedef struct{
 	char* codigo;
 }proceso_en_espera_t;
 
+typedef struct{
+	pcb_t* pcb;
+	uint32_t cantRafagas;
+	uint32_t cantSyscalls;
+	uint32_t cantOpPrivi;
+	uint32_t cantPaginasHeap;
+}proceso_t;
+
 void inicializarColas();
 void inicializaciones(void);
 void crearConfig(int argc, char* argv[]);
@@ -128,6 +136,7 @@ t_config_kernel* config;
 int socketConexionFS;
 int socketConexionMemoria;
 int max_pid;
+int cantProcesosSistema;
 t_log* logger;
 sem_t sem_cola_ready;
 sem_t sem_cola_new;

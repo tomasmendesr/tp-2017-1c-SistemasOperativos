@@ -32,14 +32,14 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		log_info(logger, "recibo codigo");
 		nuevoProceso = crearProceso(consola_fd, package);
 
-		sem_wait(&sem_multi);
+		//sem_wait(&sem_multi);
 		sem_wait(&mutex_cola_new);
 		queue_push(colaNew, nuevoProceso);
 		sem_post(&mutex_cola_new);
-		sem_post(&sem_cola_new);
+		//sem_post(&sem_cola_new);
 
 		log_info(logger,"Proceso agregado a la cola New");
-
+		planificarLargoPlazo();
 	break;
 	case FINALIZAR_PROGRAMA:
 		//finalizarPrograma(consola_fd,package);
