@@ -113,7 +113,7 @@ void requestHandlerKernel(int fd){
 	int tipo_mensaje;
 
 	for(;;){
-		bytes = recibir_info(fd, paquete, &tipo_mensaje);
+		bytes = recibir_info(fd, &paquete, &tipo_mensaje);
 		if(bytes <= 0){
 			log_error(logger, "Desconexion del kernel. Terminando...");
 			close(fd);
@@ -150,7 +150,7 @@ void requestHandlerCpu(int fd){
 
 	for(;;){
 		//Recibo mensajes de cpu y hago el switch
-		bytes = recibir_info(fd, paquete, &tipo_mensaje);
+		bytes = recibir_info(fd, &paquete, &tipo_mensaje);
 		if(bytes <= 0){
 			log_error(logger, "Desconexion del Cpu. Se cerro el socket %d. Terminando...", fd);
 			close(fd);

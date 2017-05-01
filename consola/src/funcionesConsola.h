@@ -16,11 +16,11 @@
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/interface.h>
+#include <ctype.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
 
 #define MAX_COMMAND_SIZE 256
 
@@ -49,8 +49,8 @@ int crearLog();
 
 int enviarArchivo(int kernel_fd, char* path);
 
-
-void crearProceso(int socketProceso, pthread_t threadPrograma);
+void inicializacion(void);
+void crearProceso(int socketProceso, pthread_t threadPrograma, int pid);
 bool esNumero(char* string);
 void threadPrograma(dataHilo* data);
 void terminarProceso(t_proceso* proc);

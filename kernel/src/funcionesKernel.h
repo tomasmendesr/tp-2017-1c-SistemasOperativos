@@ -13,6 +13,7 @@
 #define configuracionKernel "../confKernel.init"
 #define MAX_LEN_PUERTO 6
 #define MAX_LEN_IP 20
+#define PAG_SIZE 256
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,7 +66,7 @@ typedef struct{
 }proceso_en_espera_t;
 
 void inicializarColas();
-void inicializaciones();
+void inicializaciones(void);
 void crearConfig(int argc, char* argv[]);
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
 void destruirConfiguracionKernel(t_config_kernel* config);
@@ -119,7 +120,7 @@ void planificarCortoPlazo();
 
 //Planificacion Largo Plazo
 void planificarLargoPlazo();
-void aletarConsolaProcesoAceptado(int pid, int socketConsola);
+void alertarConsolaProcesoAceptado(int pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
 
 //Variables Globales
@@ -132,6 +133,7 @@ sem_t sem_cola_ready;
 sem_t sem_cola_new;
 sem_t mutex_cola_ready;
 sem_t mutex_cola_new;
+sem_t sem_multi;
 sem_t semCPUs;
 t_list* listaCPUs;
 

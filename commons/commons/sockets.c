@@ -904,7 +904,7 @@ int enviar_info(int sockfd, int codigo_operacion, int length, void* buff){
 	return bytes_enviados;
 }
 
-int recibir_info(int socket, void* paquete, int *tipo_mensaje){
+int recibir_info(int socket, void** paquete, int *tipo_mensaje){
 
 	int bytes_recibidos;
 	header_t cabecera;
@@ -917,29 +917,30 @@ int recibir_info(int socket, void* paquete, int *tipo_mensaje){
 	*tipo_mensaje=cabecera.type;
 
 	if(cabecera.length){
-		paquete = malloc(cabecera.length);
-		bytes_recibidos = recvAll(socket, (char*)paquete, cabecera.length, MSG_WAITALL);
+		*paquete = malloc(cabecera.length);
+		bytes_recibidos = recvAll(socket, (char*)*paquete, cabecera.length, MSG_WAITALL);
 		if(bytes_recibidos == 0) return 0;
 		if(bytes_recibidos == -1) return -1;
 	}
 	else
-		paquete=NULL;
+		*paquete=NULL;
 
 	return bytes_recibidos;
 }
 
-int recvMsj(int socket, void* paquete, header_t *header){
+int recvMsj(int socket, void** paquete, header_t *header){
 
 	int bytes;
-	bytes=recvAll(socket, (char*)&header, sizeof(header_t), MSG_WAITALL);
+	bytes=recvAll(socket, (char*)header, sizeof(header_t), MSG_WAITALL);
 	if(bytes == 0) return 0;
 	if(bytes == -1) return -1;
 	if(header->length){
-		paquete = malloc(header->length);
-		bytes = recvAll(socket, (char*)paquete, header->length, MSG_WAITALL);
+		*paquete = malloc(header->length);
+		bytes = recvAll(socket, (char*)*paquete, header->length, MSG_WAITALL);
 		if(bytes == 0) return 0;
 		if(bytes == -1) return -1;
 	}
+	else *paquete=NULL;
 	return bytes;
 }
 

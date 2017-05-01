@@ -5,7 +5,7 @@
  * Envia a la memoria para que le reserve espacio para el codigo
  * Graba el codigo en Memoria y devuelve el PCB con todas las referencias
  */
-pcb_t* crearPCB(char* codigo, int id){
+pcb_t* crearPCB(char* codigo, int id, int fd){
 
 	pcb_t* pcb = malloc(sizeof(pcb));
 
@@ -13,12 +13,13 @@ pcb_t* crearPCB(char* codigo, int id){
 
 	pcb->pid = id;
 	pcb->stackPointer = 0;
-	pcb->cantPaginasCodigo = strlen(codigo) / pageSize;
-	if(strlen(codigo)%pageSize != 0) pcb->cantPaginasCodigo++;
+	pcb->cantPaginasCodigo = strlen(codigo) / PAG_SIZE;
+	if(strlen(codigo)%PAG_SIZE != 0) pcb->cantPaginasCodigo++;
 	pcb->exitCode = 0;
 	pcb->programCounter = metadata->instruccion_inicio;
 	pcb->codigo = metadata->instrucciones_size;
 	pcb->tamanioEtiquetas = metadata->etiquetas_size;
+	pcb->consolaFd=fd;
 
 	//Indice de Codigo ----> tenemos que decidir si va como lista o no
 //	pcb->indiceCodigo = malloc(metadata->instrucciones_size * sizeof(t_intructions));

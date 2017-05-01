@@ -33,20 +33,20 @@ void crearConfig(int argc, char* argv[]){
 		if(verificarExistenciaDeArchivo(argv[1]))
 			config=levantarConfiguracionCPU(argv[1]);
 		else{
-			log_error(logger,"La ruta especificada es incorrecta");
+			log_error(logger,"Ruta incorrecta");
 			exit(EXIT_FAILURE);
 		}
 	}
 	else if(verificarExistenciaDeArchivo(configuracionCPU)){
 		config=levantarConfiguracionCPU(configuracionCPU);
-		log_info(logger,"Configuracion levantada correctamente");
+		log_info(logger,"Configuracion levantada");
 	}
 	else if(verificarExistenciaDeArchivo(string_substring_from(configuracionCPU,3))){
 		config=levantarConfiguracionCPU(string_substring_from(configuracionCPU,3));
-		log_info(logger,"Configuracion levantada correctamente");
+		log_info(logger,"Configuracion levantada");
 	}
 	else{
-		log_error(logger,"No pudo levantarse el archivo de configuracion");
+		log_error(logger,"No pudimos levantar el archivo");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -134,9 +134,9 @@ int conexionConMemoria(void){
 
 int32_t requestHandlerKernel(void){
 	header_t header;
-	char* paquete;
+	void* paquete;
 	paquete=NULL;
-	conecFailKernel(recvMsj(socketConexionKernel,paquete,&header));
+	conecFailKernel(recvMsj(socketConexionKernel,&paquete,&header));
 	switch(header.type){
 		case EXEC_PCB:
 			recibirPCB(paquete);
@@ -193,7 +193,7 @@ int32_t requestHandlerMemoria(void){
 	header_t header;
 	void* paquete;
 	paquete=NULL;
-	conecFailMemoria(recvMsj(socketConexionMemoria,paquete,&header));
+	conecFailMemoria(recvMsj(socketConexionMemoria,&paquete,&header));
 	switch(header.type){
 		// respuesta grabarBytes - asignarCompartida
 	case OP_OK:

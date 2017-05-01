@@ -25,16 +25,18 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 	switch(mensaje){
 	case HANDSHAKE_PROGRAMA:
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,consola_fd);
-		log_info(logger,"Conexion con la consola establecida");
+		log_info(logger,"handshake con consola");
 		printf("\n");
 		break;
 	case ENVIO_CODIGO:
 		log_info(logger, "recibo codigo");
 		nuevoProceso = crearProceso(consola_fd, package);
 
+		sem_wait(&sem_multi);
 		sem_wait(&mutex_cola_new);
 		queue_push(colaNew, nuevoProceso);
 		sem_post(&mutex_cola_new);
+		sem_post(&sem_cola_new);
 
 		log_info(logger,"Proceso agregado a la cola New");
 

@@ -63,7 +63,7 @@ void trabajarConexionCPU(){
 					if(newSocket > numero_maximo_socket) numero_maximo_socket = newSocket;
 				}
 			} else {
-				//Gestiono cada conexi�n -> Recibo los programas y creo sus PCB.
+				//Gestiono cada conexion -> Recibo los programas y creo sus PCB.
 				int tipo_mensaje; //Para que la funcion recibir_string lo reciba
 				int check = recibir_paquete(iterador_sockets, &paquete, &tipo_mensaje);
 
@@ -154,7 +154,6 @@ void enviarTamanioStack(int fd){
 	header->length=sizeof(config->stack_Size);
 	sendSocket(fd,header,&config->stack_Size);
 }
-
 
 proceso_en_espera_t* crearProceso(int consola_fd, char* source){
 
@@ -401,7 +400,7 @@ void planificarLargoPlazo(){
 
 	while(1){
 
-		sem_wait(&sem_cola_new); //si la cola esta vacio bloqueo
+		sem_wait(&sem_cola_new); //si la cola esta vacia bloqueo
 		sem_wait(&mutex_cola_new);
 		proceso_en_espera_t* proc = queue_pop(colaNew);
 		sem_post(&mutex_cola_new);
@@ -432,13 +431,13 @@ void planificarLargoPlazo(){
 		}
 		if(resultado == OP_OK){
 			//aviso a consola que se acepto
-			aletarConsolaProcesoAceptado(pid, proc->socketConsola);
+			alertarConsolaProcesoAceptado(pid, proc->socketConsola);
 
 			//mando a memoria el codigo
 			envioCodigoMemoria(proc->codigo);
 
 			//creo pcb y paso el proceso a ready
-			pcb_t* pcb = crearPCB(proc->codigo, pid);
+			pcb_t* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
 			sem_wait(&mutex_cola_ready);
 			queue_push(colaReady, pcb);
 			sem_post(&mutex_cola_ready);
@@ -450,7 +449,7 @@ void planificarLargoPlazo(){
 	}
 }
 
-void aletarConsolaProcesoAceptado(int pid, int socketConsola){
+void alertarConsolaProcesoAceptado(int pid, int socketConsola){
 	header_t header;
 
 	header.type = PID_PROGRAMA;
@@ -462,6 +461,6 @@ void envioCodigoMemoria(char* codigo){
 	header_t header;
 
 	header.type = ENVIO_CODIGO;
-	header.length = strlen(codigo);
+	header.length = strlen(codigo)+1;
 	sendSocket(socketConexionMemoria, &header, codigo);
 }

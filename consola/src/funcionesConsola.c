@@ -148,30 +148,30 @@ void iniciarPrograma(char* comando, char* param) {
 	if (operacion == HANDSHAKE_KERNEL) {
 		printf("Conexion con Kernel establecida! :D \n");
 		printf("Se procede a mandar el archivo: %s\n", param);
+
 	} else {
 		printf("El Kernel no devolvio handshake :( \n");
 	}
 
 	dataHilo* data = malloc(sizeof(dataHilo));
-	data->pathAnsisop = malloc(strlen(param));
-	memcpy(data->pathAnsisop, param, strlen(param));
+	data->pathAnsisop = malloc(strlen(param)+1);
+	memcpy(data->pathAnsisop, param, strlen(param)+1);
 	data->socket = socket_cliente;
 
 	pthread_t thread;
 	pthread_create(&thread, NULL, (void*)threadPrograma, data);
-
 	pthread_detach(thread);
 
-	//creo y agrego proceso a la lista
-	crearProceso(socket_cliente, thread);
+//	creo y agrego proceso a la lista
+//	crear_proceso(socket_cliente,thread);
 
 }
 
-void crearProceso(int socketProceso, pthread_t threadPrograma){
+void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
 	t_proceso* proc = malloc(sizeof(t_proceso));
 	proc->socket = socketProceso;
 	proc->thread = threadPrograma;
-
+	proc->pid = pid;
 	list_add(procesos, proc);
 }
 
@@ -192,6 +192,7 @@ void threadPrograma(dataHilo* data){
 	bool procesoActivo = true;
 	int* pidAsignado;
 	int socketProceso = data->socket;
+	pthread_t thread = pthread_self();
 
 	printf("voy a enviar el archivo\n");
 	if((enviarArchivo(socketProceso, data->pathAnsisop))==-1){
@@ -201,7 +202,6 @@ void threadPrograma(dataHilo* data){
 	}
 	log_info(logger,"Archivo enviado correctamente");
 
-	// quiero mi respuesta
 	if(recibir_info(socketProceso, &paquete, &operacion)==0){
 		log_error(logger, "El kernel se desconecto");
 		return;
@@ -225,10 +225,14 @@ void threadPrograma(dataHilo* data){
 		return proc->socket == socketProceso ? true : false;
 	}
 
+	crearProceso(socketProceso,thread,*pidAsignado);
+
 	while(procesoActivo){
 
-		if(recibir_info(socketProceso, &paquete, &operacion)==0){
+		/*ambos se quedan esperando una respuesta del otro*/
+		if(recibir_info(socketProceso, (void*)&paquete, &operacion)==0){
 			log_error(logger, "El kernel se desconecto");
+			if(paquete)free(paquete);
 			return;
 		}else{
 
@@ -249,6 +253,7 @@ void threadPrograma(dataHilo* data){
 			}
 
 		}
+		if(paquete)free(paquete);
 
 	}
 
@@ -273,9 +278,8 @@ void finalizarPrograma(char* comando, char* param){
 		return;
 	}
 
-	t_proceso* proc = list_find(procesos, buscarProceso);
 	//evaluar si debo avisar al kernel o si al desconectarse el socket el kernel lo maneje solo
-	terminarProceso(proc);
+	terminarProceso(proceso);
 
 	printf("Proceso finalizado\n");
 }
@@ -283,7 +287,7 @@ void finalizarPrograma(char* comando, char* param){
 void desconectarConsola(char* comando, char* param) {
 	list_destroy_and_destroy_elements(procesos,terminarProceso);
 
-	exit(1);
+	exit(0);
 }
 
 void terminarProceso(t_proceso* proc){

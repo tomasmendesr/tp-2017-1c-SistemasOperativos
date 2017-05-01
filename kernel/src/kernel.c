@@ -10,7 +10,6 @@
 
 #include "funcionesKernel.h"
 
-
 int main(int argc, char** argv){
 	logger = log_create("logKernel","kernel", 1, LOG_LEVEL_TRACE);
 	crearConfig(argc,argv);
@@ -81,10 +80,7 @@ void escucharConexiones(){
 				resultadoHilo = pthread_create(&hilo, NULL, (void*)trabajarMensajeConsola, iterador_sockets);
 				if(resultadoHilo) exit(1);
 			}
-
-
 		}
-
 	}
 }
 
@@ -102,9 +98,10 @@ void aceptarNuevaConexion(int socketEscucha, fd_set* set){
 	}
 }
 
-void inicializaciones(){
+void inicializaciones(void){
 	sem_init(&sem_cola_ready,0,1);
-	sem_init(&sem_cola_new,0,config->grado_MultiProg);
+	sem_init(&sem_cola_new,0,0);
+	sem_init(&sem_multi,0,config->grado_MultiProg);
 	sem_init(&semCPUs, 0, 0);
 	sem_init(&mutex_cola_ready,0,1);
 	sem_init(&mutex_cola_new,0,1);
