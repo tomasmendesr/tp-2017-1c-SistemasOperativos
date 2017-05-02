@@ -2,6 +2,7 @@
 
 void inicializarGlobales(){
 	pthread_mutex_init(&cache_mutex,NULL);
+	pthread_mutex_init(&tablaPag_mutex,NULL);
 }
 
 void crearConfig(int argc, char* argv[]){
@@ -184,7 +185,7 @@ void requestHandlerCpu(int fd){
 
 int iniciarPrograma(int fd, t_pedido_iniciar* pedido){
 
-	if( asignarPaginas(pedido->pid,pedido->cant_pag) == -1){
+	if( reservarFrames(pedido->pid,pedido->cant_pag) == -1){
 		//No se puede, aviso a kernel que no hay lugar
 		enviarRespuesta(fd, SIN_ESPACIO);
 		log_warning(logger, "No hay espacio");
@@ -230,10 +231,12 @@ int finalizarPrograma(t_pedido_finalizar* pid){
 /* Asigna la cantidad de paginas al proceso especifico
  * Devuelve 0 en caso de poder asignar las paginas
  * -1 en caso de no haber frames disponibles para realizar la operacion */
-int asignarPaginas(int pid, int cantPag){
+int reservarFrames(int pid, int cantPag){
 
 	if(framesLibres() < cantPag)
 		return -1;
+
+	pthread_mutex_lock(&tablaPag_mutex);
 
 	int maxPag = 0;
 	int i;
@@ -254,6 +257,7 @@ int asignarPaginas(int pid, int cantPag){
 		}
 	}
 
+	pthread_mutex_unlock(&tablaPag_mutex);
 	return 0;
 }
 
@@ -343,24 +347,34 @@ bool pedidoIncorrecto(t_pedido_memoria* pedido){
 
 int framesLibres(){
 
+	pthread_mutex_lock(&tablaPag_mutex);
+
 	int i, cant = 0;
 	for(i=0;i<cant_frames;i++){
 		if( tabla_pag[i].pid == -1 &&
 			tabla_pag[i].pag == -1  )
 			cant++;
 	}
+
+	pthread_mutex_unlock(&tablaPag_mutex);
 	return cant;
 }
 
 /* Busqueda secuencial, despues implementamos hash */
 int buscarFrame(int pid, int pag){
 
+	pthread_mutex_lock(&tablaPag_mutex);
+
 	int i;
 	for(i=0;i<config->marcos;i++){
 		if( tabla_pag[i].pid == pid &&
-			tabla_pag[i].pag == pag  )
+			tabla_pag[i].pag == pag  ){
+			pthread_mutex_unlock(&tablaPag_mutex);
 			return i;
+		}
 	}
+
+	pthread_mutex_unlock(&tablaPag_mutex);
 	return -1; //No encontro en la tabla de paginas la entrada
 }
 
