@@ -427,6 +427,7 @@ void planificarLargoPlazo(){
 	int pid = asignarPid();
 	pedido.pid = pid;
 	pedido.cant_pag = config->stack_Size;
+	log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags: %d", pid, pedido.cant_pag);
 
 	header_t header;
 	header.type = INICIAR_PROGRAMA;
@@ -438,12 +439,13 @@ void planificarLargoPlazo(){
 
 	//evaluo respuesta
 	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
-	printf("resultado %d\n", resultado);
 	if(resultado == SIN_ESPACIO){
 		//aviso a consola que se rechazo
 		enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
+		log_error(logger, "Proceso rechazado porque no hay espacio en memoria");
 	}
 	if(resultado == OP_OK){
+		log_info(logger, "Paginas reservadas para el proceso %d", pid);
 		//aviso a consola que se acepto
 		alertarConsolaProcesoAceptado(pid, proc->socketConsola);
 

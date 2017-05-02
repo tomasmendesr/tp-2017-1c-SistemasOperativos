@@ -60,7 +60,6 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	fstat(file_fd, &stats);
  	file_size = stats.st_size;
- 	printf("el tamaño del archivo es de %d\n", file_size);
  	header_t header;
  	char* buffer = malloc(file_size + sizeof(header_t));
  	int offset = 0;
@@ -194,7 +193,6 @@ void threadPrograma(dataHilo* data){
 	int socketProceso = data->socket;
 	pthread_t thread = pthread_self();
 
-	printf("voy a enviar el archivo\n");
 	if((enviarArchivo(socketProceso, data->pathAnsisop))==-1){
 		log_error(logger,"No se pudo mandar el archivo");
 		printf("No pudo enviarse el archivo\n");
@@ -204,6 +202,7 @@ void threadPrograma(dataHilo* data){
 
 	if(recibir_info(socketProceso, &paquete, &operacion)==0){
 		log_error(logger, "El kernel se desconecto");
+		exit(1);
 		return;
 	}
 
