@@ -185,6 +185,8 @@ void requestHandlerCpu(int fd){
 
 int iniciarPrograma(int fd, t_pedido_iniciar* pedido){
 
+	log_info(logger, "pedido reserva. pid: %d cant_pag: %d.",pedido->pid,pedido->cant_pag);
+
 	if( reservarFrames(pedido->pid,pedido->cant_pag) == -1){
 		//No se puede, aviso a kernel que no hay lugar
 		enviarRespuesta(fd, SIN_ESPACIO);
@@ -248,13 +250,18 @@ int reservarFrames(int pid, int cantPag){
 	}
 
 	//Asigno las paginas que me piden
-	for(i=0;i<cantPag;i++){
+	int asignadas = 0;
+	i = 0;
+	while(asignadas < cantPag){
 
 		if(tabla_pag[i].pid == -1 || tabla_pag[i].pag == -1){
 			tabla_pag[i].pid = pid;
 			tabla_pag[i].pag = maxPag;
 			maxPag++;
+			asignadas++;
 		}
+
+		i++;
 	}
 
 	pthread_mutex_unlock(&tablaPag_mutex);
@@ -363,18 +370,22 @@ int framesLibres(){
 /* Busqueda secuencial, despues implementamos hash */
 int buscarFrame(int pid, int pag){
 
+	printf("Busco el frame con pid: %d, pag: %d\n", pid,pag);
+
 	pthread_mutex_lock(&tablaPag_mutex);
 
 	int i;
-	for(i=0;i<config->marcos;i++){
+	for(i=0;i<cant_frames;i++){
 		if( tabla_pag[i].pid == pid &&
 			tabla_pag[i].pag == pag  ){
 			pthread_mutex_unlock(&tablaPag_mutex);
+			printf("ENCONTRE!!\n");
 			return i;
 		}
 	}
 
 	pthread_mutex_unlock(&tablaPag_mutex);
+	printf("NO ENCONTRE :(\n");
 	return -1; //No encontro en la tabla de paginas la entrada
 }
 
@@ -581,7 +592,7 @@ void retardo(char* comando, char* param){
         printf("retardo\n");
 }
 void dump(char* comando, char* param){
-	printf("dump\n");
+	//printf("dump\n");
 
 	if(strlen(param) == 0){
 		//Dump de todas las estructuras
@@ -676,7 +687,7 @@ void dumpTable(){
 }
 void dumpMemory(int pid){
 
-	printf("dump Memory pid: %i", pid);
+	//printf("dump Memory pid: %i\n", pid);
 
 	FILE* dumpFile = fopen("memoryDump","a");
 
