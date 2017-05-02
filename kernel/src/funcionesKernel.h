@@ -99,7 +99,7 @@ void aceptarNuevaConexion(int socketEscucha, fd_set* set);
 //Mensajes con consola
 void trabajarConexionConsola();
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
-proceso_en_espera_t* crearProceso(int consola_fd, char* package);
+proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* package);
 int asignarPid();
 
 //Funciones de interfaz
@@ -130,6 +130,7 @@ void planificarCortoPlazo();
 void planificarLargoPlazo();
 void alertarConsolaProcesoAceptado(int pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
+proceso_t* crearProceso(pcb_t* pcb);
 
 //Variables Globales
 t_config_kernel* config;

@@ -30,7 +30,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		break;
 	case ENVIO_CODIGO:
 		log_info(logger, "recibo codigo");
-		nuevoProceso = crearProceso(consola_fd, package);
+		nuevoProceso = crearProcesoEnEspera(consola_fd, package);
 
 		//sem_wait(&sem_multi);
 		sem_wait(&mutex_cola_new);

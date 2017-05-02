@@ -15,7 +15,7 @@ int main(int argc, char** argv){
 	crearConfig(argc,argv);
 	inicializaciones();
 
-	//conectarConServidores();
+	conectarConServidores();
 	lanzarHilosPlanificacion();
 	escucharConexiones();
 
@@ -28,10 +28,10 @@ void conectarConServidores(){
 		log_error(logger,"No se pudo establecer la conexion con la memoria.");
 		exit(1);
 	}
-	if(conexionConFileSystem() == -1){
-		log_error(logger,"No se pudo establecer la conexion con el File System.");
-		exit(1);
-	}
+	//if(conexionConFileSystem() == -1){
+	//	log_error(logger,"No se pudo establecer la conexion con el File System.");
+	//	exit(1);
+	//}
 }
 
 void escucharConexiones(){

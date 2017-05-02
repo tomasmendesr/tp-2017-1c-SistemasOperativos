@@ -155,7 +155,7 @@ void enviarTamanioStack(int fd){
 	sendSocket(fd,header,&config->stack_Size);
 }
 
-proceso_en_espera_t* crearProceso(int consola_fd, char* source){
+proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
 
 	proceso_en_espera_t* proc = malloc(sizeof(proceso_en_espera_t));
 	proc->socketConsola = consola_fd;
@@ -383,16 +383,16 @@ void planificarCortoPlazo(){
 		cpu_t* cpu = obtenerCpuLibre();
 
 		sem_wait(&mutex_cola_ready);
-		pcb_t* pcb = queue_pop(colaReady);
+		proceso_t* proc = queue_pop(colaReady);
 		sem_post(&mutex_cola_ready);
 
-		t_buffer_tamanio* buffer = serializar_pcb(pcb);
+		t_buffer_tamanio* buffer = serializar_pcb(proc->pcb);
 		header_t header;
 		header.type = EXEC_PCB;
 		header.length = buffer->tamanioBuffer;
 		sendSocket(cpu->socket, &header, buffer->buffer);
 
-		cpu->pcb = pcb;
+		cpu->pcb = proc->pcb;
 	}
 }
 
@@ -407,7 +407,6 @@ void planificarLargoPlazo(){
 		return;
 	}
 
-	sem_wait(&sem_cola_new); //si la cola esta vacia bloqueo
 	sem_wait(&mutex_cola_new);
 	proceso_en_espera_t* proc = queue_pop(colaNew);
 	sem_post(&mutex_cola_new);
@@ -431,7 +430,7 @@ void planificarLargoPlazo(){
 
 	//evaluo respuesta
 	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
-
+	printf("resultado %d\n", resultado);
 	if(resultado == SIN_ESPACIO){
 		//aviso a consola que se rechazo
 		enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
@@ -445,9 +444,12 @@ void planificarLargoPlazo(){
 
 		//creo pcb y paso el proceso a ready
 		pcb_t* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
+		proceso_t* proceso = crearProceso(pcb);
 		sem_wait(&mutex_cola_ready);
-		queue_push(colaReady, pcb);
+		queue_push(colaReady, proceso);
 		sem_post(&mutex_cola_ready);
+
+		cantProcesosSistema++;
 
 		//destruyo el proceso en espera;
 		free(proc->codigo);
@@ -470,4 +472,15 @@ void envioCodigoMemoria(char* codigo){
 	header.type = ENVIO_CODIGO;
 	header.length = strlen(codigo)+1;
 	sendSocket(socketConexionMemoria, &header, codigo);
+}
+
+proceso_t* crearProceso(pcb_t* pcb){
+	proceso_t* proc = malloc(sizeof(proc));
+	proc->cantOpPrivi = 0;
+	proc->cantPaginasHeap = 0;
+	proc->cantRafagas = 0;
+	proc->cantSyscalls = 0;
+	proc->pcb = pcb;
+
+	return proc;
 }
