@@ -60,6 +60,8 @@ typedef struct{
 	unsigned long int time_used; //Cual fue la ultima vez que se utilizo
 }t_entrada_cache;
 
+void inicializarGlobales();
+
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
 void crearConfig(int argc, char* argv[]);
 void destruirConfiguracionMemoria(t_config_memoria* config);
@@ -77,9 +79,9 @@ void inicializarMemoria();
 //Funciones administracion memoria
 int framesLibres();
 int buscarFrame(int pid, int pag);
+int reservarFrames(int pid, int cantPag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
-void reservarFrame(int pid, int pag);
 
 bool pedidoIncorrecto(t_pedido_memoria*);
 
@@ -109,7 +111,6 @@ void enviarTamanioPagina(int fd);
 
 //Pedidos de Kernel
 int iniciarPrograma(int fd, t_pedido_iniciar* pedido);
-int asignarPaginas(int pid, int cantPag);
 int finalizarPrograma(t_pedido_finalizar *pid);
 
 //Pedidos cpu
@@ -146,5 +147,9 @@ t_entrada_cache* cache;
 
 unsigned long int op_count; /*Esto vendría a ser nuestro tiempo de referencia para el algoritmo LRU.
  	 	 	 			 Cada vez que se realiza una operación en memoria, se incrementa.*/
+
+//Mutexes
+pthread_mutex_t cache_mutex;
+pthread_mutex_t tablaPag_mutex;
 
 #endif /* FUNCIONESMEMORIA_H_ */

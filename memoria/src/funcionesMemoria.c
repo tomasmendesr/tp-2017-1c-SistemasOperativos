@@ -1,5 +1,10 @@
 #include "funcionesMemoria.h"
 
+void inicializarGlobales(){
+	pthread_mutex_init(&cache_mutex,NULL);
+	pthread_mutex_init(&tablaPag_mutex,NULL);
+}
+
 void crearConfig(int argc, char* argv[]){
 
 	char* pathConfig=string_new();
@@ -180,7 +185,7 @@ void requestHandlerCpu(int fd){
 
 int iniciarPrograma(int fd, t_pedido_iniciar* pedido){
 
-	if( asignarPaginas(pedido->pid,pedido->cant_pag) == -1){
+	if( reservarFrames(pedido->pid,pedido->cant_pag) == -1){
 		//No se puede, aviso a kernel que no hay lugar
 		enviarRespuesta(fd, SIN_ESPACIO);
 		log_warning(logger, "No hay espacio");
@@ -226,10 +231,12 @@ int finalizarPrograma(t_pedido_finalizar* pid){
 /* Asigna la cantidad de paginas al proceso especifico
  * Devuelve 0 en caso de poder asignar las paginas
  * -1 en caso de no haber frames disponibles para realizar la operacion */
-int asignarPaginas(int pid, int cantPag){
+int reservarFrames(int pid, int cantPag){
 
 	if(framesLibres() < cantPag)
 		return -1;
+
+	pthread_mutex_lock(&tablaPag_mutex);
 
 	int maxPag = 0;
 	int i;
@@ -250,6 +257,7 @@ int asignarPaginas(int pid, int cantPag){
 		}
 	}
 
+	pthread_mutex_unlock(&tablaPag_mutex);
 	return 0;
 }
 
@@ -259,7 +267,7 @@ int solicitudBytes(int fd, t_pedido_memoria* pedido){
 		enviarRespuesta(fd, SEGMENTATION_FAULT);
 		return -1;
 	}
-
+	log_info(logger, "Pedido de bytes: pid->%d, pag->%d, offset->%d, size->%d", pedido->pid, pedido->pag, pedido->offset, pedido->size);
 	char* buf = malloc(pedido->size);
 
 	if(buf == NULL){
@@ -339,24 +347,34 @@ bool pedidoIncorrecto(t_pedido_memoria* pedido){
 
 int framesLibres(){
 
+	pthread_mutex_lock(&tablaPag_mutex);
+
 	int i, cant = 0;
 	for(i=0;i<cant_frames;i++){
 		if( tabla_pag[i].pid == -1 &&
 			tabla_pag[i].pag == -1  )
 			cant++;
 	}
+
+	pthread_mutex_unlock(&tablaPag_mutex);
 	return cant;
 }
 
 /* Busqueda secuencial, despues implementamos hash */
 int buscarFrame(int pid, int pag){
 
+	pthread_mutex_lock(&tablaPag_mutex);
+
 	int i;
 	for(i=0;i<config->marcos;i++){
 		if( tabla_pag[i].pid == pid &&
-			tabla_pag[i].pag == pag  )
+			tabla_pag[i].pag == pag  ){
+			pthread_mutex_unlock(&tablaPag_mutex);
 			return i;
+		}
 	}
+
+	pthread_mutex_unlock(&tablaPag_mutex);
 	return -1; //No encontro en la tabla de paginas la entrada
 }
 
@@ -373,6 +391,7 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 	while(cant_leida < size){
 
 		if( leerCache(pid,pag,&pos_leer) == -1 ){//No Esta en cache, debo leer de memoria
+
 			frame = buscarFrame(pid,pag);
 			if(frame == -1)
 				return -1;
@@ -432,6 +451,8 @@ int cantEntradas(int pid){
 	return cant;
 }
 
+/* Busca la entrada de cache que coincida con pid y pag
+ * Retorna -1 si no existe */
 bool buscarEntrada(int pid, int pag){
 	int i;
 	for(i=0;i<cache_entradas;i++){
@@ -489,6 +510,8 @@ int reemplazoGlobal(){
 
 int leerCache(int pid, int pag, char** contenido){
 
+	pthread_mutex_lock(&cache_mutex);
+
 	increaseOpCount();
 
 	int i;
@@ -496,13 +519,17 @@ int leerCache(int pid, int pag, char** contenido){
 		if(cache[i].pid == pid && cache[i].pag == pag){
 			*contenido = cache[i].content;
 			cache[i].time_used = op_count;
+			pthread_mutex_unlock(&cache_mutex);
 			return 0;
 		}
 	}
+	pthread_mutex_unlock(&cache_mutex);
 	return -1;
 }
 
 void actualizarEntradaCache(int pid, int pag, char* frame){
+
+	pthread_mutex_lock(&cache_mutex);
 
 	increaseOpCount();
 
@@ -519,6 +546,7 @@ void actualizarEntradaCache(int pid, int pag, char* frame){
 
 	cache[entrada].time_used = op_count;
 
+	pthread_mutex_unlock(&cache_mutex);
 }
 
 //funciones interfaz

@@ -37,7 +37,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		queue_push(colaNew, nuevoProceso);
 		sem_post(&mutex_cola_new);
 		//sem_post(&sem_cola_new);
-
+		crearInfoEstadistica(nuevoProceso->pid);
 		log_info(logger,"Proceso agregado a la cola New");
 		planificarLargoPlazo();
 	break;
@@ -76,10 +76,11 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		log_info(logger,"Conexion con nueva CPU establecida");
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketCPU);
 		enviarTamanioStack(socketCPU);
+		agregarNuevaCPU(listaCPUs, socketCPU);
 //		enviarQuantum(socketCPU);
 		break;
-	case ENVIO_PCB:
-		break;
+	/*case ENVIO_PCB:
+		break;*/
 	case SEM_SIGNAL:
 		realizarSignal(socketCPU, package);
 		break;
@@ -92,6 +93,18 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case ASIG_VAR_COMPARTIDA:
 		asignarVarCompartida(socketCPU, package);
 		break;
+
+	/* CPU DEVUELVE EL PCB */
+	case FIN_PROCESO:  //TODO
+		break;
+	case FIN_EJECUCION:
+		break;
+	/* ERRORES */
+	case SEGMENTATION_FAULT:
+		break;
+	case STACKOVERFLOW:
+		break;
+
 	default:
 		log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	}

@@ -161,7 +161,7 @@ proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
 	proc->socketConsola = consola_fd;
 	proc->codigo = malloc(strlen(source));
 	memcpy(proc->codigo, source, strlen(source));
-
+	proc->pid = asignarPid();
 	//pcb_t* pcb = crearPCB(source, asignarPid() );
 	//pcb->consolaFd = consola_fd;
 
@@ -322,7 +322,25 @@ void listProcesses(char* comando, char* param){
         printf("listProcesses\n");
 }
 void processInfo(char* comando, char* param){
-        printf("process info\n");
+	printf("entre aca\n");
+	int pid = atoi(param);
+
+	bool buscar(info_estadistica_t* info){
+		return info->pid == pid ? true : false;
+	}
+
+	info_estadistica_t* info = list_find(listadoEstadistico, buscar);
+	if(info == NULL){
+		printf("no se encuentra ese poceso en el sistema\n");
+	}else{
+		printf("Cantidad rafagas: %d\n", info->cantRafagas);
+		printf("Cantidad operaciones privilegiadas: %d\n", info->cantOpPrivi);
+		printf("Cantidad paginas de heap: %d\n", info->cantPaginasHeap);
+		printf("Cantidad acciones alocar: %d\n", info->cantAlocar);
+		printf("Cantidad acciones liberar: %d\n", info->cantLiberar);
+		printf("Cantidad syscalls: %d\n", info->cantSyscalls);
+	}
+
 }
 void getTablaArchivos(char* comando, char* param){
         printf("get tabla archivos\n");
@@ -343,6 +361,7 @@ void agregarNuevaCPU(t_list* lista, int socketCPU){
 	nuevaCPU->pcb = NULL;
 
 	list_add(lista, nuevaCPU);
+	sem_post(&semCPUs);
 }
 
 void liberarCPU(cpu_t* cpu){
@@ -388,20 +407,34 @@ void planificarCortoPlazo(){
 
 		sem_wait(&semCPUs);
 		sem_wait(&sem_cola_ready);
+		printf("pase\n");
 		cpu_t* cpu = obtenerCpuLibre();
+		printf("obtuve cpu libre\n");
 
 		sem_wait(&mutex_cola_ready);
-		proceso_t* proc = queue_pop(colaReady);
+		pcb_t* pcb = queue_pop(colaReady);
 		sem_post(&mutex_cola_ready);
 
-		t_buffer_tamanio* buffer = serializar_pcb(proc->pcb);
-		header_t header;
-		header.type = EXEC_PCB;
-		header.length = buffer->tamanioBuffer;
-		sendSocket(cpu->socket, &header, buffer->buffer);
+		enviarPcbCPU(pcb, cpu->socket);
 
-		cpu->pcb = proc->pcb;
+		cpu->pcb = pcb;
 	}
+}
+
+void enviarPcbCPU(pcb_t* pcb, int socketCPU){
+	t_buffer_tamanio* buffer = serializar_pcb(pcb);
+	header_t header;
+	header.type = EXEC_PCB;
+	header.length = buffer->tamanioBuffer;
+	sendSocket(socketCPU, &header, buffer->buffer);
+
+	int quantum = 0;
+	header.type=EXEC_QUANTUM;
+	if(!strcmp(config->algoritmo, "RR")){
+		quantum = config->quantum;
+	}
+	header.length = sizeof(int);
+	sendSocket(socketCPU, &header, &quantum);
 }
 
 void planificarLargoPlazo(){
@@ -424,7 +457,7 @@ void planificarLargoPlazo(){
 
 	//creo el pedido para la memoria
 	t_pedido_iniciar pedido;
-	int pid = asignarPid();
+	int pid = proc->pid;
 	pedido.pid = pid;
 	pedido.cant_pag = config->stack_Size;
 	log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags: %d", pid, pedido.cant_pag);
@@ -439,6 +472,7 @@ void planificarLargoPlazo(){
 
 	//evaluo respuesta
 	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+
 	if(resultado == SIN_ESPACIO){
 		//aviso a consola que se rechazo
 		enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
@@ -447,33 +481,34 @@ void planificarLargoPlazo(){
 	if(resultado == OP_OK){
 		log_info(logger, "Paginas reservadas para el proceso %d", pid);
 		//aviso a consola que se acepto
-		alertarConsolaProcesoAceptado(pid, proc->socketConsola);
+		alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
 
 		//mando a memoria el codigo
 		envioCodigoMemoria(proc->codigo);
 
 		//creo pcb y paso el proceso a ready
 		pcb_t* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
-		proceso_t* proceso = crearProceso(pcb);
+		//proceso_t* proceso = crearProceso(pcb);
 		sem_wait(&mutex_cola_ready);
-		queue_push(colaReady, proceso);
+		queue_push(colaReady, pcb);
 		sem_post(&mutex_cola_ready);
-
+		sem_post(&sem_cola_ready);
 		cantProcesosSistema++;
 
 		//destruyo el proceso en espera;
 		free(proc->codigo);
 		free(proc);
+		printf("fin plp\n");
 	}
 
 }
 
-void alertarConsolaProcesoAceptado(int pid, int socketConsola){
+void alertarConsolaProcesoAceptado(int* pid, int socketConsola){
 	header_t header;
 
 	header.type = PID_PROGRAMA;
 	header.length = sizeof(int);
-	sendSocket(socketConsola, &header, &pid);
+	sendSocket(socketConsola, &header, pid);
 }
 
 void envioCodigoMemoria(char* codigo){
@@ -484,13 +519,15 @@ void envioCodigoMemoria(char* codigo){
 	sendSocket(socketConexionMemoria, &header, codigo);
 }
 
-proceso_t* crearProceso(pcb_t* pcb){
-	proceso_t* proc = malloc(sizeof(proc));
-	proc->cantOpPrivi = 0;
-	proc->cantPaginasHeap = 0;
-	proc->cantRafagas = 0;
-	proc->cantSyscalls = 0;
-	proc->pcb = pcb;
+void crearInfoEstadistica(int pid){
+	info_estadistica_t* info = malloc(sizeof(info_estadistica_t));
+	info->pid = pid;
+	info->cantLiberar = 0;
+	info->cantAlocar = 0;
+	info->cantOpPrivi = 0;
+	info->cantPaginasHeap = 0;
+	info->cantRafagas = 0;
+	info->cantSyscalls = 0;
 
-	return proc;
+	list_add(listadoEstadistico, info);
 }

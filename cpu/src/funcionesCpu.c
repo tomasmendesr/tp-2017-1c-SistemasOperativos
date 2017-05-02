@@ -210,15 +210,14 @@ int32_t requestHandlerMemoria(void){
 		break;
 	//respuestas de operaciones fallidas
 	case SEGMENTATION_FAULT:
-		//enviar_paquete_vacio(FIN_SEGMENTATION_FAULT,socketConexionKernel);
 		log_error(logger,"Segmentation Fault");
 		finalizarPor(SEGMENTATION_FAULT);
-		break;
+		return -1;
 	case STACKOVERFLOW:
 		//enviar_paquete_vacio(STACKOVERFLOW,socketConexionKernel);
 		log_error(logger, "Stack Overflow");
 		finalizarPor(STACKOVERFLOW);
-		break;
+		return -1;
 	default:
 		log_error(logger, "Mensaje Recibido Incorrecto");
 		return -1;
@@ -341,10 +340,13 @@ void comenzarEjecucionDePrograma(void* paquete){
 	free(paquete);
 
 	int i = 1;
-	while(i <= quantum){
-		if(solicitarProximaInstruccion() != 0){ /// carga la instruccion en el paquete globan bytes
+	while(i <= quantum || quantum == 0){ // Si el quantum es 0 significa que es FIFO ---> ejecuto hasta terminar.
+		if(solicitarProximaInstruccion() != 0){ /// carga la instruccion en el paquete global bytes
 			return;
 		}
+		// char * instruccion = deserializarInstruccion(paqueteGlobal);
+		// free(paqueteGlobal();
+		// reemplazar los paqueteGlobal de abajo por instruccion.
 		limpiarInstruccion(paqueteGlobal);
 
 		if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(paqueteGlobal, "end") == 0)) {
@@ -388,9 +390,8 @@ int16_t solicitarProximaInstruccion() {
 	solicitar->offset = requestStart - (tamanioPagina * paginaAPedir);
 	solicitar->size = requestSize;
 	solicitar->pid = pcb->pid;
-	log_info(logger, "Pido a Memoria -> Pagina: %d - Start: %d - Offset: %d",
-		paginaAPedir, requestStart - (tamanioPagina * paginaAPedir),
-		solicitar->offset);
+	log_info(logger, "Pido a Memoria -> Pid: %d - Pagina: %d - Offset: %d - Size: %d",
+		solicitar->pid, paginaAPedir, solicitar->offset, requestSize);
 	if(solicitarBytes(solicitar) != 0 ){
 		free(solicitar);
 		log_error(logger, "Error al solicitar bytes a memoria.");
@@ -422,7 +423,7 @@ void limpiarInstruccion(char * instruccion) {
 void finalizarPor(int type) {
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
-	header.type= FIN_EJECUCION;
+	header.type= type;
 	header.length=paquete->tamanioBuffer;
 	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
 		log_error(logger,"Error al notificar kernel el fin de ejecucion");

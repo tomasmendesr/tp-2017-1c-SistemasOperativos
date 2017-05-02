@@ -160,10 +160,6 @@ void iniciarPrograma(char* comando, char* param) {
 	pthread_t thread;
 	pthread_create(&thread, NULL, (void*)threadPrograma, data);
 	pthread_detach(thread);
-
-//	creo y agrego proceso a la lista
-//	crear_proceso(socket_cliente,thread);
-
 }
 
 void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
