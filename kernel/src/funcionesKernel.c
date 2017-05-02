@@ -445,7 +445,7 @@ void planificarLargoPlazo(){
 	}
 	if(resultado == OP_OK){
 		//aviso a consola que se acepto
-		alertarConsolaProcesoAceptado(pid, proc->socketConsola);
+		alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
 
 		//mando a memoria el codigo
 		envioCodigoMemoria(proc->codigo);
@@ -462,16 +462,17 @@ void planificarLargoPlazo(){
 		//destruyo el proceso en espera;
 		free(proc->codigo);
 		free(proc);
+		printf("fin plp\n");
 	}
 
 }
 
-void alertarConsolaProcesoAceptado(int pid, int socketConsola){
+void alertarConsolaProcesoAceptado(int* pid, int socketConsola){
 	header_t header;
 
 	header.type = PID_PROGRAMA;
 	header.length = sizeof(int);
-	sendSocket(socketConsola, &header, &pid);
+	sendSocket(socketConsola, &header, pid);
 }
 
 void envioCodigoMemoria(char* codigo){
@@ -483,7 +484,7 @@ void envioCodigoMemoria(char* codigo){
 }
 
 proceso_t* crearProceso(pcb_t* pcb){
-	proceso_t* proc = malloc(sizeof(proc));
+	proceso_t* proc = malloc(sizeof(proceso_t));
 	proc->cantOpPrivi = 0;
 	proc->cantPaginasHeap = 0;
 	proc->cantRafagas = 0;

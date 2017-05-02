@@ -128,7 +128,7 @@ void planificarCortoPlazo();
 
 //Planificacion Largo Plazo
 void planificarLargoPlazo();
-void alertarConsolaProcesoAceptado(int pid, int socketConsola);
+void alertarConsolaProcesoAceptado(int* pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
 proceso_t* crearProceso(pcb_t* pcb);
 
