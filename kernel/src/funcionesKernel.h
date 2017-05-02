@@ -125,6 +125,7 @@ pthread_t hiloPCP;
 
 //Planificar Corto Plazo
 void planificarCortoPlazo();
+void enviarPcbCPU(pcb_t* pcb, int socketCPU);
 
 //Planificacion Largo Plazo
 void planificarLargoPlazo();

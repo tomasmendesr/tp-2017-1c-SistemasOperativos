@@ -76,6 +76,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		log_info(logger,"Conexion con nueva CPU establecida");
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketCPU);
 		enviarTamanioStack(socketCPU);
+		agregarNuevaCPU(listaCPUs, socketCPU);
 //		enviarQuantum(socketCPU);
 		break;
 	case ENVIO_PCB:

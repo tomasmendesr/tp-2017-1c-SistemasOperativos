@@ -343,6 +343,7 @@ void agregarNuevaCPU(t_list* lista, int socketCPU){
 	nuevaCPU->pcb = NULL;
 
 	list_add(lista, nuevaCPU);
+	sem_post(&semCPUs);
 }
 
 void liberarCPU(cpu_t* cpu){
@@ -389,19 +390,32 @@ void planificarCortoPlazo(){
 		sem_wait(&semCPUs);
 		sem_wait(&sem_cola_ready);
 		cpu_t* cpu = obtenerCpuLibre();
+		printf("obtuve cpu libre\n");
 
 		sem_wait(&mutex_cola_ready);
 		proceso_t* proc = queue_pop(colaReady);
 		sem_post(&mutex_cola_ready);
 
-		t_buffer_tamanio* buffer = serializar_pcb(proc->pcb);
-		header_t header;
-		header.type = EXEC_PCB;
-		header.length = buffer->tamanioBuffer;
-		sendSocket(cpu->socket, &header, buffer->buffer);
+		enviarPcbCPU(proc->pcb, cpu->socket);
 
 		cpu->pcb = proc->pcb;
 	}
+}
+
+void enviarPcbCPU(pcb_t* pcb, int socketCPU){
+	t_buffer_tamanio* buffer = serializar_pcb(pcb);
+	header_t header;
+	header.type = EXEC_PCB;
+	header.length = buffer->tamanioBuffer;
+	sendSocket(socketCPU, &header, buffer->buffer);
+
+	int quantum = 0;
+	header.type=EXEC_QUANTUM;
+	if(!strcmp(config->algoritmo, "RR")){
+		quantum = config->quantum;
+	}
+	header.length = sizeof(int);
+	sendSocket(socketCPU, &header, &quantum);
 }
 
 void planificarLargoPlazo(){
@@ -456,7 +470,7 @@ void planificarLargoPlazo(){
 		sem_wait(&mutex_cola_ready);
 		queue_push(colaReady, proceso);
 		sem_post(&mutex_cola_ready);
-
+		sem_post(&sem_cola_ready);
 		cantProcesosSistema++;
 
 		//destruyo el proceso en espera;
