@@ -16,6 +16,6 @@
 
 //Prototipos de creacion y manejo de pcb
 pcb_t* crearPCB(char* codigo, int id, int fd);
-t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
+void llenarLista(t_list** lista, t_intructions * indiceCodigo, int cantInstruc);
 
 #endif /* PCB_H_ */

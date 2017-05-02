@@ -7,9 +7,12 @@
  */
 pcb_t* crearPCB(char* codigo, int id, int fd){
 
-	pcb_t* pcb = malloc(sizeof(pcb));
+	pcb_t* pcb=malloc(sizeof(pcb_t));
+	t_list * lista=list_create();
+	t_metadata_program* metadata=metadata_desde_literal(codigo);
+	llenarLista(&lista,metadata->instrucciones_serializado, metadata->instrucciones_size);
+	pcb->indiceCodigo=lista;
 
-	t_metadata_program* metadata = metadata_desde_literal(codigo);
 
 	pcb->pid = id;
 	pcb->stackPointer = 0;
@@ -21,12 +24,6 @@ pcb_t* crearPCB(char* codigo, int id, int fd){
 	pcb->tamanioEtiquetas = metadata->etiquetas_size;
 	pcb->consolaFd=fd;
 
-	//Indice de Codigo ----> tenemos que decidir si va como lista o no
-//	pcb->indiceCodigo = malloc(metadata->instrucciones_size * sizeof(t_intructions));
-//	memcpy(pcb->indiceCodigo, metadata->instrucciones_serializado, metadata->instrucciones_size * sizeof(t_intructions));
-
-	pcb->indiceCodigo = llenarLista(metadata->instrucciones_serializado,metadata->instrucciones_size);
-
 	if (metadata->etiquetas_size) {
 		pcb->etiquetas = malloc(metadata->etiquetas_size);
 		memcpy(pcb->etiquetas, metadata->etiquetas, metadata->etiquetas_size);
@@ -34,8 +31,9 @@ pcb_t* crearPCB(char* codigo, int id, int fd){
 		pcb->etiquetas = NULL;
 	}
 
-	pcb->indiceStack = list_create();
-	insertarNuevoStack(pcb);
+//	pcb->indiceStack = list_create();
+//	insertarNuevoStack(pcb);
+
 /*
 	//Reservo el espacio para el codigo y almaceno el codigo
 	u_int32_t direccion_segmento = guardarEnMemoria(socketConexionMemoria,strlen(codigo),pcb->pid);
@@ -54,19 +52,18 @@ pcb_t* crearPCB(char* codigo, int id, int fd){
 		return pcb;
 	}
 */
+
 	metadata_destruir(metadata);
 	return pcb;
 }
 
-
-t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc) {
-	t_list * lista = list_create();
+void llenarLista(t_list** lista, t_intructions * indiceCodigo, int cantInstruc){
 	int b = 0;
 	for (b = 0; b < cantInstruc; b++) {
 		t_indice_codigo* linea = malloc(sizeof(t_indice_codigo));
 		linea->offset = indiceCodigo[b].start;
 		linea->size = indiceCodigo[b].offset;
-		list_add(lista, linea);
+		list_add(*lista, linea);
 	}
-	return lista;
+	return;
 }
