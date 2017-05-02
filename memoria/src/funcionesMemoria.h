@@ -60,6 +60,8 @@ typedef struct{
 	unsigned long int time_used; //Cual fue la ultima vez que se utilizo
 }t_entrada_cache;
 
+void inicializarGlobales();
+
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
 void crearConfig(int argc, char* argv[]);
 void destruirConfiguracionMemoria(t_config_memoria* config);
@@ -146,5 +148,8 @@ t_entrada_cache* cache;
 
 unsigned long int op_count; /*Esto vendría a ser nuestro tiempo de referencia para el algoritmo LRU.
  	 	 	 			 Cada vez que se realiza una operación en memoria, se incrementa.*/
+
+//Mutexes
+pthread_mutex_t cache_mutex;
 
 #endif /* FUNCIONESMEMORIA_H_ */

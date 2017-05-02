@@ -1,5 +1,9 @@
 #include "funcionesMemoria.h"
 
+void inicializarGlobales(){
+	pthread_mutex_init(&cache_mutex,NULL);
+}
+
 void crearConfig(int argc, char* argv[]){
 
 	char* pathConfig=string_new();
@@ -373,6 +377,7 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 	while(cant_leida < size){
 
 		if( leerCache(pid,pag,&pos_leer) == -1 ){//No Esta en cache, debo leer de memoria
+
 			frame = buscarFrame(pid,pag);
 			if(frame == -1)
 				return -1;
@@ -432,6 +437,8 @@ int cantEntradas(int pid){
 	return cant;
 }
 
+/* Busca la entrada de cache que coincida con pid y pag
+ * Retorna -1 si no existe */
 bool buscarEntrada(int pid, int pag){
 	int i;
 	for(i=0;i<cache_entradas;i++){
@@ -489,6 +496,8 @@ int reemplazoGlobal(){
 
 int leerCache(int pid, int pag, char** contenido){
 
+	pthread_mutex_lock(&cache_mutex);
+
 	increaseOpCount();
 
 	int i;
@@ -496,13 +505,17 @@ int leerCache(int pid, int pag, char** contenido){
 		if(cache[i].pid == pid && cache[i].pag == pag){
 			*contenido = cache[i].content;
 			cache[i].time_used = op_count;
+			pthread_mutex_unlock(&cache_mutex);
 			return 0;
 		}
 	}
+	pthread_mutex_unlock(&cache_mutex);
 	return -1;
 }
 
 void actualizarEntradaCache(int pid, int pag, char* frame){
+
+	pthread_mutex_lock(&cache_mutex);
 
 	increaseOpCount();
 
@@ -519,6 +532,7 @@ void actualizarEntradaCache(int pid, int pag, char* frame){
 
 	cache[entrada].time_used = op_count;
 
+	pthread_mutex_unlock(&cache_mutex);
 }
 
 //funciones interfaz
