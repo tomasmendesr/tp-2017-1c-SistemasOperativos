@@ -30,16 +30,16 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		break;
 	case ENVIO_CODIGO:
 		log_info(logger, "recibo codigo");
-		nuevoProceso = crearProceso(consola_fd, package);
+		nuevoProceso = crearProcesoEnEspera(consola_fd, package);
 
-		sem_wait(&sem_multi);
+		//sem_wait(&sem_multi);
 		sem_wait(&mutex_cola_new);
 		queue_push(colaNew, nuevoProceso);
 		sem_post(&mutex_cola_new);
-		sem_post(&sem_cola_new);
-
+		//sem_post(&sem_cola_new);
+		crearInfoEstadistica(nuevoProceso->pid);
 		log_info(logger,"Proceso agregado a la cola New");
-
+		planificarLargoPlazo();
 	break;
 	case FINALIZAR_PROGRAMA:
 		//finalizarPrograma(consola_fd,package);
@@ -76,6 +76,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		log_info(logger,"Conexion con nueva CPU establecida");
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketCPU);
 		enviarTamanioStack(socketCPU);
+		agregarNuevaCPU(listaCPUs, socketCPU);
 //		enviarQuantum(socketCPU);
 		break;
 	case ENVIO_PCB:

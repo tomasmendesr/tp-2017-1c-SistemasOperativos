@@ -63,7 +63,19 @@ typedef struct{
 typedef struct{
 	int socketConsola;
 	char* codigo;
+	int pid;
 }proceso_en_espera_t;
+
+
+typedef struct{
+	uint32_t pid;
+	uint32_t cantRafagas;
+	uint32_t cantSyscalls;
+	uint32_t cantOpPrivi;
+	uint32_t cantPaginasHeap;
+	uint32_t cantAlocar;
+	uint32_t cantLiberar;
+}info_estadistica_t;
 
 void inicializarColas();
 void inicializaciones(void);
@@ -91,8 +103,9 @@ void aceptarNuevaConexion(int socketEscucha, fd_set* set);
 //Mensajes con consola
 void trabajarConexionConsola();
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
-proceso_en_espera_t* crearProceso(int consola_fd, char* package);
+proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* package);
 int asignarPid();
+void crearInfoEstadistica(int pid);
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -117,10 +130,11 @@ pthread_t hiloPCP;
 
 //Planificar Corto Plazo
 void planificarCortoPlazo();
+void enviarPcbCPU(pcb_t* pcb, int socketCPU);
 
 //Planificacion Largo Plazo
 void planificarLargoPlazo();
-void alertarConsolaProcesoAceptado(int pid, int socketConsola);
+void alertarConsolaProcesoAceptado(int* pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
 
 //Variables Globales
@@ -128,6 +142,7 @@ t_config_kernel* config;
 int socketConexionFS;
 int socketConexionMemoria;
 int max_pid;
+int cantProcesosSistema;
 t_log* logger;
 sem_t sem_cola_ready;
 sem_t sem_cola_new;
@@ -136,6 +151,7 @@ sem_t mutex_cola_new;
 sem_t sem_multi;
 sem_t semCPUs;
 t_list* listaCPUs;
+t_list* listadoEstadistico;
 
 fd_set master;
 fd_set setConsolas;

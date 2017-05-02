@@ -15,8 +15,12 @@ int main(int argc, char** argv){
 	crearConfig(argc,argv);
 	inicializaciones();
 
-	//conectarConServidores();
+	levantarInterfaz();
+
+	conectarConServidores();
+
 	lanzarHilosPlanificacion();
+
 	escucharConexiones();
 
 	destruirConfiguracionKernel(config);
@@ -28,10 +32,10 @@ void conectarConServidores(){
 		log_error(logger,"No se pudo establecer la conexion con la memoria.");
 		exit(1);
 	}
-	if(conexionConFileSystem() == -1){
-		log_error(logger,"No se pudo establecer la conexion con el File System.");
-		exit(1);
-	}
+	//if(conexionConFileSystem() == -1){
+	//	log_error(logger,"No se pudo establecer la conexion con el File System.");
+	//	exit(1);
+	//}
 }
 
 void escucharConexiones(){
@@ -99,7 +103,7 @@ void aceptarNuevaConexion(int socketEscucha, fd_set* set){
 }
 
 void inicializaciones(void){
-	sem_init(&sem_cola_ready,0,1);
+	sem_init(&sem_cola_ready,0,0);
 	sem_init(&sem_cola_new,0,0);
 	sem_init(&sem_multi,0,config->grado_MultiProg);
 	sem_init(&semCPUs, 0, 0);
@@ -107,6 +111,8 @@ void inicializaciones(void){
 	sem_init(&mutex_cola_new,0,1);
 	inicializarColas();
 	listaCPUs = list_create();
+	listadoEstadistico = list_create();
+	cantProcesosSistema = 0;
 }
 
 void lanzarHilosPlanificacion(){

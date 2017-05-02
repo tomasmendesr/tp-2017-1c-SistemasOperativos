@@ -17,11 +17,14 @@ int main(int argc, char** argv) {
 	if(conexionConKernel() == -1 || conexionConMemoria() == -1){
 		finalizarCPU();
 	}
-	comenzarEjecucionDePrograma();
+
 	/*
 	 * Manejo de la interrupcion SigusR1
 	 */
 	signal(SIGUSR1, revisarSigusR1);
+	for(;;){
+		requestHandlerKernel();
+	}
 
 	return EXIT_SUCCESS;
 }
