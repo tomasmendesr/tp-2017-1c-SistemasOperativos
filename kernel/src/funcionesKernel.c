@@ -201,6 +201,14 @@ int conexionConMemoria(){
 
 	enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionMemoria);
 
+	int respuesta;
+	void* paquete;
+
+	recibir_info(socketConexionMemoria, &paquete, &respuesta);
+	if(respuesta != HANDSHAKE_MEMORIA){
+		return -1;
+	}
+
 	printf("Conexion con memoria establecida\n");
 
 	return 1;
