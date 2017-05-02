@@ -22,7 +22,9 @@ int main(int argc, char** argv) {
 	 * Manejo de la interrupcion SigusR1
 	 */
 	signal(SIGUSR1, revisarSigusR1);
-	comenzarEjecucionDePrograma();
+	for(;;){
+		requestHandlerKernel();
+	}
 
 	return EXIT_SUCCESS;
 }

@@ -142,8 +142,7 @@ int32_t requestHandlerKernel(void){
 			recibirPCB(paquete);
 			break;
 		case EXEC_QUANTUM:
-			quantum=*(uint32_t*)paquete;
-			free(paquete);
+			comenzarEjecucionDePrograma(paquete);
 			break;
 		case TAMANIO_STACK_PARA_CPU:
 			tamanioStack=*(uint32_t*)paquete;
@@ -337,9 +336,9 @@ void revisarFinalizarCPU(void){
 	exit(EXIT_SUCCESS);
 }
 
-void comenzarEjecucionDePrograma(void){
-	for(;;){
-	requestHandlerKernel();
+void comenzarEjecucionDePrograma(void* paquete){
+	quantum = *(uint32_t*)paquete;
+	free(paquete);
 
 	int i = 1;
 	while(i <= quantum){
@@ -375,7 +374,6 @@ void comenzarEjecucionDePrograma(void){
 	finalizarPor(FIN_EJECUCION);
 	freePCB(pcb);
 	revisarFinalizarCPU();
-	}
 }
 
 int16_t solicitarProximaInstruccion() {

@@ -62,7 +62,7 @@ int16_t recibirTamanioPagina(void);
 void revisarFinalizarCPU(void);
 void revisarSigusR1(int signo);
 void limpiarInstruccion(char* instruccion);
-void comenzarEjecucionDePrograma(void);
+void comenzarEjecucionDePrograma(void* paquete);
 int16_t solicitarProximaInstruccion();
 void finalizarPor(int type);
 int32_t requestHandlerKernel(void);
