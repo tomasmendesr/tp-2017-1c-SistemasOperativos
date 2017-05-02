@@ -15,8 +15,12 @@ int main(int argc, char** argv){
 	crearConfig(argc,argv);
 	inicializaciones();
 
+	levantarInterfaz();
+
 	conectarConServidores();
+
 	lanzarHilosPlanificacion();
+
 	escucharConexiones();
 
 	destruirConfiguracionKernel(config);
@@ -107,6 +111,7 @@ void inicializaciones(void){
 	sem_init(&mutex_cola_new,0,1);
 	inicializarColas();
 	listaCPUs = list_create();
+	listadoEstadistico = list_create();
 	cantProcesosSistema = 0;
 }
 
