@@ -280,7 +280,7 @@ int deserializar_string(void* paquete, char** string){
 	return bytes_totales_leidos;
 
 }
-/*
+
 void* pcb_serializer(pcb_t* self, int16_t *length){
 
 	void *serialized = malloc(sizeof(pcb_t));
@@ -314,7 +314,7 @@ pcb_t* pcb_deserializer(int socketfd) {
 	recv(socketfd, &self->exitCode, sizeof(self->exitCode), MSG_WAITALL);
 	recv(socketfd, &self->consolaFd, sizeof(self->consolaFd), MSG_WAITALL);
 	return self;
-} */
+}
 
 t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack) {
 	int a;
@@ -522,186 +522,167 @@ t_list* deserializarIndiceStack(char* buffer) {
 t_buffer_tamanio* serializarIndiceDeCodigo(t_list* indiceCodigo) {
 	uint32_t offset = 0, m = 0;
 	int tmp_size = sizeof(uint32_t);
-	char* bufferIndCod = malloc((list_size(indiceCodigo) * (2 * sizeof(uint32_t))) + sizeof(uint32_t)); // todo - borrar el ultimo sizeof(int)?
+	char* bufferIndCod = malloc(list_size(indiceCodigo) * 2 * sizeof(uint32_t));
 	uint32_t itemsEnLista = list_size(indiceCodigo);
 
-	memcpy(bufferIndCod + offset, &itemsEnLista, tmp_size);
-	offset += tmp_size;
+//	memcpy(bufferIndCod + offset, &itemsEnLista, tmp_size);
+//	offset += tmp_size;
 
 	t_indice_codigo* linea;
 	for (m = 0; m < itemsEnLista; m++) {
 		linea = list_get(indiceCodigo, m);
-		memcpy(bufferIndCod + offset, &(linea->offset), tmp_size);
+		memcpy(bufferIndCod + offset, &linea->offset, tmp_size);
 		offset += tmp_size;
-		memcpy(bufferIndCod + offset, &(linea->size), tmp_size);
+		memcpy(bufferIndCod + offset, &linea->size, tmp_size);
 		offset += tmp_size;
 	}
 
-	t_buffer_tamanio * tamanioBuffer = malloc(sizeof(uint32_t) + offset);
+	t_buffer_tamanio * tamanioBuffer = malloc(sizeof(uint32_t)*2);
 	tamanioBuffer->tamanioBuffer = offset;
-	tamanioBuffer->buffer = bufferIndCod;
+	tamanioBuffer->buffer = malloc(tamanioBuffer->tamanioBuffer);
+	memcpy(tamanioBuffer->buffer,bufferIndCod,tamanioBuffer->tamanioBuffer);
 
 	return tamanioBuffer;
 }
 
 t_list* deserializarIndiceCodigo(char* indice, uint32_t tam) {
+	int unit;
 	t_list* ret = list_create();
 	uint32_t offset = 0;
 	uint32_t tmp_size = sizeof(uint32_t);
-	int i = 0;
-	for (i = 0; i < tam; i++) {
+	unit=tam/(sizeof(uint32_t)*2);
+	int i;
+	for (i = 0; i < unit; i++) {
 		t_indice_codigo* linea = malloc(sizeof(t_indice_codigo));
-		memcpy(&(linea->offset), indice + offset, tmp_size);
+		memcpy(&linea->offset, indice + offset, tmp_size);
 		offset += tmp_size;
-		memcpy(&(linea->size), indice + offset, tmp_size);
+		memcpy(&linea->size, indice + offset, tmp_size);
 		offset += tmp_size;
 		list_add(ret, linea);
 	}
 	return ret;
 }
 
-t_buffer_tamanio* serializar_pcb(pcb_t* pcb) {
+t_buffer_tamanio* serializar_pcb(pcb_t* pcb){
 	t_buffer_tamanio* indcod = serializarIndiceDeCodigo(pcb->indiceCodigo);
-	t_buffer_tamanio* stackSerializado = serializarIndiceStack(pcb->indiceStack);
+	char* paqueteSerializado;
+
+//	t_buffer_tamanio* stackSerializado = serializarIndiceStack(pcb->indiceStack);
+//	tamanioPCB += stackSerializado->tamanioBuffer;
 
 	uint32_t tamanioPCB = 0;
-	tamanioPCB += stackSerializado->tamanioBuffer;
+	tamanioPCB += sizeof(uint32_t);
 	tamanioPCB += indcod->tamanioBuffer;
-	tamanioPCB += sizeof(uint32_t); //Tamanio Etiquetas
-	if (pcb->etiquetas != NULL && pcb->tamanioEtiquetas > 0) {
-		tamanioPCB += pcb->tamanioEtiquetas;
-	}
-	tamanioPCB += (sizeof(uint32_t) * 8); //Cantidad de uint32_t que tiene PCB
-	//tamanioPCB += sizeof(uint32_t); //Para indicar tamanio de PCBs
+	tamanioPCB += sizeof(uint32_t);
 
-	//Comienzo serializacion
-	char* paqueteSerializado = malloc(tamanioPCB);
+	if (pcb->etiquetas != NULL && pcb->tamanioEtiquetas > 0)
+		tamanioPCB += pcb->tamanioEtiquetas;
+	tamanioPCB += sizeof(uint32_t) * 7;
+	paqueteSerializado = malloc(tamanioPCB);
 	uint32_t offset = 0;
 	uint32_t tmp_size = sizeof(uint32_t);
 
-	//Serializo tamanio de PCB ------------- todo - lo comento porque este espacio va a ir en la estructura theader
-/*	memcpy(paqueteSerializado + offset, &tamanioPCB, tmp_size);
-	offset += tmp_size; */
-
-	//Serializo los 8 uint32_t del PCB
-	memcpy(paqueteSerializado + offset, &(pcb->pid), tmp_size);
+	memcpy(paqueteSerializado + offset, &pcb->pid, tmp_size);
 	offset += tmp_size;
-	memcpy(paqueteSerializado + offset, &(pcb->codigo), tmp_size);
+	memcpy(paqueteSerializado + offset, &pcb->codigo, tmp_size);
 	offset += tmp_size;
-	memcpy(paqueteSerializado + offset, &(pcb->programCounter), tmp_size);
+	memcpy(paqueteSerializado + offset, &pcb->programCounter, tmp_size);
 	offset += tmp_size;
-	memcpy(paqueteSerializado + offset, &(pcb->stackPointer), tmp_size);
+	memcpy(paqueteSerializado + offset, &pcb->stackPointer, tmp_size);
 	offset += tmp_size;
-	memcpy(paqueteSerializado + offset, &(pcb->tamanioEtiquetas), tmp_size);
-	offset += tmp_size;
-	memcpy(paqueteSerializado, &(pcb->cantPaginasCodigo), tmp_size);
+	memcpy(paqueteSerializado + offset, &pcb->cantPaginasCodigo, tmp_size);
  	offset += tmp_size;
- 	memcpy(paqueteSerializado, &(pcb->exitCode), tmp_size);
+ 	memcpy(paqueteSerializado + offset, &pcb->exitCode, tmp_size);
  	offset += tmp_size;
-	memcpy(paqueteSerializado, &(pcb->consolaFd), tmp_size);
- 	offset += tmp_size;
-	memcpy(paqueteSerializado, &(pcb->exitCode), tmp_size);
+	memcpy(paqueteSerializado + offset, &pcb->consolaFd, tmp_size);
  	offset += tmp_size;
 
-	//Serializo Indice de Codigo
-	memcpy(paqueteSerializado + offset, indcod->buffer, indcod->tamanioBuffer);
-	offset += indcod->tamanioBuffer;
+//	memcpy(paqueteSerializado + offset, stackSerializado->buffer, stackSerializado->tamanioBuffer);
+//	offset += stackSerializado->tamanioBuffer;
 
-	//Serializo Indice de Stack
-	memcpy(paqueteSerializado + offset, stackSerializado->buffer, stackSerializado->tamanioBuffer);
-	offset += stackSerializado->tamanioBuffer;
-
-	//Serializo Indice de Etiquetas
-	if(pcb->etiquetas != NULL && pcb->tamanioEtiquetas > 0) {
-		//uint32_t longitudIndiceEtiquetas = strlen(pcb->ind_etiq);
+ 	if(pcb->etiquetas != NULL && pcb->tamanioEtiquetas > 0){
 		memcpy(paqueteSerializado + offset, &pcb->tamanioEtiquetas, tmp_size);
 		offset += tmp_size;
 		memcpy(paqueteSerializado + offset, pcb->etiquetas, pcb->tamanioEtiquetas);
+		offset += pcb->tamanioEtiquetas;
 	}else{
 		uint32_t longitudIndiceEtiquetas = 0;
 		memcpy(paqueteSerializado + offset, &longitudIndiceEtiquetas, tmp_size);
+		offset += tmp_size;
 	}
-
-
+	memcpy(paqueteSerializado + offset, &indcod->tamanioBuffer, tmp_size);
+	offset += tmp_size;
+	memcpy(paqueteSerializado + offset, (void*)indcod->buffer, indcod->tamanioBuffer);
+	offset += indcod->tamanioBuffer;
 	free(indcod->buffer);
 	free(indcod);
-	free(stackSerializado->buffer);
-	free(stackSerializado);
 
-	t_buffer_tamanio * buffer_tamanio = malloc(sizeof(uint32_t) + tamanioPCB);
+//	free(stackSerializado->buffer);
+//	free(stackSerializado);
+	t_buffer_tamanio * buffer_tamanio = malloc(sizeof(t_buffer_tamanio));
 	buffer_tamanio->tamanioBuffer = tamanioPCB;
-	buffer_tamanio->buffer = paqueteSerializado;
+	buffer_tamanio->buffer = malloc(buffer_tamanio->tamanioBuffer);
+	memcpy(buffer_tamanio->buffer,paqueteSerializado,buffer_tamanio->tamanioBuffer);
 
 	return buffer_tamanio;
 }
 
 pcb_t* deserializar_pcb(char* package) {
  	uint32_t offset = 0, tmp_size = sizeof(uint32_t);
- 	uint32_t tamanioPCB;
-
- 	//Tomo el tamanio del PCB
-  	memcpy(&tamanioPCB, package + offset, tmp_size);
+ 	char * indiceEtiquetas;
+ 	char * bufferIndiceDeCodigo;
  	pcb_t *pcb;
+ 	t_list * indiceDeCodigo;
+ 	pcb = malloc (sizeof(pcb_t));
 
- 	pcb = malloc(tamanioPCB);
-  	offset += tmp_size;
+ 	memcpy(&pcb->pid, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->codigo, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->programCounter, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->stackPointer, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->cantPaginasCodigo, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->exitCode, package + offset, tmp_size);
+ 	offset += tmp_size;
+	memcpy(&pcb->consolaFd, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->tamanioEtiquetas, package + offset, tmp_size);
+	offset += tmp_size;
 
-  	//Tomo los 8 uint32_t del PCB
- 	memcpy(&(pcb->pid), package + offset, tmp_size);
- 	offset += tmp_size;
- 	memcpy(&(pcb->codigo), package + offset, tmp_size);
- 	offset += tmp_size;
- 	memcpy(&(pcb->programCounter), package + offset, tmp_size);
- 	offset += tmp_size;
- 	memcpy(&(pcb->stackPointer), package + offset, tmp_size);
- 	offset += tmp_size;
- 	memcpy(&(pcb->tamanioEtiquetas), package + offset, tmp_size);
- 	offset += tmp_size;
- 	memcpy(&(pcb->cantPaginasCodigo), package + offset, tmp_size);
- 	offset += tmp_size;
- 	memcpy(&(pcb->exitCode), package + offset, tmp_size);
- 	offset += tmp_size;
-	memcpy(&(pcb->consolaFd), package + offset, tmp_size);
- 	offset += tmp_size;
+	if(pcb->tamanioEtiquetas>0){
+		indiceEtiquetas = malloc(pcb->tamanioEtiquetas);
+		memcpy(indiceEtiquetas, package + offset, pcb->tamanioEtiquetas);
+		pcb->etiquetas = indiceEtiquetas;
+		offset += pcb->tamanioEtiquetas;
+	}else
+		pcb->etiquetas = NULL;
 
- 	//Tomo Indice de Codigo
- 	uint32_t itemsIndiceDeCodigo;
+	uint32_t itemsIndiceDeCodigo;
  	memcpy(&itemsIndiceDeCodigo, package + offset, tmp_size);
  	offset += tmp_size;
- 	uint32_t tamanioIndiceDeCodigo = sizeof(t_indice_codigo) * itemsIndiceDeCodigo;
- 	char * bufferIndiceDeCodigo = malloc(tamanioIndiceDeCodigo);
- 	memcpy(bufferIndiceDeCodigo, package + offset, tamanioIndiceDeCodigo);
- 	offset += tamanioIndiceDeCodigo;
-
- 	t_list * indiceDeCodigo = deserializarIndiceCodigo(bufferIndiceDeCodigo, itemsIndiceDeCodigo);
+ 	if(itemsIndiceDeCodigo){
+		bufferIndiceDeCodigo=malloc(itemsIndiceDeCodigo);
+		memcpy(bufferIndiceDeCodigo, package + offset, itemsIndiceDeCodigo);
+		offset += itemsIndiceDeCodigo;
+ 	indiceDeCodigo = deserializarIndiceCodigo(bufferIndiceDeCodigo, itemsIndiceDeCodigo);
  	pcb->indiceCodigo = indiceDeCodigo;
-
- 	//Tomo Indice de Stack
- 	uint32_t tamanioStack;
- 	memcpy(&tamanioStack, package + offset, tmp_size);
- 	offset += tmp_size;
- 	char * bufferIndiceStack = malloc(tamanioStack);
- 	memcpy(bufferIndiceStack, package + offset, tamanioStack);
- 	offset += tamanioStack;
-
- 	t_list * indiceStack = deserializarIndiceStack(bufferIndiceStack);
- 	pcb->indiceStack = indiceStack;
-
- 	//Tomo Indice de Etiquetas
- 	uint32_t longitudIndiceEtiquetas;
- 	memcpy(&longitudIndiceEtiquetas, package + offset, tmp_size);
- 	offset+= tmp_size;
- 	if(longitudIndiceEtiquetas>0) {
- 		char * indiceEtiquetas = malloc(pcb->tamanioEtiquetas);
- 		memcpy(indiceEtiquetas, package + offset, longitudIndiceEtiquetas);
- 		pcb->etiquetas = indiceEtiquetas;
- 		//memcpy(pcb->ind_etiq, package + offset, longitudIndiceEtiquetas);
- 	}else{
- 		pcb->etiquetas = NULL;
  	}
+ 	else
+ 		pcb->indiceCodigo=list_create();
 
+// 	uint32_t tamanioStack;
+// 	memcpy(&tamanioStack, package + offset, tmp_size);
+// 	offset += tmp_size;
+// 	char * bufferIndiceStack = malloc(tamanioStack);
+// 	memcpy(bufferIndiceStack, package + offset, tamanioStack);
+// 	offset += tamanioStack;
+// 	t_list * indiceStack = deserializarIndiceStack(bufferIndiceStack);
+// 	pcb->indiceStack = indiceStack;
  	free(bufferIndiceDeCodigo);
- 	free(bufferIndiceStack);
+// 	free(bufferIndiceStack);
 
  	return pcb;
  }
