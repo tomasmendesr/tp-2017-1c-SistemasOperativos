@@ -68,6 +68,7 @@ typedef struct{
 
 typedef struct{
 	uint32_t pid;
+	uint8_t estado;
 	uint32_t cantRafagas;
 	uint32_t cantSyscalls;
 	uint32_t cantOpPrivi;
@@ -75,6 +76,13 @@ typedef struct{
 	uint32_t cantAlocar;
 	uint32_t cantLiberar;
 }info_estadistica_t;
+
+enum enum_estado{
+	NEW = 1,
+	READY = 2,
+	FINISH = 3,
+	EXEC = 4
+};
 
 void inicializarColas();
 void inicializaciones(void);
@@ -104,7 +112,7 @@ void trabajarConexionConsola();
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
 proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* package);
 int asignarPid();
-void crearInfoEstadistica(int pid);
+
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -135,6 +143,16 @@ void enviarPcbCPU(pcb_t* pcb, int socketCPU);
 void planificarLargoPlazo();
 void alertarConsolaProcesoAceptado(int* pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
+
+//estadisticas (para consola del kernel)
+void crearInfoEstadistica(int pid);
+void estadisticaAumentarRafaga(int pid);
+void estadisticaAumentarSyscall(int pid);
+void estadisticaAumentarOpPriviligiada(int pid);
+void estadisticaAumentarAlocar(int pid);
+void estadisticaAumentarLiberar(int pid);
+void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado);
+
 
 //Variables Globales
 t_config_kernel* config;
