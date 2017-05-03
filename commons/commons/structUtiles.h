@@ -37,14 +37,14 @@ typedef struct{
 	uint32_t pag;
 	uint32_t offset;
 	uint32_t size;
-}__attribute__((__packed__)) pedido_bytes_t;
+}__attribute__((__packed__)) t_pedido_bytes;
 
 typedef struct{
 	char idVariable;
 	uint32_t pagina;
 	uint32_t offset;
 	uint32_t size;
-}__attribute__((__packed__)) t_var_local;
+}__attribute__((__packed__)) t_var;
 
 typedef struct{
 	t_list* argumentos;
@@ -65,7 +65,6 @@ typedef struct{
 	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
 	uint32_t cantPaginasCodigo;
 	t_list* indiceCodigo;
-//	t_intructions* indiceCodigo;
 	t_list* indiceStack;
 	int32_t exitCode;
 	uint32_t consolaFd;
@@ -73,11 +72,7 @@ typedef struct{
 	uint32_t stackPointer; // el ultimo offset
 	uint32_t tamanioEtiquetas;
 	uint32_t codigo; // cant de instrucciones ----- podria sacarse, ya qye es indiceCodigo->elements_count
-}__attribute__((__packed__)) pcb_t;
-
-typedef enum{
-	ERROR, NOTHING, SUCCESS
-} opciones_generales_ops;
+}__attribute__((__packed__)) t_pcb;
 
 //Auxiliares
 typedef struct {
@@ -88,17 +83,17 @@ typedef struct {
 typedef struct {
 	uint32_t tamanioStack;
 	void * stack;
-}__attribute__((__packed__)) t_tamanio_stack_stack;
+}__attribute__((__packed__)) t_tamanio_stack;
 
 t_entrada_stack* crearPosicionStack(void);
-void insertarNuevoStack(pcb_t* pcb);
-void eliminarUltimaPosicionStack(pcb_t* pcb);
+void insertarNuevoStack(t_pcb* pcb);
+void eliminarUltimaPosicionStack(t_pcb* pcb);
 void destruirPosicionStack(t_entrada_stack* stack);
-t_var_local* crearVariableStack(char id, uint32_t pagina, uint32_t offset, uint32_t size);
-void destruirVariableStack(t_var_local* var);
+t_var* crearVariableStack(char id, uint32_t pagina, uint32_t offset, uint32_t size);
+void destruirVariableStack(t_var* var);
 t_argumento* crearArgumentoStack(uint32_t pagina, uint32_t offset, uint32_t size);
 void destruirArgumentoStack(t_argumento* arg);
-void agregarVariable(t_entrada_stack* stack, t_var_local* variable);
+void agregarVariable(t_entrada_stack* stack, t_var* variable);
 void agregarArgumento(t_entrada_stack* stack, t_argumento* argumento);
 char* ansisop_a_string(char* path);
 

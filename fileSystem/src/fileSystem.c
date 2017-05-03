@@ -25,7 +25,7 @@ void esperarConexionKernel(){
 	void* paquete;
 	int tipo_mensaje;
 
-	if(recibir_info(socketConexionKernel, &paquete, &tipo_mensaje)){
+	if(recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje)){
 		log_info(logger, "Conexion con kernel establecida");
 	}
 }

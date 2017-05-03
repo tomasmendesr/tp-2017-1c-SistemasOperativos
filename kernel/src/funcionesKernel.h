@@ -56,7 +56,7 @@ typedef struct{
 
 typedef struct{
 	int socket; //funciona como id del cpu
-	pcb_t* pcb;
+	t_pcb* pcb;
 	bool disponible;
 } cpu_t;
 
@@ -128,7 +128,7 @@ void stopPlanification(char*,char*);
 void agregarNuevaCPU(t_list* lista, int socketCPU);
 void liberarCPU(cpu_t* cpu);
 void eliminarCPU(t_list* lista, int socketCPU);
-void actualizarReferenciaPCB(int id, pcb_t* pcb);
+void actualizarReferenciaPCB(int id, t_pcb* pcb);
 cpu_t* obtenerCpuLibre();
 cpu_t *obtener_cpu_por_socket_asociado(int socket_asociado);
 void desocupar_cpu(int socket_asociado);
@@ -140,7 +140,7 @@ pthread_t hiloPCP;
 
 //Planificar Corto Plazo
 void planificarCortoPlazo();
-void enviarPcbCPU(pcb_t* pcb, int socketCPU);
+void enviarPcbCPU(t_pcb* pcb, int socketCPU);
 
 //Planificacion Largo Plazo
 void planificarLargoPlazo();

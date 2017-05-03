@@ -163,6 +163,7 @@ int32_t requestHandlerKernel(void){
 			memcpy(paqueteGlobal,paquete,header.length);
 			break;
 		case RESPUESTA_ASIG_VAR_COMPARTIDA_OK:
+			log_info(logger, "Se asigno correctamente la variable compartida");
 			break;
 		default:
 			log_error(logger, "Mensaje Recibido Incorrecto");
@@ -232,10 +233,10 @@ void recibirPCB(void* paquete){
 	log_info(logger, "Recibo PCB id: %i", pcb->pid);
 }
 
-int16_t solicitarBytes(pedido_bytes_t* pedido){
+int16_t solicitarBytes(t_pedido_bytes* pedido){
 	header_t header;
 	header.type=SOLICITUD_BYTES;
-	header.length=sizeof(pedido_bytes_t);
+	header.length=sizeof(t_pedido_bytes);
 	if(sendSocket(socketConexionMemoria,&header,(void*)pedido) <= 0 ){
 		log_error(logger,"Error al enviar. Desconexion...");
 		finalizarCPU();
@@ -243,12 +244,12 @@ int16_t solicitarBytes(pedido_bytes_t* pedido){
 	return requestHandlerMemoria();
 }
 
-int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
+int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
 	char*buffer;
 	int16_t rta;
 	uint32_t size;
 	header_t header;
-	size = sizeof(pedido_bytes_t);
+	size = sizeof(t_pedido_bytes);
 	header.type=GRABAR_BYTES;
 	header.length=size+pedido->size;
 	buffer=malloc(header.length);
@@ -337,7 +338,11 @@ void revisarFinalizarCPU(void){
 
 void comenzarEjecucionDePrograma(void* paquete){
 	quantum = *(uint32_t*)paquete;
-
+	if(quantum == 0){
+		log_debug(logger, "Ejecutar - Algoritmo FIFO");
+	}else{
+		log_debug(logger, "Ejecutar - Algoritmo RR con Q = %d", quantum);
+	}
 	int i = 1;
 	while(i <= quantum || quantum == 0){ // Si el quantum es 0 significa que es FIFO ---> ejecuto hasta terminar.
 		if(solicitarProximaInstruccion() != 0){ /// carga la instruccion en el paquete global bytes
@@ -381,12 +386,12 @@ int16_t solicitarProximaInstruccion(void) {
 	uint32_t i = 0;
 	while (requestStart >= (tamanioPagina + (tamanioPagina * i++)));
 	uint32_t paginaAPedir = --i;
-	pedido_bytes_t* solicitar = malloc(sizeof(pedido_bytes_t));
+	t_pedido_bytes* solicitar = malloc(sizeof(t_pedido_bytes));
 	solicitar->pag = paginaAPedir;
 	solicitar->offset = requestStart - (tamanioPagina * paginaAPedir);
 	solicitar->size = requestSize;
 	solicitar->pid = pcb->pid;
-	log_info(logger, "Pido a Memoria -> Pid: %d - Pagina: %d - Offset: %d - Size: %d",
+	log_info(logger, "Pido instruccion a Memoria -> Pid: %d - Pagina: %d - Offset: %d - Size: %d",
 		solicitar->pid, paginaAPedir, solicitar->offset, requestSize);
 	if(solicitarBytes(solicitar) != 0 ){
 		free(solicitar);
@@ -441,25 +446,25 @@ void finalizarPor(int type) {
 //	free(buffer);
 //}
 
-void freePCB(pcb_t* pcb){
+void freePCB(t_pcb* pcb){
 	free(pcb->etiquetas);
 	list_destroy(pcb->indiceCodigo);
 	list_destroy(pcb->indiceStack);
 	free(pcb);
 }
 
-void recibirRafaga(void){
-	void*paquete;
-	int buffer;
-	int type_msj;
-	buffer=sizeof(uint32_t);
-	recvAll(socketConexionKernel,(char*)&type_msj,buffer,MSG_WAITALL);
-	if(type_msj==EXEC_QUANTUM){
-		recvAll(socketConexionKernel,(char*)&paquete,buffer,MSG_WAITALL);
-		recvAll(socketConexionKernel,(char*)&quantum,buffer,MSG_WAITALL);
-	}
-	free(paquete);
-}
+//void recibirRafaga(void){
+//	void*paquete;
+//	int buffer;
+//	int type_msj;
+//	buffer=sizeof(uint32_t);
+//	recvAll(socketConexionKernel,(char*)&type_msj,buffer,MSG_WAITALL);
+//	if(type_msj==EXEC_QUANTUM){
+//		recvAll(socketConexionKernel,(char*)&paquete,buffer,MSG_WAITALL);
+//		recvAll(socketConexionKernel,(char*)&quantum,buffer,MSG_WAITALL);
+//	}
+//	free(paquete);
+//}
 
 void finalizarCPU(void){
 	finalizarConexion(socketConexionKernel);

@@ -69,7 +69,7 @@ void trabajarMensajeCPU(int socketCPU){
 }
 
 void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
-	pcb_t* pcbRecibido;
+	t_pcb* pcbRecibido;
 	switch(mensaje){
 	case HANDSHAKE_CPU:
 		log_info(logger,"Conexion con nueva CPU establecida");
@@ -134,7 +134,7 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 	escribirVariableGlobal(config->variablesGlobales, variable, &valor);
 	free(variable);
 
-	enviar_paquete_vacio(OK, socketCPU);
+	enviar_paquete_vacio(RESPUESTA_ASIG_VAR_COMPARTIDA_OK, socketCPU);
 }
 
 void realizarSignal(int socketCPU, char* key){
@@ -158,7 +158,7 @@ void realizarWait(int socketCPU, char* key){
 
 void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	//el paquete recibido solo contiene el pcb
-	pcb_t* pcb_recibido =  deserializar_pcb(paquete_from_cpu);
+	t_pcb* pcb_recibido =  deserializar_pcb(paquete_from_cpu);
 
 	// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
 

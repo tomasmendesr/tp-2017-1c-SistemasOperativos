@@ -186,7 +186,7 @@ void threadPrograma(dataHilo* data){
 	}
 	log_info(logger,"Archivo enviado correctamente");
 
-	if(recibir_info(socketProceso, &paquete, &operacion)==0){
+	if(recibir_paquete(socketProceso, &paquete, &operacion)==0){
 		log_error(logger, "El kernel se desconecto");
 		exit(1);
 		return;
@@ -216,7 +216,7 @@ void threadPrograma(dataHilo* data){
 	while(procesoActivo){
 
 		/*ambos se quedan esperando una respuesta del otro*/
-		if(recibir_info(socketProceso, (void*)&paquete, &operacion)==0){
+		if(recibir_paquete(socketProceso, (void*)&paquete, &operacion)==0){
 			log_error(logger, "El kernel se desconecto");
 			if(paquete)free(paquete);
 			exit(1);

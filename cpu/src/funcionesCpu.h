@@ -41,7 +41,7 @@ int quantum;
 /*desde memoria*/
 uint32_t tamanioPagina;
 
-pcb_t* new_PCB(char* buf, int pid);
+t_pcb* new_PCB(char* buf, int pid);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
 void levantarArchivo(char*path,char**content);
 t_config_cpu* levantarConfiguracionCPU(char* archivo);
@@ -49,8 +49,8 @@ int conexionConKernel(void);
 int conexionConMemoria(void);
 void recibirRafaga(void);
 void freeConf(t_config_cpu* config);
-int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete);
-int16_t solicitarBytes(pedido_bytes_t* pedido);
+int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete);
+int16_t solicitarBytes(t_pedido_bytes* pedido);
 t_puntero definirVariable(t_nombre_variable nombre);
 int crearLog(void);
 void crearConfig(int argc, char* argv[]);
@@ -69,7 +69,7 @@ int32_t requestHandlerKernel(void);
 int32_t requestHandlerMemoria(void);
 void endBlockedProc(void);
 void finalizarCPU(void);
-void freePCB(pcb_t* pcb);
+void freePCB(t_pcb* pcb);
 void conecFailKernel(int cant);
 void conecFailMemoria(int cant);
 

@@ -25,35 +25,10 @@
 #include <errno.h>
 #include <stdio.h>
 
-//
-// Estructuras utilizadas para el intercambio de mensajes entre procesos.
-//
-
 typedef struct {
 	int8_t type;
 	int16_t length;
 }__attribute__((__packed__)) header_t;
-
-typedef struct {
-	char *addr;
-	char *port;
-}__attribute__((__packed__)) ip_info_t;
-
-typedef struct {
-	u_int32_t offset;
-	u_int32_t tamanio;
-}__attribute__((__packed__)) codeIndex;
-
-typedef struct {
-	char* 	   nombre;
-	u_int32_t  programCounter;
-}__attribute__((__packed__)) labelIndex;
-
-typedef struct {
-	char      nombre;
-	int32_t valor;
-	u_int32_t direccion;
-}__attribute__((__packed__)) t_variable;
 
 enum enum_protocolo {// Si yo soy el kernel tengo que enviar handshake_kernel.
 	PEDIDO_INFO_CONEXION = 1,
@@ -175,22 +150,13 @@ int recibir_paquete(int socket, void** paquete, int* tipo);
 int recibir_string(int socket,void** puntero_buffer,int* tipo);
 int agregar_caracter_nulo(void* stream, int tamanio);
 header_t crear_cabecera(int codigo, int length);
-int recibir_info(int socket, void** paquete, int* tipo_mensaje);
 int recvMsj(int socket, void** paquete, header_t*header);
 int enviar_info(int sockfd, int codigo_operacion, int length, void* buff);
 int enviar_paquete_vacio(int codigo_operacion, int socket);
-int enviar_paquete_vacio_a_cpu(int codigo_operacion, int socket);
-bool recibirHanshake(int socket, int handshakeRecibir, int handshakeRespuesta);
-bool enviarHandshake(int socket, int handshakeEnviar, int handshakeRespuesta);
 int finalizarConexion(int socket);
 //
 // Serializadores y Deserializadores de mensajes.
 //
-char *program_serializer(char *codigo_programa);
-int deserializar_string(void* paquete, char** string);
-
-void* variable_serializer(t_variable* var, int16_t *length);
-t_variable* variable_deserializer(int socketfd);
 
 
 //************* NUEVOS **************
@@ -200,17 +166,11 @@ t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack);
 t_list* deserializarIndiceCodigo(char* indice, uint32_t tam);
 t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack);
 
-pcb_t* deserializar_pcb(char* package);
-t_buffer_tamanio* serializar_pcb(pcb_t* pcb);
+t_pcb* deserializar_pcb(char* package);
+t_buffer_tamanio* serializar_pcb(t_pcb* pcb);
 
-t_buffer_tamanio * serializarInstruccion(char* instruccion, int tamanioInstruccion);
 //***********************************
 
-
-//void* pcb_serializer(pcb_t* self, int16_t *length);
-//pcb_t* pcb_deserializer(int socketfd);
-
-char *paqueteEnviarAEjecutar_serializer(u_int16_t quantum, uint32_t retardo_quantum,pcb_t *pcb_proceso);
 
 int sendAll(int fd, char *cosa, int size, int flags);
 int recvAll(int fd, char *buffer, int size, int flags);

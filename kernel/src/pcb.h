@@ -15,7 +15,7 @@
 #include <parser/parser.h>
 
 //Prototipos de creacion y manejo de pcb
-pcb_t* crearPCB(char* codigo, int id, int fd);
+t_pcb* crearPCB(char* codigo, int id, int fd);
 void llenarLista(t_list** lista, t_intructions * indiceCodigo, int cantInstruc);
 
 #endif /* PCB_H_ */

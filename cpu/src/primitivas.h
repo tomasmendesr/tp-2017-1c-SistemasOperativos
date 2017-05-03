@@ -16,9 +16,9 @@
 
 extern bool huboStackOver;
 extern bool finPrograma;
-pcb_t* pcb;
+t_pcb* pcb;
 
-void setPCB(pcb_t* pcb);
+void setPCB(t_pcb* pcb);
 void asignar(t_puntero direccion_variable, t_valor_variable valor);
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor);
 t_puntero definirVariable(t_nombre_variable identificador_variable);

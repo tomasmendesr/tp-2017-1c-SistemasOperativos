@@ -129,12 +129,12 @@ int conexionConMemoria(){
 	int respuesta;
 	void* paquete;
 
-	recibir_info(socketConexionMemoria, &paquete, &respuesta);
+	recibir_paquete(socketConexionMemoria, &paquete, &respuesta);
 	if(respuesta != HANDSHAKE_MEMORIA){
 		return -1;
 	}
 
-	recibir_info(socketConexionMemoria, &paquete, &respuesta);
+	recibir_paquete(socketConexionMemoria, &paquete, &respuesta);
 	pagina_size = *(int*)paquete;
 	printf("tamanio de pagina: %d\n", pagina_size);
 	printf("Conexion con memoria establecida\n");
@@ -375,7 +375,7 @@ void eliminarCPU(t_list* lista, int socketCPU){
 	list_remove_and_destroy_by_condition(lista, condicion, liberarCPU);
 }
 
-void actualizarReferenciaPCB(int id, pcb_t* pcb){
+void actualizarReferenciaPCB(int id, t_pcb* pcb){
 
 	bool condicion(cpu_t* cpu){
 		return cpu->socket == id ? true : false;
@@ -414,7 +414,7 @@ void planificarCortoPlazo(){
 		printf("obtuve cpu libre\n");
 
 		sem_wait(&mutex_cola_ready);
-		pcb_t* pcb = queue_pop(colaReady);
+		t_pcb* pcb = queue_pop(colaReady);
 		sem_post(&mutex_cola_ready);
 
 		enviarPcbCPU(pcb, cpu->socket);
@@ -424,7 +424,7 @@ void planificarCortoPlazo(){
 	}
 }
 
-void enviarPcbCPU(pcb_t* pcb, int socketCPU){
+void enviarPcbCPU(t_pcb* pcb, int socketCPU){
 	t_buffer_tamanio* buffer = serializar_pcb(pcb);
 	header_t header;
 	header.type = EXEC_PCB;
@@ -495,7 +495,7 @@ void planificarLargoPlazo(){
 		envioCodigoMemoria(proc->codigo);
 
 		//creo pcb y paso el proceso a ready
-		pcb_t* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
+		t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
 		//proceso_t* proceso = crearProceso(pcb);
 		sem_wait(&mutex_cola_ready);
 		queue_push(colaReady, pcb);

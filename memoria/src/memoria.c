@@ -44,7 +44,7 @@ void esperarConexionKernel(){
 		exit(1);
 	}
 
-	check = recibir_info(socketConexionKernel, &paquete, &tipo_mensaje);
+	check = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
 
 	//Chequeo de errores
 	if (check <= 0){

@@ -5,9 +5,9 @@
  * Envia a la memoria para que le reserve espacio para el codigo
  * Graba el codigo en Memoria y devuelve el PCB con todas las referencias
  */
-pcb_t* crearPCB(char* codigo, int pid, int fd){
+t_pcb* crearPCB(char* codigo, int pid, int fd){
 
-	pcb_t* pcb=malloc(sizeof(pcb_t));
+	t_pcb* pcb=malloc(sizeof(t_pcb));
 	t_list * lista=list_create();
 	t_metadata_program* metadata=metadata_desde_literal(codigo);
 	llenarLista(&lista,metadata->instrucciones_serializado, metadata->instrucciones_size);
