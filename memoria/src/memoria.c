@@ -56,6 +56,8 @@ void esperarConexionKernel(){
 	if(tipo_mensaje == HANDSHAKE_KERNEL){
 		printf("Conexion con el kernel establecido\n");
 		enviar_paquete_vacio(HANDSHAKE_MEMORIA,socketConexionKernel);
+		enviarTamanioPagina(socketConexionKernel);
+
 		pthread_t threadKernel;
 		pthread_create(&threadKernel, NULL, (void*)requestHandlerKernel, socketConexionKernel);
 		pthread_detach(threadKernel);

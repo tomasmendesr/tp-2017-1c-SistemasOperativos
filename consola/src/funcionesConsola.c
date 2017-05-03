@@ -210,6 +210,7 @@ void threadPrograma(dataHilo* data){
 		break;
 	case PID_PROGRAMA:
 		pidAsignado = (int*)paquete;
+		log_info(logger, "Programa %d aceptado por el kernel", *pidAsignado);
 		break;
 	default:
 		printf("Se recibio una operacion invalida\n");
@@ -228,6 +229,7 @@ void threadPrograma(dataHilo* data){
 		if(recibir_info(socketProceso, (void*)&paquete, &operacion)==0){
 			log_error(logger, "El kernel se desconecto");
 			if(paquete)free(paquete);
+			exit(1);
 			return;
 		}else{
 

@@ -95,7 +95,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		break;
 
 	/* CPU DEVUELVE EL PCB */
-	case FIN_PROCESO:  //TODO
+	case FIN_PROCESO:
+		//pcb_t* pcbRecibido = deserializar_pcb(package);
+		//queue_push(colaFinished, pcbRecibido);
 		break;
 	case FIN_EJECUCION:
 		break;

@@ -13,7 +13,6 @@
 #define configuracionKernel "../confKernel.init"
 #define MAX_LEN_PUERTO 6
 #define MAX_LEN_IP 20
-#define PAG_SIZE 256
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,6 +68,7 @@ typedef struct{
 
 typedef struct{
 	uint32_t pid;
+	uint8_t estado;
 	uint32_t cantRafagas;
 	uint32_t cantSyscalls;
 	uint32_t cantOpPrivi;
@@ -76,6 +76,13 @@ typedef struct{
 	uint32_t cantAlocar;
 	uint32_t cantLiberar;
 }info_estadistica_t;
+
+enum enum_estado{
+	NEW = 1,
+	READY = 2,
+	FINISH = 3,
+	EXEC = 4
+};
 
 void inicializarColas();
 void inicializaciones(void);
@@ -105,7 +112,7 @@ void trabajarConexionConsola();
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
 proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* package);
 int asignarPid();
-void crearInfoEstadistica(int pid);
+
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -137,12 +144,23 @@ void planificarLargoPlazo();
 void alertarConsolaProcesoAceptado(int* pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
 
+//estadisticas (para consola del kernel)
+void crearInfoEstadistica(int pid);
+void estadisticaAumentarRafaga(int pid);
+void estadisticaAumentarSyscall(int pid);
+void estadisticaAumentarOpPriviligiada(int pid);
+void estadisticaAumentarAlocar(int pid);
+void estadisticaAumentarLiberar(int pid);
+void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado);
+
+
 //Variables Globales
 t_config_kernel* config;
 int socketConexionFS;
 int socketConexionMemoria;
 int max_pid;
 int cantProcesosSistema;
+int pagina_size;
 t_log* logger;
 sem_t sem_cola_ready;
 sem_t sem_cola_new;
@@ -152,6 +170,9 @@ sem_t sem_multi;
 sem_t semCPUs;
 t_list* listaCPUs;
 t_list* listadoEstadistico;
+bool planificacionActivada;
+pthread_mutex_t lockPlanificacion;
+pthread_cond_t lockCondicionPlanificacion;
 
 fd_set master;
 fd_set setConsolas;
@@ -160,7 +181,7 @@ int socketEscuchaCPUs;
 int socketEscuchaConsolas;
 int max_fd;
 
-int pageSize;
+//int PAG_SIZE;
 
 //Colas procesos
 t_queue *colaNew, *colaReady, *colaFinished;

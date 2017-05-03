@@ -113,6 +113,9 @@ void inicializaciones(void){
 	listaCPUs = list_create();
 	listadoEstadistico = list_create();
 	cantProcesosSistema = 0;
+	planificacionActivada = true;
+	pthread_cond_init(&lockCondicionPlanificacion, NULL);
+	pthread_mutex_init(&lockPlanificacion, NULL);
 }
 
 void lanzarHilosPlanificacion(){
@@ -123,13 +126,6 @@ void lanzarHilosPlanificacion(){
 	if(resultado){
 		printf("El hilo de PCP no pudo crearse\n");
 		log_error(logger, "El hilo de PCP no pudo crearse");
-		exit(1);
-	}
-
-	resultado = pthread_create(&hiloPLP, NULL, (void*)planificarLargoPlazo, NULL);
-	if(resultado){
-		printf("El hilo de PLP no pudo crearse\n");
-		log_error(logger, "El hilo de PLP no pudo crearse");
 		exit(1);
 	}
 
