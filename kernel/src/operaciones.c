@@ -69,7 +69,7 @@ void trabajarMensajeCPU(int socketCPU){
 }
 
 void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
-	t_pcb* pcbRecibido;
+  t_pcb* pcbRecibido;
 	switch(mensaje){
 	case HANDSHAKE_CPU:
 		log_info(logger,"Conexion con nueva CPU establecida");
@@ -99,7 +99,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		//queue_push(colaFinished, pcbRecibido);
 		break;
 	case FIN_EJECUCION:
-		//finalizacion_quantum(package,socketCPU);
+		finalizacion_quantum(package,socketCPU);
 		break;
 	/* ERRORES */
 	case SEGMENTATION_FAULT:
@@ -170,25 +170,22 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	queue_push(colaReady, pcb_recibido); 		// La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
 	sem_post(&mutex_cola_ready);
 
-	//Aumento el semanfoto de procesos en ready
-	sem_post(&semaforo_cantidiad_procesos_en_ready);
+	//Aumento el semanforo de procesos en ready
+	sem_post(&sem_cola_ready);
 	// Se desocupa la CPU
 	desocupar_cpu(socket_cpu);
 }
 void desocupar_cpu(int socket_asociado) {
 
-	sem_wait(&semCPUs);
-	//TODO:Obtener Cpu por socket asociado,Desocupar CPU
+	//TODO:Crear un mutex para manejar la lista de CPUs Condicion de carrear fija
 	cpu_t *cpu = obtener_cpu_por_socket_asociado(socket_asociado);
 	if(cpu != NULL){
-		if(!cpu->disponible) { //todo: nuevo fijarse si solo con el pcb en null alcanza
+		if(cpu->pcb != NULL) { //todo: nuevo fijarse si solo con el pcb en null alcanza
 			cpu->disponible = true;
 			cpu->pcb = NULL;
-			sem_post(&semCPUs); // Se incrementa la cantidad de CPUs disponibles.
+			sem_post(&semCPUs); // Aumento el semaforo contador de cpus disponibles.
 		}
 	}
-	//Hacer post de una lista de cpus disponibles.
-	sem_post(&semCPUs);
 }
 
 /*

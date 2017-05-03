@@ -354,6 +354,7 @@ void agregarNuevaCPU(t_list* lista, int socketCPU){
 	cpu_t* nuevaCPU = malloc(sizeof(cpu_t));
 	nuevaCPU->socket = socketCPU;
 	nuevaCPU->pcb = NULL;
+	nuevaCPU->disponible = true;
 
 	list_add(lista, nuevaCPU);
 	sem_post(&semCPUs);
@@ -388,7 +389,7 @@ void actualizarReferenciaPCB(int id, t_pcb* pcb){
 cpu_t* obtenerCpuLibre(){
 
 	bool estaLibre(cpu_t* cpu){
-		return cpu->pcb == NULL ? true : false;
+		return cpu->pcb != NULL ? false : true;
 	}
 
 	return list_find(listaCPUs, estaLibre);
@@ -407,7 +408,9 @@ void planificarCortoPlazo(){
 		}
 		pthread_mutex_unlock(&lockPlanificacion);
 
+		//Espera que halla CPUs Disponibles
 		sem_wait(&semCPUs);
+		//Espera procesos para ejecutar
 		sem_wait(&sem_cola_ready);
 		printf("pase\n");
 		cpu_t* cpu = obtenerCpuLibre();
@@ -418,6 +421,7 @@ void planificarCortoPlazo(){
 		sem_post(&mutex_cola_ready);
 
 		enviarPcbCPU(pcb, cpu->socket);
+		//TODO: Agregar proceso a la lista de ejecuccion.
 		estadisticaCambiarEstado(pcb->pid, EXEC);
 
 		cpu->pcb = pcb;
