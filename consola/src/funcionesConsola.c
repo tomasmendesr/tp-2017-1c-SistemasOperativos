@@ -228,6 +228,7 @@ void threadPrograma(dataHilo* data){
 		if(recibir_info(socketProceso, (void*)&paquete, &operacion)==0){
 			log_error(logger, "El kernel se desconecto");
 			if(paquete)free(paquete);
+			exit(1);
 			return;
 		}else{
 
