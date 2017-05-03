@@ -47,7 +47,6 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	break;
 	}
-
 }
 
 void trabajarMensajeCPU(int socketCPU){

@@ -12,18 +12,29 @@
 
 int main(int argc, char** argv){
 	logger = log_create("logKernel","kernel", 1, LOG_LEVEL_TRACE);
+
+	//Levanto los archivos de Configuracion.
 	crearConfig(argc,argv);
+
+	//Inicializo las esctructuras de control de procesos/cpus/etc.
+	//Listas y colas.
 	inicializaciones();
 
+	//Levanto la interfaz de consola para el kernel.
 	levantarInterfaz();
 
+	//Conexiones con Memoria y FS.
 	conectarConServidores();
 
+	//PCP para administrar las CPUs nuevas y planificar.
 	lanzarHilosPlanificacion();
 
+	//Escucho conexiones CPU y ConsolaPrograma.
 	escucharConexiones();
 
+	//Fijarse si esta bien destruir la configuracion en este momento.
 	destruirConfiguracionKernel(config);
+
 	return EXIT_SUCCESS;
 }
 
@@ -32,6 +43,7 @@ void conectarConServidores(){
 		log_error(logger,"No se pudo establecer la conexion con la memoria.");
 		exit(1);
 	}
+	//TODO:Cuando se haga el filesystem descomentar la liea.
 	//if(conexionConFileSystem() == -1){
 	//	log_error(logger,"No se pudo establecer la conexion con el File System.");
 	//	exit(1);
@@ -88,7 +100,6 @@ void escucharConexiones(){
 	}
 }
 
-
 void aceptarNuevaConexion(int socketEscucha, fd_set* set){
 
 	int newSocket = acceptSocket(socketEscucha);
@@ -119,19 +130,12 @@ void lanzarHilosPlanificacion(){
 
 	int resultado;
 
+	//Se Crear un hilo de PCP que se encargara de planificar los procesos cuando se conecte una CPU nueva.
 	resultado = pthread_create(&hiloPCP, NULL, (void*)planificarCortoPlazo, NULL);
 	if(resultado){
 		printf("El hilo de PCP no pudo crearse\n");
 		log_error(logger, "El hilo de PCP no pudo crearse");
 		exit(1);
 	}
-
-	resultado = pthread_create(&hiloPLP, NULL, (void*)planificarLargoPlazo, NULL);
-	if(resultado){
-		printf("El hilo de PLP no pudo crearse\n");
-		log_error(logger, "El hilo de PLP no pudo crearse");
-		exit(1);
-	}
-
 }
 

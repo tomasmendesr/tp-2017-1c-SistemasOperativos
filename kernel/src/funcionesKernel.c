@@ -321,6 +321,7 @@ int semaforoWait(t_dictionary* dic, char* key){
 void listProcesses(char* comando, char* param){
         printf("listProcesses\n");
 }
+
 void processInfo(char* comando, char* param){
 	printf("entre aca\n");
 	int pid = atoi(param);
@@ -342,6 +343,7 @@ void processInfo(char* comando, char* param){
 	}
 
 }
+
 void getTablaArchivos(char* comando, char* param){
         printf("get tabla archivos\n");
 }
@@ -389,7 +391,6 @@ void actualizarReferenciaPCB(int id, pcb_t* pcb){
 	cpu_t* cpu = list_find(listaCPUs, condicion);
 	cpu->pcb = pcb;
 }
-
 
 cpu_t* obtenerCpuLibre(){
 
