@@ -160,7 +160,7 @@ int socketEscuchaCPUs;
 int socketEscuchaConsolas;
 int max_fd;
 
-int pageSize;
+//int PAG_SIZE;
 
 //Colas procesos
 t_queue *colaNew, *colaReady, *colaFinished;

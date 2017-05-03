@@ -458,8 +458,13 @@ void planificarLargoPlazo(){
 	//creo el pedido para la memoria
 	t_pedido_iniciar pedido;
 	int pid = proc->pid;
+
+	int cant_pag_cod = strlen(proc->codigo) / PAG_SIZE;
+	if(strlen(proc->codigo) % PAG_SIZE > 0)
+		cant_pag_cod++;
+
 	pedido.pid = pid;
-	pedido.cant_pag = config->stack_Size;
+	pedido.cant_pag = config->stack_Size + cant_pag_cod;
 	log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags: %d", pid, pedido.cant_pag);
 
 	header_t header;
