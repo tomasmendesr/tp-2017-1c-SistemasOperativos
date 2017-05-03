@@ -15,13 +15,12 @@ void eliminarUltimaPosicionStack(pcb_t* pcb){
 	list_remove_and_destroy_element(pcb->indiceStack, cantElementos - 1, destruirPosicionStack);
 }
 
-t_entrada_stack* crearPosicionStack(){
+t_entrada_stack* crearPosicionStack(void){
 	t_entrada_stack* stack = malloc(sizeof(t_entrada_stack));
-
 	stack->argumentos = list_create();
 	stack->variables = list_create();
-	stack->retVar = malloc(sizeof(t_argumento));
-
+	stack->direcretorno = -1;
+	stack->retVar = NULL;
 	return stack;
 }
 

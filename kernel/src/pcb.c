@@ -5,7 +5,7 @@
  * Envia a la memoria para que le reserve espacio para el codigo
  * Graba el codigo en Memoria y devuelve el PCB con todas las referencias
  */
-pcb_t* crearPCB(char* codigo, int id, int fd){
+pcb_t* crearPCB(char* codigo, int pid, int fd){
 
 	pcb_t* pcb=malloc(sizeof(pcb_t));
 	t_list * lista=list_create();
@@ -14,7 +14,7 @@ pcb_t* crearPCB(char* codigo, int id, int fd){
 	pcb->indiceCodigo=lista;
 
 
-	pcb->pid = id;
+	pcb->pid = pid;
 	pcb->stackPointer = 0;
 	pcb->cantPaginasCodigo = strlen(codigo) / PAG_SIZE;
 	if(strlen(codigo)%PAG_SIZE != 0) pcb->cantPaginasCodigo++;
@@ -31,9 +31,9 @@ pcb_t* crearPCB(char* codigo, int id, int fd){
 		pcb->etiquetas = NULL;
 	}
 
-//	pcb->indiceStack = list_create();
-//	insertarNuevoStack(pcb);
-
+	pcb->indiceStack=list_create();
+	t_entrada_stack* entrada=crearPosicionStack();
+	list_add(pcb->indiceStack,entrada);
 /*
 	//Reservo el espacio para el codigo y almaceno el codigo
 	u_int32_t direccion_segmento = guardarEnMemoria(socketConexionMemoria,strlen(codigo),pcb->pid);
