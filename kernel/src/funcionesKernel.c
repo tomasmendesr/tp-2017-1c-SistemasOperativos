@@ -254,7 +254,10 @@ t_dictionary* crearDiccionario(char** array){
         return dic;
 }
 
-//funciones interfaz
+/*
+ * @NAME: LevantarInterfaz.
+ * @DESC: Interfaz de Consola para manejar operaciones del kernel.
+ */
 void levantarInterfaz(){
 	//creo los comandos y el parametro
 	comando* comandos = malloc(sizeof(comando)*6);

@@ -10,7 +10,7 @@
 
 #define IP "127.0.0.1"
 #define BACKLOG 10
-#define configuracionKernel "../confKernel.init"
+#define configuracionKernel "confKernel.init"
 #define MAX_LEN_PUERTO 6
 #define MAX_LEN_IP 20
 

@@ -16,28 +16,26 @@ int main(int argc, char** argv){
 	//Levanto los archivos de Configuracion.
 	crearConfig(argc,argv);
 
-	//Inicializo las esctructuras de control de procesos/cpus/etc.
-	//Listas y colas.
 	inicializaciones();
 
-	//Levanto la interfaz de consola para el kernel.
 	levantarInterfaz();
 
-	//Conexiones con Memoria y FS.
 	conectarConServidores();
 
-	//PCP para administrar las CPUs nuevas y planificar.
 	lanzarHilosPlanificacion();
 
-	//Escucho conexiones CPU y ConsolaPrograma.
 	escucharConexiones();
 
-	//Fijarse si esta bien destruir la configuracion en este momento.
+	//TODO: Fijarse si esta bien destruir la configuracion en este momento.
 	destruirConfiguracionKernel(config);
 
 	return EXIT_SUCCESS;
 }
 
+/**
+ * @NAME: ConexionConServidores
+ * @DESC: Conexiones con Memoria y FS.
+ */
 void conectarConServidores(){
 	if(conexionConMemoria() == -1){
 		log_error(logger,"No se pudo establecer la conexion con la memoria.");
@@ -50,6 +48,10 @@ void conectarConServidores(){
 	//}
 }
 
+/**
+ * @NAME: EscucharConexiones
+ * @DESC: Escucho conexiones CPU y ConsolaPrograma.
+ */
 void escucharConexiones(){
 	FD_ZERO(&master);
 	FD_ZERO(&setCPUs);
@@ -113,6 +115,11 @@ void aceptarNuevaConexion(int socketEscucha, fd_set* set){
 	}
 }
 
+/**
+ * @NAME: Inicializaciones
+ * @DESC: Inicializo las esctructuras de control de procesos/cpus/etc.
+ *		  (Listas y colas.)
+ */
 void inicializaciones(void){
 	sem_init(&sem_cola_ready,0,0);
 	sem_init(&sem_cola_new,0,0);
@@ -129,6 +136,10 @@ void inicializaciones(void){
 	pthread_mutex_init(&lockPlanificacion, NULL);
 }
 
+/**
+ * @NAME: Planificador corto plazo.
+ * @DESC: PCP para administrar las CPUs nuevas y planificar.
+ */
 void lanzarHilosPlanificacion(){
 
 	int resultado;

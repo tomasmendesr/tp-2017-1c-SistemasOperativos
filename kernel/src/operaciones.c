@@ -69,7 +69,7 @@ void trabajarMensajeCPU(int socketCPU){
 }
 
 void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
-
+	pcb_t* pcbRecibido;
 	switch(mensaje){
 	case HANDSHAKE_CPU:
 		log_info(logger,"Conexion con nueva CPU establecida");
@@ -99,6 +99,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		//queue_push(colaFinished, pcbRecibido);
 		break;
 	case FIN_EJECUCION:
+		finalizacion_quantum(package,socketCPU);
 		break;
 	/* ERRORES */
 	case SEGMENTATION_FAULT:
@@ -111,6 +112,25 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	}
 }
 
+void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
+	//el paquete recibido solo contiene el pcb
+	pcb_t* pcb_recibido =  deserializar_pcb(paquete_from_cpu);
+
+	// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
+
+	// TODO: quitar de EXEC el proceso (que contiene la PCB desactualizada).
+
+
+	// Se encola el pcb del proceso en READY.
+	sem_wait(&mutex_cola_ready);
+	queue_push(colaReady, pcb_recibido); 		// La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
+	sem_post(&mutex_cola_ready);
+
+
+	// Se desocupa la CPU
+	desocupar_cpu(socket_cpu);
+
+}
 void leerVarCompartida(int socketCPU, char* variable){
 	int valor = leerVariableGlobal(config->variablesGlobales, variable);
 
@@ -155,3 +175,10 @@ void realizarWait(int socketCPU, char* key){
 	enviar_paquete_vacio(resultado, socketCPU);
 }
 
+void desocupar_cpu(int socket_asociado) {
+
+	sem_wait(&semCPUs);
+	//TODO:Obtener Cpu por socket asociado,Desocupar CPU
+	//Hacer post de una lista de cpus disponibles.
+	sem_post(&listaCPUs);
+}

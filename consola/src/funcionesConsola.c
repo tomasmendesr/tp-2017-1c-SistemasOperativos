@@ -170,16 +170,6 @@ void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
 	list_add(procesos, proc);
 }
 
-bool esNumero(char* string){
-	int size = strlen(string);
-	int i;
-
-	for (i=0 ; i < size ; i++){
-		if(!isdigit(string[i])) return false;
-	}
-	return true;
-}
-
 void threadPrograma(dataHilo* data){
 
 	int operacion;
