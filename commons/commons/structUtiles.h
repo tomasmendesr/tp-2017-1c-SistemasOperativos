@@ -72,7 +72,7 @@ typedef struct{
 	char* etiquetas;
 	uint32_t stackPointer; // el ultimo offset
 	uint32_t tamanioEtiquetas;
-	uint32_t codigo; // cant de instrucciones
+	uint32_t codigo; // cant de instrucciones ----- podria sacarse, ya qye es indiceCodigo->elements_count
 }__attribute__((__packed__)) pcb_t;
 
 typedef enum{
