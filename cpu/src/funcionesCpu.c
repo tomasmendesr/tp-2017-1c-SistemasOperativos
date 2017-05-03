@@ -163,6 +163,7 @@ int32_t requestHandlerKernel(void){
 			memcpy(paqueteGlobal,paquete,header.length);
 			break;
 		case RESPUESTA_ASIG_VAR_COMPARTIDA_OK:
+			log_info(logger, "Se asigno correctamente la variable compartida");
 			break;
 		default:
 			log_error(logger, "Mensaje Recibido Incorrecto");

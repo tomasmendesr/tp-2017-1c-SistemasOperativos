@@ -133,7 +133,7 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 	escribirVariableGlobal(config->variablesGlobales, variable, &valor);
 	free(variable);
 
-	enviar_paquete_vacio(OK, socketCPU);
+	enviar_paquete_vacio(RESPUESTA_ASIG_VAR_COMPARTIDA_OK, socketCPU);
 }
 
 void realizarSignal(int socketCPU, char* key){
