@@ -99,7 +99,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		//queue_push(colaFinished, pcbRecibido);
 		break;
 	case FIN_EJECUCION:
-		finalizacion_quantum(package,socketCPU);
+		//finalizacion_quantum(package,socketCPU);
 		break;
 	/* ERRORES */
 	case SEGMENTATION_FAULT:
@@ -112,25 +112,6 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	}
 }
 
-void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
-	//el paquete recibido solo contiene el pcb
-	pcb_t* pcb_recibido =  deserializar_pcb(paquete_from_cpu);
-
-	// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
-
-	// TODO: quitar de EXEC el proceso (que contiene la PCB desactualizada).
-
-
-	// Se encola el pcb del proceso en READY.
-	sem_wait(&mutex_cola_ready);
-	queue_push(colaReady, pcb_recibido); 		// La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
-	sem_post(&mutex_cola_ready);
-
-
-	// Se desocupa la CPU
-	desocupar_cpu(socket_cpu);
-
-}
 void leerVarCompartida(int socketCPU, char* variable){
 	int valor = leerVariableGlobal(config->variablesGlobales, variable);
 
@@ -175,10 +156,60 @@ void realizarWait(int socketCPU, char* key){
 	enviar_paquete_vacio(resultado, socketCPU);
 }
 
+void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
+	//el paquete recibido solo contiene el pcb
+	pcb_t* pcb_recibido =  deserializar_pcb(paquete_from_cpu);
+
+	// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
+
+	// TODO: quitar de EXEC el proceso (que contiene la PCB desactualizada).
+
+
+	// Se encola el pcb del proceso en READY.
+	sem_wait(&mutex_cola_ready);
+	queue_push(colaReady, pcb_recibido); 		// La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
+	sem_post(&mutex_cola_ready);
+
+	//Aumento el semanfoto de procesos en ready
+	sem_post(&semaforo_cantidiad_procesos_en_ready);
+	// Se desocupa la CPU
+	desocupar_cpu(socket_cpu);
+}
 void desocupar_cpu(int socket_asociado) {
 
 	sem_wait(&semCPUs);
 	//TODO:Obtener Cpu por socket asociado,Desocupar CPU
+	cpu_t *cpu = obtener_cpu_por_socket_asociado(socket_asociado);
+	if(cpu != NULL){
+		if(!cpu->disponible) { //todo: nuevo fijarse si solo con el pcb en null alcanza
+			cpu->disponible = true;
+			cpu->pcb = NULL;
+			sem_post(&semCPUs); // Se incrementa la cantidad de CPUs disponibles.
+		}
+	}
 	//Hacer post de una lista de cpus disponibles.
-	sem_post(&listaCPUs);
+	sem_post(&semCPUs);
+}
+
+/*
+ * @NAME: obtener_cpu_por_socket_asociado
+ * @DESC: Devuelve un puntero al cpu asociado a soc_asociado, si no lo encuentra devuelve NULL.
+ */
+cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado) {
+
+	cpu_t *cpu_asociado = NULL;
+
+	t_link_element *nodo = listaCPUs->head;
+
+	while (nodo != NULL && cpu_asociado == NULL) {
+		cpu_t *cpu_aux = (cpu_t*) nodo->data;
+		if(cpu_aux->socket == soc_asociado) {
+			cpu_asociado = cpu_aux;
+		} else {
+			nodo = nodo->next;
+		}
+	}
+
+	return cpu_asociado;
+
 }

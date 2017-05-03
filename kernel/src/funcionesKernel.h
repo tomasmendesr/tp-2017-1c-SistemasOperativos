@@ -57,6 +57,7 @@ typedef struct{
 typedef struct{
 	int socket; //funciona como id del cpu
 	pcb_t* pcb;
+	bool disponible;
 } cpu_t;
 
 typedef struct{
@@ -129,6 +130,8 @@ void liberarCPU(cpu_t* cpu);
 void eliminarCPU(t_list* lista, int socketCPU);
 void actualizarReferenciaPCB(int id, pcb_t* pcb);
 cpu_t* obtenerCpuLibre();
+cpu_t *obtener_cpu_por_socket_asociado(int socket_asociado);
+void desocupar_cpu(int socket_asociado);
 
 //Planificacion
 void lanzarHilosPlanificacion();
@@ -163,6 +166,7 @@ int cantProcesosSistema;
 int pagina_size;
 t_log* logger;
 sem_t sem_cola_ready;
+sem_t semaforo_cantidiad_procesos_en_ready;
 sem_t sem_cola_new;
 sem_t mutex_cola_ready;
 sem_t mutex_cola_new;
