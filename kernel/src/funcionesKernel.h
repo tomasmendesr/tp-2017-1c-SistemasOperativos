@@ -165,6 +165,11 @@ int max_pid;
 int cantProcesosSistema;
 int pagina_size;
 t_log* logger;
+
+//TODO: Sacar.
+//Semaforo Limita la cantidad de procesos que pueden accesar a un sector critico.
+//mutex solo permite que uno a la vez entre.
+//Semaforos
 sem_t sem_cola_ready;
 sem_t semaforo_cantidiad_procesos_en_ready;
 sem_t sem_cola_new;
@@ -172,11 +177,16 @@ sem_t mutex_cola_ready;
 sem_t mutex_cola_new;
 sem_t sem_multi;
 sem_t semCPUs;
+
+//Listas
 t_list* listaCPUs;
 t_list* listadoEstadistico;
 bool planificacionActivada;
 pthread_mutex_t lockPlanificacion;
 pthread_cond_t lockCondicionPlanificacion;
+
+//Colas procesos
+t_queue *colaNew, *colaReady, *colaFinished, *colaExec, *colaBloqueados;
 
 fd_set master;
 fd_set setConsolas;
@@ -187,7 +197,6 @@ int max_fd;
 
 //int PAG_SIZE;
 
-//Colas procesos
-t_queue *colaNew, *colaReady, *colaFinished;
+
 
 #endif /* FUNCIONESKERNEL_H_ */
