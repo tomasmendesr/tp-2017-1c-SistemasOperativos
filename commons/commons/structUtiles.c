@@ -5,12 +5,12 @@
  */
 #include "structUtiles.h"
 
-void insertarNuevoStack(pcb_t* pcb){
+void insertarNuevoStack(t_pcb* pcb){
 	t_entrada_stack* nuevo = crearPosicionStack();
 	list_add(pcb->indiceStack, nuevo);
 }
 
-void eliminarUltimaPosicionStack(pcb_t* pcb){
+void eliminarUltimaPosicionStack(t_pcb* pcb){
 	int cantElementos = list_size(pcb->indiceStack);
 	list_remove_and_destroy_element(pcb->indiceStack, cantElementos - 1, destruirPosicionStack);
 }
@@ -31,8 +31,8 @@ void destruirPosicionStack(t_entrada_stack* stack){
 	free(stack);
 }
 
-t_var_local* crearVariableStack(char id, uint32_t pagina, uint32_t offset, uint32_t size){
-	t_var_local* var = malloc(sizeof(t_var_local));
+t_var* crearVariableStack(char id, uint32_t pagina, uint32_t offset, uint32_t size){
+	t_var* var = malloc(sizeof(t_var));
 
 	var->idVariable = id;
 	var->pagina = pagina;
@@ -42,7 +42,7 @@ t_var_local* crearVariableStack(char id, uint32_t pagina, uint32_t offset, uint3
 	return var;
 }
 
-void destruirVariableStack(t_var_local* var){
+void destruirVariableStack(t_var* var){
 	free(var);
 }
 
@@ -59,7 +59,7 @@ void destruirArgumentoStack(t_argumento* arg){
 	free(arg);
 }
 
-void agregarVariable(t_entrada_stack* stack, t_var_local* variable){
+void agregarVariable(t_entrada_stack* stack, t_var* variable){
 	list_add(stack->variables, variable);
 }
 

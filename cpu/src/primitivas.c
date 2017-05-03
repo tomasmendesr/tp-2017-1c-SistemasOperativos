@@ -14,7 +14,7 @@ bool esArgumento(t_nombre_variable identificador_variable){
 	}
 }
 
-void setPCB(pcb_t * pcbDeCPU){
+void setPCB(t_pcb * pcbDeCPU){
 	pcb = pcbDeCPU;
 }
 
@@ -45,7 +45,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	}
 	if(!esArgumento(identificador_variable)){
 		log_debug(logger, "definir variable %c", identificador_variable);
-		t_var_local* nuevaVar = malloc(sizeof(t_var_local));
+		t_var* nuevaVar = malloc(sizeof(t_var));
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count - 1);
 
 		if(lineaStack == NULL){
@@ -102,7 +102,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
 	log_debug(logger, "asignar -> posicion var: %d - valor: %d", direccion_variable, valor);
 	//calculo la posicion de la variable en el stack mediante el desplazamiento
-	pedido_bytes_t* enviar = malloc(sizeof(uint32_t)*TAMANIO_VARIABLE);
+	t_pedido_bytes* enviar = malloc(sizeof(uint32_t)*TAMANIO_VARIABLE);
 	enviar->pag = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
 	enviar->offset = direccion_variable % tamanioPagina;
 	enviar->size = TAMANIO_VARIABLE;
@@ -170,11 +170,11 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	log_debug(logger, "dereferenciar %d", direccion_variable);
 	//calculo la posicion de la variable en el stack mediante el desplazamiento
 	t_posicion posicionRet;
-	pedido_bytes_t* solicitar;
+	t_pedido_bytes* solicitar;
 	posicionRet.pagina = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
 	posicionRet.offset = direccion_variable % tamanioPagina;
 	posicionRet.size = TAMANIO_VARIABLE;
-	solicitar = malloc(sizeof(pedido_bytes_t));
+	solicitar = malloc(sizeof(t_pedido_bytes));
 	solicitar->pag = posicionRet.pagina;
 	solicitar->size = posicionRet.size;
 	solicitar->offset = posicionRet.offset;
@@ -186,7 +186,7 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	}
 	free(solicitar);
 	valor = *(t_valor_variable*)paqueteGlobal;
-	log_info(logger, "Variable dereferenciada");
+	log_info(logger, "Variable dereferenciada. Valor: %d", valor);
 	free(paqueteGlobal);
 	return valor;
 }
@@ -327,7 +327,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 	log_debug(logger, "obtener posicion de: %c", identificador_variable);
 	uint32_t i;
 	t_entrada_stack* entrada;
-	t_var_local* var_local;
+	t_var* var_local;
 	t_argumento* argumento;
 	t_puntero puntero;
 	if(pcb->indiceStack->elements_count == 0){
@@ -408,7 +408,7 @@ void retornar(t_valor_variable retorno){
 		pcb->stackPointer = pcb->stackPointer - TAMANIO_VARIABLE;
 	}
 	for(i=0; i<list_size(contextoEjecucionActual->variables); i++){
-		t_variable* var = list_get(contextoEjecucionActual->variables, i);
+		t_var* var = list_get(contextoEjecucionActual->variables, i);
 		free(var);
 		pcb->stackPointer = pcb->stackPointer-TAMANIO_VARIABLE;
 	}
