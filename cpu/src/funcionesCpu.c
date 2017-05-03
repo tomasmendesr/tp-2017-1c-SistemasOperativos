@@ -2,6 +2,7 @@
 
 bool cerrarCPU = false;
 bool huboStackOver = false;
+bool finPrograma = false;
 
 AnSISOP_funciones functions = { .AnSISOP_asignar = asignar,
 		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
@@ -331,8 +332,8 @@ void revisarFinalizarCPU(void){
 		log_info(logger, "CPU cerrada. Adios!");
 		log_destroy(logger);
 		freeConf(config);
+		return;
 	}
-	exit(EXIT_SUCCESS);
 }
 
 void comenzarEjecucionDePrograma(void* paquete){
@@ -355,10 +356,9 @@ void comenzarEjecucionDePrograma(void* paquete){
 			if (paqueteGlobal) {
 				log_debug(logger, "Instruccion recibida: %s", paqueteGlobal);
 				analizadorLinea(paqueteGlobal, &functions, &kernel_functions);
-				if (huboStackOver){
-					finalizarPor(STACKOVERFLOW);
-				}
+				if(huboStackOver) finalizarPor(STACKOVERFLOW);
 				revisarFinalizarCPU();
+				if(finPrograma) return;
 				i++;
 				pcb->programCounter++;
 				// usleep -----------------> no se que es esto
