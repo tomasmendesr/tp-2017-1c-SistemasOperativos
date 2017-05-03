@@ -406,7 +406,18 @@ void killProcess(char* comando, char* param){
         printf("killProcess\n");
 }
 void stopPlanification(char* comando, char* param){
-        printf("stopPlanification\n");
+       if(planificacionActivada){
+    	   pthread_mutex_lock(&lockPlanificacion);
+    	   planificacionActivada = false;
+    	   pthread_mutex_unlock(&lockPlanificacion);
+    	   printf("Planificacion desactiviada\n");
+       }else{
+    	   pthread_mutex_lock(&lockPlanificacion);
+    	   planificacionActivada = true;
+    	   pthread_mutex_unlock(&lockPlanificacion);
+    	   pthread_cond_signal(&lockCondicionPlanificacion);
+    	   printf("Planificacion Activada\n");
+       }
 }
 
 void agregarNuevaCPU(t_list* lista, int socketCPU){
@@ -458,6 +469,14 @@ cpu_t* obtenerCpuLibre(){
 void planificarCortoPlazo(){
 
 	while(1){
+
+		//esto es para lockear la planificacion, pero no esta funcionando
+		//pueden seguir testeando como si esto no estuviera que total por ahora es irrelevante
+		pthread_mutex_lock(&lockPlanificacion);
+		while(!planificacionActivada){
+			pthread_cond_wait(&lockCondicionPlanificacion, &lockPlanificacion);
+		}
+		pthread_mutex_unlock(&lockPlanificacion);
 
 		sem_wait(&semCPUs);
 		sem_wait(&sem_cola_ready);

@@ -170,6 +170,9 @@ sem_t sem_multi;
 sem_t semCPUs;
 t_list* listaCPUs;
 t_list* listadoEstadistico;
+bool planificacionActivada;
+pthread_mutex_t lockPlanificacion;
+pthread_cond_t lockCondicionPlanificacion;
 
 fd_set master;
 fd_set setConsolas;
