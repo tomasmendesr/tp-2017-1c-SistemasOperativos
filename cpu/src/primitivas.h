@@ -15,6 +15,7 @@
 #define TAMANIO_VARIABLE 4
 
 extern bool huboStackOver;
+extern bool finPrograma;
 pcb_t* pcb;
 
 void setPCB(pcb_t* pcb);

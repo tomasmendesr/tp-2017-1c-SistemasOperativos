@@ -185,7 +185,7 @@ void requestHandlerCpu(int fd){
 
 int iniciarPrograma(int fd, t_pedido_iniciar* pedido){
 
-	log_info(logger, "pedido reserva. pid: %d cant_pag: %d.",pedido->pid,pedido->cant_pag);
+	log_info(logger, "Iniciar Programa. pid: %d cant_pag: %d.",pedido->pid,pedido->cant_pag);
 
 	if( reservarFrames(pedido->pid,pedido->cant_pag) == -1){
 		//No se puede, aviso a kernel que no hay lugar
@@ -218,6 +218,8 @@ int iniciarPrograma(int fd, t_pedido_iniciar* pedido){
 }
 
 int finalizarPrograma(t_pedido_finalizar* pid){
+
+	log_info(logger,"Pedido finalizar. pid: %d",*pid);
 
 	int i;
 	for(i=0;i<cant_frames;i++){
@@ -270,11 +272,13 @@ int reservarFrames(int pid, int cantPag){
 
 int solicitudBytes(int fd, t_pedido_memoria* pedido){
 
+	log_info("Pedido lectura. pid: %d pag: %d offset: %d size: %d",
+				pedido->pid,pedido->pag,pedido->offset,pedido->size);
+
 	if(pedidoIncorrecto(pedido)){
 		enviarRespuesta(fd, SEGMENTATION_FAULT);
 		return -1;
 	}
-	log_info(logger, "Pedido de bytes: pid->%d, pag->%d, offset->%d, size->%d", pedido->pid, pedido->pag, pedido->offset, pedido->size);
 	char* buf = malloc(pedido->size);
 
 	if(buf == NULL){
@@ -309,6 +313,9 @@ int grabarBytes(int fd, char* paquete){
 
 	t_pedido_memoria* pedido = paquete;
 	char* buf = paquete + sizeof(t_pedido_memoria);
+
+	log_info("Pedido escritura. pid: %d pag: %d offset: %d size: %d contenido: %s",
+			pedido->pid,pedido->pag,pedido->offset,pedido->size,buf);
 
 	if(pedidoIncorrecto(pedido)){
 		enviarRespuesta(fd, SEGMENTATION_FAULT);
@@ -394,6 +401,8 @@ int buscarFrame(int pid, int pag){
  */
 int leer(int pid, int pag, int offset, int size, char* resultado){
 
+	log_info(logger,"Entro a leer.");
+
 	int frame;
 	int cant_leida = 0;
 	int cant_a_leer;
@@ -413,10 +422,14 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 		}/* Al salir de este if pos_leer apunta o bien al frame de donde tengo que leer,
 		  * o a donde esta cacheado el frame */
 
+		log_info(logger,"Antes de leer. cant_leida: %d, size: %d, frame_size: %d, offset: %d",
+				cant_leida,size,frame_size,offset);
+
 		//Me fijo cuanto tengo que leer y copio lo que esta en memoria/cache en resultado
 		cant_a_leer = min(size - cant_leida, frame_size - offset);
 		memcpy(resultado + cant_leida, pos_leer + offset, cant_a_leer);
 
+		cant_leida += cant_a_leer;
 		offset = 0;
 		pag++;
 	}
@@ -441,6 +454,7 @@ int escribir(int pid, int pag, int offset, char* contenido, int size){
 
 		actualizarEntradaCache(pid, pag, memoria + frame * frame_size);
 
+		cant_escrita += cant_a_escribir;
 		offset = 0;
 		pag++;
 	}

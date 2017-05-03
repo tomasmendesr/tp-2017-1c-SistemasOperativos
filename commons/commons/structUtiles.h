@@ -72,7 +72,7 @@ typedef struct{
 	char* etiquetas;
 	uint32_t stackPointer; // el ultimo offset
 	uint32_t tamanioEtiquetas;
-	uint32_t codigo; // cant de instrucciones
+	uint32_t codigo; // cant de instrucciones ----- podria sacarse, ya qye es indiceCodigo->elements_count
 }__attribute__((__packed__)) pcb_t;
 
 typedef enum{
@@ -90,7 +90,7 @@ typedef struct {
 	void * stack;
 }__attribute__((__packed__)) t_tamanio_stack_stack;
 
-t_entrada_stack* crearPosicionStack();
+t_entrada_stack* crearPosicionStack(void);
 void insertarNuevoStack(pcb_t* pcb);
 void eliminarUltimaPosicionStack(pcb_t* pcb);
 void destruirPosicionStack(t_entrada_stack* stack);
@@ -100,7 +100,6 @@ t_argumento* crearArgumentoStack(uint32_t pagina, uint32_t offset, uint32_t size
 void destruirArgumentoStack(t_argumento* arg);
 void agregarVariable(t_entrada_stack* stack, t_var_local* variable);
 void agregarArgumento(t_entrada_stack* stack, t_argumento* argumento);
-
 char* ansisop_a_string(char* path);
 
 #endif /* STRUCTSUTILES_H_ */

@@ -209,6 +209,9 @@ int conexionConMemoria(){
 		return -1;
 	}
 
+	recibir_info(socketConexionMemoria, &paquete, &respuesta);
+	pagina_size = *(int*)paquete;
+	printf("tamanio de pagina: %d\n", pagina_size);
 	printf("Conexion con memoria establecida\n");
 
 	return 1;
@@ -319,11 +322,57 @@ int semaforoWait(t_dictionary* dic, char* key){
 }
 
 void listProcesses(char* comando, char* param){
-        printf("listProcesses\n");
+
+	int estado;
+
+	void listarProcesos(info_estadistica_t* info){
+		int cant = 0;
+		if(info->estado == estado){
+			printf("Proceso pid: %d\n", info->pid);
+			cant++;
+		}
+		if(cant == 0) printf("No existen procesos que se encuentren en ese estado\n");
+	}
+
+	void listarTodos(info_estadistica_t* info){
+		printf("El proceso con pid %d se encuentra en estado ", info->pid);
+		switch (info->estado) {
+			case NEW:
+				printf("NEW\n");
+				break;
+			case READY:
+				printf("READY\n");
+				break;
+			case EXEC:
+				printf("EXEC\n");
+				break;
+			case FINISH:
+				printf("FINISH\n");
+				break;
+		}
+	}
+
+	if(!strcmp(param, "")){
+		list_iterate(listadoEstadistico, listarTodos);
+		return;
+	}
+
+	if(!strcmp(param, "new")) estado = NEW;
+	if(!strcmp(param, "ready")) estado = READY;
+	if(!strcmp(param, "exec")) estado = EXEC;
+	if(!strcmp(param, "finish")) estado = FINISH;
+
+	list_iterate(listadoEstadistico, listarProcesos);
+
 }
 
 void processInfo(char* comando, char* param){
-	printf("entre aca\n");
+
+	if(!esNumero(param)){
+		printf("Ingrese un valor numerico valido para el proceso\n");
+		return;
+	}
+
 	int pid = atoi(param);
 
 	bool buscar(info_estadistica_t* info){
@@ -348,13 +397,29 @@ void getTablaArchivos(char* comando, char* param){
         printf("get tabla archivos\n");
 }
 void gradoMultiprogramacion(char* comando, char* param){
-        printf("gradoMultiprogramacion\n");
+	if(!esNumero(param)){
+		printf("Ingrese un valor valido para el grado de multiporgramacion\n");
+		return;
+	}
+	config->grado_MultiProg = atoi(param);
+	printf("Grado de Multiprogramacion cambiado con exito, ahora es %d\n", config->grado_MultiProg);
 }
 void killProcess(char* comando, char* param){
         printf("killProcess\n");
 }
 void stopPlanification(char* comando, char* param){
-        printf("stopPlanification\n");
+       if(planificacionActivada){
+    	   pthread_mutex_lock(&lockPlanificacion);
+    	   planificacionActivada = false;
+    	   pthread_mutex_unlock(&lockPlanificacion);
+    	   printf("Planificacion desactiviada\n");
+       }else{
+    	   pthread_mutex_lock(&lockPlanificacion);
+    	   planificacionActivada = true;
+    	   pthread_mutex_unlock(&lockPlanificacion);
+    	   pthread_cond_signal(&lockCondicionPlanificacion);
+    	   printf("Planificacion Activada\n");
+       }
 }
 
 void agregarNuevaCPU(t_list* lista, int socketCPU){
@@ -406,6 +471,14 @@ void planificarCortoPlazo(){
 
 	while(1){
 
+		//esto es para lockear la planificacion, pero no esta funcionando
+		//pueden seguir testeando como si esto no estuviera que total por ahora es irrelevante
+		pthread_mutex_lock(&lockPlanificacion);
+		while(!planificacionActivada){
+			pthread_cond_wait(&lockCondicionPlanificacion, &lockPlanificacion);
+		}
+		pthread_mutex_unlock(&lockPlanificacion);
+
 		sem_wait(&semCPUs);
 		sem_wait(&sem_cola_ready);
 		printf("pase\n");
@@ -417,6 +490,7 @@ void planificarCortoPlazo(){
 		sem_post(&mutex_cola_ready);
 
 		enviarPcbCPU(pcb, cpu->socket);
+		estadisticaCambiarEstado(pcb->pid, EXEC);
 
 		cpu->pcb = pcb;
 	}
@@ -459,8 +533,13 @@ void planificarLargoPlazo(){
 	//creo el pedido para la memoria
 	t_pedido_iniciar pedido;
 	int pid = proc->pid;
+
+	int cant_pag_cod = strlen(proc->codigo) / pagina_size;
+	if(strlen(proc->codigo) % pagina_size > 0)
+		cant_pag_cod++;
+
 	pedido.pid = pid;
-	pedido.cant_pag = config->stack_Size;
+	pedido.cant_pag = config->stack_Size + cant_pag_cod;
 	log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags: %d", pid, pedido.cant_pag);
 
 	header_t header;
@@ -494,6 +573,7 @@ void planificarLargoPlazo(){
 		queue_push(colaReady, pcb);
 		sem_post(&mutex_cola_ready);
 		sem_post(&sem_cola_ready);
+		estadisticaCambiarEstado(pid, READY);
 		cantProcesosSistema++;
 
 		//destruyo el proceso en espera;
@@ -529,6 +609,42 @@ void crearInfoEstadistica(int pid){
 	info->cantPaginasHeap = 0;
 	info->cantRafagas = 0;
 	info->cantSyscalls = 0;
+	info->estado = NEW;
 
 	list_add(listadoEstadistico, info);
+}
+
+info_estadistica_t* buscarInformacion(int pid){
+
+	bool buscar(info_estadistica_t* info){
+		return info->pid == pid ? true : false;
+	}
+
+	return list_find(listadoEstadistico, buscar);
+
+}
+
+void estadisticaAumentarRafaga(int pid){
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->cantRafagas++;
+}
+void estadisticaAumentarSyscall(int pid){
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->cantSyscalls++;
+}
+void estadisticaAumentarOpPriviligiada(int pid){
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->cantOpPrivi++;
+}
+void estadisticaAumentarAlocar(int pid){
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->cantAlocar++;
+}
+void estadisticaAumentarLiberar(int pid){
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->cantLiberar++;
+}
+void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado){
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->estado = nuevoEstado;
 }

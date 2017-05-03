@@ -124,6 +124,9 @@ void inicializaciones(void){
 	listaCPUs = list_create();
 	listadoEstadistico = list_create();
 	cantProcesosSistema = 0;
+	planificacionActivada = true;
+	pthread_cond_init(&lockCondicionPlanificacion, NULL);
+	pthread_mutex_init(&lockPlanificacion, NULL);
 }
 
 void lanzarHilosPlanificacion(){
