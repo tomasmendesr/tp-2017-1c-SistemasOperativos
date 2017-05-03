@@ -147,15 +147,15 @@ int32_t requestHandlerKernel(void){
 		case TAMANIO_STACK_PARA_CPU:
 			tamanioStack=*(uint32_t*)paquete;
 			log_info(logger, "Tamanio stack: %d", tamanioStack);
-			free(paquete);
 			break;
 		case RESPUESTA_SIGNAL_OK:
+			break;
 		case RESPUESTA_WAIT_SEGUIR_EJECUCION:
 			log_debug(logger,"proceso no queda bloqueado");
 			break;
 		case RESPUESTA_WAIT_DETENER_EJECUCION:
 			log_debug(logger,"proceso queda bloqueado");
-			endBlockedProc();
+			finalizarPor(PROC_BLOCKED);
 			break;
 		case VALOR_VAR_COMPARTIDA:
 			paqueteGlobal=malloc(header.length);
@@ -165,8 +165,10 @@ int32_t requestHandlerKernel(void){
 			break;
 		default:
 			log_error(logger, "Mensaje Recibido Incorrecto");
+			if(paquete)free(paquete);
 			return -1;
 		}
+	if(paquete)free(paquete);
 	return EXIT_SUCCESS;
 }
 
@@ -201,33 +203,30 @@ int32_t requestHandlerMemoria(void){
 	case RESPUESTA_BYTES:
 		paqueteGlobal=malloc(header.length);
 		memcpy(paqueteGlobal,paquete,header.length);
-		free(paquete);
 		break;
 	case ENVIAR_TAMANIO_PAGINA:
 		tamanioPagina=*(uint32_t*)paquete;
 		log_info(logger,"Tamaño de pagina: %d",tamanioPagina);
-		free(paquete);
 		break;
-	//respuestas de operaciones fallidas
 	case SEGMENTATION_FAULT:
 		log_error(logger,"Segmentation Fault");
 		finalizarPor(SEGMENTATION_FAULT);
 		return -1;
 	case STACKOVERFLOW:
-		//enviar_paquete_vacio(STACKOVERFLOW,socketConexionKernel);
 		log_error(logger, "Stack Overflow");
 		finalizarPor(STACKOVERFLOW);
 		return -1;
 	default:
 		log_error(logger, "Mensaje Recibido Incorrecto");
+		if(paquete)free(paquete);
 		return -1;
 	}
+	if(paquete)free(paquete);
 	return EXIT_SUCCESS;
 }
 
 void recibirPCB(void* paquete){
 	pcb = deserializar_pcb(paquete);
-	free(paquete);
 	setPCB(pcb);
 	log_info(logger, "Recibo PCB id: %i", pcb->pid);
 }
@@ -267,53 +266,53 @@ int16_t almacenarBytes(pedido_bytes_t* pedido, void* paquete){
 	return rta;
 }
 
-pcb_t* new_PCB(char* programa, int pid) {
-
-	log_debug(logger, "Se crea un PCB para el Programa Solicitado.");
-	t_metadata_program* datos;
-	char* indiceEtiquetas;
-
-	//Obtengo la metadata utilizando el preprocesador del parser
-	datos = metadata_desde_literal(programa);
-	pcb_t* pcb = malloc(sizeof(pcb_t));
-
-	pcb->pid = pid;
-	pcb->stackPointer = 0;
-	pcb->programCounter = datos->instruccion_inicio;
-	pcb->codigo = datos->instrucciones_size;
-	pcb->cantPaginasCodigo = strlen(programa) / tamanioPagina;
-	if(strlen(programa)%tamanioPagina != 0) pcb->cantPaginasCodigo++;
-	t_list *pcbStack = list_create();
-	pcb->indiceStack = pcbStack;
-	pcb->tamanioEtiquetas = datos->etiquetas_size;
-	t_list *listaIndCodigo = llenarLista(datos->instrucciones_serializado,
-			datos->instrucciones_size);
-	pcb->indiceCodigo = listaIndCodigo;
-	if (datos->cantidad_de_etiquetas > 0
-			|| datos->cantidad_de_funciones > 0) {
-		indiceEtiquetas = malloc(datos->etiquetas_size);
-		memcpy(indiceEtiquetas,datos->etiquetas,datos->etiquetas_size);
-		pcb->etiquetas = indiceEtiquetas;
-	}else{
-		pcb->etiquetas = NULL;
-	}
-	metadata_destruir(datos);
-	free(programa);
-
-	return pcb;
-}
-
-t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc) {
-	t_list * lista = list_create();
-	int b = 0;
-	for (b = 0; b < cantInstruc; b++) {
-		t_indice_codigo* linea = malloc(sizeof(t_indice_codigo));
-		linea->offset = indiceCodigo[b].start;
-		linea->size = indiceCodigo[b].offset;
-		list_add(lista, linea);
-	}
-	return lista;
-}
+//pcb_t* new_PCB(char* programa, int pid) {
+//
+//	log_debug(logger, "Se crea un PCB para el Programa Solicitado.");
+//	t_metadata_program* datos;
+//	char* indiceEtiquetas;
+//
+//	//Obtengo la metadata utilizando el preprocesador del parser
+//	datos = metadata_desde_literal(programa);
+//	pcb_t* pcb = malloc(sizeof(pcb_t));
+//
+//	pcb->pid = pid;
+//	pcb->stackPointer = 0;
+//	pcb->programCounter = datos->instruccion_inicio;
+//	pcb->codigo = datos->instrucciones_size;
+//	pcb->cantPaginasCodigo = strlen(programa) / tamanioPagina;
+//	if(strlen(programa)%tamanioPagina != 0) pcb->cantPaginasCodigo++;
+//	t_list *pcbStack = list_create();
+//	pcb->indiceStack = pcbStack;
+//	pcb->tamanioEtiquetas = datos->etiquetas_size;
+//	t_list *listaIndCodigo = llenarLista(datos->instrucciones_serializado,
+//			datos->instrucciones_size);
+//	pcb->indiceCodigo = listaIndCodigo;
+//	if (datos->cantidad_de_etiquetas > 0
+//			|| datos->cantidad_de_funciones > 0) {
+//		indiceEtiquetas = malloc(datos->etiquetas_size);
+//		memcpy(indiceEtiquetas,datos->etiquetas,datos->etiquetas_size);
+//		pcb->etiquetas = indiceEtiquetas;
+//	}else{
+//		pcb->etiquetas = NULL;
+//	}
+//	metadata_destruir(datos);
+//	free(programa);
+//
+//	return pcb;
+//}
+//
+//t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc) {
+//	t_list * lista = list_create();
+//	int b = 0;
+//	for (b = 0; b < cantInstruc; b++) {
+//		t_indice_codigo* linea = malloc(sizeof(t_indice_codigo));
+//		linea->offset = indiceCodigo[b].start;
+//		linea->size = indiceCodigo[b].offset;
+//		list_add(lista, linea);
+//	}
+//	return lista;
+//}
 
 void revisarSigusR1(int signo){
 	if(signo == SIGUSR1){
@@ -337,7 +336,6 @@ void revisarFinalizarCPU(void){
 
 void comenzarEjecucionDePrograma(void* paquete){
 	quantum = *(uint32_t*)paquete;
-	free(paquete);
 
 	int i = 1;
 	while(i <= quantum || quantum == 0){ // Si el quantum es 0 significa que es FIFO ---> ejecuto hasta terminar.
@@ -376,7 +374,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 	revisarFinalizarCPU();
 }
 
-int16_t solicitarProximaInstruccion() {
+int16_t solicitarProximaInstruccion(void) {
 	t_indice_codigo *indice = list_get(pcb->indiceCodigo, pcb->programCounter);
 	uint32_t requestStart = indice->offset;
 	uint32_t requestSize = indice->size;
@@ -399,7 +397,7 @@ int16_t solicitarProximaInstruccion() {
 	return EXIT_SUCCESS;
 }
 
-void limpiarInstruccion(char * instruccion) {
+void limpiarInstruccion(char* instruccion) {
 	char* instr = instruccion;
 	int a = 0;
 	while (*instruccion != '\0') {
@@ -430,20 +428,19 @@ void finalizarPor(int type) {
 	free(paquete);
 }
 
-void endBlockedProc(void){
-	t_buffer_tamanio* buffer;
-	buffer=serializar_pcb(pcb);
-	if(enviar_info(socketConexionKernel,PROC_BLOCKED,buffer->tamanioBuffer,(void*)buffer->buffer) <=0 ){
-		log_error(logger,"Error al notificar kernel");
-		free(buffer->buffer);
-		free(buffer);
-		finalizarCPU();
-	}
-	free(buffer->buffer);
-	free(buffer);
-}
+//void endBlockedProc(void){
+//	t_buffer_tamanio* buffer;
+//	buffer=serializar_pcb(pcb);
+//	if(enviar_info(socketConexionKernel,PROC_BLOCKED,buffer->tamanioBuffer,(void*)buffer->buffer) <=0 ){
+//		log_error(logger,"Error al notificar kernel");
+//		free(buffer->buffer);
+//		free(buffer);
+//		finalizarCPU();
+//	}
+//	free(buffer->buffer);
+//	free(buffer);
+//}
 
-//esto no esta bien
 void freePCB(pcb_t* pcb){
 	free(pcb->etiquetas);
 	list_destroy(pcb->indiceCodigo);

@@ -170,6 +170,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
  */
 t_valor_variable dereferenciar(t_puntero direccion_variable){
 	int32_t rta;
+	t_valor_variable valor;
 	log_debug(logger, "dereferenciar %d", direccion_variable);
 	//calculo la posicion de la variable en el stack mediante el desplazamiento
 	t_posicion posicionRet;
@@ -188,8 +189,10 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 		return rta;
 	}
 	free(solicitar);
+	valor=*(t_valor_variable*)paqueteGlobal;
 	log_info(logger, "Variable dereferenciada!");
-	return *(t_valor_variable*)paqueteGlobal;
+	free(paqueteGlobal);
+	return valor;
 }
 
 /*
