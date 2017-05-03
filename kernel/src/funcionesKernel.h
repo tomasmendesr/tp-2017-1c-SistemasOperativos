@@ -13,7 +13,6 @@
 #define configuracionKernel "../confKernel.init"
 #define MAX_LEN_PUERTO 6
 #define MAX_LEN_IP 20
-#define PAG_SIZE 256
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -143,6 +142,7 @@ int socketConexionFS;
 int socketConexionMemoria;
 int max_pid;
 int cantProcesosSistema;
+int pagina_size;
 t_log* logger;
 sem_t sem_cola_ready;
 sem_t sem_cola_new;

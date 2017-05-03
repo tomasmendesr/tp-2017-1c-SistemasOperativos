@@ -16,8 +16,8 @@ pcb_t* crearPCB(char* codigo, int id, int fd){
 
 	pcb->pid = id;
 	pcb->stackPointer = 0;
-	pcb->cantPaginasCodigo = strlen(codigo) / PAG_SIZE;
-	if(strlen(codigo)%PAG_SIZE != 0) pcb->cantPaginasCodigo++;
+	pcb->cantPaginasCodigo = strlen(codigo) / pagina_size;
+	if(strlen(codigo)%pagina_size != 0) pcb->cantPaginasCodigo++;
 	pcb->exitCode = 0;
 	pcb->programCounter = metadata->instruccion_inicio;
 	pcb->codigo = metadata->instrucciones_size;

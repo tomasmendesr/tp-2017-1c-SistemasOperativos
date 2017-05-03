@@ -209,6 +209,9 @@ int conexionConMemoria(){
 		return -1;
 	}
 
+	recibir_info(socketConexionMemoria, &paquete, &respuesta);
+	pagina_size = *(int*)paquete;
+	printf("tamanio de pagina: %d\n", pagina_size);
 	printf("Conexion con memoria establecida\n");
 
 	return 1;
@@ -459,8 +462,8 @@ void planificarLargoPlazo(){
 	t_pedido_iniciar pedido;
 	int pid = proc->pid;
 
-	int cant_pag_cod = strlen(proc->codigo) / PAG_SIZE;
-	if(strlen(proc->codigo) % PAG_SIZE > 0)
+	int cant_pag_cod = strlen(proc->codigo) / pagina_size;
+	if(strlen(proc->codigo) % pagina_size > 0)
 		cant_pag_cod++;
 
 	pedido.pid = pid;
