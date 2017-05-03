@@ -63,7 +63,7 @@ void revisarFinalizarCPU(void);
 void revisarSigusR1(int signo);
 void limpiarInstruccion(char* instruccion);
 void comenzarEjecucionDePrograma(void* paquete);
-int16_t solicitarProximaInstruccion();
+int16_t solicitarProximaInstruccion(void);
 void finalizarPor(int type);
 int32_t requestHandlerKernel(void);
 int32_t requestHandlerMemoria(void);
