@@ -57,7 +57,8 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 			list_add(pcb->indiceStack, lineaStack);
 		}
 		nuevaVar->idVariable = identificador_variable;
-		nuevaVar->pagina = pcb->stackPointer / tamanioPagina + pcb->cantPaginasCodigo; /*por la posicion en memoria*/
+//		nuevaVar->pagina = pcb->stackPointer / tamanioPagina + pcb->cantPaginasCodigo;
+		nuevaVar->pagina = pcb->stackPointer / tamanioPagina; //sumar la cantPaginas al hacer la solicitud
 		nuevaVar->offset = pcb->stackPointer % tamanioPagina;
 		nuevaVar->size = TAMANIO_VARIABLE;
 		list_add(lineaStack->variables, nuevaVar);
@@ -81,7 +82,8 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 			lineaStack->variables = list_create();
 			list_add(pcb->indiceStack, lineaStack);
 		}
-		nuevoArg->pagina = pcb->stackPointer / tamanioPagina + pcb->cantPaginasCodigo;
+//		nuevoArg->pagina = pcb->stackPointer / tamanioPagina + pcb->cantPaginasCodigo;
+		nuevoArg->pagina = pcb->stackPointer / tamanioPagina;
 		nuevoArg->offset = pcb->stackPointer % tamanioPagina;
 		nuevoArg->size = TAMANIO_VARIABLE;
 		list_add(lineaStack->argumentos, nuevoArg);
@@ -248,7 +250,7 @@ void irAlLabel(t_nombre_etiqueta etiqueta){
 		if(numeroInstr == -1){
 			log_error(logger,"El indice de etiquetas devolvio -1");
 		}
-		pcb->programCounter = numeroInstr - 1;
+		pcb->programCounter = numeroInstr - 1; //revisar despues
 		return;
 }
 
@@ -270,7 +272,8 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	uint32_t tamLineaStack = sizeof(uint32_t) + sizeof(t_posicion) + 2 * sizeof(t_list);
 	t_entrada_stack * nuevaLineaStackEjecucionActual;
 	t_posicion* varRetorno = malloc(sizeof(t_posicion));
-	varRetorno->pagina = ( donde_retornar/ tamanioPagina) + pcb->cantPaginasCodigo;
+//	varRetorno->pagina = donde_retornar / tamanioPagina + pcb->cantPaginasCodigo;
+	varRetorno->pagina = donde_retornar / tamanioPagina; //interno a la cpu
 	varRetorno->offset = donde_retornar % tamanioPagina;
 	varRetorno->size = TAMANIO_VARIABLE;
 
@@ -344,7 +347,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 			if(entrada->variables->elements_count==i)
 				return EXIT_FAILURE;
 			else{
-				puntero=(var_local->pagina-pcb->cantPaginasCodigo)*tamanioPagina+var_local->offset;
+				puntero=var_local->pagina*tamanioPagina+var_local->offset;
 			}
 		}
 		else{
@@ -352,7 +355,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 				return EXIT_FAILURE;
 			}else{
 				argumento=list_get(entrada->argumentos,identificador_variable);
-				puntero=(argumento->pagina-pcb->cantPaginasCodigo)*tamanioPagina+argumento->offset;
+				puntero=argumento->pagina*tamanioPagina+argumento->offset;
 			}
 		}
 	}
@@ -413,7 +416,8 @@ void retornar(t_valor_variable retorno){
 	}
 	//calculo la direccion a la que tengo que retornar mediante la direccion de pagina start y offset que esta en el campo retvar
 	t_posicion* retVar = contextoEjecucionActual->retVar;
-	t_puntero direcVariable = retVar->pagina * tamanioPagina + retVar->offset + pcb->cantPaginasCodigo ;
+//	t_puntero direcVariable = retVar->pagina * tamanioPagina + retVar->offset + pcb->cantPaginasCodigo ;
+	t_puntero direcVariable = retVar->pagina * tamanioPagina + retVar->offset;
 	asignar(direcVariable, retorno);
 	//elimino el contexto actual del indice del stack
 	//Seteo el contexto de ejecucion actual en el anterior
