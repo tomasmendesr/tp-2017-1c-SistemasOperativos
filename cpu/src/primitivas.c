@@ -49,7 +49,8 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		t_entrada_stack* lineaStack = list_get(pcb->indiceStack, pcb->indiceStack->elements_count-1);
 
 		if(lineaStack == NULL){
-			insertarNuevoStack(pcb); // crea una entrada_stack y lo agrega a la lista
+			lineaStack = crearPosicionStack();
+			list_add(pcb->indiceStack, lineaStack);
 		}
 
 		nuevaVar->idVariable = identificador_variable;
@@ -82,7 +83,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		list_add(lineaStack->argumentos, nuevoArg);
 		pcb->stackPointer += TAMANIO_VARIABLE;
 
-		log_debug(logger, "Posicion relatvia de %c -> %d %d %d", identificador_variable, nuevoArg->pagina, nuevoArg->offset, nuevoArg->size);
+		log_debug(logger, "Posicion relativa de %c -> %d %d %d", identificador_variable, nuevoArg->pagina, nuevoArg->offset, nuevoArg->size);
 		log_debug(logger, "Posicion absoluta de %c: %d", identificador_variable, pcb->stackPointer-TAMANIO_VARIABLE );
 		return pcb->stackPointer-TAMANIO_VARIABLE;
 	}
