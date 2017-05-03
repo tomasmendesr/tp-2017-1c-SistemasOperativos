@@ -210,6 +210,7 @@ void threadPrograma(dataHilo* data){
 		break;
 	case PID_PROGRAMA:
 		pidAsignado = (int*)paquete;
+		log_info(logger, "Programa %d aceptado por el kernel", *pidAsignado);
 		break;
 	default:
 		printf("Se recibio una operacion invalida\n");

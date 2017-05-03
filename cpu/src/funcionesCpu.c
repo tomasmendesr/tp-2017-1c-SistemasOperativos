@@ -344,9 +344,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 		if(solicitarProximaInstruccion() != 0){ /// carga la instruccion en el paquete global bytes
 			return;
 		}
-		// char * instruccion = deserializarInstruccion(paqueteGlobal);
-		// free(paqueteGlobal();
-		// reemplazar los paqueteGlobal de abajo por instruccion.
+
 		limpiarInstruccion(paqueteGlobal);
 
 		if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(paqueteGlobal, "end") == 0)) {
