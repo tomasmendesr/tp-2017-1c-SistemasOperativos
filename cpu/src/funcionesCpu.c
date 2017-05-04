@@ -152,10 +152,10 @@ int32_t requestHandlerKernel(void){
 		case RESPUESTA_SIGNAL_OK:
 			break;
 		case RESPUESTA_WAIT_SEGUIR_EJECUCION:
-			log_debug(logger,"proceso no queda bloqueado");
+			log_debug(logger,"Proceso no queda bloqueado");
 			break;
 		case RESPUESTA_WAIT_DETENER_EJECUCION:
-			log_debug(logger,"proceso queda bloqueado");
+			log_debug(logger,"Proceso queda bloqueado");
 			finalizarPor(PROC_BLOCKED);
 			break;
 		case VALOR_VAR_COMPARTIDA:
@@ -246,7 +246,6 @@ int16_t solicitarBytes(t_pedido_bytes* pedido){
 
 int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
 	char*buffer;
-	int16_t rta;
 	uint32_t size;
 	header_t header;
 	size = sizeof(t_pedido_bytes);
@@ -261,11 +260,11 @@ int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
 		finalizarCPU();
 	}
 	free(buffer);
-	rta=requestHandlerMemoria();
-	if(rta!=0){
-		log_error(logger,"la variable no pudo asignarse");
+	if(requestHandlerMemoria() != 0){
+		log_error(logger,"La variable no pudo asignarse");
+		return -1;
 	}
-	return rta;
+	return EXIT_SUCCESS;
 }
 
 //pcb_t* new_PCB(char* programa, int pid) {
@@ -357,7 +356,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 			return;
 		} else {
 			if (paqueteGlobal) {
-				log_debug(logger, "Instruccion recibida: %s", paqueteGlobal);
+				log_info(logger, "Instruccion recibida: %s", paqueteGlobal);
 				analizadorLinea(paqueteGlobal, &functions, &kernel_functions);
 				if(huboStackOver) finalizarPor(STACKOVERFLOW);
 				revisarFinalizarCPU();
@@ -373,7 +372,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 			}
 		}
 	}
-	log_debug(logger, "Finalizo ejecucion por fin de Quantum");
+	log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	finalizarPor(FIN_EJECUCION);
 	freePCB(pcb);
 	revisarFinalizarCPU();
@@ -391,7 +390,7 @@ int16_t solicitarProximaInstruccion(void) {
 	solicitar->offset = requestStart - (tamanioPagina * paginaAPedir);
 	solicitar->size = requestSize;
 	solicitar->pid = pcb->pid;
-	log_info(logger, "Pido instruccion a Memoria -> Pid: %d - Pagina: %d - Offset: %d - Size: %d",
+	log_debug(logger, "Pido instruccion a Memoria -> Pid: %d - Pagina: %d - Offset: %d - Size: %d",
 		solicitar->pid, paginaAPedir, solicitar->offset, requestSize);
 	if(solicitarBytes(solicitar) != 0 ){
 		free(solicitar);

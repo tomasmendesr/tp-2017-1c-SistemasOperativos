@@ -34,7 +34,7 @@ void destruirPosicionStack(t_entrada_stack* stack){
 t_var* crearVariableStack(char id, uint32_t pagina, uint32_t offset, uint32_t size){
 	t_var* var = malloc(sizeof(t_var));
 
-	var->idVariable = id;
+	var->id = id;
 	var->pagina = pagina;
 	var->offset = offset;
 	var->size = size;
