@@ -10,7 +10,7 @@
 
 #define IP "127.0.0.1"
 #define BACKLOG 10
-#define configuracionKernel "confKernel.init"
+#define configuracionKernel "../confKernel.init"
 #define MAX_LEN_PUERTO 6
 #define MAX_LEN_IP 20
 
@@ -155,6 +155,7 @@ void estadisticaAumentarOpPriviligiada(int pid);
 void estadisticaAumentarAlocar(int pid);
 void estadisticaAumentarLiberar(int pid);
 void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado);
+void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid));
 
 
 //Variables Globales

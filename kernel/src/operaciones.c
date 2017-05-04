@@ -134,12 +134,14 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 	escribirVariableGlobal(config->variablesGlobales, variable, &valor);
 	free(variable);
 
+	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(RESPUESTA_ASIG_VAR_COMPARTIDA_OK, socketCPU);
 }
 
 void realizarSignal(int socketCPU, char* key){
 	semaforoSignal(config->semaforos, key);
 
+	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(RESPUESTA_SIGNAL_OK, socketCPU);
 }
 
@@ -153,6 +155,7 @@ void realizarWait(int socketCPU, char* key){
 		resultado = RESPUESTA_WAIT_SEGUIR_EJECUCION;
 	}
 
+	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(resultado, socketCPU);
 }
 
@@ -174,6 +177,9 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	sem_post(&sem_cola_ready);
 	// Se desocupa la CPU
 	desocupar_cpu(socket_cpu);
+
+	estadisticaCambiarEstado(pcb_recibido->pid, READY);
+	estadisticaAumentarRafaga(pcb_recibido->pid);
 }
 void desocupar_cpu(int socket_asociado) {
 
@@ -210,3 +216,4 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado) {
 	return cpu_asociado;
 
 }
+

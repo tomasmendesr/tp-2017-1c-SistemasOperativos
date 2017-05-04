@@ -580,3 +580,7 @@ void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->estado = nuevoEstado;
 }
+void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid)){
+	cpu_t* cpu = obtener_cpu_por_socket_asociado(socket);
+	estadistica(cpu->pcb->pid);
+}
