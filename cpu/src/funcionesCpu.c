@@ -203,7 +203,7 @@ int32_t requestHandlerMemoria(void){
 		// aca no quiero hacer un free del paquete porque lo voy a usar. hacer free en la funcion que pide el paquete
 		break;
 	case RESPUESTA_BYTES:
-		paqueteGlobal=malloc(header.length);
+		paqueteGlobal = malloc(header.length);
 		memcpy(paqueteGlobal,paquete,header.length);
 		break;
 	case ENVIAR_TAMANIO_PAGINA:
@@ -267,54 +267,6 @@ int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
 	return EXIT_SUCCESS;
 }
 
-//pcb_t* new_PCB(char* programa, int pid) {
-//
-//	log_debug(logger, "Se crea un PCB para el Programa Solicitado.");
-//	t_metadata_program* datos;
-//	char* indiceEtiquetas;
-//
-//	//Obtengo la metadata utilizando el preprocesador del parser
-//	datos = metadata_desde_literal(programa);
-//	pcb_t* pcb = malloc(sizeof(pcb_t));
-//
-//	pcb->pid = pid;
-//	pcb->stackPointer = 0;
-//	pcb->programCounter = datos->instruccion_inicio;
-//	pcb->codigo = datos->instrucciones_size;
-//	pcb->cantPaginasCodigo = strlen(programa) / tamanioPagina;
-//	if(strlen(programa)%tamanioPagina != 0) pcb->cantPaginasCodigo++;
-//	t_list *pcbStack = list_create();
-//	pcb->indiceStack = pcbStack;
-//	pcb->tamanioEtiquetas = datos->etiquetas_size;
-//	t_list *listaIndCodigo = llenarLista(datos->instrucciones_serializado,
-//			datos->instrucciones_size);
-//	pcb->indiceCodigo = listaIndCodigo;
-//	if (datos->cantidad_de_etiquetas > 0
-//			|| datos->cantidad_de_funciones > 0) {
-//		indiceEtiquetas = malloc(datos->etiquetas_size);
-//		memcpy(indiceEtiquetas,datos->etiquetas,datos->etiquetas_size);
-//		pcb->etiquetas = indiceEtiquetas;
-//	}else{
-//		pcb->etiquetas = NULL;
-//	}
-//	metadata_destruir(datos);
-//	free(programa);
-//
-//	return pcb;
-//}
-//
-//t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc) {
-//	t_list * lista = list_create();
-//	int b = 0;
-//	for (b = 0; b < cantInstruc; b++) {
-//		t_indice_codigo* linea = malloc(sizeof(t_indice_codigo));
-//		linea->offset = indiceCodigo[b].start;
-//		linea->size = indiceCodigo[b].offset;
-//		list_add(lista, linea);
-//	}
-//	return lista;
-//}
-
 void revisarSigusR1(int signo){
 	if(signo == SIGUSR1){
 		log_info(logger, "Se recibe SIGUSR1");
@@ -347,17 +299,18 @@ void comenzarEjecucionDePrograma(void* paquete){
 		if(solicitarProximaInstruccion() != 0){ /// carga la instruccion en el paquete global bytes
 			return;
 		}
-
-		limpiarInstruccion(paqueteGlobal);
-
-		if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(paqueteGlobal, "end") == 0)) {
+	/*	if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(paqueteGlobal, "end") == 0)) {
 			finalizarPor(FIN_PROCESO);
-			revisarFinalizarCPU();
-			return;
-		} else {
-			if (paqueteGlobal) {
-				log_info(logger, "Instruccion recibida: %s", paqueteGlobal);
-				analizadorLinea(paqueteGlobal, &functions, &kernel_functions);
+			revisarFinalizarCPU();                        **************** lo comento porque me parece que para eso esta la primitiva finalizar. *******************
+			return; */
+
+		//} else {
+			char* instruccion = malloc(strlen(paqueteGlobal) + 1);
+			strcpy(instruccion, paqueteGlobal);
+			log_info(logger, "Instruccion recibida: %s", instruccion);
+			free(paqueteGlobal);
+			if (instruccion) {
+				analizadorLinea(instruccion, &functions, &kernel_functions);
 				if(huboStackOver) finalizarPor(STACKOVERFLOW);
 				revisarFinalizarCPU();
 				if(finPrograma) return;
@@ -370,7 +323,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 				finalizarConexion(socketConexionMemoria);
 				return;
 			}
-		}
+		//}
 	}
 	log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	finalizarPor(FIN_EJECUCION);
@@ -394,30 +347,11 @@ int16_t solicitarProximaInstruccion(void) {
 		solicitar->pid, paginaAPedir, solicitar->offset, requestSize);
 	if(solicitarBytes(solicitar) != 0 ){
 		free(solicitar);
-		log_error(logger, "Error al solicitar bytes a memoria.");
+		log_error(logger, "Error al solicitar bytes (instruccion) a memoria.");
 		return -1;
 	}
 	free(solicitar);
 	return EXIT_SUCCESS;
-}
-
-void limpiarInstruccion(char* instruccion) {
-	char* instr = instruccion;
-	int a = 0;
-	while (*instruccion != '\0') {
-		if (*instruccion
-				!= '\t'&& *instruccion != '\n' && !iscntrl(*instruccion)) {
-			if (a == 0 && isdigit((int )*instruccion)) {
-				++instruccion;
-			} else {
-				*instr++ = *instruccion++;
-				a++;
-			}
-		} else {
-			++instruccion;
-		}
-	}
-	*instr = '\0';
 }
 
 void finalizarPor(int type) {
@@ -432,38 +366,12 @@ void finalizarPor(int type) {
 	free(paquete);
 }
 
-//void endBlockedProc(void){
-//	t_buffer_tamanio* buffer;
-//	buffer=serializar_pcb(pcb);
-//	if(enviar_info(socketConexionKernel,PROC_BLOCKED,buffer->tamanioBuffer,(void*)buffer->buffer) <=0 ){
-//		log_error(logger,"Error al notificar kernel");
-//		free(buffer->buffer);
-//		free(buffer);
-//		finalizarCPU();
-//	}
-//	free(buffer->buffer);
-//	free(buffer);
-//}
-
 void freePCB(t_pcb* pcb){
 	free(pcb->etiquetas);
 	list_destroy(pcb->indiceCodigo);
 	list_destroy(pcb->indiceStack);
 	free(pcb);
 }
-
-//void recibirRafaga(void){
-//	void*paquete;
-//	int buffer;
-//	int type_msj;
-//	buffer=sizeof(uint32_t);
-//	recvAll(socketConexionKernel,(char*)&type_msj,buffer,MSG_WAITALL);
-//	if(type_msj==EXEC_QUANTUM){
-//		recvAll(socketConexionKernel,(char*)&paquete,buffer,MSG_WAITALL);
-//		recvAll(socketConexionKernel,(char*)&quantum,buffer,MSG_WAITALL);
-//	}
-//	free(paquete);
-//}
 
 void finalizarCPU(void){
 	finalizarConexion(socketConexionKernel);
