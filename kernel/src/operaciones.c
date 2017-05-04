@@ -37,7 +37,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		queue_push(colaNew, nuevoProceso);
 		sem_post(&mutex_cola_new);
 		//sem_post(&sem_cola_new);
-		crearInfoEstadistica(nuevoProceso->pid);
+		crearInfoEstadistica(nuevoProceso->pid, consola_fd);
 		log_info(logger,"Proceso agregado a la cola New");
 		planificarLargoPlazo();
 	break;
@@ -163,23 +163,32 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	//el paquete recibido solo contiene el pcb
 	t_pcb* pcb_recibido =  deserializar_pcb(paquete_from_cpu);
 
-	// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
+	estadisticaAumentarRafaga(pcb_recibido->pid);
 
-	// TODO: quitar de EXEC el proceso (que contiene la PCB desactualizada).
+	info_estadistica_t* info = buscarInformacion(pcb_recibido->pid);
+
+	if(info->matarSiguienteRafaga){
+		estadisticaCambiarEstado(pcb_recibido->pid, FINISH);
+		queue_push(colaFinished, pcb_recibido);
+	}else{
+
+		// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
+
+		// TODO: quitar de EXEC el proceso (que contiene la PCB desactualizada).
 
 
-	// Se encola el pcb del proceso en READY.
-	sem_wait(&mutex_cola_ready);
-	queue_push(colaReady, pcb_recibido); 		// La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
-	sem_post(&mutex_cola_ready);
+		// Se encola el pcb del proceso en READY.
+		sem_wait(&mutex_cola_ready);
+		queue_push(colaReady, pcb_recibido); 		// La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
+		sem_post(&mutex_cola_ready);
 
-	//Aumento el semanforo de procesos en ready
-	sem_post(&sem_cola_ready);
+		//Aumento el semanforo de procesos en ready
+		sem_post(&sem_cola_ready);
+	}
+
 	// Se desocupa la CPU
 	desocupar_cpu(socket_cpu);
 
-	estadisticaCambiarEstado(pcb_recibido->pid, READY);
-	estadisticaAumentarRafaga(pcb_recibido->pid);
 }
 void desocupar_cpu(int socket_asociado) {
 

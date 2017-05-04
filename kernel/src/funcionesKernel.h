@@ -70,12 +70,14 @@ typedef struct{
 typedef struct{
 	uint32_t pid;
 	uint8_t estado;
+	uint32_t socketConsola;
 	uint32_t cantRafagas;
 	uint32_t cantSyscalls;
 	uint32_t cantOpPrivi;
 	uint32_t cantPaginasHeap;
 	uint32_t cantAlocar;
 	uint32_t cantLiberar;
+	bool matarSiguienteRafaga;
 }info_estadistica_t;
 
 enum enum_estado{
@@ -148,7 +150,8 @@ void alertarConsolaProcesoAceptado(int* pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
 
 //estadisticas (para consola del kernel)
-void crearInfoEstadistica(int pid);
+void crearInfoEstadistica(int pid, uint32_t socketConsola);
+info_estadistica_t* buscarInformacion(int pid);
 void estadisticaAumentarRafaga(int pid);
 void estadisticaAumentarSyscall(int pid);
 void estadisticaAumentarOpPriviligiada(int pid);

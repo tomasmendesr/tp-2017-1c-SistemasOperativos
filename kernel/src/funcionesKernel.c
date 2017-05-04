@@ -333,7 +333,23 @@ void gradoMultiprogramacion(char* comando, char* param){
 	printf("Grado de Multiprogramacion cambiado con exito, ahora es %d\n", config->grado_MultiProg);
 }
 void killProcess(char* comando, char* param){
-        printf("killProcess\n");
+        if(!esNumero(param)){
+        	printf("ingrese un valor valido\n");
+        	return;
+        }
+        int pid = atoi(param);
+        info_estadistica_t* info = buscarInformacion(pid);
+        if(info == NULL){
+        	printf("Ese proceso no se encuentra en el sistema\n");
+        	return;
+        }
+        if(info->estado != EXEC){ //como no esta ejecutando no tengo que esperar a que cpu lo devuelva
+        	eliminarEstadistica(info->pid);
+        	enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
+        }else{ //debo esperar a que el cpu devuelva el pcb;
+        	info->matarSiguienteRafaga = true;
+        }
+
 }
 void stopPlanification(char* comando, char* param){
        if(planificacionActivada){
@@ -532,7 +548,7 @@ void envioCodigoMemoria(char* codigo){
 	sendSocket(socketConexionMemoria, &header, codigo);
 }
 
-void crearInfoEstadistica(int pid){
+void crearInfoEstadistica(int pid, uint32_t socketConsola){
 	info_estadistica_t* info = malloc(sizeof(info_estadistica_t));
 	info->pid = pid;
 	info->cantLiberar = 0;
@@ -542,6 +558,8 @@ void crearInfoEstadistica(int pid){
 	info->cantRafagas = 0;
 	info->cantSyscalls = 0;
 	info->estado = NEW;
+	info->socketConsola = socketConsola;
+	info->matarSiguienteRafaga = false;
 
 	list_add(listadoEstadistico, info);
 }
@@ -583,4 +601,12 @@ void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado){
 void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid)){
 	cpu_t* cpu = obtener_cpu_por_socket_asociado(socket);
 	estadistica(cpu->pcb->pid);
+}
+void eliminarEstadistica(int pid){
+
+	bool buscar(info_estadistica_t* info){
+		return info->pid == pid ? true : false;
+	}
+
+	list_remove_and_destroy_by_condition(listadoEstadistico, buscar, free);
 }
