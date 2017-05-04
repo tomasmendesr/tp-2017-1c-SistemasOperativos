@@ -95,7 +95,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO:
-		//finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado);
+		//finalizacion_proceso(, int socket_cpu_asociado);
 		break;
 	case FIN_EJECUCION:
 		finalizacion_quantum(package,socketCPU);
