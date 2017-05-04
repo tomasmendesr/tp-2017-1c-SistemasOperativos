@@ -327,7 +327,7 @@ t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack) {
 
 		for(p=0; p<cantidadVariables; p++){
 			t_var *variable=list_get(stack->variables, p);
-			memcpy(buffer + offset, &variable->idVariable, sizeof(char));
+			memcpy(buffer + offset, &variable->id, sizeof(char));
 			offset+=sizeof(char);
 			memcpy(buffer + offset, &variable->pagina, tamanioUint32);
 			offset+=tamanioUint32;
@@ -407,7 +407,7 @@ t_list* deserializarIndiceStack(char* buffer){
 
 		for(p=0; p<cantidadVariablesStack; p++){
 			t_var* varStack=malloc(sizeof(t_var));
-			memcpy(&varStack->idVariable, buffer + offset, sizeof(char));
+			memcpy(&varStack->id, buffer + offset, sizeof(char));
 			offset+=sizeof(char);
 			memcpy(&varStack->pagina, buffer + offset, tamanioUint32);
 			offset+=tamanioUint32;

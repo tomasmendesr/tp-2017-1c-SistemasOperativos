@@ -40,7 +40,7 @@ typedef struct{
 }__attribute__((__packed__)) t_pedido_bytes;
 
 typedef struct{
-	char idVariable;
+	char id;
 	uint32_t pagina;
 	uint32_t offset;
 	uint32_t size;
