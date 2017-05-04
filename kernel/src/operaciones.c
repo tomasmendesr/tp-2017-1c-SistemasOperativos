@@ -95,8 +95,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO:
-		//pcb_t* pcbRecibido = deserializar_pcb(package);
-		//queue_push(colaFinished, pcbRecibido);
+		//finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado);
 		break;
 	case FIN_EJECUCION:
 		finalizacion_quantum(package,socketCPU);
@@ -160,7 +159,7 @@ void realizarWait(int socketCPU, char* key){
 }
 
 void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
-	//el paquete recibido solo contiene el pcb
+
 	t_pcb* pcb_recibido =  deserializar_pcb(paquete_from_cpu);
 
 	estadisticaAumentarRafaga(pcb_recibido->pid);
@@ -173,9 +172,9 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	}else{
 
 		// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
-
-		// TODO: quitar de EXEC el proceso (que contiene la PCB desactualizada).
-
+		sem_wait(&mutex_cola_exec);
+		//TODO: Remover PCB()
+		sem_wait(&mutex_cola_exec);
 
 		// Se encola el pcb del proceso en READY.
 		sem_wait(&mutex_cola_ready);
@@ -190,17 +189,20 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	desocupar_cpu(socket_cpu);
 
 }
+void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado) {
+	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
+}
 void desocupar_cpu(int socket_asociado) {
 
-	//TODO:Crear un mutex para manejar la lista de CPUs Condicion de carrear fija
+	sem_wait(&mutex_lista_CPUs);
 	cpu_t *cpu = obtener_cpu_por_socket_asociado(socket_asociado);
 	if(cpu != NULL){
-		if(cpu->pcb != NULL) { //todo: nuevo fijarse si solo con el pcb en null alcanza
-			cpu->disponible = true;
+		if(cpu->pcb != NULL) { //TODO: nuevo fijarse si solo con el pcb en null alcanza
 			cpu->pcb = NULL;
-			sem_post(&semCPUs); // Aumento el semaforo contador de cpus disponibles.
+			sem_post(&semCPUs_disponibles); // Aumento el semaforo contador de cpus disponibles.
 		}
 	}
+	sem_post(&mutex_lista_CPUs);
 }
 
 /*
@@ -223,6 +225,5 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado) {
 	}
 
 	return cpu_asociado;
-
 }
 

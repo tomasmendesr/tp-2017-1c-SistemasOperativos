@@ -57,7 +57,6 @@ typedef struct{
 typedef struct{
 	int socket; //funciona como id del cpu
 	t_pcb* pcb;
-	bool disponible;
 } cpu_t;
 
 typedef struct{
@@ -159,7 +158,7 @@ void estadisticaAumentarAlocar(int pid);
 void estadisticaAumentarLiberar(int pid);
 void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado);
 void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid));
-
+void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado);
 
 //Variables Globales
 t_config_kernel* config;
@@ -170,7 +169,7 @@ int cantProcesosSistema;
 int pagina_size;
 t_log* logger;
 
-//TODO: Sacar.
+//TODO: Sacar Comentarios siguientes.
 //Semaforo Limita la cantidad de procesos que pueden accesar a un sector critico.
 //mutex solo permite que uno a la vez entre.
 //Semaforos
@@ -179,8 +178,10 @@ sem_t semaforo_cantidiad_procesos_en_ready;
 sem_t sem_cola_new;
 sem_t mutex_cola_ready;
 sem_t mutex_cola_new;
+sem_t mutex_cola_exec;
 sem_t sem_multi;
-sem_t semCPUs;
+sem_t semCPUs_disponibles;
+sem_t mutex_lista_CPUs;
 
 //Listas
 t_list* listaCPUs;
