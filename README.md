@@ -10,7 +10,9 @@
   <li>Administracion de CPUs</li>
   <li>Ejecucion Quantum configurable del programa</li>
   <li>Sincronizacion de estructuras de administracion de procesos</li>
+  <li>Primitivas de operaciones -> Actualizado 100%</li>
   <li>Finalizacion correcta del programa (prueba con facil.ansisop)</li>
+  <li>Funcion de Dump en la memoria</li>
 </ul>
 
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/home/utnso/tp-2017-1c-Dirty-Cow/commons/Debug:/home/utnso/tp-2017-1c-Dirty-Cow/parser/Debug
