@@ -125,6 +125,8 @@ void inicializaciones(void){
 	sem_init(&semCPUs_disponibles, 0, 0);
 	sem_init(&mutex_cola_ready,0,1);
 	sem_init(&mutex_cola_new,0,1);
+	sem_init(&mutex_cola_exec,0,1); // TODO - revisar que los haya inicializado bien
+	sem_init(&mutex_lista_CPUs,0,1);
 	inicializarColas();
 	listaCPUs = list_create();
 	listadoEstadistico = list_create();

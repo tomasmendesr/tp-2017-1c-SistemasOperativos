@@ -174,7 +174,7 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 		// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
 		sem_wait(&mutex_cola_exec);
 		//TODO: Remover PCB()
-		sem_wait(&mutex_cola_exec);
+		sem_post(&mutex_cola_exec);
 
 		// Se encola el pcb del proceso en READY.
 		sem_wait(&mutex_cola_ready);
