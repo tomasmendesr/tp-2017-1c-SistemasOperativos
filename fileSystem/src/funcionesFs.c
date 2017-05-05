@@ -35,6 +35,10 @@ t_config_FS* levantarConfiguracion(char* archivo){
 	conf->punto_montaje = malloc(strlen(config_get_string_value(configFS, "PUNTO_MONTAJE"))+1);
 	strcpy(conf->punto_montaje, config_get_string_value(configFS, "PUNTO_MONTAJE"));
 
+	conf->tamanio_bloque = config_get_int_value(configFS, "TAMANIO_BLOQUE");
+
+	conf->cantidad_bloques = config_get_int_value(configFS, "CANTIDAD_BLOQUES");
+
 	config_destroy(configFS);
 
 	return conf;

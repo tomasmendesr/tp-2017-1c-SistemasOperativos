@@ -19,11 +19,18 @@
 #define MAX_LEN_PUERTO 6
 #define IP "127.0.0.1"
 #define BACKLOG 10
+#define METADATA_PATH "Metadata"
+#define METADATA_ARCHIVO "/Metadata.bin"
+#define BITMAP_PATH "Metadata/Bitmap.bin"
+#define ARCHIVOS_PATH "Archivos"
+#define BLOQUES_PATH "Bloques"
 
 //TADS
 typedef struct{
 	char* puertoEscucha;
 	char* punto_montaje;
+	int tamanio_bloque;
+	int cantidad_bloques;
 }t_config_FS;
 
 //Prototipos
@@ -31,6 +38,8 @@ t_config_FS* levantarConfiguracion(char* archivo);
 void destruirConfiguracionFS(t_config_FS* conf);
 void esperarConexionKernel();
 void crearConfig(int argc, char* argv[]);
+
+void inicializarMetadata();
 
 //Variables Globales
 t_config_FS* conf;
