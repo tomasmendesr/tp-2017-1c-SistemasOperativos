@@ -36,11 +36,8 @@ void setPCB(t_pcb * pcbDeCPU){
  */
 t_puntero definirVariable(t_nombre_variable identificador_variable){
 	if(pcb->stackPointer + TAMANIO_VARIABLE > tamanioStack * tamanioPagina){
-		/*esta verificacion me hace ruido*/
-		if(!huboStackOver){
-			log_error(logger, "StackOverflow. Se finaliza el proceso");
-			huboStackOver = true;
-		}
+		log_error(logger, "StackOverflow. Se finaliza el proceso");
+		huboStackOver = true;
 		return -1;
 	}
 
@@ -314,7 +311,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 			if(var_local->id == identificador_variable)
 				break;
 		}
-		if(list_size(contexto->variables) == i){
+		if(list_size(contexto->variables) < i){
 			log_error(logger, "No se encontro la variable %c en el stack", identificador_variable);
 			return EXIT_FAILURE;
 		}

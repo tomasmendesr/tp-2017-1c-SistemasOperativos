@@ -296,39 +296,41 @@ void comenzarEjecucionDePrograma(void* paquete){
 	}
 	int i = 1;
 	while(i <= quantum || quantum == 0){ // Si el quantum es 0 significa que es FIFO ---> ejecuto hasta terminar.
-		if(solicitarProximaInstruccion() != 0){ /// carga la instruccion en el paquete global bytes
+		int16_t sizeInstruccion = solicitarProximaInstruccion(); // carga la instruccion en el paquete global bytes
+		if(sizeInstruccion == -1){
+			log_error(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
+			finalizarConexion(socketConexionMemoria);
 			return;
 		}
-	/*	if (pcb->programCounter >= (pcb->codigo - 1) && (strcmp(paqueteGlobal, "end") == 0)) {
-			finalizarPor(FIN_PROCESO);
-			revisarFinalizarCPU();                        **************** lo comento porque me parece que para eso esta la primitiva finalizar. *******************
-			return; */
-
-		//} else {
-			char* instruccion = malloc(strlen(paqueteGlobal) + 1);
-			strcpy(instruccion, paqueteGlobal);
-			log_info(logger, "Instruccion recibida: %s", instruccion);
-			free(paqueteGlobal);
-			if (instruccion) {
-				analizadorLinea(instruccion, &functions, &kernel_functions);
-				if(huboStackOver) finalizarPor(STACKOVERFLOW);
-				revisarFinalizarCPU();
-				if(finPrograma) return;
-				i++;
-				pcb->programCounter++;
-				// usleep -----------------> no se que es esto
-			}
-			else {
-				log_error(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
-				finalizarConexion(socketConexionMemoria);
-				return;
-			}
-		//}
+		char* instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
+		free(paqueteGlobal);
+		log_info(logger, "Instruccion recibida: %s", instruccion);
+		analizadorLinea(instruccion, &functions, &kernel_functions);
+		if(huboStackOver) finalizarPor(STACKOVERFLOW);
+		revisarFinalizarCPU();
+		if(finPrograma) return;
+		i++;
+		pcb->programCounter++;
+		// usleep -----------------> no se que es esto
 	}
 	log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	finalizarPor(FIN_EJECUCION);
 	freePCB(pcb);
 	revisarFinalizarCPU();
+}
+
+char* obtenerInstruccion(char* paquete, int16_t sizeInstruccion){
+	char* instruccion = malloc(sizeInstruccion);
+	memcpy(instruccion,paquete,sizeInstruccion);
+	int pos_ultimo_caracter = sizeInstruccion - 1;
+	char salto_linea = '\n';
+	char fin_string = '\0';
+	char last_char;
+	memcpy(&last_char,instruccion + pos_ultimo_caracter,1);
+	if(last_char == salto_linea){
+		memcpy(instruccion + pos_ultimo_caracter,&fin_string,1);
+	}
+	return instruccion;
 }
 
 int16_t solicitarProximaInstruccion(void) {
@@ -351,7 +353,7 @@ int16_t solicitarProximaInstruccion(void) {
 		return -1;
 	}
 	free(solicitar);
-	return EXIT_SUCCESS;
+	return requestSize;
 }
 
 void finalizarPor(int type) {
