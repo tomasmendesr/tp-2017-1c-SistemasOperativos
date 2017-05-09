@@ -94,8 +94,8 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		break;
 
 	/* CPU DEVUELVE EL PCB */
-	case FIN_PROCESO:
-		//finalizacion_proceso(, int socket_cpu_asociado);
+	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		finalizacion_proceso(package, socketCPU);
 		break;
 	case FIN_EJECUCION:
 		finalizacion_quantum(package,socketCPU);
@@ -181,6 +181,8 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 		queue_push(colaReady, pcb_recibido); 		// La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
 		sem_post(&mutex_cola_ready);
 
+		estadisticaCambiarEstado(pcb_recibido->pid, READY);
+
 		//Aumento el semanforo de procesos en ready
 		sem_post(&sem_cola_ready);
 	}
@@ -191,6 +193,22 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 }
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado) {
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
+
+	//modifico informacion estadistica
+	estadisticaAumentarRafaga(pcbRecibido->pid);
+	estadisticaCambiarEstado(pcbRecibido->pid, FINISH);
+
+	//pongo pcb en cola finish
+	queue_push(colaFinished, pcbRecibido);
+
+	//libero la cpu
+	desocupar_cpu(socket_cpu_asociado);
+
+	//aviso a consola que termino el proceso
+	info_estadistica_t * info = buscarInformacion(pcbRecibido->pid);
+	enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
+
+	cantProcesosSistema--;
 }
 void desocupar_cpu(int socket_asociado) {
 
