@@ -57,6 +57,7 @@ typedef struct{
 typedef struct{
 	int socket; //funciona como id del cpu
 	t_pcb* pcb;
+	bool disponible;
 } cpu_t;
 
 typedef struct{

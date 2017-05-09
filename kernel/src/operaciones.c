@@ -69,7 +69,6 @@ void trabajarMensajeCPU(int socketCPU){
 }
 
 void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
-  t_pcb* pcbRecibido;
 	switch(mensaje){
 	case HANDSHAKE_CPU:
 		log_info(logger,"Conexion con nueva CPU establecida");
@@ -215,10 +214,9 @@ void desocupar_cpu(int socket_asociado) {
 	sem_wait(&mutex_lista_CPUs);
 	cpu_t *cpu = obtener_cpu_por_socket_asociado(socket_asociado);
 	if(cpu != NULL){
-		if(cpu->pcb != NULL) { //TODO: nuevo fijarse si solo con el pcb en null alcanza
-			cpu->pcb = NULL;
+			printf("Desocupo cpu %d\n", socket_asociado);
+			cpu->disponible = true;
 			sem_post(&semCPUs_disponibles); // Aumento el semaforo contador de cpus disponibles.
-		}
 	}
 	sem_post(&mutex_lista_CPUs);
 }
