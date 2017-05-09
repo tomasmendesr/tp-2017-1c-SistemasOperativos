@@ -60,6 +60,7 @@ typedef struct{
 	unsigned long int time_used; //Cual fue la ultima vez que se utilizo
 }t_entrada_cache;
 
+void testHash();
 void inicializarGlobales();
 
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);

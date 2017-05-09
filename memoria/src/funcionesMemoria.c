@@ -1,4 +1,46 @@
 #include "funcionesMemoria.h"
+#include "hash.h"
+
+void testHash(){
+
+	const int cantPids = 15;
+	const int cantPags = 20;
+
+	hashInit(500);
+
+	printf("\nLas seeds son: %d %d\n", getSeed1(), getSeed2() );
+
+	int arrayMagico[cantPids*cantPags];
+	int i,j;
+	for(i=0;i<cantPids;i++){
+		printf("\nValores de las primeras 20 paginas del pid: %d\n", i);
+		for(j=0;j<cantPags;j++){
+			printf("%d ",getPos(i,j));
+			arrayMagico[i*cantPags + j] = getPos(i,j);
+		}
+	}
+
+	if(getPos(i,j) == getPos(i,j))
+		printf("\n\nHash es deterministico\n");
+	else printf("\n\nHash NO es deterministico\n");
+
+	int cant_colisiones = 0;
+	int valor = -1;
+	for(i=0;i<cantPids*cantPags;i++){
+
+		for(j=i+1;j<cantPids*cantPags;j++){
+			if(arrayMagico[i] == arrayMagico[j]){
+				cant_colisiones++;
+				arrayMagico[j] = valor;
+				valor--;
+			}
+		}
+	}
+
+	printf("\nCantidad de colisiones: %d\n", cant_colisiones);
+
+	exit(0);
+}
 
 void inicializarGlobales(){
 	pthread_mutex_init(&cache_mutex,NULL);
@@ -101,6 +143,9 @@ void inicializarMemoria(){
 		((t_entrada_tabla*)memoria)[i].pag = 0;
 		((t_entrada_tabla*)memoria)[i].pid = 0;
 	}
+
+	//Inicializo la funcion de hash
+	hashInit(cant_frames);
 
 	/*Imprimo el contenido de la memoria en un archivo dump
 	FILE* memFile = fopen("memDump","w");
