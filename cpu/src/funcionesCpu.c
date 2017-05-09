@@ -302,10 +302,12 @@ void comenzarEjecucionDePrograma(void* paquete){
 			finalizarConexion(socketConexionMemoria);
 			return;
 		}
-		char* instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
+		char* instruccion = malloc(sizeInstruccion);
+		obtenerInstruccion(instruccion, paqueteGlobal, sizeInstruccion);
 		free(paqueteGlobal);
 		log_info(logger, "Instruccion recibida: %s", instruccion);
 		analizadorLinea(instruccion, &functions, &kernel_functions);
+		free(instruccion);
 		if(huboStackOver) finalizarPor(STACKOVERFLOW);
 		revisarFinalizarCPU();
 		if(finPrograma) return;
@@ -319,8 +321,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 	revisarFinalizarCPU();
 }
 
-char* obtenerInstruccion(char* paquete, int16_t sizeInstruccion){
-	char* instruccion = malloc(sizeInstruccion);
+void obtenerInstruccion(char* instruccion, char* paquete, int16_t sizeInstruccion){
 	memcpy(instruccion,paquete,sizeInstruccion);
 	int pos_ultimo_caracter = sizeInstruccion - 1;
 	char salto_linea = '\n';
@@ -330,7 +331,6 @@ char* obtenerInstruccion(char* paquete, int16_t sizeInstruccion){
 	if(last_char == salto_linea){
 		memcpy(instruccion + pos_ultimo_caracter,&fin_string,1);
 	}
-	return instruccion;
 }
 
 int16_t solicitarProximaInstruccion(void) {
@@ -366,6 +366,7 @@ void finalizarPor(int type) {
 	}
 	free(paquete->buffer);
 	free(paquete);
+	freePCB(pcb);
 }
 
 void freePCB(t_pcb* pcb){
