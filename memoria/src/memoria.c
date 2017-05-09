@@ -12,7 +12,7 @@
 
 int main(int argc, char** argv){
 
-	testHash();
+	//testHash();
 
 	logger = log_create("logMemoria","memoria",true,LOG_LEVEL_TRACE);
 
