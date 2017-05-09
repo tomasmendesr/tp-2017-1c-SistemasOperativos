@@ -30,8 +30,9 @@ void esperarConexionKernel(){
 	if(recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje)){
 		log_info(logger, "Conexion con kernel establecida");
 	}
-}
 
+	procesarMensajesKernel();
+}
 
 void inicializarMetadata(){
 

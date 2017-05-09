@@ -49,3 +49,55 @@ void destruirConfiguracionFS(t_config_FS* conf){
 	free(conf->punto_montaje);
 	free(conf);
 }
+
+void procesarMensajesKernel(){
+	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	void* paquete;
+	int check = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
+
+	if (check <= 0) {
+		log_error(logger, "El kernel se desconecto");
+		close(socketConexionKernel);
+		exit(1);
+	}
+
+	switch (tipo_mensaje) {
+		case CREAR_ARCHIVO:
+			crearArchivo(paquete);
+			break;
+		case BORRAR_ARCHIVO:
+			borrarArchivo(paquete);
+			break;
+		case GUARDAR_DATOS:
+			guardarDatos(paquete);
+			break;
+		case OBTENER_DATOS:
+			obtenerDatos(paquete);
+			break;
+		default:
+			log_warning(logger, "se recivio una operacion invalida");
+			break;
+	}
+
+}
+
+bool validarArchivo(char* path){
+	//no implementado aun
+	return false;
+}
+
+void crearArchivo(void* package){
+	//no implementado aun
+}
+
+void borrarArchivo(void* package){
+	//no implementado aun
+}
+
+void guardarDatos(void* package){
+	//no implementado aun
+}
+
+void obtenerDatos(void* package){
+	//no implementado aun
+}

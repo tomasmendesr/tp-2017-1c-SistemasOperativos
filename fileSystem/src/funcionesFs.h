@@ -41,6 +41,14 @@ void esperarConexionKernel();
 void crearConfig(int argc, char* argv[]);
 
 void inicializarMetadata();
+void procesarMensajesKernel();
+
+//Operaciones
+bool validarArchivo(char* path);
+void crearArchivo(void* package);
+void borrarArchivo(void* package);
+void guardarDatos(void* package);
+void obtenerDatos(void* package);
 
 //Variables Globales
 t_config_FS* conf;

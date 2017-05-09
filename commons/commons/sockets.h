@@ -132,6 +132,13 @@ enum protocolo_programa_a_kernel{
 	FINALIZAR_PROGRAMA = 123
 };
 
+enum protocolo_kernel_a_fs{
+	CREAR_ARCHIVO = 21,
+	OBTENER_DATOS = 23,
+	GUARDAR_DATOS = 24
+	//para borrar archivo uso el que esta en cpu
+};
+
 enum exit_code{
 	FINALIZO_BIEN = 0,
 	FALLA_RESERVAR_RECURSOS = -1,
