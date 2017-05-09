@@ -112,6 +112,7 @@ void enviarTamanioPagina(int fd);
 //Pedidos de Kernel
 int iniciarPrograma(int fd, t_pedido_iniciar* pedido);
 int finalizarPrograma(t_pedido_finalizar *pid);
+int asignarPaginas(int fd, t_pedido_asignar* pedido);
 
 //Pedidos cpu
 int solicitudBytes(int fd, t_pedido_memoria* pedido);

@@ -135,7 +135,7 @@ void requestHandlerKernel(int fd){
 			break;
 
 		case ASIGNAR_PAGINAS:
-//			asignarPaginas();
+			asignarPaginas(fd, (t_pedido_asignar*)paquete);
 			break;
 
 		default:
@@ -228,6 +228,21 @@ int finalizarPrograma(t_pedido_finalizar* pid){
 			tabla_pag[i].pag = -1;
 		}
 	}
+
+	return 0;
+}
+
+int asignarPaginas(int fd, t_pedido_asignar* pedido){
+
+	if( reservarFrames(pedido->pid,pedido->cant_pag) == -1){
+		//No se puede, aviso a kernel que no hay lugar
+		enviarRespuesta(fd, SIN_ESPACIO);
+		log_warning(logger, "No hay espacio");
+		return -1;
+	}
+
+	//Se pudo reservar
+	enviarRespuesta(fd,OP_OK);
 
 	return 0;
 }
