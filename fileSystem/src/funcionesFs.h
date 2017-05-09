@@ -14,6 +14,7 @@
 #include <commons/string.h>
 #include <commons/sockets.h>
 #include <commons/log.h>
+#include <commons/bitarray.h>
 
 #define configuracionFS "../confFileSystem.init"
 #define MAX_LEN_PUERTO 6
@@ -21,7 +22,7 @@
 #define BACKLOG 10
 #define METADATA_PATH "Metadata"
 #define METADATA_ARCHIVO "/Metadata.bin"
-#define BITMAP_PATH "Metadata/Bitmap.bin"
+#define BITMAP_ARCHIVO "/Bitmap.bin"
 #define ARCHIVOS_PATH "Archivos"
 #define BLOQUES_PATH "Bloques"
 
@@ -46,5 +47,6 @@ t_config_FS* conf;
 int socketEscucha;
 int socketConexionKernel;
 t_log* logger;
+t_bitarray* bitarray;
 
 #endif /* FUNCIONESFS_H_ */
