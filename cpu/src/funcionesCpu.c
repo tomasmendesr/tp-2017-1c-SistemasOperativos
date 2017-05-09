@@ -366,7 +366,6 @@ void finalizarPor(int type) {
 	}
 	free(paquete->buffer);
 	free(paquete);
-	freePCB(pcb);
 }
 
 void freePCB(t_pcb* pcb){
