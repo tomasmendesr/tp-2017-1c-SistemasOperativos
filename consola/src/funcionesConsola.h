@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <commons/string.h>
 #include <commons/sockets.h>
 #include <commons/log.h>

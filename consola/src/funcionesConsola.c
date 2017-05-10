@@ -37,6 +37,7 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 	return config;
 }
 
+
 int enviarArchivo(int kernel_fd, char* path){
 
 	//Verifico existencia archivo (Aguante esta funcion loco!)
