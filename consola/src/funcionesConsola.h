@@ -65,8 +65,6 @@ void finalizarPrograma(char* comando, char* param);
 void desconectarConsola(char* comando, char* param);
 void limpiarMensajes(char* comando, char* param);
 
-void enviarArchivo(int fd, char* path);
-
 //Variables Globales
 
 t_log* logger;
