@@ -7,7 +7,7 @@ void interface(interface_thread_param* param){
 	comando* comandos = param->comandos;
 
 	//Vars
-	char buffer[2*command_size + 1];//+1 mas para el \0
+	char buffer[buffer_size + 1];//+1 mas para el \0
 	char comando[command_size + 1];
 	char parametro[command_size + 1];
 	int cantParametros;

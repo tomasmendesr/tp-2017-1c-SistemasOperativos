@@ -10,21 +10,21 @@
 #include "funcionesCpu.h"
 
 int main(int argc, char** argv) {
+
 	crearLog();
-
 	crearConfig(argc,argv);
-
-	// Conecta con kernel
-	if(conexionConKernel() == -1){
-		log_error(logger, "No se pudo conectar con el kernel");
-		return EXIT_FAILURE;
-	}
-	if(conexionConMemoria() == -1){
-		log_error(logger, "No se pudo conectar con la memoria");
-		return EXIT_FAILURE;
+	// Conecta y obtiene tamanio de pagina (memoria) y de stack (kernel).
+	if(conexionConKernel() == -1 || conexionConMemoria() == -1){
+		finalizarCPU();
 	}
 
-	free(config);
-	finalizarConexion(socketConexionKernel);
+	/*
+	 * Manejo de la interrupcion SigusR1
+	 */
+	signal(SIGUSR1, revisarSigusR1);
+	for(;;){
+		requestHandlerKernel();
+	}
+
 	return EXIT_SUCCESS;
 }

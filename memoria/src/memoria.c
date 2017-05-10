@@ -12,109 +12,112 @@
 
 int main(int argc, char** argv){
 
-	log = log_create("logMemoria","memoria",true,LOG_LEVEL_TRACE);
+	//testHash();
+
+	logger = log_create("logMemoria","memoria",true,LOG_LEVEL_TRACE);
 
 	crearConfig(argc, argv);
 
 	inicializarMemoria();
 
-	esperarConexiones();
+	socketEscuchaConexiones = createServer(IP, config->puerto, BACKLOG);
 
-	//LevantarServer
+	esperarConexionKernel();
 
 	levantarInterfaz();
+
+	esperarConexiones();
 
     destruirConfiguracionMemoria(config);
 
     return EXIT_SUCCESS;
 }
 
-int esperarConexiones(){
+void esperarConexionKernel(){
 
-		int socketEscuchaConexiones = createServer(IP, config->puerto, BACKLOG);
+	void* paquete;
+	int tipo_mensaje;
+	int check;
 
-		int numero_maximo_socket;
-		int newSocket;
+	socketConexionKernel = acceptSocket(socketEscuchaConexiones);
 
-		fd_set read_fds;
-		fd_set socket_master;
+	if(socketConexionKernel == -1){
+		perror("Error al aceptar conexion con el kernel");
+		exit(1);
+	}
 
-		FD_ZERO(&read_fds);
-		FD_ZERO(&socket_master);
-		FD_SET(socketEscuchaConexiones,&socket_master);
-		numero_maximo_socket = socketEscuchaConexiones;
-		int iterador_sockets;
-		void* paquete;
+	check = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
 
-		while(1){
-			read_fds = socket_master;
+	//Chequeo de errores
+	if (check <= 0){
+		perror("recv");
+		close(socketConexionKernel);
+		exit(1);
+	}
 
-			if(select(numero_maximo_socket + 1, &read_fds, NULL, NULL, NULL) == -1) {
-				perror("select");
-				exit(1);
-			}
-		for(iterador_sockets = 0; iterador_sockets <= numero_maximo_socket; iterador_sockets++) {
-			if(FD_ISSET(iterador_sockets, &read_fds)) {
-				if(iterador_sockets == socketEscuchaConexiones) {
+	if(tipo_mensaje == HANDSHAKE_KERNEL){
+		printf("Conexion con el kernel establecido\n");
+		enviar_paquete_vacio(HANDSHAKE_MEMORIA,socketConexionKernel);
+		enviarTamanioPagina(socketConexionKernel);
 
-					newSocket = acceptSocket(socketEscuchaConexiones);
+		pthread_t threadKernel;
+		pthread_create(&threadKernel, NULL, (void*)requestHandlerKernel, socketConexionKernel);
+		pthread_detach(threadKernel);
+	}else{
+		exit(1);
+	}
 
-					if(newSocket == -1) {
-						perror("Error al aceptar");
-					} else {
-						FD_SET(newSocket, &socket_master);
-						if(newSocket > numero_maximo_socket) numero_maximo_socket = newSocket;
-					}
-				} else {
-					//Gestiono cada conexi�n -> Recibo los programas y creo sus PCB.
-					int tipo_mensaje; //Para que la funcion recibir_string lo reciba
-					int check = recibir_paquete(iterador_sockets, &paquete, &tipo_mensaje);
-
-					//Chequeo de errores
-					if (check == 0) {
-						printf("Se cerro el socket %d\n", iterador_sockets);
-						close(iterador_sockets);
-						FD_CLR(iterador_sockets, &socket_master);
-					}
-
-					if(check == -1){
-						perror("recv");
-						close(iterador_sockets);
-						FD_CLR(iterador_sockets, &socket_master);
-					}
-					// Fin chequeo de errores
-
-					if(check > 0) {
-						switch(tipo_mensaje){
-							case HANDSHAKE_KERNEL:{
-								printf("Conexion con el kernel establecido\n");
-								enviar_paquete_vacio(HANDSHAKE_MEMORIA,iterador_sockets);
-								//Lanzo el hilo que maneja el kernel
-								pthread_t threadKernel;
-								pthread_attr_t atributos;
-								pthread_attr_init(&atributos);
-								pthread_attr_setdetachstate(&atributos, PTHREAD_CREATE_DETACHED);
-
-								pthread_create(&threadKernel, &atributos, requestHandler, &socketConexionKernel);
-								break;
-							}
-							case HANDSHAKE_CPU:{
-								printf("Conexion con la CPU establecido\n");
-								enviar_paquete_vacio(HANDSHAKE_MEMORIA,iterador_sockets);
-								break;
-							}
-							default:{ printf("Se recibio un codigo no valido");
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-		}
-
-
-
-
-	return 1;
 }
+
+void esperarConexiones(){
+
+	int newSocket;
+	void* paquete;
+	int tipo_mensaje;
+	int check;
+
+	while(1){
+
+		newSocket = acceptSocket(socketEscuchaConexiones);
+
+		if(newSocket == -1)
+			perror("Error al aceptar");
+
+		check = recibir_paquete(newSocket, &paquete, &tipo_mensaje);
+
+		//Chequeo de errores
+		if (check == 0){
+			printf("Se cerro el socket %d\n", newSocket);
+			close(newSocket);
+		}
+		if(check == -1){
+			perror("recv");
+			close(newSocket);
+		}
+		//Fin chequeo de errores
+
+		if(check > 0){
+			if(tipo_mensaje == HANDSHAKE_CPU){
+
+				printf("Conexion con la CPU establecido\n");
+				enviar_paquete_vacio(HANDSHAKE_MEMORIA,newSocket);
+				enviarTamanioPagina(newSocket);
+				pthread_t threadCpu;
+				pthread_create(&threadCpu, NULL, (void*)requestHandlerCpu, newSocket);
+				pthread_detach(threadCpu);
+
+			}else{
+				close(newSocket);
+				printf("Solo se aceptan conexiones de Cpu\n");
+			}
+		}
+	}
+}
+
+void enviarTamanioPagina(int fd){
+	header_t* header=malloc(sizeof(header_t));
+	header->type=ENVIAR_TAMANIO_PAGINA;
+	header->length=sizeof(config->marcos_Size);
+	sendSocket(fd,header,&config->marcos_Size);
+}
+

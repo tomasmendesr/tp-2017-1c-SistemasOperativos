@@ -19,22 +19,44 @@
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/interface.h>
+#include <ctype.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #define MAX_COMMAND_SIZE 256
+
 #define IniciarProceso "iniciarProceso"
 #define configuracionConsola "../confConsola.init"
 
 typedef struct{
-        char* ip_Kernel;
-        char* puerto_Kernel;
-
+	char* ip_Kernel;
+	char* puerto_Kernel;
 }t_config_consola;
+
+typedef struct{
+	int pid;
+	int socket;
+	pthread_t thread;
+}t_proceso;
+
+typedef struct{
+	char* pathAnsisop;
+	int socket;
+}dataHilo;
 
 void crearConfig(int argc,char* argv[]);
 t_config_consola* levantarConfiguracionConsola(char * archivo);
 int crearLog();
-int verificarExistenciaDeArchivo(char*);
+
+int enviarArchivo(int kernel_fd, char* path);
+
+void inicializacion(void);
+void crearProceso(int socketProceso, pthread_t threadPrograma, int pid);
+bool esNumero(char* string);
+void threadPrograma(dataHilo* data);
+void terminarProceso(t_proceso* proc);
 
 //Funciones de interfaz
 void levantarInterfaz();
@@ -50,5 +72,6 @@ void enviarArchivo(int fd, char* path);
 t_log* logger;
 t_config_consola* config;
 pthread_t threadInterfaz;
+t_list* procesos;
 
 #endif /* FUNCIONESCONSOLA_H_ */

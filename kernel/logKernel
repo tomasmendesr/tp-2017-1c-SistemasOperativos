@@ -1,0 +1,63 @@
+[INFO] 11:27:13:974 kernel/(7129:7149): handshake con consola
+[INFO] 11:27:14:32 kernel/(7129:7151): recibo codigo
+[INFO] 11:27:14:32 kernel/(7129:7151): Proceso agregado a la cola New
+[INFO] 11:27:14:32 kernel/(7129:7151): Envio pedido de paginas a memoria. pid:1, cantPags: 4
+[INFO] 11:27:14:34 kernel/(7129:7151): Paginas reservadas para el proceso 1
+[INFO] 11:27:54:311 kernel/(7129:7192): Conexion con nueva CPU establecida
+[ERROR] 11:51:09:292 kernel/(7583:7583): No se pudo establecer la conexion con la memoria.
+[ERROR] 11:51:39:481 kernel/(7632:7632): No se pudo establecer la conexion con la memoria.
+[INFO] 11:54:22:292 kernel/(7774:7790): handshake con consola
+[INFO] 11:54:22:341 kernel/(7774:7792): recibo codigo
+[INFO] 11:54:22:342 kernel/(7774:7792): Proceso agregado a la cola New
+[INFO] 11:54:22:342 kernel/(7774:7792): Envio pedido de paginas a memoria. pid:1, cantPags: 4
+[INFO] 11:54:22:345 kernel/(7774:7792): Paginas reservadas para el proceso 1
+[INFO] 11:54:34:261 kernel/(7774:7795): Conexion con nueva CPU establecida
+[INFO] 11:56:51:415 kernel/(7896:7913): handshake con consola
+[INFO] 11:56:51:447 kernel/(7896:7915): recibo codigo
+[INFO] 11:56:51:448 kernel/(7896:7915): Proceso agregado a la cola New
+[INFO] 11:56:51:454 kernel/(7896:7915): Envio pedido de paginas a memoria. pid:1, cantPags: 4
+[INFO] 11:56:51:455 kernel/(7896:7915): Paginas reservadas para el proceso 1
+[INFO] 11:57:01:707 kernel/(7896:7918): Conexion con nueva CPU establecida
+[ERROR] 11:59:06:395 kernel/(8030:8030): No se pudo establecer la conexion con la memoria.
+[INFO] 11:59:49:284 kernel/(8079:8097): handshake con consola
+[INFO] 11:59:49:331 kernel/(8079:8099): recibo codigo
+[INFO] 11:59:49:331 kernel/(8079:8099): Proceso agregado a la cola New
+[INFO] 11:59:49:333 kernel/(8079:8099): Envio pedido de paginas a memoria. pid:1, cantPags: 4
+[INFO] 11:59:49:337 kernel/(8079:8099): Paginas reservadas para el proceso 1
+[INFO] 11:59:59:477 kernel/(8079:8102): Conexion con nueva CPU establecida
+[INFO] 19:18:22:947 kernel/(4408:4647): handshake con consola
+[INFO] 19:18:22:969 kernel/(4408:4649): recibo codigo
+[INFO] 19:18:22:969 kernel/(4408:4649): Proceso agregado a la cola New
+[INFO] 19:18:22:969 kernel/(4408:4649): Envio pedido de paginas a memoria. pid:1, cantPags: 4
+[INFO] 19:18:22:969 kernel/(4408:4649): Paginas reservadas para el proceso 1
+[INFO] 19:19:35:819 kernel/(4408:4742): Conexion con nueva CPU establecida
+[INFO] 19:21:30:90 kernel/(4408:4821): Conexion con nueva CPU establecida
+[INFO] 19:22:11:367 kernel/(4408:4830): Se cerro el socket 8
+[INFO] 19:22:11:378 kernel/(4408:4831): Se cerro el socket 8
+[INFO] 19:23:25:208 kernel/(4408:4832): Se cerro el socket 9
+[INFO] 19:23:25:211 kernel/(4408:4833): Se cerro el socket 9
+[INFO] 19:30:56:697 kernel/(4954:4969): handshake con consola
+[INFO] 19:30:56:706 kernel/(4954:4971): recibo codigo
+[INFO] 19:30:56:706 kernel/(4954:4971): Proceso agregado a la cola New
+[INFO] 19:30:56:706 kernel/(4954:4971): Envio pedido de paginas a memoria. pid:1, cantPags: 4
+[INFO] 19:30:56:706 kernel/(4954:4971): Paginas reservadas para el proceso 1
+[INFO] 19:31:10:211 kernel/(4954:4974): Conexion con nueva CPU establecida
+[INFO] 19:33:27:457 kernel/(4954:5003): Conexion con nueva CPU establecida
+[INFO] 19:33:29:28 kernel/(4954:5011): Se cerro el socket 8
+[INFO] 19:33:29:41 kernel/(4954:5012): Se cerro el socket 8
+[INFO] 19:36:00:373 kernel/(5105:5118): handshake con consola
+[INFO] 19:36:00:384 kernel/(5105:5120): recibo codigo
+[INFO] 19:36:00:384 kernel/(5105:5120): Proceso agregado a la cola New
+[INFO] 19:36:00:384 kernel/(5105:5120): Envio pedido de paginas a memoria. pid:1, cantPags: 4
+[INFO] 19:36:00:384 kernel/(5105:5120): Paginas reservadas para el proceso 1
+[INFO] 19:36:07:627 kernel/(5105:5123): Conexion con nueva CPU establecida
+[INFO] 19:36:43:113 kernel/(5105:5157): Se cerro el socket 8
+[INFO] 19:36:43:115 kernel/(5105:5158): Se cerro el socket 8
+[INFO] 19:42:05:312 kernel/(5274:5287): handshake con consola
+[INFO] 19:42:05:320 kernel/(5274:5289): recibo codigo
+[INFO] 19:42:05:320 kernel/(5274:5289): Proceso agregado a la cola New
+[INFO] 19:42:05:320 kernel/(5274:5289): Envio pedido de paginas a memoria. pid:1, cantPags: 4
+[INFO] 19:42:05:320 kernel/(5274:5289): Paginas reservadas para el proceso 1
+[INFO] 19:42:13:139 kernel/(5274:5292): Conexion con nueva CPU establecida
+[INFO] 19:43:20:331 kernel/(5274:5339): Se cerro el socket 8
+[INFO] 19:43:26:210 kernel/(5274:5340): Se cerro el socket 8

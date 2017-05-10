@@ -1,85 +1,385 @@
 #include "funcionesCpu.h"
 
-int crearLog() {
-	logger = log_create(getenv("/home/utnso/tp-2017-1c-Dirty-Cow/cpu/logCpu"),
-					"cpu", 1, 0);
-	if (logger) {
+bool cerrarCPU = false;
+bool huboStackOver = false;
+bool finPrograma = false;
+
+AnSISOP_funciones functions = { .AnSISOP_asignar = asignar,
+		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
+		.AnSISOP_definirVariable = definirVariable, .AnSISOP_dereferenciar =
+				dereferenciar, .AnSISOP_finalizar = finalizar,
+		.AnSISOP_irAlLabel = irAlLabel, .AnSISOP_llamarConRetorno = llamarConRetorno,
+		.AnSISOP_llamarSinRetorno=llamarSinRetorno,.AnSISOP_obtenerPosicionVariable =
+				obtenerPosicionVariable, .AnSISOP_obtenerValorCompartida =
+				obtenerValorCompartida, .AnSISOP_retornar = retornar,
+		};
+
+AnSISOP_kernel kernel_functions = { .AnSISOP_abrir =abrir, .AnSISOP_borrar = borrar,
+		.AnSISOP_cerrar = cerrar, .AnSISOP_escribir = escribir, .AnSISOP_leer = leer,
+		.AnSISOP_liberar=liberarMemoria, .AnSISOP_moverCursor = moverCursor,
+		.AnSISOP_reservar=reservar, .AnSISOP_signal = signalAnsisop,
+		.AnSISOP_wait = wait
+};
+
+int crearLog(void){
+	logger = log_create("logCpu","cpu", 1, LOG_LEVEL_TRACE);
+	if(logger)
 		return 1;
-	} else {
+	else
 		return 0;
-	}
 }
 
 void crearConfig(int argc, char* argv[]){
-	char* pathConfig=string_new();
-
-	if(argc>1)string_append(&pathConfig,argv[1]);
-		else string_append(&pathConfig,configuracionCPU);
-	if(verificarExistenciaDeArchivo(pathConfig)){
-		config = levantarConfiguracionCPU(pathConfig);
-	}else{
-		printf("No se pudo levantar archivo de configuracion");
+	if(argc>1){
+		if(verificarExistenciaDeArchivo(argv[1]))
+			config=levantarConfiguracionCPU(argv[1]);
+		else{
+			log_error(logger,"Ruta incorrecta");
+			exit(EXIT_FAILURE);
+		}
+	}
+	else if(verificarExistenciaDeArchivo(configuracionCPU)){
+		config=levantarConfiguracionCPU(configuracionCPU);
+		log_info(logger,"Configuracion levantada");
+	}
+	else if(verificarExistenciaDeArchivo(string_substring_from(configuracionCPU,3))){
+		config=levantarConfiguracionCPU(string_substring_from(configuracionCPU,3));
+		log_info(logger,"Configuracion levantada");
+	}
+	else{
+		log_error(logger,"No pudimos levantar el archivo");
 		exit(EXIT_FAILURE);
 	}
-	printf("Configuracion levantada correctamente\n");
-	return;
 }
 
 t_config_cpu* levantarConfiguracionCPU(char* archivo) {
-
         t_config_cpu* conf = malloc(sizeof(t_config_cpu));
         t_config* configCPU;
-
         configCPU = config_create(archivo);
-        conf->puerto_Kernel = malloc(MAX_LEN_PUERTO);
-        conf->puerto_Kernel = config_get_string_value(configCPU, "PUERTO_KERNEL");
-        conf->puerto_Memoria = malloc(MAX_LEN_PUERTO);
-        conf->puerto_Memoria = config_get_string_value(configCPU, "PUERTO_MEMORIA");
-        conf->ip_Memoria = malloc(MAX_LEN_IP);
-        conf->ip_Memoria = config_get_string_value(configCPU, "IP_MEMORIA");
-        conf->ip_Kernel = malloc(MAX_LEN_IP);
-        conf->ip_Kernel = config_get_string_value(configCPU, "IP_KERNEL");
-
-
+        conf->puerto_Kernel = malloc(strlen(config_get_string_value(configCPU, "PUERTO_KERNEL"))+1);
+        strcpy(conf->puerto_Kernel, config_get_string_value(configCPU, "PUERTO_KERNEL"));
+        conf->puerto_Memoria = malloc(strlen(config_get_string_value(configCPU, "PUERTO_MEMORIA"))+1);
+        strcpy(conf->puerto_Memoria, config_get_string_value(configCPU, "PUERTO_MEMORIA"));
+        conf->ip_Memoria = malloc(strlen(config_get_string_value(configCPU, "IP_MEMORIA"))+1);
+        strcpy(conf->ip_Memoria, config_get_string_value(configCPU, "IP_MEMORIA"));
+        conf->ip_Kernel = malloc(strlen(config_get_string_value(configCPU, "IP_KERNEL"))+1);
+        strcpy(conf->ip_Kernel, config_get_string_value(configCPU, "IP_KERNEL"));
+        config_destroy(configCPU);
         return conf;
 }
 
-int conexionConKernel(){
-	socketConexionKernel = createClient(config->ip_Kernel, config->puerto_Kernel);
-	if (socketConexionKernel) {
-		printf("Cliente a kernel creado\n");
-	}
-
-	//------------Envio de mensajes al servidor------------
-	enviar_paquete_vacio(HANDSHAKE_CPU, socketConexionKernel);
-	int operacion = 0;
-	void* paquete_vacio;
-
-	recibir_paquete(socketConexionKernel, &paquete_vacio, &operacion);
-
-	if (operacion == HANDSHAKE_KERNEL) {
-		printf("Conexion con Kernel establecida! :D \n");
-	} else {
-		printf("El Kernel no devolvio handshake :( \n");
-	}
+void freeConf(t_config_cpu* config){
+	free(config->ip_Kernel);
+	free(config->ip_Memoria);
+	free(config->puerto_Kernel);
+	free(config->puerto_Memoria);
+	free(config);
 }
-int conexionConMemoria(){
-	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
-	if (socketConexionMemoria) {
-		printf("Cliente a Memoria creado\n");
-	}
 
-	//------------Envio de mensajes al servidor------------
-	enviar_paquete_vacio(HANDSHAKE_CPU, socketConexionMemoria);
-	int operacion = 0;
+int conexionConKernel(void){
+	int rta;
+	int operacion;
 	void* paquete_vacio;
+	socketConexionKernel=createClient(config->ip_Kernel,config->puerto_Kernel);
+	if(socketConexionKernel == -1){
+		log_error(logger,"No pudo conectarse a Kernel");
+		return -1;
+	}else{
+		log_info(logger,"Cliente a Kernel creado");
+	}
+	enviar_paquete_vacio(HANDSHAKE_CPU, socketConexionKernel);
+	recibir_paquete(socketConexionKernel, &paquete_vacio, &operacion);
+	if(operacion==HANDSHAKE_KERNEL){
+		log_info(logger,"Conexion establecida con Kernel! :D");
+	}else{
+		log_info(logger,"El Kernel no devolvio handshake :(");
+		return -1;
+	}
+	log_debug(logger, "Esperando tamaño del stack...");
+	rta = requestHandlerKernel();
+	if(rta == -1){
+		log_error(logger,"Error al recibir tamanio de stack");
+		return -1;
+	}
+	return EXIT_SUCCESS;
+}
 
+int conexionConMemoria(void){
+	int rta;
+	int operacion;
+	void* paquete_vacio;
+	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
+	if(socketConexionMemoria == -1){
+		log_error(logger,"No pudo conectarse a Memoria");
+		return -1;
+	}else{
+		log_info(logger,"Cliente a Memoria creado");
+	}
+	enviar_paquete_vacio(HANDSHAKE_CPU, socketConexionMemoria);
 	recibir_paquete(socketConexionMemoria, &paquete_vacio, &operacion);
 
-	if (operacion == HANDSHAKE_MEMORIA) {
-		printf("Conexion con Memoria establecida! :D \n");
-	} else {
-		printf("La Memoria no devolvio handshake :( \n");
+	if(operacion == HANDSHAKE_MEMORIA){
+		log_info(logger,"Conexion establecida con Memoria! :D");
+	}else{
+		log_info(logger,"La Memoria no devolvio handshake :(");
+		return -1;
+	}
+	log_debug(logger, "Esperando tamaño de pagina...");
+	rta = requestHandlerMemoria();
+	if(rta != 0){
+		log_error(logger, "Error al recibir tamanio de pagina");
+		return -1;
+	}
+	return EXIT_SUCCESS;
+}
+
+int32_t requestHandlerKernel(void){
+	header_t header;
+	void* paquete;
+	paquete=NULL;
+	conecFailKernel(recvMsj(socketConexionKernel,&paquete,&header));
+	switch(header.type){
+		case EXEC_PCB:
+			recibirPCB(paquete);
+			break;
+		case EXEC_QUANTUM:
+			comenzarEjecucionDePrograma(paquete);
+			break;
+		case TAMANIO_STACK_PARA_CPU:
+			tamanioStack=*(uint32_t*)paquete;
+			log_info(logger, "Tamanio stack: %d", tamanioStack);
+			break;
+		case RESPUESTA_SIGNAL_OK:
+			break;
+		case RESPUESTA_WAIT_SEGUIR_EJECUCION:
+			log_debug(logger,"Proceso no queda bloqueado");
+			break;
+		case RESPUESTA_WAIT_DETENER_EJECUCION:
+			log_debug(logger,"Proceso queda bloqueado");
+			finalizarPor(PROC_BLOCKED);
+			break;
+		case VALOR_VAR_COMPARTIDA:
+			paqueteGlobal=malloc(header.length);
+			memcpy(paqueteGlobal,paquete,header.length);
+			break;
+		case RESPUESTA_ASIG_VAR_COMPARTIDA_OK:
+			log_info(logger, "Se asigno correctamente la variable compartida");
+			break;
+		default:
+			log_error(logger, "Mensaje Recibido Incorrecto");
+			if(paquete)free(paquete);
+			return -1;
+		}
+	if(paquete)free(paquete);
+	return EXIT_SUCCESS;
+}
+
+void conecFailKernel(int cant){
+	if(cant <= 0){
+		log_error(logger, "Kernel caido... Terminando...");
+		close(socketConexionKernel);
+		finalizarCPU();
+		exit(EXIT_FAILURE);
 	}
 }
 
+void conecFailMemoria(int cant){
+	if(cant <= 0){
+		log_error(logger, "Memoria se vino abajo... Terminando...");
+		close(socketConexionMemoria);
+		finalizarCPU();
+		exit(EXIT_FAILURE);
+	}
+}
+
+int32_t requestHandlerMemoria(void){
+	header_t header;
+	void* paquete;
+	paquete=NULL;
+	conecFailMemoria(recvMsj(socketConexionMemoria,&paquete,&header));
+	switch(header.type){
+		// respuesta grabarBytes - asignarCompartida
+	case OP_OK:
+		// aca no quiero hacer un free del paquete porque lo voy a usar. hacer free en la funcion que pide el paquete
+		break;
+	case RESPUESTA_BYTES:
+		paqueteGlobal = malloc(header.length);
+		memcpy(paqueteGlobal,paquete,header.length);
+		break;
+	case ENVIAR_TAMANIO_PAGINA:
+		tamanioPagina=*(uint32_t*)paquete;
+		log_info(logger,"Tamaño de pagina: %d",tamanioPagina);
+		break;
+	case SEGMENTATION_FAULT:
+		log_error(logger,"Segmentation Fault");
+		finalizarPor(SEGMENTATION_FAULT);
+		return -1;
+	case STACKOVERFLOW:
+		log_error(logger, "Stack Overflow");
+		finalizarPor(STACKOVERFLOW);
+		return -1;
+	default:
+		log_error(logger, "Mensaje Recibido Incorrecto");
+		if(paquete)free(paquete);
+		return -1;
+	}
+	if(paquete)free(paquete);
+	return EXIT_SUCCESS;
+}
+
+void recibirPCB(void* paquete){
+	pcb = deserializar_pcb(paquete);
+	setPCB(pcb);
+	log_info(logger, "Recibo PCB id: %i", pcb->pid);
+}
+
+int16_t solicitarBytes(t_pedido_bytes* pedido){
+	header_t header;
+	header.type=SOLICITUD_BYTES;
+	header.length=sizeof(t_pedido_bytes);
+	if(sendSocket(socketConexionMemoria,&header,(void*)pedido) <= 0 ){
+		log_error(logger,"Error al enviar. Desconexion...");
+		finalizarCPU();
+	}
+	return requestHandlerMemoria();
+}
+
+int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
+	char*buffer;
+	uint32_t size;
+	header_t header;
+	size = sizeof(t_pedido_bytes);
+	header.type=GRABAR_BYTES;
+	header.length=size+pedido->size;
+	buffer=malloc(header.length);
+	memcpy(buffer,pedido,size);
+	memcpy(buffer+size,paquete,pedido->size);
+	if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
+		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
+		free(buffer);
+		finalizarCPU();
+	}
+	free(buffer);
+	if(requestHandlerMemoria() != 0){
+		log_error(logger,"La variable no pudo asignarse");
+		return -1;
+	}
+	return EXIT_SUCCESS;
+}
+
+void revisarSigusR1(int signo){
+	if(signo == SIGUSR1){
+		log_info(logger, "Se recibe SIGUSR1");
+		cerrarCPU = true;
+		enviar_paquete_vacio(DESCONEXION_CPU, socketConexionKernel);
+		log_debug(logger, "Desconectando CPU...");
+	}
+}
+
+void revisarFinalizarCPU(void){
+	if(cerrarCPU){
+		finalizarConexion(socketConexionKernel);
+		finalizarConexion(socketConexionMemoria);
+		log_info(logger, "CPU cerrada. Adios!");
+		log_destroy(logger);
+		freeConf(config);
+		return;
+	}
+}
+
+void comenzarEjecucionDePrograma(void* paquete){
+	quantum = *(uint32_t*)paquete;
+	if(quantum == 0){
+		log_debug(logger, "Ejecutar - Algoritmo FIFO");
+	}else{
+		log_debug(logger, "Ejecutar - Algoritmo RR con Q = %d", quantum);
+	}
+	int i = 1;
+	while(i <= quantum || quantum == 0){ // Si el quantum es 0 significa que es FIFO ---> ejecuto hasta terminar.
+		int16_t sizeInstruccion = solicitarProximaInstruccion(); // carga la instruccion en el paquete global bytes
+		if(sizeInstruccion == -1){
+			log_error(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
+			finalizarConexion(socketConexionMemoria);
+			return;
+		}
+		char* instruccion = malloc(sizeInstruccion);
+		obtenerInstruccion(instruccion, paqueteGlobal, sizeInstruccion);
+		free(paqueteGlobal);
+		log_info(logger, "Instruccion recibida: %s", instruccion);
+		analizadorLinea(instruccion, &functions, &kernel_functions);
+		free(instruccion);
+		if(huboStackOver) finalizarPor(STACKOVERFLOW);
+		revisarFinalizarCPU();
+		if(finPrograma) return;
+		i++;
+		pcb->programCounter++;
+		// usleep -----------------> no se que es esto
+	}
+	log_info(logger, "Finalizo ejecucion por fin de Quantum");
+	finalizarPor(FIN_EJECUCION);
+	freePCB(pcb);
+	revisarFinalizarCPU();
+}
+
+void obtenerInstruccion(char* instruccion, char* paquete, int16_t sizeInstruccion){
+	memcpy(instruccion,paquete,sizeInstruccion);
+	int pos_ultimo_caracter = sizeInstruccion - 1;
+	char salto_linea = '\n';
+	char fin_string = '\0';
+	char last_char;
+	memcpy(&last_char,instruccion + pos_ultimo_caracter,1);
+	if(last_char == salto_linea){
+		memcpy(instruccion + pos_ultimo_caracter,&fin_string,1);
+	}
+}
+
+int16_t solicitarProximaInstruccion(void) {
+	t_indice_codigo *indice = list_get(pcb->indiceCodigo, pcb->programCounter);
+	uint32_t requestStart = indice->offset;
+	uint32_t requestSize = indice->size;
+	uint32_t i = 0;
+	while (requestStart >= (tamanioPagina + (tamanioPagina * i++)));
+	uint32_t paginaAPedir = --i;
+	t_pedido_bytes* solicitar = malloc(sizeof(t_pedido_bytes));
+	solicitar->pag = paginaAPedir;
+	solicitar->offset = requestStart - (tamanioPagina * paginaAPedir);
+	solicitar->size = requestSize;
+	solicitar->pid = pcb->pid;
+	log_debug(logger, "Pido instruccion a Memoria -> Pid: %d - Pagina: %d - Offset: %d - Size: %d",
+		solicitar->pid, paginaAPedir, solicitar->offset, requestSize);
+	if(solicitarBytes(solicitar) != 0 ){
+		free(solicitar);
+		log_error(logger, "Error al solicitar bytes (instruccion) a memoria.");
+		return -1;
+	}
+	free(solicitar);
+	return requestSize;
+}
+
+void finalizarPor(int type) {
+	t_buffer_tamanio* paquete = serializar_pcb(pcb);
+	header_t header;
+	header.type= type;
+	header.length=paquete->tamanioBuffer;
+	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
+		log_error(logger,"Error al notificar kernel el fin de ejecucion");
+	}
+	free(paquete->buffer);
+	free(paquete);
+}
+
+void freePCB(t_pcb* pcb){
+	free(pcb->etiquetas);
+	list_destroy(pcb->indiceCodigo);
+	list_destroy(pcb->indiceStack);
+	free(pcb);
+}
+
+void finalizarCPU(void){
+	finalizarConexion(socketConexionKernel);
+	finalizarConexion(socketConexionMemoria);
+	log_info(logger, "CPU desconectada!");
+	log_destroy(logger);
+	freeConf(config);
+	exit(EXIT_FAILURE);
+}

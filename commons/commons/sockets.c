@@ -11,7 +11,7 @@
  * @NAME: getSocket
  * @DESC: Crea un socket y retorna su descriptor. Retorna -1 en caso de error.
  */
-int getSocket(void) {
+int getSocket(void){
 	int yes = 1;
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -154,7 +154,7 @@ int createClient(char *addr, char *port) {
 
 /**
  * @NAME: sendallSocket
- * @DESC: procura enviar todo el paquete entero. Devuelve la cantidad de bytes enviados o -1 en caso de error.
+ * @DESC: procura enviar to-do el paquete entero. Devuelve la cantidad de bytes enviados o -1 en caso de error.
  *
  */
 int sendallSocket(int socket, void* paquete_a_enviar, int tamanio_paquete) {
@@ -174,19 +174,6 @@ int sendallSocket(int socket, void* paquete_a_enviar, int tamanio_paquete) {
 
 }
 
-char *program_serializer(char *codigo_programa) {
-
-	uint16_t longitud;
-	longitud = strlen(codigo_programa);
-	char *programa_ya_serializado = malloc(longitud + sizeof(longitud));
-
-	memcpy(programa_ya_serializado, &longitud, sizeof(longitud));
-	memcpy(programa_ya_serializado + sizeof(longitud), codigo_programa, longitud);
-
-	return programa_ya_serializado;
-
-}
-
 /*
  * @NAME: recibir_paquete
  *
@@ -196,26 +183,25 @@ char *program_serializer(char *codigo_programa) {
 int recibir_paquete(int socket, void** paquete, int* tipo){
 
 	int bytes_recibidos;
-	void* buffer;
-	header_t cabecera;
+		header_t cabecera;
 
-	bytes_recibidos = recv(socket, &cabecera, sizeof(header_t), MSG_WAITALL);
+		bytes_recibidos = recvAll(socket, (char*)&cabecera, sizeof(header_t), MSG_WAITALL);
 
-	if(bytes_recibidos == 0) return 0;
-	if(bytes_recibidos == -1) return -1;
+		if(bytes_recibidos == 0) return 0;
+		if(bytes_recibidos == -1) return -1;
 
-	*tipo = cabecera.type;
-	buffer = malloc(cabecera.length);
+		*tipo=cabecera.type;
 
-	bytes_recibidos = recv(socket, buffer, cabecera.length, MSG_WAITALL);
+		if(cabecera.length){
+			*paquete = malloc(cabecera.length);
+			bytes_recibidos = recvAll(socket, (char*)*paquete, cabecera.length, MSG_WAITALL);
+			if(bytes_recibidos == 0) return 0;
+			if(bytes_recibidos == -1) return -1;
+		}
+		else
+			*paquete=NULL;
 
-	if(bytes_recibidos == 0) return 0;
-	if(bytes_recibidos == -1) return -1;
-
-	*paquete = buffer;
-
-	return bytes_recibidos;
-
+		return bytes_recibidos;
 }
 
 /*
@@ -279,145 +265,351 @@ int deserializar_string(void* paquete, char** string){
 
 }
 
-void* pcb_serializer(pcb* self, int16_t *length){
+t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack) {
+	uint16_t a,p;
+	uint32_t tamanioTotalBuffer;
+	t_list* tamanioStackStack=list_create();
+	uint32_t tamanioStackParticular;
+	tamanioTotalBuffer=0;
+	uint32_t pos;
 
-	void *serialized = malloc(sizeof(pcb));
-	int offset = 0, tmp_size = 0;
+	for(a=0; a<list_size(indiceStack); a++){
+		t_entrada_stack* linea=list_get(indiceStack, a);
+		tamanioStackParticular=0;
 
-	memcpy(serialized, &self->id, tmp_size = sizeof(self->id));
-	offset += tmp_size;
+		uint16_t cantidadArgumentos=list_size(linea->argumentos);
+		tamanioTotalBuffer+=cantidadArgumentos*sizeof(t_argumento);
+		tamanioStackParticular+=cantidadArgumentos*sizeof(t_argumento);
 
-	memcpy(serialized + offset, &self->codePointer, tmp_size = sizeof(self->codePointer));
-	offset += tmp_size;
+		uint16_t cantidadVariables=list_size(linea->variables);
+		tamanioTotalBuffer+=cantidadVariables*sizeof(t_var);
+		tamanioStackParticular+=cantidadVariables*sizeof(t_var);
 
-	memcpy(serialized+ offset, &self->stackPointer, tmp_size = sizeof(self->stackPointer));
-	offset += tmp_size;
+		tamanioTotalBuffer+=sizeof(uint32_t);
+		tamanioStackParticular+=sizeof(uint32_t);
+		if(linea->retVar){
+			tamanioTotalBuffer+=sizeof(t_posicion);
+			tamanioStackParticular+=sizeof(t_posicion);
+		}
+		tamanioTotalBuffer+=sizeof(uint32_t)*4;
+		t_tamanio_stack *auxiliar=malloc(sizeof(t_tamanio_stack));
+		auxiliar->stack=linea;
+		auxiliar->tamanioStack=tamanioStackParticular;
+		list_add(tamanioStackStack, auxiliar);
+	}
+	char* buffer=malloc(tamanioTotalBuffer + sizeof(uint32_t));
+	int tamanioUint32=sizeof(uint32_t),offset=0;
+	uint32_t cantidadItemsEnStack=list_size(indiceStack);
+	memcpy(buffer + offset, &cantidadItemsEnStack, tamanioUint32);
+	offset+=tamanioUint32;
 
-	memcpy(serialized+ offset, &self->stackContextPointer, tmp_size = sizeof(self->stackContextPointer));
-	offset += tmp_size;
+	for(a=0; a<list_size(tamanioStackStack); a++){
+		t_tamanio_stack* linea=list_get(tamanioStackStack, a);
+		memcpy(buffer + offset, &linea->tamanioStack, tamanioUint32);
+		offset+=tamanioUint32;
+		t_entrada_stack* stack=linea->stack;
+		uint32_t cantidadArgumentos=list_size(stack->argumentos);
+		memcpy(buffer + offset, &cantidadArgumentos, tamanioUint32);
+		offset+=tamanioUint32;
 
-	memcpy(serialized+ offset, &self->indexCodePointer, tmp_size = sizeof(self->indexCodePointer));
-	offset += tmp_size;
+		for(p=0; p<cantidadArgumentos; p++){
+			t_argumento *argumento=list_get(stack->argumentos, p);
+			memcpy(buffer + offset, &argumento->pagina, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(buffer + offset, &argumento->offset, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(buffer + offset, &argumento->size, tamanioUint32);
+			offset+=tamanioUint32;
+		}
+		uint32_t cantidadVariables=list_size(stack->variables);
+		memcpy(buffer + offset, &cantidadVariables, tamanioUint32);
+		offset+=tamanioUint32;
 
-	memcpy(serialized+ offset, &self->labelIndexPointer, tmp_size = sizeof(self->labelIndexPointer));
-	offset += tmp_size;
+		for(p=0; p<cantidadVariables; p++){
+			t_var *variable=list_get(stack->variables, p);
+			memcpy(buffer + offset, &variable->id, sizeof(char));
+			offset+=sizeof(char);
+			memcpy(buffer + offset, &variable->pagina, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(buffer + offset, &variable->offset, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(buffer + offset, &variable->size, tamanioUint32);
+			offset+=tamanioUint32;
+		}
+		memcpy(buffer + offset, &stack->direcretorno, tamanioUint32);
+		offset+=tamanioUint32;
+		t_posicion* retVarStack=stack->retVar;
 
-	memcpy(serialized+ offset, &self->programCounter, tmp_size = sizeof(self->programCounter));
-	offset += tmp_size;
+		if(!retVarStack){
+			pos=0;
+			memcpy(buffer + offset, &pos, tamanioUint32);
+			offset+=tamanioUint32;
+		}else{
+			pos=1;
+			memcpy(buffer + offset, &pos, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(buffer + offset, &retVarStack->pagina, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(buffer + offset, &retVarStack->offset, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(buffer + offset, &retVarStack->size, tamanioUint32);
+			offset+=tamanioUint32;
+		}
+	}
+	for(a=0; a<list_size(tamanioStackStack); a++){
+		t_tamanio_stack* tamanioStack=list_get(tamanioStackStack, a);
+		t_entrada_stack* stack=tamanioStack->stack;
+		list_remove(tamanioStackStack, a);
+		free(stack);
+		free(tamanioStack);
+	}
+	free(tamanioStackStack);
+	t_buffer_tamanio* bufferTamanio=malloc(sizeof(t_buffer_tamanio));
+	bufferTamanio->tamanioBuffer=tamanioTotalBuffer + sizeof(uint32_t);
+	bufferTamanio->buffer=buffer;
 
-	memcpy(serialized+ offset, &self->tamanioContexto, tmp_size = sizeof(self->tamanioContexto));
-	offset += tmp_size;
-
-	memcpy(serialized+ offset, &self->tamanioIndiceEtiquetas, tmp_size = sizeof(self->tamanioIndiceEtiquetas));
-	offset += tmp_size;
-
-	*length = offset;
-
-	return serialized;
+	return bufferTamanio;
 }
 
-pcb* pcb_deserializer(int socketfd) {
-	pcb* self = malloc(sizeof(pcb));
-	recv(socketfd, &self->id, sizeof(self->id), MSG_WAITALL);
-	recv(socketfd, &self->codePointer, sizeof(self->codePointer), MSG_WAITALL);
-	recv(socketfd, &self->stackPointer, sizeof(self->stackPointer), MSG_WAITALL);
-	recv(socketfd, &self->stackContextPointer, sizeof(self->stackContextPointer), MSG_WAITALL);
-	recv(socketfd, &self->indexCodePointer, sizeof(self->indexCodePointer), MSG_WAITALL);
-	recv(socketfd, &self->labelIndexPointer, sizeof(self->labelIndexPointer), MSG_WAITALL);
-	recv(socketfd, &self->programCounter, sizeof(self->programCounter), MSG_WAITALL);
-	recv(socketfd, &self->tamanioContexto, sizeof(self->tamanioContexto), MSG_WAITALL);
-	recv(socketfd, &self->tamanioIndiceEtiquetas, sizeof(self->tamanioIndiceEtiquetas), MSG_WAITALL);
-	return self;
+t_list* deserializarIndiceStack(char* buffer){
+	uint16_t i,p;
+	t_list* stack=list_create();
+	uint16_t offset=0,tamanioUint32=sizeof(uint32_t);
+	uint32_t cantidadElementosEnStack;
+	memcpy(&cantidadElementosEnStack, buffer + offset, tamanioUint32);
+	offset+=tamanioUint32;
+
+	for(i=0; i<cantidadElementosEnStack; i++){
+		uint32_t tamanioItemStack;
+		memcpy(&tamanioItemStack, buffer + offset, tamanioUint32);
+		offset+=tamanioUint32;
+		t_entrada_stack* stack_item=malloc(sizeof(t_entrada_stack));
+		t_list* argumentosStack=list_create();
+		uint32_t cantidadArgumentosStack;
+		memcpy(&cantidadArgumentosStack, buffer + offset, tamanioUint32);
+		offset+=tamanioUint32;
+
+		for(p=0; p<cantidadArgumentosStack; p++){
+			t_argumento* argStack=malloc(sizeof(t_argumento));
+			memcpy(&argStack->pagina, buffer + offset, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(&argStack->offset, buffer + offset, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(&argStack->size, buffer + offset, tamanioUint32);
+			offset+=tamanioUint32;
+			list_add(argumentosStack, argStack);
+		}
+		stack_item->argumentos=argumentosStack;
+		t_list* variablesStack=list_create();
+		uint32_t cantidadVariablesStack;
+		memcpy(&cantidadVariablesStack, buffer + offset, tamanioUint32);
+		offset+=tamanioUint32;
+
+		for(p=0; p<cantidadVariablesStack; p++){
+			t_var* varStack=malloc(sizeof(t_var));
+			memcpy(&varStack->id, buffer + offset, sizeof(char));
+			offset+=sizeof(char);
+			memcpy(&varStack->pagina, buffer + offset, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(&varStack->offset, buffer + offset, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(&varStack->size, buffer + offset, tamanioUint32);
+			offset+=tamanioUint32;
+			list_add(variablesStack, varStack);
+		}
+		stack_item->variables = variablesStack;
+		uint32_t direcRetorno;
+		memcpy(&direcRetorno, buffer + offset, tamanioUint32);
+		stack_item->direcretorno=direcRetorno;
+		offset+=tamanioUint32;
+		memcpy(&direcRetorno, buffer + offset, tamanioUint32);
+		offset+=tamanioUint32;
+		t_posicion* retVarStack;
+		if(!direcRetorno)
+			retVarStack=NULL;
+		else{
+			retVarStack=malloc(sizeof(t_posicion));
+			memcpy(&retVarStack->pagina, buffer + offset, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(&retVarStack->offset, buffer + offset, tamanioUint32);
+			offset+=tamanioUint32;
+			memcpy(&retVarStack->size, buffer + offset, tamanioUint32);
+			offset+=tamanioUint32;
+		}
+		stack_item->retVar=retVarStack;
+		list_add(stack, stack_item);
+	}
+	return stack;
 }
 
-void* variable_serializer(t_variable *self, int16_t *length){
+t_buffer_tamanio* serializarIndiceDeCodigo(t_list* indiceCodigo) {
+	uint32_t offset = 0, m = 0;
+	int tmp_size = sizeof(uint32_t);
+	char* bufferIndCod = malloc(list_size(indiceCodigo) * 2 * sizeof(uint32_t));
+	uint32_t itemsEnLista = list_size(indiceCodigo);
 
-	void *serialized = malloc(sizeof(char) + sizeof(u_int32_t));
-	int offset = 0, tmp_size = 0;
+//	memcpy(bufferIndCod + offset, &itemsEnLista, tmp_size);
+//	offset += tmp_size;
 
-	memcpy(serialized, &self->nombre, tmp_size = sizeof(self->nombre));
-	offset = tmp_size;
+	t_indice_codigo* linea;
+	for (m = 0; m < itemsEnLista; m++) {
+		linea = list_get(indiceCodigo, m);
+		memcpy(bufferIndCod + offset, &linea->offset, tmp_size);
+		offset += tmp_size;
+		memcpy(bufferIndCod + offset, &linea->size, tmp_size);
+		offset += tmp_size;
+	}
 
-	memcpy(serialized + offset, &self->valor, tmp_size = sizeof(self->valor));
+	t_buffer_tamanio * tamanioBuffer = malloc(sizeof(uint32_t)*2);
+	tamanioBuffer->tamanioBuffer = offset;
+	tamanioBuffer->buffer = malloc(tamanioBuffer->tamanioBuffer);
+	memcpy(tamanioBuffer->buffer,bufferIndCod,tamanioBuffer->tamanioBuffer);
+
+	return tamanioBuffer;
+}
+
+t_list* deserializarIndiceCodigo(char* indice, uint32_t tam) {
+	int unit;
+	t_list* ret = list_create();
+	uint32_t offset = 0;
+	uint32_t tmp_size = sizeof(uint32_t);
+	unit=tam/(sizeof(uint32_t)*2);
+	int i;
+	for (i = 0; i < unit; i++) {
+		t_indice_codigo* linea = malloc(sizeof(t_indice_codigo));
+		memcpy(&linea->offset, indice + offset, tmp_size);
+		offset += tmp_size;
+		memcpy(&linea->size, indice + offset, tmp_size);
+		offset += tmp_size;
+		list_add(ret, linea);
+	}
+	return ret;
+}
+
+t_buffer_tamanio* serializar_pcb(t_pcb* pcb){
+	t_buffer_tamanio* indcod = serializarIndiceDeCodigo(pcb->indiceCodigo);
+	char* paqueteSerializado;
+	t_buffer_tamanio* stackSerializado = serializarIndiceStack(pcb->indiceStack);
+
+	uint32_t tamanioPCB=0;
+	tamanioPCB+=sizeof(uint32_t);
+	tamanioPCB+=indcod->tamanioBuffer;
+	tamanioPCB+=sizeof(uint32_t);
+	tamanioPCB+=stackSerializado->tamanioBuffer;
+	tamanioPCB+=sizeof(uint32_t);
+
+	if (pcb->etiquetas != NULL && pcb->tamanioEtiquetas > 0)
+		tamanioPCB+=pcb->tamanioEtiquetas;
+	tamanioPCB+=sizeof(uint32_t) * 7;
+	paqueteSerializado = malloc(tamanioPCB);
+	uint32_t offset = 0;
+	uint32_t tmp_size = sizeof(uint32_t);
+
+	memcpy(paqueteSerializado+offset, &pcb->pid, tmp_size);
+	offset += tmp_size;
+	memcpy(paqueteSerializado+offset, &pcb->codigo, tmp_size);
+	offset += tmp_size;
+	memcpy(paqueteSerializado+offset, &pcb->programCounter, tmp_size);
+	offset += tmp_size;
+	memcpy(paqueteSerializado+offset, &pcb->stackPointer, tmp_size);
+	offset += tmp_size;
+	memcpy(paqueteSerializado+offset, &pcb->cantPaginasCodigo, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(paqueteSerializado+offset, &pcb->exitCode, tmp_size);
+ 	offset += tmp_size;
+	memcpy(paqueteSerializado+offset, &pcb->consolaFd, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(paqueteSerializado+offset, &stackSerializado->tamanioBuffer, tmp_size);
+	offset += tmp_size;
+	memcpy(paqueteSerializado+offset, (void*)stackSerializado->buffer, stackSerializado->tamanioBuffer);
+	offset += stackSerializado->tamanioBuffer;
+
+ 	if(pcb->etiquetas != NULL && pcb->tamanioEtiquetas > 0){
+		memcpy(paqueteSerializado+offset, &pcb->tamanioEtiquetas, tmp_size);
+		offset += tmp_size;
+		memcpy(paqueteSerializado+offset, pcb->etiquetas, pcb->tamanioEtiquetas);
+		offset += pcb->tamanioEtiquetas;
+	}else{
+		uint32_t longitudIndiceEtiquetas = 0;
+		memcpy(paqueteSerializado+offset, &longitudIndiceEtiquetas, tmp_size);
+		offset += tmp_size;
+	}
+	memcpy(paqueteSerializado+offset, &indcod->tamanioBuffer, tmp_size);
+	offset += tmp_size;
+	memcpy(paqueteSerializado+offset, (void*)indcod->buffer, indcod->tamanioBuffer);
+	offset += indcod->tamanioBuffer;
+	free(indcod->buffer);
+	free(indcod);
+	free(stackSerializado->buffer);
+	free(stackSerializado);
+
+	t_buffer_tamanio * buffer_tamanio = malloc(sizeof(t_buffer_tamanio));
+	buffer_tamanio->tamanioBuffer = tamanioPCB;
+	buffer_tamanio->buffer = malloc(buffer_tamanio->tamanioBuffer);
+	memcpy(buffer_tamanio->buffer,paqueteSerializado,buffer_tamanio->tamanioBuffer);
+
+	return buffer_tamanio;
+}
+
+t_pcb* deserializar_pcb(char* package){
+ 	uint32_t offset = 0, tmp_size = sizeof(uint32_t);
+ 	char * indiceEtiquetas;
+ 	char * bufferIndiceDeCodigo;
+ 	t_pcb *pcb;
+ 	t_list * indiceDeCodigo;
+ 	pcb = malloc (sizeof(t_pcb));
+
+ 	memcpy(&pcb->pid, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->codigo, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->programCounter, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->stackPointer, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->cantPaginasCodigo, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	memcpy(&pcb->exitCode, package + offset, tmp_size);
+ 	offset += tmp_size;
+	memcpy(&pcb->consolaFd, package + offset, tmp_size);
+ 	offset += tmp_size;
+
+ 	uint32_t tamanioStack;
+	memcpy(&tamanioStack, package + offset, tmp_size);
+	offset += tmp_size;
+	char * bufferIndiceStack = malloc(tamanioStack);
+	memcpy(bufferIndiceStack, package + offset, tamanioStack);
+	offset += tamanioStack;
+	t_list * indiceStack = deserializarIndiceStack(bufferIndiceStack);
+	pcb->indiceStack = indiceStack;
+ 	memcpy(&pcb->tamanioEtiquetas, package + offset, tmp_size);
 	offset += tmp_size;
 
-	*length = offset;
+	if(pcb->tamanioEtiquetas>0){
+		indiceEtiquetas = malloc(pcb->tamanioEtiquetas);
+		memcpy(indiceEtiquetas, package + offset, pcb->tamanioEtiquetas);
+		pcb->etiquetas = indiceEtiquetas;
+		offset += pcb->tamanioEtiquetas;
+	}else
+		pcb->etiquetas = NULL;
 
-	return serialized;
-}
+	uint32_t itemsIndiceDeCodigo;
+ 	memcpy(&itemsIndiceDeCodigo, package + offset, tmp_size);
+ 	offset += tmp_size;
+ 	if(itemsIndiceDeCodigo){
+		bufferIndiceDeCodigo=malloc(itemsIndiceDeCodigo);
+		memcpy(bufferIndiceDeCodigo, package + offset, itemsIndiceDeCodigo);
+		offset += itemsIndiceDeCodigo;
+ 	indiceDeCodigo = deserializarIndiceCodigo(bufferIndiceDeCodigo, itemsIndiceDeCodigo);
+ 	pcb->indiceCodigo = indiceDeCodigo;
+ 	}
+ 	else
+ 		pcb->indiceCodigo=list_create();
+ 	free(bufferIndiceDeCodigo);
+ 	free(bufferIndiceStack);
 
-t_variable* variable_deserializer(int socketfd){
-	t_variable* self = malloc(sizeof(t_variable));
-	recv(socketfd, &self->nombre, sizeof(self->nombre), MSG_WAITALL);
-	recv(socketfd, &self->valor, sizeof(self->valor), MSG_WAITALL);
-	return self;
-}
-
-void* codeIndex_serializer(codeIndex *self, int16_t *length){
-
-	void *serialized = malloc(sizeof(codeIndex));
-	int offset = 0, tmp_size = 0;
-
-	memcpy(serialized, &self->tamanio, tmp_size = sizeof(self->tamanio));
-	offset = tmp_size;
-
-	memcpy(serialized + offset, &self->offset, tmp_size = sizeof(self->offset));
-	offset += tmp_size;
-
-	*length = offset;
-
-	return serialized;
-}
-
-codeIndex* codeIndex_deserializer(int socketfd){
-	codeIndex* self = malloc(sizeof(codeIndex));
-	recv(socketfd, &self->offset, sizeof(self->offset), MSG_WAITALL);
-	recv(socketfd, &self->tamanio, sizeof(self->tamanio), MSG_WAITALL);
-	return self;
-}
-
-
-
-char *paqueteEnviarAEjecutar_serializer(u_int16_t quantum, uint32_t retardo_quantum,pcb *pcb_proceso) {
-
-	char *serialized = malloc(sizeof(quantum) + sizeof(retardo_quantum) + sizeof(pcb));
-	int offset = 0, tmp_size = 0;
-
-	memcpy(serialized, &quantum, tmp_size = sizeof(quantum));
-	offset = tmp_size;
-
-	memcpy(serialized + offset, &retardo_quantum, tmp_size = sizeof(retardo_quantum));
-	offset += tmp_size;
-
-	memcpy(serialized + offset, pcb_proceso, tmp_size = sizeof(pcb));
-	offset += tmp_size;
-
-	return serialized;
-
-}
-
-t_segmento* segmento_deserializer(int socketfd) {
-	t_segmento* self = malloc(sizeof(t_segmento));
-	recv(socketfd, &self->id, sizeof(self->id), MSG_WAITALL);
-	recv(socketfd, &self->tamanio, sizeof(self->tamanio), MSG_WAITALL);
-	return self;
-}
-
-void* segmento_serializer(t_segmento *self, int16_t *length){
-
-	void *serialized = malloc(sizeof(char) + sizeof(u_int32_t));
-	int offset = 0, tmp_size = 0;
-
-	memcpy(serialized, &self->id, tmp_size = sizeof(self->id));
-	offset = tmp_size;
-
-	memcpy(serialized + offset, &self->tamanio, tmp_size = sizeof(self->tamanio));
-	offset += tmp_size;
-
-	*length = offset;
-
-	return serialized;
-}
+ 	return pcb;
+ }
 
 header_t crear_cabecera(int codigo, int length){
 
@@ -427,31 +619,17 @@ header_t crear_cabecera(int codigo, int length){
 	cabecera.length = length;
 
 	return cabecera;
-
 }
 
 int enviar_paquete_vacio(int codigo_operacion, int socket){
 
-	header_t cabecera = crear_cabecera(codigo_operacion, 1);
-	int bytes_enviados = sendSocket(socket, &cabecera, "0");
-
-	return bytes_enviados;
-}
-
-int enviar_paquete_vacio_a_cpu(int codigo_operacion, int socket){
-
 	int bytes_enviados;
-	header_t cabecera;
-	cabecera.type = codigo_operacion;
-	cabecera.length = 0;
-
-	bytes_enviados = sendSocket(socket, &cabecera, '\0');
+	bytes_enviados=enviar_info(socket, codigo_operacion, 0, NULL);
 
 	return bytes_enviados;
-
 }
 
-/* sendAll y recvAll: Te aseguran que se envio o recibio todo.
+/* sendAll y recvAll: Te aseguran que se envio o recibio tod-o.
  * Respetan la misma interfaz que send y recv originales*/
 int sendAll(int fd, char *cosa, int size, int flags){
 
@@ -487,7 +665,7 @@ int recvAll(int fd, char *buffer, int size, int flags){
 		if(aux == -1){
 			return -1;
 		}else if(aux == 0)
-			return -1;
+			return 0;
 
 		cant_recibida += aux;
 	}
@@ -495,40 +673,40 @@ int recvAll(int fd, char *buffer, int size, int flags){
 	return cant_recibida;
 }
 
+int enviar_info(int sockfd, int codigo_operacion, int length, void* buff){
 
-bool enviarHandshake(int socket, int handshakeEnviar, int handshakeRespuesta){
+	int bytes_enviados;
+	header_t cabecera = crear_cabecera(codigo_operacion, length);
 
-	int operacion = 0;
-	void* paquete_vacio;
+	bytes_enviados = sendAll(sockfd, (char*)&cabecera, sizeof(cabecera), 0);
 
-	enviar_paquete_vacio(handshakeEnviar,socket);
+	if(bytes_enviados == 0) return 0;
+	if(bytes_enviados == -1) return -1;
 
-	if(recibir_paquete(socket, &paquete_vacio, &operacion) == 0){
-		return false;
+	if(cabecera.length!=0){
+		bytes_enviados += sendAll(sockfd, (char*)buff, cabecera.length, 0);
+		if(bytes_enviados == 0) return 0;
+		if(bytes_enviados == -1) return -1;
 	}
 
-	if(operacion == handshakeRespuesta ){
-		enviar_paquete_vacio(handshakeEnviar,socket);
-	}
-
-	return true;
+	return bytes_enviados;
 }
 
-bool recibirHanshake(int socket, int handshakeRecibir, int handshakeRespuesta){
-	int operacion = 0;
-	void* paquete_vacio;
+int recvMsj(int socket, void** paquete, header_t *header){
 
-	if (recibir_paquete(socket, &paquete_vacio, &operacion)) return false;
-
-	if (operacion == handshakeRecibir) {
-		enviar_paquete_vacio(handshakeRespuesta,socket);
-
-		recibir_paquete(socket, &paquete_vacio, &operacion);
-
-		if(operacion == handshakeRecibir){
-			return true;
-		}
+	int bytes;
+	bytes=recvAll(socket, (char*)header, sizeof(header_t), MSG_WAITALL);
+	if(bytes == 0) return 0;
+	if(bytes == -1) return -1;
+	if(header->length){
+		*paquete = malloc(header->length);
+		bytes = recvAll(socket, (char*)*paquete, header->length, MSG_WAITALL);
+		if(bytes == 0) return 0;
+		if(bytes == -1) return -1;
 	}
-
-	return false;
+	else *paquete=NULL;
+	return bytes;
 }
+
+
+
