@@ -313,17 +313,27 @@ int reservarFrames(int pid, int cantPag){
 
 	//Asigno las paginas que me piden
 	int asignadas = 0;
-	i = 0;
+	int posInicial;
+	bool asigne;
 	while(asignadas < cantPag){
 
-		if(tabla_pag[i].pid == -1 || tabla_pag[i].pag == -1){
-			tabla_pag[i].pid = pid;
-			tabla_pag[i].pag = maxPag;
-			maxPag++;
-			asignadas++;
+		posInicial = getPos(pid,maxPag);
+		asigne = false;
+
+		for(i=0;!asigne && i<cant_frames; i++){
+			if(tabla_pag[posInicial + i].pid == -1 || tabla_pag[posInicial + i].pag == -1){
+				tabla_pag[posInicial + i].pid = pid;
+				tabla_pag[posInicial + i].pag = maxPag;
+				maxPag++;
+				asignadas++;
+				asigne = true;
+			}
 		}
 
-		i++;
+		if(asigne == false){
+			printf("\nERRRRRORRORORORORORR; QUILOMBOOOO\n");
+		}
+
 	}
 
 	pthread_mutex_unlock(&tablaPag_mutex);
@@ -441,7 +451,23 @@ int buscarFrame(int pid, int pag){
 
 	pthread_mutex_lock(&tablaPag_mutex);
 
+	int posInicial = getPos(pid,pag);
 	int i;
+
+	int iterador(){
+		return (posInicial + i) % cant_frames;
+	}
+
+	for(i=0;i<cant_frames;i++){
+		if( tabla_pag[iterador()].pid == pid &&
+			tabla_pag[iterador()].pag == pag	){
+			pthread_mutex_unlock(&tablaPag_mutex);
+			printf("ENCONTRE!!\n");
+			return iterador();
+		}
+	}
+
+/*	int i;
 	for(i=0;i<cant_frames;i++){
 		if( tabla_pag[i].pid == pid &&
 			tabla_pag[i].pag == pag  ){
@@ -449,7 +475,7 @@ int buscarFrame(int pid, int pag){
 			printf("ENCONTRE!!\n");
 			return i;
 		}
-	}
+	}*/
 
 	pthread_mutex_unlock(&tablaPag_mutex);
 	printf("NO ENCONTRE :(\n");
