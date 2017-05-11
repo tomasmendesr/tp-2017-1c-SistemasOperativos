@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <time.h>
 
 #define MAX_COMMAND_SIZE 256
 
@@ -39,11 +40,14 @@ typedef struct{
 	int pid;
 	int socket;
 	pthread_t thread;
+	struct tm* inicio;
+	struct tm* fin;
 }t_proceso;
 
 typedef struct{
 	char* pathAnsisop;
 	int socket;
+
 }dataHilo;
 
 void crearConfig(int argc,char* argv[]);
@@ -57,6 +61,8 @@ void crearProceso(int socketProceso, pthread_t threadPrograma, int pid);
 bool esNumero(char* string);
 void threadPrograma(dataHilo* data);
 void terminarProceso(t_proceso* proc);
+void imprimirInformacion(t_proceso* proceso);
+void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data);
 
 //Funciones de interfaz
 void levantarInterfaz();

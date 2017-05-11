@@ -143,7 +143,11 @@ void iniciarPrograma(char* comando, char* param) {
 	int operacion = 0;
 	void* paquete_vacio;
 
-	recibir_paquete(socket_cliente, &paquete_vacio, &operacion);
+	if(recibir_paquete(socket_cliente, &paquete_vacio, &operacion) <= 0){
+		log_error(logger, "El kernel se desconecto");
+		close(socket_cliente);
+		exit(EXIT_FAILURE);
+	}
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		printf("Conexion con Kernel establecida! :D \n");
@@ -168,6 +172,10 @@ void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
 	proc->socket = socketProceso;
 	proc->thread = threadPrograma;
 	proc->pid = pid;
+	time_t tiempo = time(0);
+    struct tm * inicio = localtime(&tiempo);
+    proc->inicio = inicio;
+
 	list_add(procesos, proc);
 }
 
@@ -187,29 +195,24 @@ void threadPrograma(dataHilo* data){
 	}
 	log_info(logger,"Archivo enviado correctamente");
 
-	if(recibir_paquete(socketProceso, &paquete, &operacion)==0){
+	if(recibir_paquete(socketProceso, &paquete, &operacion) <= 0){
 		log_error(logger, "El kernel se desconecto");
-		exit(1);
-		return;
+		close(socketProceso);
+		exit(EXIT_FAILURE);
 	}
 
 	switch(operacion){
 	case PROCESO_RECHAZADO:
-		printf("El kernel rechazo el proceso\n");
 		log_error(logger, "El kernel rechazo el proceso");
 		return;
 		break;
-	case PID_PROGRAMA:
+	case PID_PROGRAMA: // TODO
 		pidAsignado = (int*)paquete;
 		log_info(logger, "Programa %d aceptado por el kernel", *pidAsignado);
 		break;
 	default:
-		printf("Se recibio una operacion invalida\n");
+		log_warning(logger, "Se recibio una operacion invalida\n");
 		break;
-	}
-
-	bool buscar(t_proceso* proc){
-		return proc->socket == socketProceso ? true : false;
 	}
 
 	crearProceso(socketProceso,thread,*pidAsignado);
@@ -217,18 +220,15 @@ void threadPrograma(dataHilo* data){
 	while(procesoActivo){
 
 		/*ambos se quedan esperando una respuesta del otro*/
-		if(recibir_paquete(socketProceso, (void*)&paquete, &operacion)==0){
+		if(recibir_paquete(socketProceso, (void*)&paquete, &operacion) <= 0){
 			log_error(logger, "El kernel se desconecto");
 			if(paquete)free(paquete);
-			exit(1);
-			return;
+			exit(EXIT_FAILURE);
 		}else{
 
 			switch (operacion) {
 			case FINALIZAR_EJECUCION:
-				procesoActivo = false;
-				list_remove_and_destroy_by_condition(procesos, buscar, free);
-				free(data);
+				finalizarEjecucionProceso(&procesoActivo, data);
 				break;
 			case IMPRIMIR_TEXTO_PROGRAMA:
 				printf("%s\n", (char*)paquete);
@@ -244,7 +244,29 @@ void threadPrograma(dataHilo* data){
 		if(paquete)free(paquete);
 
 	}
+}
 
+
+void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data){
+	bool buscarPorSocket(t_proceso* proc){
+		return proc->socket == data->socket ? true : false;
+	}
+
+	t_proceso* proc = list_find(procesos, buscarPorSocket);
+	log_info(logger, "Termino la ejecucion del programa %d", proc->pid);
+	time_t tiempo = time(0);
+	struct tm * fin = localtime(&tiempo);
+	proc->fin = fin;
+
+	imprimirInformacion(proc); // TODO
+
+	procesoActivo = false;
+	list_remove_and_destroy_by_condition(procesos, buscarPorSocket, free);
+	free(data);
+}
+
+void imprimirInformacion(t_proceso* proceso){
+	printf("----- Proceso %d\n", proceso->pid);
 }
 
 void finalizarPrograma(char* comando, char* param){

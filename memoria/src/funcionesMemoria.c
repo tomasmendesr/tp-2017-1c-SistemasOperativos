@@ -202,10 +202,9 @@ void requestHandlerCpu(int fd){
 		//Recibo mensajes de cpu y hago el switch
 		bytes = recibir_paquete(fd, &paquete, &tipo_mensaje);
 		if(bytes <= 0){
-			log_error(logger, "Desconexion del Cpu. Se cerro el socket %d. Terminando...", fd);
+			log_info(logger, "Desconexion de cpu con socket %d", fd);
 			close(fd);
 			return;
-			//exit(1);
 		}else{
 
 			switch(tipo_mensaje){
