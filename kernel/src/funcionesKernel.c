@@ -624,7 +624,7 @@ void crearColasBloqueados(char** semaforos){
 	bloqueos = dictionary_create();
 
 	while(semaforos[j] != NULL){
-		dictionary_put(bloqueos, semaforos[j], 0);
+		dictionary_put(bloqueos, semaforos[j], list_create());
 		j++;
 	}
 
