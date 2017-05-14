@@ -40,8 +40,10 @@ typedef struct{
 	int pid;
 	int socket;
 	pthread_t thread;
-	struct tm* inicio;
-	struct tm* fin;
+	struct tm* fechaInicio;
+	struct tm* fechaFin;
+	struct timespec start;
+	struct timespec end;
 }t_proceso;
 
 typedef struct{
@@ -63,6 +65,7 @@ void threadPrograma(dataHilo* data);
 void terminarProceso(t_proceso* proc);
 void imprimirInformacion(t_proceso* proceso);
 void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data);
+void cargarFechaFin(t_proceso* proc);
 
 //Funciones de interfaz
 void levantarInterfaz();

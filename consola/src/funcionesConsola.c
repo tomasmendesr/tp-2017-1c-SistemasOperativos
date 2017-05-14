@@ -174,7 +174,11 @@ void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
 	proc->pid = pid;
 	time_t tiempo = time(0);
     struct tm * inicio = localtime(&tiempo);
-    proc->inicio = inicio;
+    proc->fechaInicio = inicio;
+
+    struct timespec start;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+    proc->start = start;
 
 	list_add(procesos, proc);
 }
@@ -254,10 +258,8 @@ void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data){
 
 	t_proceso* proc = list_find(procesos, buscarPorSocket);
 	log_info(logger, "Termino la ejecucion del programa %d", proc->pid);
-	time_t tiempo = time(0);
-	struct tm * fin = localtime(&tiempo);
-	proc->fin = fin;
 
+	cargarFechaFin(proc);
 	imprimirInformacion(proc); // TODO
 
 	procesoActivo = false;
@@ -265,8 +267,25 @@ void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data){
 	free(data);
 }
 
+void cargarFechaFin(t_proceso* proc){
+	time_t tiempo = time(0);
+	struct tm * fin = localtime(&tiempo);
+	proc->fechaFin = fin;
+	struct timespec end;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+	proc->end = end;
+}
+
 void imprimirInformacion(t_proceso* proceso){
-	printf("----- Proceso %d\n", proceso->pid);
+	struct timespec;
+	printf("----------------------\n");
+	printf("Proceso %d\n", proceso->pid);
+	printf("Inicio: %d-%d-%d %d%d:%d\n", proceso->fechaInicio->tm_year + 1900, proceso->fechaInicio->tm_mon + 1, proceso->fechaInicio->tm_mday, proceso->fechaInicio->tm_hour, proceso->fechaInicio->tm_min, proceso->fechaInicio->tm_sec);
+	printf("Fin:  %d-%d-%d %d:%d:%d\n", proceso->fechaFin->tm_year + 1900, proceso->fechaFin->tm_mon + 1, proceso->fechaFin->tm_mday, proceso->fechaFin->tm_hour, proceso->fechaFin->tm_min, proceso->fechaFin->tm_sec);
+	uint64_t msInicio = proceso->start.tv_nsec / 1000000 + proceso->start.tv_sec * 1000;
+	uint64_t msFin = proceso->end.tv_nsec / 1000000 + proceso->end.tv_sec * 1000;
+	printf("Duracion: %d seg - %d ms\n", proceso->end.tv_sec - proceso->start.tv_sec, msFin - msInicio);
+	printf("----------------------\n");
 }
 
 void finalizarPrograma(char* comando, char* param){
@@ -287,6 +306,8 @@ void finalizarPrograma(char* comando, char* param){
 		printf("Ese proceso no se encuentra en el sistema\n");
 		return;
 	}
+	cargarFechaFin(proceso);
+	imprimirInformacion(proceso);
 
 	//evaluar si debo avisar al kernel o si al desconectarse el socket el kernel lo maneje solo
 	terminarProceso(proceso);
