@@ -84,7 +84,8 @@ enum enum_estado{
 	NEW = 1,
 	READY = 2,
 	FINISH = 3,
-	EXEC = 4
+	EXEC = 4,
+	BLOQ = 5
 };
 
 void inicializarColas();
@@ -149,6 +150,11 @@ void planificarLargoPlazo();
 void alertarConsolaProcesoAceptado(int* pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
 
+//Palnificacion Mediano Plazo
+void crearColasBloqueados(char** semaforos);
+void desbloquearProceso(char* semaforo);
+void bloquearProceso(char* semaforo, t_pcb* pcb);
+
 //estadisticas (para consola del kernel)
 void crearInfoEstadistica(int pid, uint32_t socketConsola);
 info_estadistica_t* buscarInformacion(int pid);
@@ -193,6 +199,9 @@ pthread_cond_t lockCondicionPlanificacion;
 
 //Colas procesos
 t_queue *colaNew, *colaReady, *colaFinished, *colaExec, *colaBloqueados;
+
+//Diccionarios
+t_dictionary* bloqueos;
 
 fd_set master;
 fd_set setConsolas;

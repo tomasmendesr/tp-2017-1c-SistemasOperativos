@@ -141,6 +141,8 @@ void realizarSignal(int socketCPU, char* key){
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(RESPUESTA_SIGNAL_OK, socketCPU);
+
+	desbloquearProceso(key);
 }
 
 void realizarWait(int socketCPU, char* key){
@@ -155,6 +157,15 @@ void realizarWait(int socketCPU, char* key){
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(resultado, socketCPU);
+
+	if(resultado == RESPUESTA_WAIT_DETENER_EJECUCION){ //recibo el pcb
+
+		int tipo_mensaje;
+		void* paquete;
+		recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
+
+		t_pcb* pcbRecibido = deserializar_pcb(paquete);
+	}
 }
 
 void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {

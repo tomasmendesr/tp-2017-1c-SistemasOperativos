@@ -62,6 +62,7 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         semID = config_get_array_value(configKernel, "SEM_ID");
         semInit = config_get_array_value(configKernel, "SEM_INIT");
         conf->semaforos = crearDiccionarioConValue(semID,semInit);
+        crearColasBloqueados(semID);
 
         varGlob = config_get_array_value(configKernel, "SHARED_VARS");
         conf->variablesGlobales = crearDiccionario(varGlob);
@@ -614,4 +615,34 @@ void eliminarEstadistica(int pid){
 	}
 
 	list_remove_and_destroy_by_condition(listadoEstadistico, buscar, free);
+}
+
+
+void crearColasBloqueados(char** semaforos){
+	int j = 0;
+
+	bloqueos = dictionary_create();
+
+	while(semaforos[j] != NULL){
+		dictionary_put(bloqueos, semaforos[j], 0);
+		j++;
+	}
+
+}
+
+void desbloquearProceso(char* semaforo){
+	t_queue* cola = (t_queue*)dictionary_get(bloqueos, semaforo);
+	t_pcb* pcb = queue_pop(cola);
+
+	queue_push(colaReady, pcb);
+	estadisticaCambiarEstado(pcb->pid, READY);
+}
+
+void bloquearProceso(char* semaforo, t_pcb* pcb){
+
+	t_queue* cola = (t_queue*)dictionary_get(bloqueos, semaforo);
+	queue_push(cola, pcb);
+
+	estadisticaAumentarRafaga(pcb->pid);
+	estadisticaCambiarEstado(pcb->pid, BLOQ);
 }
