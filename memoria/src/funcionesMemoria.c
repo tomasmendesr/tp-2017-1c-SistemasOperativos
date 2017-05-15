@@ -78,7 +78,7 @@ t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
         config->marcos = config_get_int_value(configMemoria, "MARCOS");
         config->marcos_Size = config_get_int_value(configMemoria, "MARCOS_SIZE");
         config->entradas_Cache = config_get_int_value(configMemoria, "ENTRADAS_CACHE");
-        config->entradas_Cache = config_get_int_value(configMemoria, "CACHE_X_PROC");
+        config->cache_x_Proceso = config_get_int_value(configMemoria, "CACHE_X_PROC");
 
         config->reemplazo_cache = malloc(MAX_LEN_PUERTO);
         strcpy(config->reemplazo_cache, config_get_string_value(configMemoria, "REEMPLAZO_CACHE"));
@@ -143,6 +143,8 @@ void inicializarMemoria(){
 		((t_entrada_tabla*)memoria)[i].pag = 0;
 		((t_entrada_tabla*)memoria)[i].pid = 0;
 	}
+
+	printf("cant entradas cache: %d\nmax entradas: %d\n",cache_entradas,max_entradas);
 
 	//Inicializo la funcion de hash
 	hashInit(cant_frames);
@@ -446,8 +448,6 @@ int framesLibres(){
 /* Busqueda secuencial, despues implementamos hash */
 int buscarFrame(int pid, int pag){
 
-	printf("Busco el frame con pid: %d, pag: %d\n", pid,pag);
-
 	pthread_mutex_lock(&tablaPag_mutex);
 
 	int posInicial = getPos(pid,pag);
@@ -461,7 +461,6 @@ int buscarFrame(int pid, int pag){
 		if( tabla_pag[iterador()].pid == pid &&
 			tabla_pag[iterador()].pag == pag	){
 			pthread_mutex_unlock(&tablaPag_mutex);
-			printf("ENCONTRE!!\n");
 			return iterador();
 		}
 	}
@@ -486,7 +485,7 @@ int buscarFrame(int pid, int pag){
  */
 int leer(int pid, int pag, int offset, int size, char* resultado){
 
-	log_info(logger,"Entro a leer.");
+	log_info(logger,"Leer pid: %d pag:%d offset: %d size: %d",pid,pag,offset,size);
 
 	int frame;
 	int cant_leida = 0;
@@ -507,8 +506,8 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 		}/* Al salir de este if pos_leer apunta o bien al frame de donde tengo que leer,
 		  * o a donde esta cacheado el frame */
 
-		log_info(logger,"Antes de leer. cant_leida: %d, size: %d, frame_size: %d, offset: %d",
-				cant_leida,size,frame_size,offset);
+		//log_info(logger,"Antes de leer. cant_leida: %d, size: %d, frame_size: %d, offset: %d",
+		//		cant_leida,size,frame_size,offset);
 
 		//Me fijo cuanto tengo que leer y copio lo que esta en memoria/cache en resultado
 		cant_a_leer = min(size - cant_leida, frame_size - offset);
@@ -523,6 +522,8 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 }
 
 int escribir(int pid, int pag, int offset, char* contenido, int size){
+
+	log_info(logger,"Escribir pid: %d pag:%d offset: %d size: %d contenido: %s",pid,pag,offset,size,contenido);
 
 	int frame;
 	int cant_escrita = 0;
@@ -563,7 +564,7 @@ int cantEntradas(int pid){
 
 /* Busca la entrada de cache que coincida con pid y pag
  * Retorna -1 si no existe */
-bool buscarEntrada(int pid, int pag){
+int buscarEntrada(int pid, int pag){
 	int i;
 	for(i=0;i<cache_entradas;i++){
 		if(cache[i].pid == pid && cache[i].pag == pag){
@@ -581,6 +582,7 @@ int entradaAReemplazar(int pid){
 }
 
 int reemplazoLocal(int pid){
+	printf("Reemplazo local.\n");
 	int i;
 	int entrada; //A reemplazar
 	int minTime = ULONG_MAX;
@@ -596,10 +598,11 @@ int reemplazoLocal(int pid){
 }
 
 int reemplazoGlobal(){
+	printf("Reemplazo global.\n");
 	//Recorro buscando una entrada libre
 	int i;
 	for(i=0;i<cache_entradas;i++){
-		if(cache[i].pid == -1 || cache[i].pag -1){
+		if(cache[i].pid == -1 || cache[i].pag == -1){
 			return i;
 		}
 	}
@@ -630,14 +633,18 @@ int leerCache(int pid, int pag, char** contenido){
 			*contenido = cache[i].content;
 			cache[i].time_used = op_count;
 			pthread_mutex_unlock(&cache_mutex);
+			log_info(logger, "CACHE HIT.",pid,pag);
 			return 0;
 		}
 	}
 	pthread_mutex_unlock(&cache_mutex);
+	log_info(logger, "CACHE MISS",pid,pag);
 	return -1;
 }
 
 void actualizarEntradaCache(int pid, int pag, char* frame){
+
+	log_info(logger,"Actualizar entrada cache. pid: %d pag: %d", pid,pag);
 
 	pthread_mutex_lock(&cache_mutex);
 
@@ -649,6 +656,9 @@ void actualizarEntradaCache(int pid, int pag, char* frame){
 		memcpy(cache[entrada].content,frame,frame_size);
 	}else{ //tengo que reemplazar una entrada
 		entrada = entradaAReemplazar(pid);
+
+		log_info(logger,"Reemplazo entrada n° %d con pid %d pag %d",entrada,pid,pag);
+
 		cache[entrada].pid = pid;
 		cache[entrada].pag = pag;
 		memcpy(cache[entrada].content,frame,frame_size);

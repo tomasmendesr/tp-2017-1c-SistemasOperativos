@@ -91,7 +91,7 @@ void increaseOpCount(); //Suma uno al opCount
 /* Cuantas entradas tiene el pid */
 int cantEntradas(int pid);
 /* Busca la entrada con pid y pag. Si no existe retorna -1*/
-bool buscarEntrada(int pid, int pag);
+int buscarEntrada(int pid, int pag);
 /* Esta funcion aplica el LRU y me dice que entrada debo reemplazar
  * en caso de que esten todas ocupadas. Necesita el pid para no pasarse
  * del límite de entradas por proceso*/
