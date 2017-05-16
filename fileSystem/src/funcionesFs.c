@@ -101,3 +101,47 @@ void guardarDatos(void* package){
 void obtenerDatos(void* package){
 	//no implementado aun
 }
+
+void mkdirRecursivo(char* path){
+
+	char tmp[256];
+    char *p = NULL;
+    size_t len;
+
+    snprintf(tmp, sizeof(tmp),"%s",path);
+    len = strlen(tmp);
+    if(tmp[len - 1] == '/')
+        tmp[len - 1] = 0;
+    for(p = tmp + 1; *p; p++)
+        if(*p == '/') {
+        	*p = 0;
+            mkdir(tmp, S_IRWXU);
+            *p = '/';
+        }
+    mkdir(tmp, S_IRWXU);
+}
+
+int buscarBloqueLibre(){
+	int j = 0;
+	bool res = false;
+	while(!res){
+		if(!bitarray_test_bit(bitarray, j)) // cero esta libre
+			res = true;
+	}
+
+}
+
+char** obtenerNumeroBloques(char* path){
+	t_config* c = config_create();
+	char** bloques = config_get_array_value(c, "BLOQUES");
+	config_destroy(c);
+
+	return bloques;
+}
+
+int obtenerNumBloque(char* path, int offset){
+	char** bloques = obtenerNumeroBloques(strcat(ARCHIVOS_PATH , path));
+
+	int numBloque = (offset / conf->tamanio_bloque);
+	return atoi(bloques[numBloque]);
+}

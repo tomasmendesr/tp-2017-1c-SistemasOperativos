@@ -34,6 +34,21 @@ typedef struct{
 	int cantidad_bloques;
 }t_config_FS;
 
+typedef struct
+{
+	char* path;
+	int offset;
+	int size;
+} pedido_obtener_datos;
+
+typedef struct
+{
+	char* path;
+	int offset;
+	int size;
+	char* buffer;
+}pedido_guardar_datos;
+
 //Prototipos
 t_config_FS* levantarConfiguracion(char* archivo);
 void destruirConfiguracionFS(t_config_FS* conf);
@@ -42,6 +57,10 @@ void crearConfig(int argc, char* argv[]);
 
 void inicializarMetadata();
 void procesarMensajesKernel();
+void mkdirRecursivo(char* path);
+int buscarBloqueLibre();
+char** obtenerNumeroBloques(char* path);
+int obtenerNumBloque(char* path, int offset);
 
 //Operaciones
 bool validarArchivo(char* path);
