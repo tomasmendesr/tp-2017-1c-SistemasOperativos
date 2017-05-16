@@ -310,7 +310,10 @@ void comenzarEjecucionDePrograma(void* paquete){
 		free(instruccion);
 		if(huboStackOver) finalizarPor(STACKOVERFLOW);
 		revisarFinalizarCPU();
-		if(finPrograma) return;
+		if(finPrograma){
+			finPrograma = false;
+			return;
+		}
 		i++;
 		pcb->programCounter++;
 		// usleep -----------------> no se que es esto
