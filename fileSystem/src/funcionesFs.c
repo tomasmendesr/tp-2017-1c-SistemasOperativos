@@ -132,7 +132,7 @@ int buscarBloqueLibre(){
 }
 
 char** obtenerNumeroBloques(char* path){
-	t_config* c = config_create();
+	t_config* c = config_create(path);
 	char** bloques = config_get_array_value(c, "BLOQUES");
 	config_destroy(c);
 

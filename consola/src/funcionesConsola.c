@@ -54,7 +54,7 @@ int enviarArchivo(int kernel_fd, char* path){
  	file = fopen(path, "r");
  	//esto nunca deberia fallar porque ya esta verificado, pero por las dudas
  	if(file == NULL){
- 		log_error(logger, "no pudo abrir archivo");
+ 		log_error(logger, "No pudo abrir el archivo");
  		return -1;
  	}
  	file_fd = fileno(file);
@@ -277,51 +277,53 @@ void cargarFechaFin(t_proceso* proc){
 }
 
 void imprimirInformacion(t_proceso* proceso){
-	struct timespec;
-	printf("----------------------\n");
-	printf("Proceso %d\n", proceso->pid);
+	printf("-----FIN PROGRAMA-----\n");
+	printf("Pid %d\n", proceso->pid);
 	printf("Inicio: %d-%d-%d %d%d:%d\n", proceso->fechaInicio->tm_year + 1900, proceso->fechaInicio->tm_mon + 1, proceso->fechaInicio->tm_mday, proceso->fechaInicio->tm_hour, proceso->fechaInicio->tm_min, proceso->fechaInicio->tm_sec);
 	printf("Fin:  %d-%d-%d %d:%d:%d\n", proceso->fechaFin->tm_year + 1900, proceso->fechaFin->tm_mon + 1, proceso->fechaFin->tm_mday, proceso->fechaFin->tm_hour, proceso->fechaFin->tm_min, proceso->fechaFin->tm_sec);
-	uint64_t msInicio = proceso->start.tv_nsec / 1000000 + proceso->start.tv_sec * 1000;
-	uint64_t msFin = proceso->end.tv_nsec / 1000000 + proceso->end.tv_sec * 1000;
-	printf("Duracion: %d seg - %d ms\n", proceso->end.tv_sec - proceso->start.tv_sec, msFin - msInicio);
+	uint32_t msInicio = proceso->start.tv_nsec / 1000000 + proceso->start.tv_sec * 1000;
+	uint32_t msFin = proceso->end.tv_nsec / 1000000 + proceso->end.tv_sec * 1000;
+	printf("Duracion: %d seg - %d ms\n",(int) (proceso->end.tv_sec - proceso->start.tv_sec),(int) (msFin - msInicio));
 	printf("----------------------\n");
 }
 
 void finalizarPrograma(char* comando, char* param){
 
 	if(!esNumero(param)){
-		printf("Valor de pid invalido\n");
+		log_warning(logger, "Valor de pid invalido");
 		return;
 	}
 
 	int pid = strtol(param, NULL, 10);
 
 	bool buscarProceso(t_proceso* p){
-		return p->pid == pid? true : false;
+		return p->pid == pid ? true : false;
 	}
 
 	t_proceso* proceso = list_find(procesos, buscarProceso);
+
 	if(proceso == NULL){
-		printf("Ese proceso no se encuentra en el sistema\n");
+		log_warning(logger, "El proceso %d no se encuentra en el sistema", pid);
 		return;
 	}
-	cargarFechaFin(proceso);
-	imprimirInformacion(proceso);
 
 	//evaluar si debo avisar al kernel o si al desconectarse el socket el kernel lo maneje solo
 	terminarProceso(proceso);
 
-	printf("Proceso finalizado\n");
+	log_info(logger, "Proceso finalizado\n");
 }
 
 void desconectarConsola(char* comando, char* param) {
+	log_debug(logger, "Finalizando conexion threads...");
+	log_debug(logger, "Abortando programas...");
 	list_destroy_and_destroy_elements(procesos,terminarProceso);
-
+	log_info(logger, "Consola desconectada.");
 	exit(0);
 }
 
 void terminarProceso(t_proceso* proc){
+	cargarFechaFin(proc);
+	imprimirInformacion(proc);
 	pthread_cancel(proc->thread);
 	free(proc);
 }
