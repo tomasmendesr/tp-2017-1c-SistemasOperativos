@@ -80,6 +80,26 @@ typedef struct{
 	bool matarSiguienteRafaga;
 }info_estadistica_t;
 
+typedef struct
+{
+	char* archivo;
+	int vecesAbierto;
+	int ubicacion;
+}entrada_tabla_globlal_archivo;
+
+typedef struct
+{
+	int proceso; //id del proceso
+	t_list* archivos;
+}entrada_tabla_archivo_proceso;
+
+typedef struct
+{
+	int fd;
+	char* flags;
+	int globalFD;
+}archivo;
+
 enum enum_estado{
 	NEW = 1,
 	READY = 2,
@@ -202,6 +222,16 @@ t_queue *colaNew, *colaReady, *colaFinished, *colaExec, *colaBloqueados;
 
 //Diccionarios
 t_dictionary* bloqueos;
+
+//para manejo de archivos
+int max_archivo_fd;
+t_list* globalFileTable;
+t_list* processFileTable;
+int getArchivoFdMax();
+void crearEntradaArchivoProceso(int proceso);
+void agregarArchivo_aProceso(int proceso, char* file, char* permisos);
+void eliminarFd(int fd, int proceso);
+void imprimirTablaGlobal();
 
 fd_set master;
 fd_set setConsolas;

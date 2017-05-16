@@ -323,7 +323,7 @@ void processInfo(char* comando, char* param){
 }
 
 void getTablaArchivos(char* comando, char* param){
-        printf("get tabla archivos\n");
+        imprimirTablaGlobal();
 }
 void gradoMultiprogramacion(char* comando, char* param){
 	if(!esNumero(param)){
@@ -646,3 +646,85 @@ void bloquearProceso(char* semaforo, t_pcb* pcb){
 	estadisticaAumentarRafaga(pcb->pid);
 	estadisticaCambiarEstado(pcb->pid, BLOQ);
 }
+
+
+int getArchivoFdMax(){
+	max_archivo_fd++;
+	return max_archivo_fd;
+}
+
+void crearEntradaArchivoProceso(int proceso){
+	entrada_tabla_archivo_proceso* entrada = malloc(sizeof(entrada_tabla_archivo_proceso));
+	entrada->proceso = proceso;
+	entrada->archivos = list_create();
+
+	list_add(processFileTable, entrada);
+}
+
+void agregarArchivo_aProceso(int proceso, char* file, char* permisos){
+
+	bool buscar(entrada_tabla_archivo_proceso* entrada){
+		return entrada->proceso == proceso ? true : false;
+	}
+
+	bool buscarArchivo(entrada_tabla_globlal_archivo* entrada){
+		return !strcmp(entrada->archivo, file) ? true : false;
+	}
+
+	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscar);
+
+	entrada_tabla_globlal_archivo* entradaGlobal = list_find(globalFileTable, buscarArchivo);
+
+	if(entradaGlobal == NULL){ // no existe
+		entradaGlobal = malloc(sizeof(entradaGlobal));
+		memcpy(entradaGlobal->archivo, file, strlen(file));
+		entradaGlobal->vecesAbierto = 1;
+		entradaGlobal->ubicacion = list_size(globalFileTable);
+
+		list_add(globalFileTable, entradaGlobal);
+	}else{ //existe en la tabla global
+		entradaGlobal->vecesAbierto++;
+	}
+
+	archivo* archivo = malloc(sizeof(archivo));
+	archivo->flags = permisos;
+	archivo->fd = getArchivoFdMax(); //aca tengo que pasarselo a la cpu
+	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
+	list_add(entrada->archivos, archivo);
+
+}
+
+void eliminarFd(int fd, int proceso){
+
+	bool buscarPorProceso(entrada_tabla_archivo_proceso* entrada){
+		return entrada->proceso == proceso ? true : false;
+	}
+
+	bool eliminar(archivo* archivo){
+		return archivo->fd == fd ? true : false;
+	}
+
+	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
+	list_remove_by_condition(entrada->archivos, eliminar);
+	entrada_tabla_globlal_archivo* entradaGlobal = list_get(globalFileTable, entradaGlobal->ubicacion);
+	entradaGlobal->vecesAbierto--;
+
+	if(entradaGlobal->vecesAbierto == 0){
+		list_remove_and_destroy_element(globalFileTable,entradaGlobal->ubicacion, free);
+		free(entradaGlobal);
+	}
+	free(entrada);
+
+}
+
+void imprimirTablaGlobal(){
+
+	void imprimirData(entrada_tabla_globlal_archivo* entrada){
+		printf("Nombre del file: %s\n", entrada->archivo);
+		printf("Cantidad de veces abierto: %s\n", entrada->vecesAbierto);
+	}
+
+	list_iterate(globalFileTable, imprimirData);
+
+}
+
