@@ -70,7 +70,6 @@ void destruirConfiguracionMemoria(t_config_memoria* config);
 //Funciones de conexionado
 void esperarConexiones();
 void esperarConexionKernel();
-void esperarConexionKernel();
 
 /* Esta funcion hace la creacion de la memoria y todas las estructuras
  * administrativas necesarias para que el sistema arranque

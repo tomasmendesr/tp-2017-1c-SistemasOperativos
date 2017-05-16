@@ -260,7 +260,7 @@ void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data){
 	log_info(logger, "Termino la ejecucion del programa %d", proc->pid);
 
 	cargarFechaFin(proc);
-	imprimirInformacion(proc); // TODO
+	imprimirInformacion(proc);
 
 	procesoActivo = false;
 	list_remove_and_destroy_by_condition(procesos, buscarPorSocket, free);
@@ -283,7 +283,9 @@ void imprimirInformacion(t_proceso* proceso){
 	printf("Fin:  %d-%d-%d %d:%d:%d\n", proceso->fechaFin->tm_year + 1900, proceso->fechaFin->tm_mon + 1, proceso->fechaFin->tm_mday, proceso->fechaFin->tm_hour, proceso->fechaFin->tm_min, proceso->fechaFin->tm_sec);
 	uint32_t msInicio = proceso->start.tv_nsec / 1000000 + proceso->start.tv_sec * 1000;
 	uint32_t msFin = proceso->end.tv_nsec / 1000000 + proceso->end.tv_sec * 1000;
-	printf("Duracion: %d seg - %d ms\n",(int) (proceso->end.tv_sec - proceso->start.tv_sec),(int) (msFin - msInicio));
+	int segDuracion = proceso->end.tv_sec - proceso->start.tv_sec;
+	int msDuracion = msFin - msInicio - (segDuracion * 1000);
+	printf("Duracion: %d seg - %d ms\n", segDuracion, msDuracion);
 	printf("----------------------\n");
 }
 
