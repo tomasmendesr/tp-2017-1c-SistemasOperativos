@@ -42,12 +42,13 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		planificarLargoPlazo();
 	break;
 	case FINALIZAR_PROGRAMA:
-		//finalizarPrograma(consola_fd,package);
+		finalizarPrograma(consola_fd,(int*) *package);
 		break;
 	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	break;
 	}
 }
+
 
 void trabajarMensajeCPU(int socketCPU){
 
@@ -168,6 +169,14 @@ void realizarWait(int socketCPU, char* key){
 
 		t_pcb* pcbRecibido = deserializar_pcb(paquete);
 	}
+}
+
+void finalizarPrograma(int consola_fd, int pid){
+
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->matarSiguienteRafaga = true;
+	log_info(logger, "Se termina la ejecucion del proceso %d", pid);
+
 }
 
 void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {

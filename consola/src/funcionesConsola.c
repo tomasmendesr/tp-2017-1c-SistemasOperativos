@@ -305,11 +305,15 @@ void finalizarPrograma(char* comando, char* param){
 	t_proceso* proceso = list_find(procesos, buscarProceso);
 
 	if(proceso == NULL){
-		log_warning(logger, "El proceso %d no se encuentra en el sistema", pid);
+		log_warning(logger, "El proceso %d no se encuentra", pid);
 		return;
 	}
 
-	//evaluar si debo avisar al kernel o si al desconectarse el socket el kernel lo maneje solo
+	header_t* header=malloc(sizeof(header_t));
+	header->type=FINALIZAR_PROGRAMA;
+	header->length= sizeof(pid);
+	sendSocket(proceso->socket, header, (void*) &pid);
+
 	terminarProceso(proceso);
 
 	log_info(logger, "Proceso finalizado\n");
