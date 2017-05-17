@@ -172,6 +172,8 @@ void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
 	proc->socket = socketProceso;
 	proc->thread = threadPrograma;
 	proc->pid = pid;
+	proc->aceptado = true;
+
 	time_t tiempo = time(0);
     struct tm * inicio = localtime(&tiempo);
     proc->fechaInicio = inicio;
@@ -328,8 +330,10 @@ void desconectarConsola(char* comando, char* param) {
 }
 
 void terminarProceso(t_proceso* proc){
-	cargarFechaFin(proc);
-	imprimirInformacion(proc);
+	if(proc->aceptado){
+		cargarFechaFin(proc);
+		imprimirInformacion(proc);
+	}
 	pthread_cancel(proc->thread);
 	free(proc);
 }

@@ -44,6 +44,7 @@ typedef struct{
 	struct tm* fechaFin;
 	struct timespec start;
 	struct timespec end;
+	bool aceptado;
 }t_proceso;
 
 typedef struct{
