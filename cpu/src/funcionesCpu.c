@@ -165,6 +165,10 @@ int32_t requestHandlerKernel(void){
 		case RESPUESTA_ASIG_VAR_COMPARTIDA_OK:
 			log_info(logger, "Se asigno correctamente la variable compartida");
 			break;
+		// RESPUESTAS PRIMITIVAS KERNEL:
+		case RESPUESTA_LIBERAR_MEMORIA_OK:
+			log_info(logger, "Memoria liberada");
+			break;
 		default:
 			log_error(logger, "Mensaje Recibido Incorrecto");
 			if(paquete)free(paquete);
@@ -261,7 +265,7 @@ int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
 	}
 	free(buffer);
 	if(requestHandlerMemoria() != 0){
-		log_error(logger,"La variable no pudo asignarse");
+		log_error(logger,"No se pudo almacenar en memoria");
 		return -1;
 	}
 	return EXIT_SUCCESS;

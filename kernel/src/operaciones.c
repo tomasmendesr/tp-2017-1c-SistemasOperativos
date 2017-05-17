@@ -91,6 +91,8 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case ASIG_VAR_COMPARTIDA:
 		asignarVarCompartida(socketCPU, package);
 		break;
+	case LIBERAR_MEMORIA: // TODO
+		break;
 
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

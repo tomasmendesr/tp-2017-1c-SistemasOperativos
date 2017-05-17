@@ -90,7 +90,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
  */
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
 	log_debug(logger, "ANSISOP_asignar -> posicion var: %d - valor: %d", direccion_variable, valor);
-	t_pedido_bytes* pedidoEscritura = malloc(sizeof(t_pedido_bytes)); //malloc(sizeof(uint32_t)*TAMANIO_VARIABLE);
+	t_pedido_bytes* pedidoEscritura = malloc(sizeof(t_pedido_bytes));
 	pedidoEscritura->pag = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
 	pedidoEscritura->offset = direccion_variable % tamanioPagina;
 	pedidoEscritura->size = TAMANIO_VARIABLE;
@@ -487,7 +487,20 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
  * @return	void
  */
 void liberarMemoria(t_puntero puntero){
-	printf("liberar!\n");
+	log_debug(logger, "ANSISOP_liberarMemoria -> posicion: %d", puntero);
+	t_pedido_bytes* pedidoLiberar = malloc(sizeof(t_pedido_bytes));
+	pedidoLiberar->pag = puntero / tamanioPagina + pcb->cantPaginasCodigo;
+	pedidoLiberar->offset = puntero % tamanioPagina;
+	pedidoLiberar->size = TAMANIO_VARIABLE; // en la primitiva RESERVAR se guarda una variable (un int), por eso mando TAMANIO_VARIABLE
+	pedidoLiberar->pid = pcb->pid;
+	header_t header;
+	header.type= LIBERAR_MEMORIA;
+	header.length = sizeof(t_pedido_bytes);
+	if(sendSocket(socketConexionKernel, &header,(void*) pedidoLiberar) <= 0 ){
+		log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
+		finalizarCPU();
+	}
+	requestHandlerKernel();
 }
 
 /*
@@ -515,7 +528,7 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
  * @return	puntero a donde esta reservada la memoria
  */
 t_puntero reservar(t_valor_variable espacio){
-	printf("reservar!\n");
+	log_debug(logger, "ANSISOP_reservar -> espacio: %d", espacio);
 	return 0;
 }
 
