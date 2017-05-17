@@ -6,6 +6,8 @@
  */
 #include "primitivas.h"
 
+int cantDeReservas = 0;
+
 bool esArgumento(t_nombre_variable identificador_variable){
 	if(isdigit(identificador_variable)){
 		return true;
@@ -488,19 +490,24 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
  */
 void liberarMemoria(t_puntero puntero){
 	log_debug(logger, "ANSISOP_liberarMemoria -> posicion: %d", puntero);
-	t_pedido_bytes* pedidoLiberar = malloc(sizeof(t_pedido_bytes));
-	pedidoLiberar->pag = puntero / tamanioPagina + pcb->cantPaginasCodigo;
-	pedidoLiberar->offset = puntero % tamanioPagina;
-	pedidoLiberar->size = TAMANIO_VARIABLE; // en la primitiva RESERVAR se guarda una variable (un int), por eso mando TAMANIO_VARIABLE
-	pedidoLiberar->pid = pcb->pid;
-	header_t header;
-	header.type= LIBERAR_MEMORIA;
-	header.length = sizeof(t_pedido_bytes);
-	if(sendSocket(socketConexionKernel, &header,(void*) pedidoLiberar) <= 0 ){
-		log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
-		finalizarCPU();
+	if(cantDeReservas > 0){
+		t_pedido_bytes* pedidoLiberar = malloc(sizeof(t_pedido_bytes));
+		pedidoLiberar->pag = puntero / tamanioPagina + pcb->cantPaginasCodigo;
+		pedidoLiberar->offset = puntero % tamanioPagina;
+		pedidoLiberar->size = TAMANIO_VARIABLE; // en la primitiva RESERVAR se guarda una variable (un int), por eso mando TAMANIO_VARIABLE
+		pedidoLiberar->pid = pcb->pid;
+		header_t header;
+		header.type= LIBERAR_MEMORIA;
+		header.length = sizeof(t_pedido_bytes);
+		if(sendSocket(socketConexionKernel, &header,(void*) pedidoLiberar) <= 0 ){
+			log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
+			finalizarCPU();
+		}
+		requestHandlerKernel();
+		cantDeReservas--;
+	}else{
+		log_warning(logger, "No hay memoria para liberar");
 	}
-	requestHandlerKernel();
 }
 
 /*
@@ -529,6 +536,7 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
  */
 t_puntero reservar(t_valor_variable espacio){
 	log_debug(logger, "ANSISOP_reservar -> espacio: %d", espacio);
+	cantDeReservas++;
 	return 0;
 }
 

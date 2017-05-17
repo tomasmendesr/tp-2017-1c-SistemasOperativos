@@ -312,12 +312,8 @@ void comenzarEjecucionDePrograma(void* paquete){
 		log_info(logger, "Instruccion recibida: %s", instruccion);
 		analizadorLinea(instruccion, &functions, &kernel_functions);
 		free(instruccion);
-		if(huboStackOver) finalizarPor(STACKOVERFLOW);
+		if (verificarTerminarEjecucion() == -1) return;
 		revisarFinalizarCPU();
-		if(finPrograma){
-			finPrograma = false;
-			return;
-		}
 		i++;
 		pcb->programCounter++;
 		// usleep -----------------> no se que es esto
@@ -326,6 +322,20 @@ void comenzarEjecucionDePrograma(void* paquete){
 	finalizarPor(FIN_EJECUCION);
 	freePCB(pcb);
 	revisarFinalizarCPU();
+}
+
+int verificarTerminarEjecucion(){
+	if(huboStackOver) {
+		finalizarPor(STACKOVERFLOW);
+		huboStackOver = false;
+		return -1;
+	}
+	else if(finPrograma){
+		finPrograma = false;
+		return -1;
+	}
+	else
+		return 0;
 }
 
 void obtenerInstruccion(char* instruccion, char* paquete, int16_t sizeInstruccion){

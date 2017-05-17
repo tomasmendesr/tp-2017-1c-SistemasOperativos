@@ -72,5 +72,6 @@ void finalizarCPU(void);
 void freePCB(t_pcb* pcb);
 void conecFailKernel(int cant);
 void conecFailMemoria(int cant);
+int verificarTerminarEjecucion();
 
 #endif /* FUNCIONESCPU_H_ */
