@@ -40,6 +40,7 @@ uint32_t tamanioStack;
 int quantum;
 /*desde memoria*/
 uint32_t tamanioPagina;
+bool procesoBloqueado;
 
 t_pcb* new_PCB(char* buf, int pid);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);
@@ -61,7 +62,7 @@ int16_t asignarCompartida(int valor, char* variable);
 int16_t recibirTamanioPagina(void);
 void revisarFinalizarCPU(void);
 void revisarSigusR1(int signo);
-char* obtenerInstruccion(char* paquete, int16_t sizeInstruccion);
+void obtenerInstruccion(char* instruccion, char* paquete, int16_t sizeInstruccion);
 void comenzarEjecucionDePrograma(void* paquete);
 int16_t solicitarProximaInstruccion(void);
 void finalizarPor(int type);
@@ -72,5 +73,6 @@ void finalizarCPU(void);
 void freePCB(t_pcb* pcb);
 void conecFailKernel(int cant);
 void conecFailMemoria(int cant);
+int verificarTerminarEjecucion();
 
 #endif /* FUNCIONESCPU_H_ */

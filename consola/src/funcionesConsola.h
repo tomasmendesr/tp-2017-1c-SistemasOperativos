@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <commons/string.h>
 #include <commons/sockets.h>
 #include <commons/log.h>
@@ -21,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <time.h>
 
 #define MAX_COMMAND_SIZE 256
 
@@ -36,11 +40,17 @@ typedef struct{
 	int pid;
 	int socket;
 	pthread_t thread;
+	struct tm* fechaInicio;
+	struct tm* fechaFin;
+	struct timespec start;
+	struct timespec end;
+	bool aceptado;
 }t_proceso;
 
 typedef struct{
 	char* pathAnsisop;
 	int socket;
+
 }dataHilo;
 
 void crearConfig(int argc,char* argv[]);
@@ -54,6 +64,9 @@ void crearProceso(int socketProceso, pthread_t threadPrograma, int pid);
 bool esNumero(char* string);
 void threadPrograma(dataHilo* data);
 void terminarProceso(t_proceso* proc);
+void imprimirInformacion(t_proceso* proceso);
+void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data);
+void cargarFechaFin(t_proceso* proc);
 
 //Funciones de interfaz
 void levantarInterfaz();

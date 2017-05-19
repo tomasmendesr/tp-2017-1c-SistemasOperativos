@@ -6,6 +6,8 @@
  */
 #include "primitivas.h"
 
+int cantDeReservas = 0;
+
 bool esArgumento(t_nombre_variable identificador_variable){
 	if(isdigit(identificador_variable)){
 		return true;
@@ -90,7 +92,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
  */
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
 	log_debug(logger, "ANSISOP_asignar -> posicion var: %d - valor: %d", direccion_variable, valor);
-	t_pedido_bytes* pedidoEscritura = malloc(sizeof(t_pedido_bytes)); //malloc(sizeof(uint32_t)*TAMANIO_VARIABLE);
+	t_pedido_bytes* pedidoEscritura = malloc(sizeof(t_pedido_bytes));
 	pedidoEscritura->pag = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
 	pedidoEscritura->offset = direccion_variable % tamanioPagina;
 	pedidoEscritura->size = TAMANIO_VARIABLE;
@@ -415,7 +417,7 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 
 	//defino las variables
 	header_t* header = malloc(header_t);
-	size_t offset = sizeof(uint8_t);
+	size_t offset = 0;
 	t_descriptor_archivo fd;
 	size_t size;
 	char* paquete;
@@ -424,15 +426,16 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	//armo el header y el paquete de las banderas
 	header->type = ABRIR_ARCHIVO;
 	bFlags = malloc(sizeof(t_banderas));
-	memcpy(bFlags, (void*)&flags, offset*3);
-	size_t len = strlen(direccion) + sizeof(t_banderas) + 1;
+	memcpy(bFlags, (void*)&flags, sizeof(t_banderas));
+	size_t len = strlen(direccion) + sizeof(t_banderas) + 1 + sizeof(uint32_t);
 	header->length = len;
-	size = header->length-sizeof(t_banderas);
+	size = strlen(direccion) + 1;
 
-	//agrego la direccion y las banderas al paquete que voy a mandar al kernel
+	//armo el paquete con la direccion del archivo, las banderas y el pid del proceso
 	paquete = malloc(len);
-	memcpy(paquete, direccion, size);
-	memcpy(paquete+size, bFlags, offset*3);
+	memcpy(paquete+offset, (void*)&pcb->pid, sizeof(uint32_t));
+	memcpy(paquete+offset+=sizeof(uint32_t), direccion, size);
+	memcpy(paquete+offset+=size, bFlags, sizeof(t_banderas));
 
 	//se lo mando a kernel
 	sendSocket(socketConexionKernel,header,(void*)&paquete);
@@ -464,13 +467,17 @@ void borrar(t_descriptor_archivo direccion){
 	//armo lo que voy a mandar
 	header_t* header = malloc(header_t);
 	char* paquete;
+	size_t size = sizeof(uint32_t);
 	header->type = BORRAR_ARCHIVO;
-	size_t len = strlen(direccion);
+	size_t len = sizeof(direccion) + sizeof(uint32_t);
 	header->length = len;
-	paquete = malloc(len);
-	memcpy(paquete, direccion, len);
 
-	//se lo mando a kernel
+	//armo el paquete con el pid del proceso y el descriptor del archivo
+	paquete = malloc(len);
+	memcpy(paquete, (void*)&pcb->pid, size);
+	memcpy(paquete+size, (void*)&direccion, size);
+
+	//se lo mando a kernel (falta hacer verificacion de envio)
 	sendSocket(socketConexionKernel,header,(void*)&paquete);
 
 	//respuesta
@@ -491,11 +498,15 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
 	//armo lo que voy a mandar
 	header_t* header = malloc(header_t);
 	char* paquete;
+	size_t size = sizeof(uint32_t);
 	header->type = CERRAR_ARCHIVO;
-	size_t len = strlen(descriptor_archivo);
+	size_t len = sizeof(descriptor_archivo) + sizeof(uint32_t);
 	header->length = len;
+
+	//armo el paquete con el pid del proceso y el descriptor del archivo
 	paquete = malloc(len);
-	memcpy(paquete, descriptor_archivo, len);
+	memcpy(paquete, (void*)&pcb->pid, size);
+	memcpy(paquete+size, (void*)&descriptor_archivo, size);
 
 	//se lo mando a kernel
 	sendSocket(socketConexionKernel,header,(void*)&paquete);
@@ -549,11 +560,32 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
  * @return	void
  */
 void liberarMemoria(t_puntero puntero){
-	header_t* header = malloc(header_t);
-	header->type = LIBERAR_MEMORIA;
-	header->length = sizeof(t_puntero);
-	sendSocket(socketConexionKernel,header,(void*)&puntero);
-	requestHandlerKernel();
+	log_debug(logger, "ANSISOP_liberarMemoria -> posicion: %d", puntero);
+
+	if(cantDeReservas){
+
+//	    con el puntero alcanza porque me dice en que pagina del heap esta lo que quiero reservar
+		t_pedido_bytes* pedidoLiberar = malloc(sizeof(t_pedido_bytes));
+
+//		todo tambien se podria mandar el puntero y que el kernel haga este laburo
+		pedidoLiberar->pag = puntero / tamanioPagina + pcb->cantPaginasCodigo;
+		pedidoLiberar->offset = puntero % tamanioPagina;
+//		el tamanio no importa
+//		pedidoLiberar->size = 0;
+		pedidoLiberar->pid = pcb->pid;
+		header_t header;
+		header.type= LIBERAR_MEMORIA;
+		header.length = sizeof(t_pedido_bytes);
+		if(sendSocket(socketConexionKernel, &header,(void*)pedidoLiberar) <= 0 ){
+			log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
+			finalizarCPU();
+		}
+		requestHandlerKernel();
+		cantDeReservas--;
+	}else{
+		//esta tratando de liberar memoria no reservada previamente
+		finalizarPor(FIN_ERROR_MEMORIA);
+	}
 }
 
 /*
@@ -582,14 +614,34 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
  */
 t_puntero reservar(t_valor_variable espacio){
 
+	log_debug(logger, "ANSISOP_reservar -> espacio: %d", espacio);
+
+	//defino variables
 	header_t* header = malloc(header_t);
+	char* paquete;
+	size_t size = sizeof(t_valor_variable);
 	t_valor_variable valor;
+
+	//armo el pedido
 	header->type = RESERVAR_MEMORIA;
-	header->length = sizeof(t_valor_variable);
-	sendSocket(socketConexionKernel,header,(void*)&espacio);
+	header->length = sizeof(t_valor_variable)*2;
+	malloc(header->length);
+	memcpy(paquete, (void*)&pcb->pid, sizeof(t_valor_variable));
+	memcpy(paquete+size, (void*)&espacio, sizeof(t_valor_variable));
+
+	//pido el espacio al kernel
+	sendSocket(socketConexionKernel,header,(void*)paquete);
+
+	//respuesta
 	requestHandlerKernel();
+
+	//hago esto para poder liberar paqueteGlobal
 	valor = *(t_valor_variable*)paqueteGlobal;
 	free(paqueteGlobal);
+
+	//aumento la cantidad de reservas
+	cantDeReservas++;
+
 	return valor;
 }
 

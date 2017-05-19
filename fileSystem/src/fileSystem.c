@@ -30,8 +30,9 @@ void esperarConexionKernel(){
 	if(recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje)){
 		log_info(logger, "Conexion con kernel establecida");
 	}
-}
 
+	procesarMensajesKernel();
+}
 
 void inicializarMetadata(){
 
@@ -57,18 +58,59 @@ void inicializarMetadata(){
 		exit(1);
 	}
 
+	char* bitmap_path = string_new();
+	string_append(&bitmap_path, metadata_path);
 
 	string_append(&metadata_path, METADATA_ARCHIVO);
-	FILE* metadata = fopen(metadata_path, "w");
+	FILE* metadata = fopen(metadata_path, "a");
 	fprintf(metadata, "TAMANIO_BLOQUES=%d\n", conf->tamanio_bloque);
 	fprintf(metadata, "CANTIDAD_BLOQUES=%d\n", conf->cantidad_bloques);
 	fprintf(metadata, "MAGIC_NUMBER=SADICA\n");
 	fclose(metadata);
 
+
+	int sizeBitArray = conf->cantidad_bloques / 8;//en bytes
+	if((sizeBitArray % 8) != 0)
+		sizeBitArray++;
+
+	bitarray = bitarray_create_with_mode(string_repeat('0', sizeBitArray), sizeBitArray, MSB_FIRST);
+
+	int index;
+	for(index = 0; index < conf->cantidad_bloques; index++)
+		bitarray_clean_bit(bitarray, index);
+
+	char* data = malloc(sizeBitArray);
+	for(index =0; index <sizeBitArray; index++);
+		data[index] = '\0';
+
+	string_append(&bitmap_path, BITMAP_ARCHIVO);
+	printf("%s\n", bitmap_path);
+	FILE* bitmap = fopen(bitmap_path, "a");
+	fwrite(data, sizeBitArray, 1, bitmap);
+	fclose(bitmap);
+
+	//para crear los n bloques.bin
+
+	int j;
+	FILE* bloque;
+	strcat(bloques_path, "/");
+	char* path = bloques_path;
+	int null = strlen(bloques_path);
+
+	for (j = 1 ; j<=conf->cantidad_bloques ; j++){
+
+		strcat(path, string_itoa(j));
+		strcat(path, ".bin");
+		printf("%s\n", path);
+		bloque = fopen( path, "a");
+		fclose(bloque);
+		path[null] = '\0';
+	}
+
 	free(metadata_path);
 	free(bloques_path);
 	free(archivos_path);
+	free(bitmap_path);
 
 	printf("inicialize la metadata\n");
 }
-

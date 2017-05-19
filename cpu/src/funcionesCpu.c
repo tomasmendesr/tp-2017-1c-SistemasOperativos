@@ -156,6 +156,8 @@ int32_t requestHandlerKernel(void){
 			break;
 		case RESPUESTA_WAIT_DETENER_EJECUCION:
 			log_debug(logger,"Proceso queda bloqueado");
+			procesoBloqueado = true;
+			pcb->programCounter++;
 			finalizarPor(PROC_BLOCKED);
 			break;
 		case VALOR_VAR_COMPARTIDA:
@@ -165,11 +167,17 @@ int32_t requestHandlerKernel(void){
 		case RESPUESTA_ASIG_VAR_COMPARTIDA_OK:
 			log_info(logger, "Se asigno correctamente la variable compartida");
 			break;
+<<<<<<< HEAD
 		case RESPUESTA_RESERVAR:
 			paqueteGlobal=malloc(header.length);
 			memcpy(paqueteGlobal,paquete,header.length);
 			break;
 		case RESPUESTA_LIBERAR:
+=======
+		// RESPUESTAS PRIMITIVAS KERNEL:
+		case RESPUESTA_LIBERAR_MEMORIA_OK:
+			log_info(logger, "Memoria liberada");
+>>>>>>> f6c4dc2018137ad4c8a9c1f8530f537a093ecb86
 			break;
 		default:
 			log_error(logger, "Mensaje Recibido Incorrecto");
@@ -267,7 +275,7 @@ int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
 	}
 	free(buffer);
 	if(requestHandlerMemoria() != 0){
-		log_error(logger,"La variable no pudo asignarse");
+		log_error(logger,"No se pudo almacenar en memoria");
 		return -1;
 	}
 	return EXIT_SUCCESS;
@@ -300,7 +308,12 @@ void comenzarEjecucionDePrograma(void* paquete){
 	}else{
 		log_debug(logger, "Ejecutar - Algoritmo RR con Q = %d", quantum);
 	}
+<<<<<<< HEAD
 	uint16_t i = 1;
+=======
+	int i = 1;
+	procesoBloqueado = false;
+>>>>>>> f6c4dc2018137ad4c8a9c1f8530f537a093ecb86
 	while(i <= quantum || quantum == 0){ // Si el quantum es 0 significa que es FIFO ---> ejecuto hasta terminar.
 		int16_t sizeInstruccion = solicitarProximaInstruccion(); // carga la instruccion en el paquete global bytes
 		if(sizeInstruccion == -1){
@@ -310,24 +323,53 @@ void comenzarEjecucionDePrograma(void* paquete){
 //			finalizarConexion(socketConexionMemoria);
 			return;
 		}
+<<<<<<< HEAD
 		instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
+=======
+		char* instruccion = malloc(sizeInstruccion);
+		obtenerInstruccion(instruccion, paqueteGlobal, sizeInstruccion);
+>>>>>>> f6c4dc2018137ad4c8a9c1f8530f537a093ecb86
 		free(paqueteGlobal);
 		log_info(logger, "Instruccion recibida: %s", instruccion);
 		analizadorLinea(instruccion, &functions, &kernel_functions);
-		if(huboStackOver) finalizarPor(STACKOVERFLOW);
+		free(instruccion);
+		if (verificarTerminarEjecucion() == -1) return;
 		revisarFinalizarCPU();
-		if(finPrograma) return;
 		i++;
 		pcb->programCounter++;
 		// usleep --------> todo no se para que es esto
 	}
+<<<<<<< HEAD
 	log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	finalizarPor(FIN_EJECUCION);
+=======
+
+	if(!procesoBloqueado){
+		finalizarPor(FIN_EJECUCION);
+		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
+	}else
+		log_info(logger, "Finalizo ejecucion por fin de Quantum");
+
+	freePCB(pcb);
+>>>>>>> f6c4dc2018137ad4c8a9c1f8530f537a093ecb86
 	revisarFinalizarCPU();
 }
 
-char* obtenerInstruccion(char* paquete, int16_t sizeInstruccion){
-	char* instruccion = malloc(sizeInstruccion);
+int verificarTerminarEjecucion(){
+	if(huboStackOver) {
+		finalizarPor(STACKOVERFLOW);
+		huboStackOver = false;
+		return -1;
+	}
+	else if(finPrograma){
+		finPrograma = false;
+		return -1;
+	}
+	else
+		return 0;
+}
+
+void obtenerInstruccion(char* instruccion, char* paquete, int16_t sizeInstruccion){
 	memcpy(instruccion,paquete,sizeInstruccion);
 	int pos_ultimo_caracter = sizeInstruccion - 1;
 	char salto_linea = '\n';
@@ -336,7 +378,11 @@ char* obtenerInstruccion(char* paquete, int16_t sizeInstruccion){
 	memcpy(&last_char,instruccion + pos_ultimo_caracter,1);
 	if(last_char == salto_linea)
 		memcpy(instruccion + pos_ultimo_caracter,&fin_string,1);
+<<<<<<< HEAD
 	return instruccion;
+=======
+	}
+>>>>>>> f6c4dc2018137ad4c8a9c1f8530f537a093ecb86
 }
 
 int16_t solicitarProximaInstruccion(void) {
@@ -372,7 +418,12 @@ void finalizarPor(int type) {
 	}
 	free(paquete->buffer);
 	free(paquete);
+<<<<<<< HEAD
 	freePCB(pcb);
+=======
+
+	quantum = -1;
+>>>>>>> f6c4dc2018137ad4c8a9c1f8530f537a093ecb86
 }
 
 void freePCB(t_pcb* pcb){

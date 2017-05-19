@@ -42,12 +42,13 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		planificarLargoPlazo();
 	break;
 	case FINALIZAR_PROGRAMA:
-		//finalizarPrograma(consola_fd,package);
+		finalizarPrograma(consola_fd,(int*) *package);
 		break;
 	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	break;
 	}
 }
+
 
 void trabajarMensajeCPU(int socketCPU){
 
@@ -69,7 +70,6 @@ void trabajarMensajeCPU(int socketCPU){
 }
 
 void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
-  t_pcb* pcbRecibido;
 	switch(mensaje){
 	case HANDSHAKE_CPU:
 		log_info(logger,"Conexion con nueva CPU establecida");
@@ -92,10 +92,12 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case ASIG_VAR_COMPARTIDA:
 		asignarVarCompartida(socketCPU, package);
 		break;
+	case LIBERAR_MEMORIA: // TODO
+		break;
 
 	/* CPU DEVUELVE EL PCB */
-	case FIN_PROCESO:
-		//finalizacion_proceso(, int socket_cpu_asociado);
+	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		finalizacion_proceso(package, socketCPU);
 		break;
 	case FIN_EJECUCION:
 		finalizacion_quantum(package,socketCPU);
@@ -142,6 +144,9 @@ void realizarSignal(int socketCPU, char* key){
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(RESPUESTA_SIGNAL_OK, socketCPU);
+
+	desbloquearProceso(key);
+	log_info(logger, "Desbloqueo un proceso");
 }
 
 void realizarWait(int socketCPU, char* key){
@@ -156,6 +161,27 @@ void realizarWait(int socketCPU, char* key){
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(resultado, socketCPU);
+
+	if(resultado == RESPUESTA_WAIT_DETENER_EJECUCION){ //recibo el pcb
+
+		int tipo_mensaje;
+		void* paquete;
+		recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
+
+		t_pcb* pcbRecibido = deserializar_pcb(paquete);
+		bloquearProceso(key, pcbRecibido);
+		desocupar_cpu(socketCPU);
+
+		log_info(logger, "Bloqueo un proceso");
+	}
+}
+
+void finalizarPrograma(int consola_fd, int pid){
+
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->matarSiguienteRafaga = true;
+	log_info(logger, "Se termina la ejecucion del proceso %d", pid);
+
 }
 
 void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
@@ -181,6 +207,8 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 		queue_push(colaReady, pcb_recibido); 		// La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
 		sem_post(&mutex_cola_ready);
 
+		estadisticaCambiarEstado(pcb_recibido->pid, READY);
+
 		//Aumento el semanforo de procesos en ready
 		sem_post(&sem_cola_ready);
 	}
@@ -191,16 +219,31 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 }
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado) {
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
+
+	//modifico informacion estadistica
+	estadisticaAumentarRafaga(pcbRecibido->pid);
+	estadisticaCambiarEstado(pcbRecibido->pid, FINISH);
+
+	//pongo pcb en cola finish
+	queue_push(colaFinished, pcbRecibido);
+
+	//libero la cpu
+	desocupar_cpu(socket_cpu_asociado);
+
+	//aviso a consola que termino el proceso
+	info_estadistica_t * info = buscarInformacion(pcbRecibido->pid);
+	enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
+
+	cantProcesosSistema--;
 }
 void desocupar_cpu(int socket_asociado) {
 
 	sem_wait(&mutex_lista_CPUs);
 	cpu_t *cpu = obtener_cpu_por_socket_asociado(socket_asociado);
 	if(cpu != NULL){
-		if(cpu->pcb != NULL) { //TODO: nuevo fijarse si solo con el pcb en null alcanza
-			cpu->pcb = NULL;
+			printf("Desocupo cpu %d\n", socket_asociado);
+			cpu->disponible = true;
 			sem_post(&semCPUs_disponibles); // Aumento el semaforo contador de cpus disponibles.
-		}
 	}
 	sem_post(&mutex_lista_CPUs);
 }

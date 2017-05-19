@@ -1,4 +1,46 @@
 #include "funcionesMemoria.h"
+#include "hash.h"
+
+void testHash(){
+
+	const int cantPids = 15;
+	const int cantPags = 20;
+
+	hashInit(500);
+
+	printf("\nLas seeds son: %d %d\n", getSeed1(), getSeed2() );
+
+	int arrayMagico[cantPids*cantPags];
+	int i,j;
+	for(i=0;i<cantPids;i++){
+		printf("\nValores de las primeras 20 paginas del pid: %d\n", i);
+		for(j=0;j<cantPags;j++){
+			printf("%d ",getPos(i,j));
+			arrayMagico[i*cantPags + j] = getPos(i,j);
+		}
+	}
+
+	if(getPos(i,j) == getPos(i,j))
+		printf("\n\nHash es deterministico\n");
+	else printf("\n\nHash NO es deterministico\n");
+
+	int cant_colisiones = 0;
+	int valor = -1;
+	for(i=0;i<cantPids*cantPags;i++){
+
+		for(j=i+1;j<cantPids*cantPags;j++){
+			if(arrayMagico[i] == arrayMagico[j]){
+				cant_colisiones++;
+				arrayMagico[j] = valor;
+				valor--;
+			}
+		}
+	}
+
+	printf("\nCantidad de colisiones: %d\n", cant_colisiones);
+
+	exit(0);
+}
 
 void inicializarGlobales(){
 	pthread_mutex_init(&cache_mutex,NULL);
@@ -36,7 +78,7 @@ t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
         config->marcos = config_get_int_value(configMemoria, "MARCOS");
         config->marcos_Size = config_get_int_value(configMemoria, "MARCOS_SIZE");
         config->entradas_Cache = config_get_int_value(configMemoria, "ENTRADAS_CACHE");
-        config->entradas_Cache = config_get_int_value(configMemoria, "CACHE_X_PROC");
+        config->cache_x_Proceso = config_get_int_value(configMemoria, "CACHE_X_PROC");
 
         config->reemplazo_cache = malloc(MAX_LEN_PUERTO);
         strcpy(config->reemplazo_cache, config_get_string_value(configMemoria, "REEMPLAZO_CACHE"));
@@ -102,6 +144,11 @@ void inicializarMemoria(){
 		((t_entrada_tabla*)memoria)[i].pid = 0;
 	}
 
+	printf("cant entradas cache: %d\nmax entradas: %d\n",cache_entradas,max_entradas);
+
+	//Inicializo la funcion de hash
+	hashInit(cant_frames);
+
 	/*Imprimo el contenido de la memoria en un archivo dump
 	FILE* memFile = fopen("memDump","w");
 	for(i=0;i<memSize;i++){
@@ -135,7 +182,7 @@ void requestHandlerKernel(int fd){
 			break;
 
 		case ASIGNAR_PAGINAS:
-//			asignarPaginas();
+			asignarPaginas(fd, (t_pedido_asignar*)paquete);
 			break;
 
 		default:
@@ -157,10 +204,9 @@ void requestHandlerCpu(int fd){
 		//Recibo mensajes de cpu y hago el switch
 		bytes = recibir_paquete(fd, &paquete, &tipo_mensaje);
 		if(bytes <= 0){
-			log_error(logger, "Desconexion del Cpu. Se cerro el socket %d. Terminando...", fd);
+			log_info(logger, "Desconexion de cpu con socket %d", fd);
 			close(fd);
 			return;
-			//exit(1);
 		}else{
 
 			switch(tipo_mensaje){
@@ -232,6 +278,21 @@ int finalizarPrograma(t_pedido_finalizar* pid){
 	return 0;
 }
 
+int asignarPaginas(int fd, t_pedido_asignar* pedido){
+
+	if( reservarFrames(pedido->pid,pedido->cant_pag) == -1){
+		//No se puede, aviso a kernel que no hay lugar
+		enviarRespuesta(fd, SIN_ESPACIO);
+		log_warning(logger, "No hay espacio");
+		return -1;
+	}
+
+	//Se pudo reservar
+	enviarRespuesta(fd,OP_OK);
+
+	return 0;
+}
+
 /* Asigna la cantidad de paginas al proceso especifico
  * Devuelve 0 en caso de poder asignar las paginas
  * -1 en caso de no haber frames disponibles para realizar la operacion */
@@ -253,17 +314,27 @@ int reservarFrames(int pid, int cantPag){
 
 	//Asigno las paginas que me piden
 	int asignadas = 0;
-	i = 0;
+	int posInicial;
+	bool asigne;
 	while(asignadas < cantPag){
 
-		if(tabla_pag[i].pid == -1 || tabla_pag[i].pag == -1){
-			tabla_pag[i].pid = pid;
-			tabla_pag[i].pag = maxPag;
-			maxPag++;
-			asignadas++;
+		posInicial = getPos(pid,maxPag);
+		asigne = false;
+
+		for(i=0;!asigne && i<cant_frames; i++){
+			if(tabla_pag[posInicial + i].pid == -1 || tabla_pag[posInicial + i].pag == -1){
+				tabla_pag[posInicial + i].pid = pid;
+				tabla_pag[posInicial + i].pag = maxPag;
+				maxPag++;
+				asignadas++;
+				asigne = true;
+			}
 		}
 
-		i++;
+		if(asigne == false){
+			printf("\nERRRRRORRORORORORORR; QUILOMBOOOO\n");
+		}
+
 	}
 
 	pthread_mutex_unlock(&tablaPag_mutex);
@@ -377,11 +448,24 @@ int framesLibres(){
 /* Busqueda secuencial, despues implementamos hash */
 int buscarFrame(int pid, int pag){
 
-	printf("Busco el frame con pid: %d, pag: %d\n", pid,pag);
-
 	pthread_mutex_lock(&tablaPag_mutex);
 
+	int posInicial = getPos(pid,pag);
 	int i;
+
+	int iterador(){
+		return (posInicial + i) % cant_frames;
+	}
+
+	for(i=0;i<cant_frames;i++){
+		if( tabla_pag[iterador()].pid == pid &&
+			tabla_pag[iterador()].pag == pag	){
+			pthread_mutex_unlock(&tablaPag_mutex);
+			return iterador();
+		}
+	}
+
+/*	int i;
 	for(i=0;i<cant_frames;i++){
 		if( tabla_pag[i].pid == pid &&
 			tabla_pag[i].pag == pag  ){
@@ -389,7 +473,7 @@ int buscarFrame(int pid, int pag){
 			printf("ENCONTRE!!\n");
 			return i;
 		}
-	}
+	}*/
 
 	pthread_mutex_unlock(&tablaPag_mutex);
 	printf("NO ENCONTRE :(\n");
@@ -401,7 +485,7 @@ int buscarFrame(int pid, int pag){
  */
 int leer(int pid, int pag, int offset, int size, char* resultado){
 
-	log_info(logger,"Entro a leer.");
+	log_info(logger,"Leer pid: %d pag:%d offset: %d size: %d",pid,pag,offset,size);
 
 	int frame;
 	int cant_leida = 0;
@@ -422,8 +506,8 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 		}/* Al salir de este if pos_leer apunta o bien al frame de donde tengo que leer,
 		  * o a donde esta cacheado el frame */
 
-		log_info(logger,"Antes de leer. cant_leida: %d, size: %d, frame_size: %d, offset: %d",
-				cant_leida,size,frame_size,offset);
+		//log_info(logger,"Antes de leer. cant_leida: %d, size: %d, frame_size: %d, offset: %d",
+		//		cant_leida,size,frame_size,offset);
 
 		//Me fijo cuanto tengo que leer y copio lo que esta en memoria/cache en resultado
 		cant_a_leer = min(size - cant_leida, frame_size - offset);
@@ -438,6 +522,8 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 }
 
 int escribir(int pid, int pag, int offset, char* contenido, int size){
+
+	log_info(logger,"Escribir pid: %d pag:%d offset: %d size: %d contenido: %s",pid,pag,offset,size,contenido);
 
 	int frame;
 	int cant_escrita = 0;
@@ -478,7 +564,7 @@ int cantEntradas(int pid){
 
 /* Busca la entrada de cache que coincida con pid y pag
  * Retorna -1 si no existe */
-bool buscarEntrada(int pid, int pag){
+int buscarEntrada(int pid, int pag){
 	int i;
 	for(i=0;i<cache_entradas;i++){
 		if(cache[i].pid == pid && cache[i].pag == pag){
@@ -496,6 +582,7 @@ int entradaAReemplazar(int pid){
 }
 
 int reemplazoLocal(int pid){
+	printf("Reemplazo local.\n");
 	int i;
 	int entrada; //A reemplazar
 	int minTime = ULONG_MAX;
@@ -511,10 +598,11 @@ int reemplazoLocal(int pid){
 }
 
 int reemplazoGlobal(){
+	printf("Reemplazo global.\n");
 	//Recorro buscando una entrada libre
 	int i;
 	for(i=0;i<cache_entradas;i++){
-		if(cache[i].pid == -1 || cache[i].pag -1){
+		if(cache[i].pid == -1 || cache[i].pag == -1){
 			return i;
 		}
 	}
@@ -545,14 +633,18 @@ int leerCache(int pid, int pag, char** contenido){
 			*contenido = cache[i].content;
 			cache[i].time_used = op_count;
 			pthread_mutex_unlock(&cache_mutex);
+			log_info(logger, "CACHE HIT.",pid,pag);
 			return 0;
 		}
 	}
 	pthread_mutex_unlock(&cache_mutex);
+	log_info(logger, "CACHE MISS",pid,pag);
 	return -1;
 }
 
 void actualizarEntradaCache(int pid, int pag, char* frame){
+
+	log_info(logger,"Actualizar entrada cache. pid: %d pag: %d", pid,pag);
 
 	pthread_mutex_lock(&cache_mutex);
 
@@ -564,6 +656,9 @@ void actualizarEntradaCache(int pid, int pag, char* frame){
 		memcpy(cache[entrada].content,frame,frame_size);
 	}else{ //tengo que reemplazar una entrada
 		entrada = entradaAReemplazar(pid);
+
+		log_info(logger,"Reemplazo entrada n° %d con pid %d pag %d",entrada,pid,pag);
+
 		cache[entrada].pid = pid;
 		cache[entrada].pag = pag;
 		memcpy(cache[entrada].content,frame,frame_size);

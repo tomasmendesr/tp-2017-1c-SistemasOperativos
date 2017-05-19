@@ -49,3 +49,99 @@ void destruirConfiguracionFS(t_config_FS* conf){
 	free(conf->punto_montaje);
 	free(conf);
 }
+
+void procesarMensajesKernel(){
+	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	void* paquete;
+	int check = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
+
+	if (check <= 0) {
+		log_error(logger, "El kernel se desconecto");
+		close(socketConexionKernel);
+		exit(1);
+	}
+
+	switch (tipo_mensaje) {
+		case CREAR_ARCHIVO:
+			crearArchivo(paquete);
+			break;
+		case BORRAR_ARCHIVO:
+			borrarArchivo(paquete);
+			break;
+		case GUARDAR_DATOS:
+			guardarDatos(paquete);
+			break;
+		case OBTENER_DATOS:
+			obtenerDatos(paquete);
+			break;
+		default:
+			log_warning(logger, "se recivio una operacion invalida");
+			break;
+	}
+
+}
+
+bool validarArchivo(char* path){
+	//no implementado aun
+	return false;
+}
+
+void crearArchivo(void* package){
+	//no implementado aun
+}
+
+void borrarArchivo(void* package){
+	//no implementado aun
+}
+
+void guardarDatos(void* package){
+	//no implementado aun
+}
+
+void obtenerDatos(void* package){
+	//no implementado aun
+}
+
+void mkdirRecursivo(char* path){
+
+	char tmp[256];
+    char *p = NULL;
+    size_t len;
+
+    snprintf(tmp, sizeof(tmp),"%s",path);
+    len = strlen(tmp);
+    if(tmp[len - 1] == '/')
+        tmp[len - 1] = 0;
+    for(p = tmp + 1; *p; p++)
+        if(*p == '/') {
+        	*p = 0;
+            mkdir(tmp, S_IRWXU);
+            *p = '/';
+        }
+    mkdir(tmp, S_IRWXU);
+}
+
+int buscarBloqueLibre(){
+	int j = 0;
+	bool res = false;
+	while(!res){
+		if(!bitarray_test_bit(bitarray, j)) // cero esta libre
+			res = true;
+	}
+
+}
+
+char** obtenerNumeroBloques(char* path){
+	t_config* c = config_create(path);
+	char** bloques = config_get_array_value(c, "BLOQUES");
+	config_destroy(c);
+
+	return bloques;
+}
+
+int obtenerNumBloque(char* path, int offset){
+	char** bloques = obtenerNumeroBloques(strcat(ARCHIVOS_PATH , path));
+
+	int numBloque = (offset / conf->tamanio_bloque);
+	return atoi(bloques[numBloque]);
+}

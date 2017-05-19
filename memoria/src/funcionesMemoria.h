@@ -60,6 +60,7 @@ typedef struct{
 	unsigned long int time_used; //Cual fue la ultima vez que se utilizo
 }t_entrada_cache;
 
+void testHash();
 void inicializarGlobales();
 
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
@@ -68,7 +69,6 @@ void destruirConfiguracionMemoria(t_config_memoria* config);
 
 //Funciones de conexionado
 void esperarConexiones();
-void esperarConexionKernel();
 void esperarConexionKernel();
 
 /* Esta funcion hace la creacion de la memoria y todas las estructuras
@@ -90,7 +90,7 @@ void increaseOpCount(); //Suma uno al opCount
 /* Cuantas entradas tiene el pid */
 int cantEntradas(int pid);
 /* Busca la entrada con pid y pag. Si no existe retorna -1*/
-bool buscarEntrada(int pid, int pag);
+int buscarEntrada(int pid, int pag);
 /* Esta funcion aplica el LRU y me dice que entrada debo reemplazar
  * en caso de que esten todas ocupadas. Necesita el pid para no pasarse
  * del límite de entradas por proceso*/
@@ -112,6 +112,7 @@ void enviarTamanioPagina(int fd);
 //Pedidos de Kernel
 int iniciarPrograma(int fd, t_pedido_iniciar* pedido);
 int finalizarPrograma(t_pedido_finalizar *pid);
+int asignarPaginas(int fd, t_pedido_asignar* pedido);
 
 //Pedidos cpu
 int solicitudBytes(int fd, t_pedido_memoria* pedido);

@@ -62,6 +62,7 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         semID = config_get_array_value(configKernel, "SEM_ID");
         semInit = config_get_array_value(configKernel, "SEM_INIT");
         conf->semaforos = crearDiccionarioConValue(semID,semInit);
+        crearColasBloqueados(semID);
 
         varGlob = config_get_array_value(configKernel, "SHARED_VARS");
         conf->variablesGlobales = crearDiccionario(varGlob);
@@ -277,6 +278,9 @@ void listProcesses(char* comando, char* param){
 			case FINISH:
 				printf("FINISH\n");
 				break;
+			case BLOQ:
+				printf("BLOQ\n");
+				break;
 		}
 	}
 
@@ -289,6 +293,7 @@ void listProcesses(char* comando, char* param){
 	if(!strcmp(param, "ready")) estado = READY;
 	if(!strcmp(param, "exec")) estado = EXEC;
 	if(!strcmp(param, "finish")) estado = FINISH;
+	if(!strcmp(param, "bloq")) estado = BLOQ;
 
 	list_iterate(listadoEstadistico, listarProcesos);
 
@@ -322,7 +327,7 @@ void processInfo(char* comando, char* param){
 }
 
 void getTablaArchivos(char* comando, char* param){
-        printf("get tabla archivos\n");
+        imprimirTablaGlobal();
 }
 void gradoMultiprogramacion(char* comando, char* param){
 	if(!esNumero(param)){
@@ -370,6 +375,7 @@ void agregarNuevaCPU(t_list* lista, int socketCPU){
 	cpu_t* nuevaCPU = malloc(sizeof(cpu_t));
 	nuevaCPU->socket = socketCPU;
 	nuevaCPU->pcb = NULL;
+	nuevaCPU->disponible = true;
 
 	list_add(lista, nuevaCPU);
 	sem_post(&semCPUs_disponibles);
@@ -404,7 +410,7 @@ void actualizarReferenciaPCB(int id, t_pcb* pcb){
 cpu_t* obtenerCpuLibre(){
 
 	bool estaLibre(cpu_t* cpu){
-		return cpu->pcb != NULL ? false : true;
+		return cpu->disponible;// != NULL ? false : true;
 	}
 
 	return list_find(listaCPUs, estaLibre);
@@ -428,8 +434,13 @@ void planificarCortoPlazo(){
 		//Espera procesos para ejecutar
 		sem_wait(&sem_cola_ready);
 		printf("pase\n");
+
 		cpu_t* cpu = obtenerCpuLibre();
-		printf("obtuve cpu libre\n");
+		if(cpu != NULL){
+			printf("Obtuve cpu libre\n");
+		}else{
+			return;
+		}
 
 		sem_wait(&mutex_cola_ready);
 		t_pcb* pcb = queue_pop(colaReady);
@@ -609,3 +620,117 @@ void eliminarEstadistica(int pid){
 
 	list_remove_and_destroy_by_condition(listadoEstadistico, buscar, free);
 }
+
+
+void crearColasBloqueados(char** semaforos){
+	int j = 0;
+
+	bloqueos = dictionary_create();
+
+	while(semaforos[j] != NULL){
+		dictionary_put(bloqueos, semaforos[j], queue_create());
+		j++;
+	}
+
+}
+
+void desbloquearProceso(char* semaforo){
+	t_queue* cola = (t_queue*)dictionary_get(bloqueos, semaforo);
+	t_pcb* pcb = queue_pop(cola);
+
+	queue_push(colaReady, pcb);
+	estadisticaCambiarEstado(pcb->pid, READY);
+
+	sem_post(&sem_cola_ready);
+}
+
+void bloquearProceso(char* semaforo, t_pcb* pcb){
+
+	t_queue* cola = (t_queue*)dictionary_get(bloqueos, semaforo);
+	queue_push(cola, pcb);
+
+	estadisticaAumentarRafaga(pcb->pid);
+	estadisticaCambiarEstado(pcb->pid, BLOQ);
+}
+
+
+int getArchivoFdMax(){
+	max_archivo_fd++;
+	return max_archivo_fd;
+}
+
+void crearEntradaArchivoProceso(int proceso){
+	entrada_tabla_archivo_proceso* entrada = malloc(sizeof(entrada_tabla_archivo_proceso));
+	entrada->proceso = proceso;
+	entrada->archivos = list_create();
+
+	list_add(processFileTable, entrada);
+}
+
+void agregarArchivo_aProceso(int proceso, char* file, char* permisos){
+
+	bool buscar(entrada_tabla_archivo_proceso* entrada){
+		return entrada->proceso == proceso ? true : false;
+	}
+
+	bool buscarArchivo(entrada_tabla_globlal_archivo* entrada){
+		return !strcmp(entrada->archivo, file) ? true : false;
+	}
+
+	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscar);
+
+	entrada_tabla_globlal_archivo* entradaGlobal = list_find(globalFileTable, buscarArchivo);
+
+	if(entradaGlobal == NULL){ // no existe
+		entradaGlobal = malloc(sizeof(entradaGlobal));
+		memcpy(entradaGlobal->archivo, file, strlen(file));
+		entradaGlobal->vecesAbierto = 1;
+		entradaGlobal->ubicacion = list_size(globalFileTable);
+
+		list_add(globalFileTable, entradaGlobal);
+	}else{ //existe en la tabla global
+		entradaGlobal->vecesAbierto++;
+	}
+
+	archivo* archivo = malloc(sizeof(archivo));
+	archivo->flags = permisos;
+	archivo->fd = getArchivoFdMax(); //aca tengo que pasarselo a la cpu
+	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
+	list_add(entrada->archivos, archivo);
+
+}
+
+void eliminarFd(int fd, int proceso){
+
+	bool buscarPorProceso(entrada_tabla_archivo_proceso* entrada){
+		return entrada->proceso == proceso ? true : false;
+	}
+
+	bool eliminar(archivo* archivo){
+		return archivo->fd == fd ? true : false;
+	}
+
+	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
+	list_remove_by_condition(entrada->archivos, eliminar);
+	entrada_tabla_globlal_archivo* entradaGlobal = list_get(globalFileTable, entradaGlobal->ubicacion);
+	entradaGlobal->vecesAbierto--;
+
+	if(entradaGlobal->vecesAbierto == 0){
+		list_remove_and_destroy_element(globalFileTable,entradaGlobal->ubicacion, free);
+		free(entradaGlobal);
+	}
+	free(entrada);
+
+}
+
+void imprimirTablaGlobal(){
+
+	void imprimirData(entrada_tabla_globlal_archivo* entrada){
+		printf("Nombre del file: %s\n", entrada->archivo);
+		printf("Cantidad de veces abierto: %s\n", entrada->vecesAbierto);
+	}
+
+	list_iterate(globalFileTable, imprimirData);
+
+}
+

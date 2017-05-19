@@ -59,7 +59,8 @@ enum protocolo_kernel_a_cpu{
 	RESPUESTA_RESERVAR = 19,
 	RESPUESTA_LIBERAR = 20,
 	RESPUESTA_ABRIR = 21,
-	RESPUESTA_CERRAR = 22
+	RESPUESTA_CERRAR = 22,
+	RESPUESTA_LIBERAR_MEMORIA_OK = 125
 };
 
 //Mensajes que el CPU le envia al kernel
@@ -134,6 +135,13 @@ enum protocolo_programa_a_kernel{
 	HANDSHAKE_PROGRAMA = 121,
 	ENVIO_CODIGO = 122,
 	FINALIZAR_PROGRAMA = 123
+};
+
+enum protocolo_kernel_a_fs{
+	CREAR_ARCHIVO = 21,
+	OBTENER_DATOS = 23,
+	GUARDAR_DATOS = 24
+	//para borrar archivo uso el que esta en cpu
 };
 
 enum exit_code{

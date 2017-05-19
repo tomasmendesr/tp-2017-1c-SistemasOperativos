@@ -57,6 +57,7 @@ typedef struct{
 typedef struct{
 	int socket; //funciona como id del cpu
 	t_pcb* pcb;
+	bool disponible;
 } cpu_t;
 
 typedef struct{
@@ -79,11 +80,32 @@ typedef struct{
 	bool matarSiguienteRafaga;
 }info_estadistica_t;
 
+typedef struct
+{
+	char* archivo;
+	int vecesAbierto;
+	int ubicacion;
+}entrada_tabla_globlal_archivo;
+
+typedef struct
+{
+	int proceso; //id del proceso
+	t_list* archivos;
+}entrada_tabla_archivo_proceso;
+
+typedef struct
+{
+	int fd;
+	char* flags;
+	int globalFD;
+}archivo;
+
 enum enum_estado{
 	NEW = 1,
 	READY = 2,
 	FINISH = 3,
-	EXEC = 4
+	EXEC = 4,
+	BLOQ = 5
 };
 
 void inicializarColas();
@@ -148,6 +170,11 @@ void planificarLargoPlazo();
 void alertarConsolaProcesoAceptado(int* pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
 
+//Palnificacion Mediano Plazo
+void crearColasBloqueados(char** semaforos);
+void desbloquearProceso(char* semaforo);
+void bloquearProceso(char* semaforo, t_pcb* pcb);
+
 //estadisticas (para consola del kernel)
 void crearInfoEstadistica(int pid, uint32_t socketConsola);
 info_estadistica_t* buscarInformacion(int pid);
@@ -192,6 +219,19 @@ pthread_cond_t lockCondicionPlanificacion;
 
 //Colas procesos
 t_queue *colaNew, *colaReady, *colaFinished, *colaExec, *colaBloqueados;
+
+//Diccionarios
+t_dictionary* bloqueos;
+
+//para manejo de archivos
+int max_archivo_fd;
+t_list* globalFileTable;
+t_list* processFileTable;
+int getArchivoFdMax();
+void crearEntradaArchivoProceso(int proceso);
+void agregarArchivo_aProceso(int proceso, char* file, char* permisos);
+void eliminarFd(int fd, int proceso);
+void imprimirTablaGlobal();
 
 fd_set master;
 fd_set setConsolas;
