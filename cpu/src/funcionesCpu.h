@@ -62,7 +62,7 @@ int16_t asignarCompartida(int valor, char* variable);
 int16_t recibirTamanioPagina(void);
 void revisarFinalizarCPU(void);
 void revisarSigusR1(int signo);
-void obtenerInstruccion(char* instruccion, char* paquete, int16_t sizeInstruccion);
+char* obtenerInstruccion(char* paquete, int16_t sizeInstruccion);
 void comenzarEjecucionDePrograma(void* paquete);
 int16_t solicitarProximaInstruccion(void);
 void finalizarPor(int type);

@@ -316,8 +316,8 @@ void comenzarEjecucionDePrograma(void* paquete){
 //			finalizarConexion(socketConexionMemoria);
 			return;
 		}
-		instruccion = malloc(sizeInstruccion);
-		obtenerInstruccion(instruccion, paqueteGlobal, sizeInstruccion);
+//		instruccion = malloc(sizeInstruccion);
+		instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
 		free(paqueteGlobal);
 		log_info(logger, "Instruccion recibida: %s", instruccion);
 		analizadorLinea(instruccion, &functions, &kernel_functions);
@@ -334,7 +334,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 	}else
 		log_info(logger, "Finalizo ejecucion por fin de Quantum");
 
-	freePCB(pcb);
+	//freePCB(pcb);
 	revisarFinalizarCPU();
 }
 
@@ -352,7 +352,8 @@ int verificarTerminarEjecucion(){
 		return 0;
 }
 
-void obtenerInstruccion(char* instruccion, char* paquete, int16_t sizeInstruccion){
+char* obtenerInstruccion(char* paquete, int16_t sizeInstruccion){
+	char* instruccion = malloc(sizeInstruccion);
 	memcpy(instruccion,paquete,sizeInstruccion);
 	int pos_ultimo_caracter = sizeInstruccion - 1;
 	char salto_linea = '\n';
@@ -361,6 +362,7 @@ void obtenerInstruccion(char* instruccion, char* paquete, int16_t sizeInstruccio
 	memcpy(&last_char,instruccion + pos_ultimo_caracter,1);
 	if(last_char == salto_linea)
 		memcpy(instruccion + pos_ultimo_caracter,&fin_string,1);
+	return instruccion;
 }
 
 int16_t solicitarProximaInstruccion(void) {
@@ -396,7 +398,7 @@ void finalizarPor(int type) {
 	}
 	free(paquete->buffer);
 	free(paquete);
-	freePCB(pcb);
+	//freePCB(pcb);
 	quantum = -1;
 }
 
