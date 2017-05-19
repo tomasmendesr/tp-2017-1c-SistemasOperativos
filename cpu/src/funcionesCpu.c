@@ -165,6 +165,12 @@ int32_t requestHandlerKernel(void){
 		case RESPUESTA_ASIG_VAR_COMPARTIDA_OK:
 			log_info(logger, "Se asigno correctamente la variable compartida");
 			break;
+		case RESPUESTA_RESERVAR:
+			paqueteGlobal=malloc(header.length);
+			memcpy(paqueteGlobal,paquete,header.length);
+			break;
+		case RESPUESTA_LIBERAR:
+			break;
 		default:
 			log_error(logger, "Mensaje Recibido Incorrecto");
 			if(paquete)free(paquete);
@@ -245,7 +251,7 @@ int16_t solicitarBytes(t_pedido_bytes* pedido){
 }
 
 int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
-	char*buffer;
+	char* buffer;
 	uint32_t size;
 	header_t header;
 	size = sizeof(t_pedido_bytes);
@@ -288,21 +294,23 @@ void revisarFinalizarCPU(void){
 }
 
 void comenzarEjecucionDePrograma(void* paquete){
-	quantum = *(uint32_t*)paquete;
-	if(quantum == 0){
+	char* instruccion;
+	if((quantum = *(uint32_t*)paquete) == 0){
 		log_debug(logger, "Ejecutar - Algoritmo FIFO");
 	}else{
 		log_debug(logger, "Ejecutar - Algoritmo RR con Q = %d", quantum);
 	}
-	int i = 1;
+	uint16_t i = 1;
 	while(i <= quantum || quantum == 0){ // Si el quantum es 0 significa que es FIFO ---> ejecuto hasta terminar.
 		int16_t sizeInstruccion = solicitarProximaInstruccion(); // carga la instruccion en el paquete global bytes
 		if(sizeInstruccion == -1){
+			//todo el problema de segmentation fault y el de stackOver
+			//hacen que finalice el proceso, por que la conexion?
 			log_error(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
-			finalizarConexion(socketConexionMemoria);
+//			finalizarConexion(socketConexionMemoria);
 			return;
 		}
-		char* instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
+		instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
 		free(paqueteGlobal);
 		log_info(logger, "Instruccion recibida: %s", instruccion);
 		analizadorLinea(instruccion, &functions, &kernel_functions);
@@ -311,11 +319,10 @@ void comenzarEjecucionDePrograma(void* paquete){
 		if(finPrograma) return;
 		i++;
 		pcb->programCounter++;
-		// usleep -----------------> no se que es esto
+		// usleep --------> todo no se para que es esto
 	}
 	log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	finalizarPor(FIN_EJECUCION);
-	freePCB(pcb);
 	revisarFinalizarCPU();
 }
 
@@ -327,9 +334,8 @@ char* obtenerInstruccion(char* paquete, int16_t sizeInstruccion){
 	char fin_string = '\0';
 	char last_char;
 	memcpy(&last_char,instruccion + pos_ultimo_caracter,1);
-	if(last_char == salto_linea){
+	if(last_char == salto_linea)
 		memcpy(instruccion + pos_ultimo_caracter,&fin_string,1);
-	}
 	return instruccion;
 }
 
@@ -342,7 +348,7 @@ int16_t solicitarProximaInstruccion(void) {
 	uint32_t paginaAPedir = --i;
 	t_pedido_bytes* solicitar = malloc(sizeof(t_pedido_bytes));
 	solicitar->pag = paginaAPedir;
-	solicitar->offset = requestStart - (tamanioPagina * paginaAPedir);
+	solicitar->offset = requestStart - tamanioPagina * paginaAPedir;
 	solicitar->size = requestSize;
 	solicitar->pid = pcb->pid;
 	log_debug(logger, "Pido instruccion a Memoria -> Pid: %d - Pagina: %d - Offset: %d - Size: %d",
@@ -359,19 +365,33 @@ int16_t solicitarProximaInstruccion(void) {
 void finalizarPor(int type) {
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
-	header.type= type;
-	header.length=paquete->tamanioBuffer;
+	header.type = type;
+	header.length = paquete->tamanioBuffer;
 	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
 		log_error(logger,"Error al notificar kernel el fin de ejecucion");
 	}
 	free(paquete->buffer);
 	free(paquete);
+	freePCB(pcb);
 }
 
 void freePCB(t_pcb* pcb){
+	uint16_t i,k;
 	free(pcb->etiquetas);
-	list_destroy(pcb->indiceCodigo);
-	list_destroy(pcb->indiceStack);
+	for(i=0; i<list_size(pcb->indiceCodigo); i++)
+		free(list_remove(pcb->indiceCodigo,i));
+		list_destroy(pcb->indiceCodigo);
+	for(i=0; i<list_size(pcb->indiceStack); i++){
+		t_entrada_stack* stack = list_remove(pcb->indiceStack,i);
+		for(k=0; i<list_size(stack->argumentos); k++)
+			free(list_remove(stack->argumentos,k));
+			list_destroy(stack->argumentos);
+		for(k=0; k<list_size(stack->variables); k++)
+			free(list_remove(stack->variables,k));
+			list_destroy(stack->variables);
+		if(stack->retVar)free(stack->retVar);
+		free(stack);
+	}
 	free(pcb);
 }
 

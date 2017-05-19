@@ -41,7 +41,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		return -1;
 	}
 
-	uint32_t pag = pcb->stackPointer / tamanioPagina; // al hacer el pedido de lectura/escritura a memoria sumar cantidadPaginasCodigo
+	uint32_t pag = pcb->stackPointer / tamanioPagina;
 	uint32_t offset = pcb->stackPointer % tamanioPagina;
 
 	t_entrada_stack* lineaStack = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
@@ -187,19 +187,19 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
  */
 void finalizar(void){
 	log_debug(logger,"ANSISOP_finalizar");
-	// Obtengo contexto quitado de la lista y lo limpio.
+	//Obtengo contexto quitado de la lista y lo limpio.
 	t_entrada_stack* contexto = list_remove(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
 	uint32_t i = list_size(contexto->argumentos) + list_size(contexto->variables);
 	pcb->stackPointer-=TAMANIO_VARIABLE*i; // Disminuyo stackPointer del pcb
-	for(i = 0; i < list_size(contexto->argumentos); i++){ // Limpio lista de argumentos del contexto
+	for(i=0; i<list_size(contexto->argumentos); i++){ // Limpio lista de argumentos del contexto
 		free(list_remove(contexto->argumentos,i));
 	}
-	for(i = 0; i < list_size(contexto->variables); i++){ // Limpio lista de variables del contexto
+	for(i=0; i<list_size(contexto->variables); i++){ // Limpio lista de variables del contexto
 		free(list_remove(contexto->variables, i));
 	}
 	list_destroy(contexto->argumentos);
 	list_destroy(contexto->variables);
-	free(contexto->retVar);
+	if(contexto->retVar)free(contexto->retVar);
 	if(list_size(pcb->indiceStack) == 0){
 		finPrograma = true;
 		log_info(logger, "Finalizó la ejecucion del programa.");
@@ -412,8 +412,42 @@ void retornar(t_valor_variable retorno){
  * @return	El valor del descriptor de archivo abierto por el sistema
  */
 t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
-	printf("abrir!\n");
-	return 0;
+
+	//defino las variables
+	header_t* header = malloc(header_t);
+	size_t offset = sizeof(uint8_t);
+	t_descriptor_archivo fd;
+	size_t size;
+	char* paquete;
+	void* bFlags;
+
+	//armo el header y el paquete de las banderas
+	header->type = ABRIR_ARCHIVO;
+	bFlags = malloc(sizeof(t_banderas));
+	memcpy(bFlags, (void*)&flags, offset*3);
+	size_t len = strlen(direccion) + sizeof(t_banderas) + 1;
+	header->length = len;
+	size = header->length-sizeof(t_banderas);
+
+	//agrego la direccion y las banderas al paquete que voy a mandar al kernel
+	paquete = malloc(len);
+	memcpy(paquete, direccion, size);
+	memcpy(paquete+size, bFlags, offset*3);
+
+	//se lo mando a kernel
+	sendSocket(socketConexionKernel,header,(void*)&paquete);
+
+	//espero respuesta
+	requestHandlerKernel();
+
+	//recibo el descriptor del archivo abierto
+	fd = *(t_descriptor_archivo*)paqueteGlobal;
+
+	//libero la variable global para que pueda ser usada de nuevo
+	free(paqueteGlobal);
+
+	//devuelvo el descriptor
+	return fd;
 }
 
 /*
@@ -426,7 +460,21 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
  * @return	void
  */
 void borrar(t_descriptor_archivo direccion){
-	printf("borrar!\n");
+
+	//armo lo que voy a mandar
+	header_t* header = malloc(header_t);
+	char* paquete;
+	header->type = BORRAR_ARCHIVO;
+	size_t len = strlen(direccion);
+	header->length = len;
+	paquete = malloc(len);
+	memcpy(paquete, direccion, len);
+
+	//se lo mando a kernel
+	sendSocket(socketConexionKernel,header,(void*)&paquete);
+
+	//respuesta
+	requestHandlerKernel();
 }
 
 /*
@@ -439,7 +487,21 @@ void borrar(t_descriptor_archivo direccion){
  * @return	void
  */
 void cerrar(t_descriptor_archivo descriptor_archivo){
-	printf("cerrar!\n");
+
+	//armo lo que voy a mandar
+	header_t* header = malloc(header_t);
+	char* paquete;
+	header->type = CERRAR_ARCHIVO;
+	size_t len = strlen(descriptor_archivo);
+	header->length = len;
+	paquete = malloc(len);
+	memcpy(paquete, descriptor_archivo, len);
+
+	//se lo mando a kernel
+	sendSocket(socketConexionKernel,header,(void*)&paquete);
+
+	//respuesta
+	requestHandlerKernel();
 }
 
 /*
@@ -487,7 +549,11 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
  * @return	void
  */
 void liberarMemoria(t_puntero puntero){
-	printf("liberar!\n");
+	header_t* header = malloc(header_t);
+	header->type = LIBERAR_MEMORIA;
+	header->length = sizeof(t_puntero);
+	sendSocket(socketConexionKernel,header,(void*)&puntero);
+	requestHandlerKernel();
 }
 
 /*
@@ -515,8 +581,16 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
  * @return	puntero a donde esta reservada la memoria
  */
 t_puntero reservar(t_valor_variable espacio){
-	printf("reservar!\n");
-	return 0;
+
+	header_t* header = malloc(header_t);
+	t_valor_variable valor;
+	header->type = RESERVAR_MEMORIA;
+	header->length = sizeof(t_valor_variable);
+	sendSocket(socketConexionKernel,header,(void*)&espacio);
+	requestHandlerKernel();
+	valor = *(t_valor_variable*)paqueteGlobal;
+	free(paqueteGlobal);
+	return valor;
 }
 
 /*

@@ -553,10 +553,10 @@ t_buffer_tamanio* serializar_pcb(t_pcb* pcb){
 
 t_pcb* deserializar_pcb(char* package){
  	uint32_t offset = 0, tmp_size = sizeof(uint32_t);
- 	char * indiceEtiquetas;
- 	char * bufferIndiceDeCodigo;
- 	t_pcb *pcb;
- 	t_list * indiceDeCodigo;
+ 	char* indiceEtiquetas;
+ 	char* bufferIndiceDeCodigo;
+ 	t_pcb* pcb;
+ 	t_list* indiceDeCodigo;
  	pcb = malloc (sizeof(t_pcb));
 
  	memcpy(&pcb->pid, package + offset, tmp_size);
@@ -585,7 +585,7 @@ t_pcb* deserializar_pcb(char* package){
  	memcpy(&pcb->tamanioEtiquetas, package + offset, tmp_size);
 	offset += tmp_size;
 
-	if(pcb->tamanioEtiquetas>0){
+	if(pcb->tamanioEtiquetas){
 		indiceEtiquetas = malloc(pcb->tamanioEtiquetas);
 		memcpy(indiceEtiquetas, package + offset, pcb->tamanioEtiquetas);
 		pcb->etiquetas = indiceEtiquetas;
