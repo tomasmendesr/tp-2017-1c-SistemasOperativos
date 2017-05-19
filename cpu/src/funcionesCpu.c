@@ -330,9 +330,9 @@ void comenzarEjecucionDePrograma(void* paquete){
 	}
 	if(!procesoBloqueado){
 		finalizarPor(FIN_EJECUCION);
-		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
-	}else
 		log_info(logger, "Finalizo ejecucion por fin de Quantum");
+	}else
+		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
 
 	//freePCB(pcb);
 	revisarFinalizarCPU();
