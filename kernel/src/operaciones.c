@@ -146,6 +146,7 @@ void realizarSignal(int socketCPU, char* key){
 	enviar_paquete_vacio(RESPUESTA_SIGNAL_OK, socketCPU);
 
 	desbloquearProceso(key);
+	log_info(logger, "Desbloqueo un proceso");
 }
 
 void realizarWait(int socketCPU, char* key){
@@ -168,6 +169,10 @@ void realizarWait(int socketCPU, char* key){
 		recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
 
 		t_pcb* pcbRecibido = deserializar_pcb(paquete);
+		bloquearProceso(key, pcbRecibido);
+		desocupar_cpu(socketCPU);
+
+		log_info(logger, "Bloqueo un proceso");
 	}
 }
 

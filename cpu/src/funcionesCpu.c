@@ -156,6 +156,8 @@ int32_t requestHandlerKernel(void){
 			break;
 		case RESPUESTA_WAIT_DETENER_EJECUCION:
 			log_debug(logger,"Proceso queda bloqueado");
+			procesoBloqueado = true;
+			pcb->programCounter++;
 			finalizarPor(PROC_BLOCKED);
 			break;
 		case VALOR_VAR_COMPARTIDA:
@@ -299,6 +301,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 		log_debug(logger, "Ejecutar - Algoritmo RR con Q = %d", quantum);
 	}
 	int i = 1;
+	procesoBloqueado = false;
 	while(i <= quantum || quantum == 0){ // Si el quantum es 0 significa que es FIFO ---> ejecuto hasta terminar.
 		int16_t sizeInstruccion = solicitarProximaInstruccion(); // carga la instruccion en el paquete global bytes
 		if(sizeInstruccion == -1){
@@ -318,8 +321,13 @@ void comenzarEjecucionDePrograma(void* paquete){
 		pcb->programCounter++;
 		// usleep -----------------> no se que es esto
 	}
-	log_info(logger, "Finalizo ejecucion por fin de Quantum");
-	finalizarPor(FIN_EJECUCION);
+
+	if(!procesoBloqueado){
+		finalizarPor(FIN_EJECUCION);
+		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
+	}else
+		log_info(logger, "Finalizo ejecucion por fin de Quantum");
+
 	freePCB(pcb);
 	revisarFinalizarCPU();
 }
@@ -383,6 +391,8 @@ void finalizarPor(int type) {
 	}
 	free(paquete->buffer);
 	free(paquete);
+
+	quantum = -1;
 }
 
 void freePCB(t_pcb* pcb){

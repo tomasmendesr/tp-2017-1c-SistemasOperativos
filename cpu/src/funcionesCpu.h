@@ -40,6 +40,7 @@ uint32_t tamanioStack;
 int quantum;
 /*desde memoria*/
 uint32_t tamanioPagina;
+bool procesoBloqueado;
 
 t_pcb* new_PCB(char* buf, int pid);
 t_list* llenarLista(t_intructions * indiceCodigo, t_size cantInstruc);

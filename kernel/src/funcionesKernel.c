@@ -278,6 +278,9 @@ void listProcesses(char* comando, char* param){
 			case FINISH:
 				printf("FINISH\n");
 				break;
+			case BLOQ:
+				printf("BLOQ\n");
+				break;
 		}
 	}
 
@@ -290,6 +293,7 @@ void listProcesses(char* comando, char* param){
 	if(!strcmp(param, "ready")) estado = READY;
 	if(!strcmp(param, "exec")) estado = EXEC;
 	if(!strcmp(param, "finish")) estado = FINISH;
+	if(!strcmp(param, "bloq")) estado = BLOQ;
 
 	list_iterate(listadoEstadistico, listarProcesos);
 
@@ -636,6 +640,8 @@ void desbloquearProceso(char* semaforo){
 
 	queue_push(colaReady, pcb);
 	estadisticaCambiarEstado(pcb->pid, READY);
+
+	sem_post(&sem_cola_ready);
 }
 
 void bloquearProceso(char* semaforo, t_pcb* pcb){
