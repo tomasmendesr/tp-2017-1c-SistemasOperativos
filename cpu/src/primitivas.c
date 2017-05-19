@@ -416,7 +416,7 @@ void retornar(t_valor_variable retorno){
 t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 
 	//defino las variables
-	header_t* header = malloc(header_t);
+	header_t* header = malloc(sizeof(header_t));
 	size_t offset = 0;
 	t_descriptor_archivo fd;
 	size_t size;
@@ -434,8 +434,10 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	//armo el paquete con la direccion del archivo, las banderas y el pid del proceso
 	paquete = malloc(len);
 	memcpy(paquete+offset, (void*)&pcb->pid, sizeof(uint32_t));
-	memcpy(paquete+offset+=sizeof(uint32_t), direccion, size);
-	memcpy(paquete+offset+=size, bFlags, sizeof(t_banderas));
+	offset+=sizeof(uint32_t);
+	memcpy(paquete+offset, direccion, size);
+	offset+=size;
+	memcpy(paquete+offset, bFlags, sizeof(t_banderas));
 
 	//se lo mando a kernel
 	sendSocket(socketConexionKernel,header,(void*)&paquete);
@@ -465,7 +467,7 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 void borrar(t_descriptor_archivo direccion){
 
 	//armo lo que voy a mandar
-	header_t* header = malloc(header_t);
+	header_t* header = malloc(sizeof(header_t));
 	char* paquete;
 	size_t size = sizeof(uint32_t);
 	header->type = BORRAR_ARCHIVO;
@@ -496,7 +498,7 @@ void borrar(t_descriptor_archivo direccion){
 void cerrar(t_descriptor_archivo descriptor_archivo){
 
 	//armo lo que voy a mandar
-	header_t* header = malloc(header_t);
+	header_t* header = malloc(sizeof(header_t));
 	char* paquete;
 	size_t size = sizeof(uint32_t);
 	header->type = CERRAR_ARCHIVO;
@@ -617,7 +619,7 @@ t_puntero reservar(t_valor_variable espacio){
 	log_debug(logger, "ANSISOP_reservar -> espacio: %d", espacio);
 
 	//defino variables
-	header_t* header = malloc(header_t);
+	header_t* header = malloc(sizeof(header_t));
 	char* paquete;
 	size_t size = sizeof(t_valor_variable);
 	t_valor_variable valor;
@@ -625,7 +627,7 @@ t_puntero reservar(t_valor_variable espacio){
 	//armo el pedido
 	header->type = RESERVAR_MEMORIA;
 	header->length = sizeof(t_valor_variable)*2;
-	malloc(header->length);
+	paquete = malloc(header->length);
 	memcpy(paquete, (void*)&pcb->pid, sizeof(t_valor_variable));
 	memcpy(paquete+size, (void*)&espacio, sizeof(t_valor_variable));
 
