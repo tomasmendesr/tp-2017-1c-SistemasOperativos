@@ -172,7 +172,6 @@ void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
 	proc->socket = socketProceso;
 	proc->thread = threadPrograma;
 	proc->pid = pid;
-	proc->aceptado = true;
 
 	time_t tiempo = time(0);
     struct tm * inicio = localtime(&tiempo);
@@ -212,7 +211,7 @@ void threadPrograma(dataHilo* data){
 		log_error(logger, "El kernel rechazo el proceso");
 		return;
 		break;
-	case PID_PROGRAMA: // TODO
+	case PID_PROGRAMA:
 		pidAsignado = (int*)paquete;
 		log_info(logger, "Programa %d aceptado por el kernel", *pidAsignado);
 		break;
@@ -330,10 +329,8 @@ void desconectarConsola(char* comando, char* param) {
 }
 
 void terminarProceso(t_proceso* proc){
-	if(proc->aceptado){
-		cargarFechaFin(proc);
-		imprimirInformacion(proc);
-	}
+	cargarFechaFin(proc);
+	imprimirInformacion(proc);
 	pthread_cancel(proc->thread);
 	free(proc);
 }

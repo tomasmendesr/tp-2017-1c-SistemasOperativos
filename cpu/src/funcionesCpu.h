@@ -30,6 +30,8 @@ typedef struct{
 	char* ip_Kernel;
 }t_config_cpu;
 
+t_pcb* pcb;
+
 int socketConexionKernel;
 int socketConexionMemoria;
 t_config_cpu* config;
@@ -70,7 +72,7 @@ int32_t requestHandlerKernel(void);
 int32_t requestHandlerMemoria(void);
 void endBlockedProc(void);
 void finalizarCPU(void);
-void freePCB(t_pcb* pcb);
+void freePCB();
 void conecFailKernel(int cant);
 void conecFailMemoria(int cant);
 int verificarTerminarEjecucion();

@@ -50,7 +50,7 @@ typedef struct{
 	t_list* argumentos;
 	t_list* variables;
 	int32_t direcretorno;
-	t_posicion * retVar;
+	t_posicion* retVar;
 }__attribute__((__packed__)) t_entrada_stack;
 
 //t_dictionary* etiquetas;

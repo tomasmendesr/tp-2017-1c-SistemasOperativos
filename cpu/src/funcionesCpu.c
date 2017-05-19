@@ -299,8 +299,8 @@ void revisarFinalizarCPU(void){
 }
 
 void comenzarEjecucionDePrograma(void* paquete){
-	char* instruccion;
-	if((quantum = *(uint32_t*)paquete) == 0){
+	quantum = *(uint32_t*)paquete;
+	if(quantum == 0){
 		log_debug(logger, "Ejecutar - Algoritmo FIFO");
 	}else{
 		log_debug(logger, "Ejecutar - Algoritmo RR con Q = %d", quantum);
@@ -316,8 +316,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 //			finalizarConexion(socketConexionMemoria);
 			return;
 		}
-//		instruccion = malloc(sizeInstruccion);
-		instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
+		char* instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
 		free(paqueteGlobal);
 		log_info(logger, "Instruccion recibida: %s", instruccion);
 		analizadorLinea(instruccion, &functions, &kernel_functions);
@@ -334,7 +333,6 @@ void comenzarEjecucionDePrograma(void* paquete){
 	}else
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
 
-	//freePCB(pcb);
 	revisarFinalizarCPU();
 }
 
@@ -398,29 +396,54 @@ void finalizarPor(int type) {
 	}
 	free(paquete->buffer);
 	free(paquete);
-	//freePCB(pcb);
+//	freePCB();
 	quantum = -1;
 }
 
-void freePCB(t_pcb* pcb){
+void freePCB(){
 	uint16_t i,k;
-	free(pcb->etiquetas);
-	for(i=0; i<list_size(pcb->indiceCodigo); i++)
+	if(pcb->etiquetas != NULL) {
+		printf("libero etiquetas\n");
+		free(pcb->etiquetas);
+	}
+	for(i=0; i<list_size(pcb->indiceCodigo); i++){
+		printf("libero indicecodigo\n");
 		free(list_remove(pcb->indiceCodigo,i));
-		list_destroy(pcb->indiceCodigo);
+	}
 	for(i=0; i<list_size(pcb->indiceStack); i++){
-		t_entrada_stack* stack = list_remove(pcb->indiceStack,i);
-		for(k=0; i<list_size(stack->argumentos); k++)
-			free(list_remove(stack->argumentos,k));
-			list_destroy(stack->argumentos);
-		for(k=0; k<list_size(stack->variables); k++)
-			free(list_remove(stack->variables,k));
-			list_destroy(stack->variables);
-		if(stack->retVar)free(stack->retVar);
+		t_entrada_stack* stack = list_get(pcb->indiceStack,i);
+		list_remove(pcb->indiceStack, i);
+		if(stack->argumentos != NULL){
+			printf("libero argmentos %d\n",list_size(stack->argumentos) );
+			for(k=0; k<list_size(stack->argumentos); k++){
+				printf("entre al for de los argumentos\n");
+				t_argumento* arg = list_get(stack->argumentos,k);
+				list_remove(stack->argumentos, k);
+				free(arg);
+			}
+			free(stack->argumentos);
+		}
+		if(stack->variables != NULL){
+			printf("libero variables %d\n", list_size(stack->variables));
+			for(k=0; k<list_size(stack->variables); k++){
+				printf("libero 1 variable \n");
+				t_var *variable = list_get(stack->variables, k);
+				list_remove(stack->variables, k);
+				free(variable);
+			}
+			free(stack->variables);
+		}
+		if(stack->retVar != NULL) {
+			printf("libero retVar\n");
+			free(stack->retVar);
+		}
+		printf("libero stack\n");
 		free(stack);
 	}
+	printf("libero pcb\n");
 	free(pcb);
 }
+
 
 void finalizarCPU(void){
 	finalizarConexion(socketConexionKernel);
