@@ -365,8 +365,8 @@ void stopPlanification(char* comando, char* param){
        }else{
     	   pthread_mutex_lock(&lockPlanificacion);
     	   planificacionActivada = true;
-    	   pthread_mutex_unlock(&lockPlanificacion);
     	   pthread_cond_signal(&lockCondicionPlanificacion);
+    	   pthread_mutex_unlock(&lockPlanificacion);
     	   printf("Planificacion Activada\n");
        }
 }
@@ -421,19 +421,17 @@ void planificarCortoPlazo(){
 
 	while(1){
 
-		//esto es para lockear la planificacion, pero no esta funcionando
-		//pueden seguir testeando como si esto no estuviera que total por ahora es irrelevante
+		//Espera que halla CPUs Disponibles
+		sem_wait(&semCPUs_disponibles);
+		//Espera procesos para ejecutar
+		sem_wait(&sem_cola_ready);
+
+		//evaluo si la planificacion esta activada
 		pthread_mutex_lock(&lockPlanificacion);
 		while(!planificacionActivada){
 			pthread_cond_wait(&lockCondicionPlanificacion, &lockPlanificacion);
 		}
 		pthread_mutex_unlock(&lockPlanificacion);
-
-		//Espera que halla CPUs Disponibles
-		sem_wait(&semCPUs_disponibles);
-		//Espera procesos para ejecutar
-		sem_wait(&sem_cola_ready);
-		printf("pase\n");
 
 		cpu_t* cpu = obtenerCpuLibre();
 		if(cpu != NULL){
