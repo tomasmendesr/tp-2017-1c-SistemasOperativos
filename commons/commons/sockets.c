@@ -378,7 +378,15 @@ t_list* deserializarIndiceStack(char* buffer){
 	uint32_t cantidadElementosEnStack;
 	memcpy(&cantidadElementosEnStack, buffer + offset, tamanioUint32);
 	offset+=tamanioUint32;
-
+	if(!cantidadElementosEnStack){
+		t_entrada_stack* stack_item=malloc(sizeof(t_entrada_stack));
+		stack_item->variables=list_create();
+		stack_item->argumentos=list_create();
+		stack_item->direcretorno=-1;
+		stack_item->retVar=NULL;
+		list_add(stack,stack_item);
+	}
+	else{
 	for(i=0; i<cantidadElementosEnStack; i++){
 		uint32_t tamanioItemStack;
 		memcpy(&tamanioItemStack, buffer + offset, tamanioUint32);
@@ -439,6 +447,7 @@ t_list* deserializarIndiceStack(char* buffer){
 		stack_item->retVar=retVarStack;
 		list_add(stack, stack_item);
 	}
+	}
 	return stack;
 }
 
@@ -447,7 +456,6 @@ t_buffer_tamanio* serializarIndiceDeCodigo(t_list* indiceCodigo) {
 	int tmp_size = sizeof(uint32_t);
 	char* bufferIndCod = malloc(list_size(indiceCodigo) * 2 * sizeof(uint32_t));
 	uint32_t itemsEnLista = list_size(indiceCodigo);
-
 //	memcpy(bufferIndCod + offset, &itemsEnLista, tmp_size);
 //	offset += tmp_size;
 
@@ -475,7 +483,7 @@ t_list* deserializarIndiceCodigo(char* indice, uint32_t tam) {
 	uint32_t tmp_size = sizeof(uint32_t);
 	unit=tam/(sizeof(uint32_t)*2);
 	int i;
-	for (i = 0; i < unit; i++) {
+	for(i = 0; i < unit; i++){
 		t_indice_codigo* linea = malloc(sizeof(t_indice_codigo));
 		memcpy(&linea->offset, indice + offset, tmp_size);
 		offset += tmp_size;

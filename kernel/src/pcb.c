@@ -13,7 +13,6 @@ t_pcb* crearPCB(char* codigo, int pid, int fd){
 	llenarLista(&lista,metadata->instrucciones_serializado, metadata->instrucciones_size);
 	pcb->indiceCodigo=lista;
 
-
 	pcb->pid = pid;
 	pcb->stackPointer = 0;
 	pcb->cantPaginasCodigo = strlen(codigo) / pagina_size;
@@ -24,16 +23,14 @@ t_pcb* crearPCB(char* codigo, int pid, int fd){
 	pcb->tamanioEtiquetas = metadata->etiquetas_size;
 	pcb->consolaFd=fd;
 
-	if (metadata->etiquetas_size) {
+	if(metadata->etiquetas_size){
 		pcb->etiquetas = malloc(metadata->etiquetas_size);
 		memcpy(pcb->etiquetas, metadata->etiquetas, metadata->etiquetas_size);
 	}else{
 		pcb->etiquetas = NULL;
 	}
-
 	pcb->indiceStack=list_create();
-	t_entrada_stack* entrada=crearPosicionStack();
-	list_add(pcb->indiceStack,entrada);
+
 /*
 	//Reservo el espacio para el codigo y almaceno el codigo
 	u_int32_t direccion_segmento = guardarEnMemoria(socketConexionMemoria,strlen(codigo),pcb->pid);

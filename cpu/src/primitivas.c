@@ -215,9 +215,7 @@ void finalizar(void){
 
 /*
  * IR a la ETIQUETA
- *
  * Cambia la linea de ejecucion a la correspondiente de la etiqueta buscada.
- *
  * @sintax	TEXT_GOTO (goto)
  * @param	t_nombre_etiqueta	Nombre de la etiqueta
  * @return	void
@@ -230,7 +228,7 @@ void irAlLabel(t_nombre_etiqueta etiqueta){
 			log_error(logger,"No se encontro la etiqueta");
 			return;
 		}
-		pcb->programCounter = numeroInstr - 1; //revisar despues
+		pcb->programCounter = numeroInstr;
 }
 
 /*
@@ -253,7 +251,6 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	varRetorno->pagina = donde_retornar / tamanioPagina;
 	varRetorno->offset = donde_retornar % tamanioPagina;
 	varRetorno->size = TAMANIO_VARIABLE;
-
 	nuevaLineaStackEjecucionActual = crearPosicionStack();
 	nuevaLineaStackEjecucionActual->retVar = varRetorno;
 	nuevaLineaStackEjecucionActual->direcretorno = pcb->programCounter;
@@ -311,10 +308,8 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 		bool notFound = true;
 		for(i=0; i < list_size(contexto->variables); i++){
 			var_local = list_get(contexto->variables, i);
-			if(var_local->id == identificador_variable){
+			if(var_local->id == identificador_variable)
 				notFound = false;
-				break;
-			}
 		}
 		if(notFound){
 			log_error(logger, "No se encontro la variable %c en el stack", identificador_variable);
@@ -325,7 +320,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 		}
 	} // es un argumento
 	else{
-		if(identificador_variable > list_size(contexto->argumentos)){
+		if(identificador_variable-48 > list_size(contexto->argumentos)){
 			return EXIT_FAILURE;
 		}else{
 			t_argumento* argumento = list_get(contexto->argumentos, identificador_variable);
