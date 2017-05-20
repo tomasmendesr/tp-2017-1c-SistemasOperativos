@@ -564,13 +564,13 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
 void liberarMemoria(t_puntero puntero){
 	log_debug(logger, "ANSISOP_liberarMemoria -> posicion: %d", puntero);
 
-	if(cantDeReservas){
+	if(cantDeReservas > 0){
 
 //	    con el puntero alcanza porque me dice en que pagina del heap esta lo que quiero reservar
 		t_pedido_bytes* pedidoLiberar = malloc(sizeof(t_pedido_bytes));
 
 //		todo tambien se podria mandar el puntero y que el kernel haga este laburo
-		pedidoLiberar->pag = puntero / tamanioPagina + pcb->cantPaginasCodigo;
+		pedidoLiberar->pag = puntero / tamanioPagina; // + pcb->cantPaginasCodigo;  TODO hace falta sumarCantidadPaginas codigo? Porque el t_puntero no lo generamos nosotros como haciamos en el stack
 		pedidoLiberar->offset = puntero % tamanioPagina;
 //		el tamanio no importa
 //		pedidoLiberar->size = 0;

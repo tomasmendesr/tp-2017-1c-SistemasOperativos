@@ -109,6 +109,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case STACKOVERFLOW:
 		finalizacion_stackoverflow(package, socketCPU);
 		break;
+	case FIN_ERROR_MEMORIA:
+		finalizacion_error_memoria(package, socketCPU);
+		break;
 
 	default:
 		log_warning(logger,"Se recibio un codigo de operacion invalido.");
@@ -189,10 +192,18 @@ void finalizarPrograma(int consola_fd, int pid){
 
 void finalizacion_segment_fault(void* paquete_from_cpu, int socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso %d por segment fautk", pcbRecibido->pid);
+	log_error(logger, "Finaliza el proceso %d por segment fautt", pcbRecibido->pid);
 	pcbRecibido->exitCode = SUPERA_LIMITE_ASIGNACION_PAGINAS;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
+
+void finalizacion_error_memoria(void* paquete_from_cpu, int socket_cpu){
+	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso %d por error en memoria", pcbRecibido->pid);
+	pcbRecibido->exitCode = FIN_ERROR_MEMORIA;
+	terminarProceso(pcbRecibido, socket_cpu);
+}
+
 
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	//modifico informacion estadistica
