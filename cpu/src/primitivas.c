@@ -91,19 +91,21 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
  * @return	void
  */
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
-	log_debug(logger, "ANSISOP_asignar -> posicion var: %d - valor: %d", direccion_variable, valor);
-	t_pedido_bytes* pedidoEscritura = malloc(sizeof(t_pedido_bytes));
-	pedidoEscritura->pag = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
-	pedidoEscritura->offset = direccion_variable % tamanioPagina;
-	pedidoEscritura->size = TAMANIO_VARIABLE;
-	pedidoEscritura->pid = pcb->pid;
-	if(almacenarBytes(pedidoEscritura, &valor) != 0){
-		log_error(logger, "La variable no pudo asignarse");
+	if(direccion_variable != -1){
+		log_debug(logger, "ANSISOP_asignar -> posicion var: %d - valor: %d", direccion_variable, valor);
+		t_pedido_bytes* pedidoEscritura = malloc(sizeof(t_pedido_bytes));
+		pedidoEscritura->pag = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
+		pedidoEscritura->offset = direccion_variable % tamanioPagina;
+		pedidoEscritura->size = TAMANIO_VARIABLE;
+		pedidoEscritura->pid = pcb->pid;
+		if(almacenarBytes(pedidoEscritura, &valor) != 0){
+			log_error(logger, "La variable no pudo asignarse");
+			free(pedidoEscritura);
+			return;
+		}
+		log_info(logger, "Variable asignada");
 		free(pedidoEscritura);
-		return;
 	}
-	log_info(logger, "Variable asignada");
-	free(pedidoEscritura);
 	return;
 }
 
