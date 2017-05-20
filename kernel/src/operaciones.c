@@ -104,8 +104,10 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		break;
 	/* ERRORES */
 	case SEGMENTATION_FAULT:
+		finalizacion_segment_fault(package, socketCPU);
 		break;
 	case STACKOVERFLOW:
+		finalizacion_stackoverflow(package, socketCPU);
 		break;
 
 	default:
@@ -180,8 +182,41 @@ void finalizarPrograma(int consola_fd, int pid){
 
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->matarSiguienteRafaga = true;
+	info->exitCode = FINALIZAR_DESDE_CONSOLA;
 	log_info(logger, "Se termina la ejecucion del proceso %d", pid);
 
+}
+
+void finalizacion_segment_fault(void* paquete_from_cpu, int socket_cpu){
+	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso %d por segment fautk", pcbRecibido->pid);
+	pcbRecibido->exitCode = SUPERA_LIMITE_ASIGNACION_PAGINAS;
+	terminarProceso(pcbRecibido, socket_cpu);
+}
+
+void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
+	//modifico informacion estadistica
+	estadisticaAumentarRafaga(pcbRecibido->pid);
+	estadisticaCambiarEstado(pcbRecibido->pid, FINISH);
+
+	//pongo pcb en cola finish
+	queue_push(colaFinished, pcbRecibido);
+
+	//libero la cpu
+	desocupar_cpu(socket_cpu);
+
+	//aviso a consola que termino el proceso
+	info_estadistica_t * info = buscarInformacion(pcbRecibido->pid);
+	enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
+
+	cantProcesosSistema--;
+}
+
+void finalizacion_stackoverflow(void* paquete_from_cpu, int socket_cpu){
+	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso %d por stack overflow", pcbRecibido->pid);
+	pcbRecibido->exitCode = SUPERO_TAMANIO_PAGINA;
+	terminarProceso(pcbRecibido, socket_cpu);
 }
 
 void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
@@ -193,6 +228,9 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	info_estadistica_t* info = buscarInformacion(pcb_recibido->pid);
 
 	if(info->matarSiguienteRafaga){
+		if(info->exitCode != NULL){
+			pcb_recibido->exitCode = info->exitCode;
+		}
 		estadisticaCambiarEstado(pcb_recibido->pid, FINISH);
 		queue_push(colaFinished, pcb_recibido);
 	}else{
@@ -220,22 +258,10 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado) {
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 
-	//modifico informacion estadistica
-	estadisticaAumentarRafaga(pcbRecibido->pid);
-	estadisticaCambiarEstado(pcbRecibido->pid, FINISH);
-
-	//pongo pcb en cola finish
-	queue_push(colaFinished, pcbRecibido);
-
-	//libero la cpu
-	desocupar_cpu(socket_cpu_asociado);
-
-	//aviso a consola que termino el proceso
-	info_estadistica_t * info = buscarInformacion(pcbRecibido->pid);
-	enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
-
-	cantProcesosSistema--;
+	pcbRecibido->exitCode = FINALIZO_BIEN;
+	terminarProceso(pcbRecibido, socket_cpu_asociado);
 }
+
 void desocupar_cpu(int socket_asociado) {
 
 	sem_wait(&mutex_lista_CPUs);

@@ -19,5 +19,7 @@ void enviarValorSemaforo(int socketCPU, int tipoMensaje);
 void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu);
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu);
 void finalizarPrograma(int consola_fd, int pid);
+void finalizacion_segment_fault(void* package,int socketCPU);
+void terminarProceso(t_pcb* pcbRecibido, int socket_cpu);
 
 #endif /* OPERACIONES_H_ */

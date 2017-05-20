@@ -568,6 +568,7 @@ void crearInfoEstadistica(int pid, uint32_t socketConsola){
 	info->estado = NEW;
 	info->socketConsola = socketConsola;
 	info->matarSiguienteRafaga = false;
+	info->exitCode = NULL;
 
 	list_add(listadoEstadistico, info);
 }

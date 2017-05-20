@@ -78,6 +78,7 @@ typedef struct{
 	uint32_t cantAlocar;
 	uint32_t cantLiberar;
 	bool matarSiguienteRafaga;
+	uint32_t exitCode;
 }info_estadistica_t;
 
 typedef struct
@@ -120,6 +121,7 @@ int semaforoSignal(t_dictionary* dic, char* key);
 int semaforoWait(t_dictionary* dic, char* key);
 int leerVariableGlobal(t_dictionary* dic, char* key);
 void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor);
+
 
 void establecerConexiones();
 int conexionConFileSystem();
