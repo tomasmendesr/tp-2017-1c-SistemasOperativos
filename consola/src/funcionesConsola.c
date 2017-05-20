@@ -233,7 +233,7 @@ void threadPrograma(dataHilo* data){
 
 			switch (operacion) {
 			case FINALIZAR_EJECUCION:
-				finalizarEjecucionProceso(&procesoActivo, data);
+				finalizarEjecucionProceso(&procesoActivo, data, *(int32_t*) paquete);
 				break;
 			case IMPRIMIR_TEXTO_PROGRAMA:
 				printf("%s\n", (char*)paquete);
@@ -252,7 +252,7 @@ void threadPrograma(dataHilo* data){
 }
 
 
-void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data){
+void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exitCode){
 	bool buscarPorSocket(t_proceso* proc){
 		return proc->socket == data->socket ? true : false;
 	}
@@ -261,7 +261,7 @@ void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data){
 	log_info(logger, "Termino la ejecucion del programa %d", proc->pid);
 
 	cargarFechaFin(proc);
-	imprimirInformacion(proc);
+	imprimirInformacion(proc, exitCode);
 
 	procesoActivo = false;
 	list_remove_and_destroy_by_condition(procesos, buscarPorSocket, free);
@@ -277,7 +277,7 @@ void cargarFechaFin(t_proceso* proc){
 	proc->end = end;
 }
 
-void imprimirInformacion(t_proceso* proceso){
+void imprimirInformacion(t_proceso* proceso, int32_t exitCode){
 	printf("-----FIN PROGRAMA-----\n");
 	printf("Pid %d\n", proceso->pid);
 	printf("Inicio: %d-%d-%d %d%d:%d\n", proceso->fechaInicio->tm_year + 1900, proceso->fechaInicio->tm_mon + 1, proceso->fechaInicio->tm_mday, proceso->fechaInicio->tm_hour, proceso->fechaInicio->tm_min, proceso->fechaInicio->tm_sec);
@@ -287,7 +287,26 @@ void imprimirInformacion(t_proceso* proceso){
 	int segDuracion = proceso->end.tv_sec - proceso->start.tv_sec;
 	int msDuracion = msFin - msInicio - (segDuracion * 1000);
 	printf("Duracion: %d seg - %d ms\n", segDuracion, msDuracion);
+	char* exitCodeString = obtenerExitCode(exitCode);
+	printf("Exit code: %s\n", exitCodeString);
 	printf("----------------------\n");
+}
+
+char* obtenerExitCode(int32_t exitCode){
+	switch(exitCode){
+	case 0: return "FINALIZO_BIEN";
+	case -1: return "FALLA_RESERVAR_RECURSOS";
+	case -2: return "ARCHIVO_INEXISTENTE";
+	case -3: return "LEER_ARCHIVO_SIN_PERMISOS";
+	case -4: return "ESCRIBIR_ARCHIVO_SIN_PERMISOS";
+	case -5: return "ERROR_MEMORIA";
+	case -6: return "DESCONEXION_CONSOLA";
+	case -7: return "FINALIZAR_DESDE_CONSOLA";
+	case -8: return "SUPERO_TAMANIO_PAGINA";
+	case -9: return "SUPERA_LIMITE_ASIGNACION_PAGINAS";
+	case -20: return "ERROR_SIN_DEFINICION";
+	default: return "ERROR DESCONOCIDO";
+	};
 }
 
 void finalizarPrograma(char* comando, char* param){
@@ -315,22 +334,27 @@ void finalizarPrograma(char* comando, char* param){
 	header->length= sizeof(pid);
 	sendSocket(proceso->socket, header, (void*) &pid);
 
-	terminarProceso(proceso);
+	//terminarProceso(proceso);
 
-	log_info(logger, "Proceso finalizado\n");
+	//log_info(logger, "Proceso finalizado\n");
 }
 
 void desconectarConsola(char* comando, char* param) {
 	log_debug(logger, "Finalizando conexion threads...");
 	log_debug(logger, "Abortando programas...");
-	list_destroy_and_destroy_elements(procesos,terminarProceso);
+	int i;
+	for(i = 0; i<list_size(procesos); i++){
+		t_proceso* proc = list_get(procesos, i);
+		list_remove(procesos, i);
+		terminarProceso(proc, DESCONEXION_CONSOLA);
+	}
 	log_info(logger, "Consola desconectada.");
 	exit(0);
 }
 
-void terminarProceso(t_proceso* proc){
+void terminarProceso(t_proceso* proc, int32_t exitCode){
 	cargarFechaFin(proc);
-	imprimirInformacion(proc);
+	imprimirInformacion(proc, exitCode);
 	pthread_cancel(proc->thread);
 	free(proc);
 }

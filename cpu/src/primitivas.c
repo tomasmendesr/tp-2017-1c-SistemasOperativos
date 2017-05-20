@@ -322,10 +322,10 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 		}
 	} // es un argumento
 	else{
-		if(identificador_variable-48 > list_size(contexto->argumentos)){
+		if(identificador_variable - '0'> list_size(contexto->argumentos)){
 			return EXIT_FAILURE;
 		}else{
-			t_argumento* argumento = list_get(contexto->argumentos, identificador_variable);
+			t_argumento* argumento = list_get(contexto->argumentos, identificador_variable-'0');
 			posicionAbsoluta = argumento->pagina * tamanioPagina + argumento->offset;
 		}
 	}

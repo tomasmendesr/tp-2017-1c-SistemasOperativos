@@ -76,10 +76,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketCPU);
 		enviarTamanioStack(socketCPU);
 		agregarNuevaCPU(listaCPUs, socketCPU);
-//		enviarQuantum(socketCPU);
 		break;
-	/*case ENVIO_PCB:
-		break;*/
 	case SEM_SIGNAL:
 		realizarSignal(socketCPU, package);
 		break;
@@ -218,7 +215,13 @@ void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 
 	//aviso a consola que termino el proceso
 	info_estadistica_t * info = buscarInformacion(pcbRecibido->pid);
-	enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
+
+	header_t* header=malloc(sizeof(header_t));
+	header->type=FINALIZAR_EJECUCION;
+	header->length=sizeof(pcbRecibido->exitCode);
+	sendSocket(info->socketConsola,header,&(pcbRecibido->exitCode));
+
+	//enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
 
 	cantProcesosSistema--;
 }
@@ -239,11 +242,9 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	info_estadistica_t* info = buscarInformacion(pcb_recibido->pid);
 
 	if(info->matarSiguienteRafaga){
-		if(info->exitCode != NULL){
 			pcb_recibido->exitCode = info->exitCode;
-		}
-		estadisticaCambiarEstado(pcb_recibido->pid, FINISH);
-		queue_push(colaFinished, pcb_recibido);
+		terminarProceso(pcb_recibido, socket_cpu);
+		return;
 	}else{
 
 		// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).

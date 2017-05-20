@@ -62,10 +62,11 @@ void inicializacion(void);
 void crearProceso(int socketProceso, pthread_t threadPrograma, int pid);
 bool esNumero(char* string);
 void threadPrograma(dataHilo* data);
-void terminarProceso(t_proceso* proc);
-void imprimirInformacion(t_proceso* proceso);
-void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data);
+void terminarProceso(t_proceso* proc, int32_t exitCode);
+void imprimirInformacion(t_proceso* proceso, int32_t exitCode);
+void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exitCode);
 void cargarFechaFin(t_proceso* proc);
+char* obtenerExitCode(int32_t exitCode);
 
 //Funciones de interfaz
 void levantarInterfaz();
