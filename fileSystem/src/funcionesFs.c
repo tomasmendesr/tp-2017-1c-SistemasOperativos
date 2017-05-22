@@ -82,8 +82,7 @@ void procesarMensajesKernel(){
 }
 
 bool validarArchivo(char* path){
-	//no implementado aun
-	return false;
+	return verificarExistenciaDeArchivo(path);
 }
 
 void crearArchivo(void* package){
@@ -91,15 +90,57 @@ void crearArchivo(void* package){
 }
 
 void borrarArchivo(void* package){
-	//no implementado aun
+	char* path_archivo = (char*)package;
+
+	if(validarArchivo(path_archivo)){
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
+	}else{
+		unlink(generarPathArchivo(path_archivo));
+
+		//tengo que liberar los bloques
+
+	}
 }
 
 void guardarDatos(void* package){
-	//no implementado aun
+	pedido_guardar_datos* pedido = deserializar_pedido_guardar_datos(package);
+
+
+	free(pedido->path);
+	free(pedido->buffer);
+	free(pedido);
 }
 
 void obtenerDatos(void* package){
-	//no implementado aun
+	pedido_obtener_datos* pedido = deserializar_pedido_obtener_datos(package);
+
+	if(validarArchivo(pedido->path)){
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
+		return;
+	}
+
+	int p = obtenerNumBloque(pedido);
+
+	char* path_bloque = generarPathBloque(p);
+
+	FILE* archivo = fopen(path_bloque, "r");
+	char* buffer = malloc(sizeof(pedido->size));
+
+	int offsetReal = pedido->offset;
+	while(offsetReal > conf->tamanio_bloque) offsetReal -= conf->tamanio_bloque;
+
+	fseek(archivo, offsetReal, SEEK_SET);
+	fread(buffer, pedido->size, 1, archivo);
+
+	header_t header;
+	header.length = pedido->size;
+	header.type = LECTURA_OK;
+	sendSocket(socketConexionKernel, &header, buffer);
+
+	fclose(archivo);
+	free(path_bloque);
+	free(pedido->path);
+	free(pedido);
 }
 
 void mkdirRecursivo(char* path){
@@ -127,8 +168,9 @@ int buscarBloqueLibre(){
 	while(!res){
 		if(!bitarray_test_bit(bitarray, j)) // cero esta libre
 			res = true;
+			j++;
 	}
-
+	return j;
 }
 
 char** obtenerNumeroBloques(char* path){
@@ -139,9 +181,67 @@ char** obtenerNumeroBloques(char* path){
 	return bloques;
 }
 
-int obtenerNumBloque(char* path, int offset){
-	char** bloques = obtenerNumeroBloques(strcat(ARCHIVOS_PATH , path));
+int obtenerNumBloque(pedido_obtener_datos* pedido){
+	char** bloques = obtenerNumeroBloques(generarPathArchivo(pedido->path));
 
-	int numBloque = (offset / conf->tamanio_bloque);
+	int numBloque = (pedido->offset / conf->tamanio_bloque);
 	return atoi(bloques[numBloque]);
+}
+
+pedido_obtener_datos* deserializar_pedido_obtener_datos(char* paquete){
+
+	pedido_obtener_datos* pedido = malloc(sizeof(pedido_obtener_datos));
+	memcpy(&(pedido->offset), paquete, sizeof(int));
+	memcpy(&(pedido->size), paquete+sizeof(int), sizeof(int));
+	int len_path;
+	memcpy(&len_path, paquete+2*sizeof(int), sizeof(int));
+	pedido->path = malloc(len_path+1);
+	memcpy(pedido->path, paquete+3*sizeof(int), len_path);
+
+	return pedido;
+}
+
+pedido_guardar_datos* deserializar_pedido_guardar_datos(char* paquete){
+	int offset = 0;
+
+	pedido_guardar_datos* pedido = malloc(sizeof(pedido_guardar_datos));
+	memcpy(&(pedido->offset), paquete, sizeof(int));
+	offset += sizeof(int);
+	memcpy(&(pedido->size), paquete+offset, sizeof(int));
+	offset += sizeof(int);
+	int len_path;
+	memcpy(&len_path, paquete+offset, sizeof(int));
+	offset += sizeof(int);
+	pedido->path = malloc(len_path+1);
+	memcpy(pedido->path, paquete+offset, len_path);
+	pedido->path[len_path] = '\0';
+	offset += len_path;
+
+	int len_buffer;
+	memcpy(&len_buffer, paquete+offset, sizeof(int));
+	offset += sizeof(int);
+	pedido->buffer = malloc(len_buffer+1);
+	memcpy(pedido->buffer, paquete+offset, len_buffer);
+	pedido->buffer[len_buffer] = '\0';
+
+	return pedido;
+}
+
+char* generarPathBloque(int num_bloque){
+	char* path_bloque = string_new();
+	strcat(path_bloque, conf->punto_montaje);
+	strcat(path_bloque, "Bloques/");
+	strcat(path_bloque, string_itoa(num_bloque));
+	strcat(path_bloque, ".bin");
+
+	return path_bloque;
+}
+
+char* generarPathArchivo(char* path){
+	char* path_archivo = string_new();
+	strcat(path_archivo, conf->punto_montaje);
+	strcat(path_archivo, "Archivos/");
+	strcat(path_archivo, path);
+
+	return path_archivo;
 }

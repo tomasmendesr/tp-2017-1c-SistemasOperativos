@@ -143,6 +143,15 @@ enum protocolo_kernel_a_fs{
 	//para borrar archivo uso el que esta en cpu
 };
 
+enum protocolo_fs_a_kernel{
+	ARCHIVO_NO_EXISTE = 26,
+	ARCHIVO_EXISTE = 27,
+	LECTURA_OK = 28,
+	ESCRITURA_OK = 29,
+	BORRADO_OK = 51,
+	ERROR = 52
+};
+
 enum exit_code{
 	FINALIZO_BIEN = 0,
 	FALLA_RESERVAR_RECURSOS = -1,
