@@ -9,7 +9,7 @@ void trabajarMensajeConsola(int socketConsola){
 	FD_SET(socketConsola, &setConsolas);
 
 	if (check <= 0) {
-		printf("Se cerro el socket %d\n", socketConsola);
+		log_warning(logger, "Se cerro el socket %d\n", socketConsola);
 		close(socketConsola);
 		FD_CLR(socketConsola, &master);
 		FD_CLR(socketConsola, &setConsolas);
@@ -29,7 +29,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		printf("\n");
 		break;
 	case ENVIO_CODIGO:
-		log_info(logger, "recibo codigo");
+		log_info(logger, "Recibo codigo");
 		nuevoProceso = crearProcesoEnEspera(consola_fd, package);
 
 		//sem_wait(&sem_multi);
@@ -91,6 +91,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		break;
 	case LIBERAR_MEMORIA: // TODO
 		break;
+	case IMPRIMIR_VARIABLE_PROGRAMA:
+		imprimirVariable((t_imprimir_variable*) package,socketCPU);
+		break;
 
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -123,6 +126,7 @@ void leerVarCompartida(int socketCPU, char* variable){
 	header->length = sizeof(valor);
 
 	sendSocket(socketCPU, header, &valor);
+	free(header);
 }
 
 void asignarVarCompartida(int socketCPU, void* buffer){
@@ -174,17 +178,15 @@ void realizarWait(int socketCPU, char* key){
 		bloquearProceso(key, pcbRecibido);
 		desocupar_cpu(socketCPU);
 
-		log_info(logger, "Bloqueo un proceso");
+		log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
 	}
 }
 
 void finalizarPrograma(int consola_fd, int pid){
-
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->matarSiguienteRafaga = true;
 	info->exitCode = FINALIZAR_DESDE_CONSOLA;
-	log_info(logger, "Se termina la ejecucion del proceso %d", pid);
-
+	log_info(logger, "Se termina la ejecucion del proceso %d por comando STOP", pid);
 }
 
 void finalizacion_segment_fault(void* paquete_from_cpu, int socket_cpu){
@@ -205,6 +207,7 @@ void finalizacion_error_memoria(void* paquete_from_cpu, int socket_cpu){
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	//modifico informacion estadistica
 	estadisticaAumentarRafaga(pcbRecibido->pid);
+	log_info(logger, "Proceso %d agregado a la cola de FINISHED", pcbRecibido->pid);
 	estadisticaCambiarEstado(pcbRecibido->pid, FINISH);
 
 	//pongo pcb en cola finish
@@ -221,9 +224,8 @@ void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	header->length=sizeof(pcbRecibido->exitCode);
 	sendSocket(info->socketConsola,header,&(pcbRecibido->exitCode));
 
-	//enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
-
 	cantProcesosSistema--;
+	free(header);
 }
 
 void finalizacion_stackoverflow(void* paquete_from_cpu, int socket_cpu){
@@ -234,8 +236,8 @@ void finalizacion_stackoverflow(void* paquete_from_cpu, int socket_cpu){
 }
 
 void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
-
 	t_pcb* pcb_recibido =  deserializar_pcb(paquete_from_cpu);
+	log_debug(logger, "Fin de quantum proceso %d", pcb_recibido->pid);
 
 	estadisticaAumentarRafaga(pcb_recibido->pid);
 
@@ -269,6 +271,7 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 }
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado) {
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
+	log_debug(logger, "Finalizar proceso %d por fin de ejecucion", pcbRecibido->pid);
 
 	pcbRecibido->exitCode = FINALIZO_BIEN;
 	terminarProceso(pcbRecibido, socket_cpu_asociado);
@@ -279,7 +282,7 @@ void desocupar_cpu(int socket_asociado) {
 	sem_wait(&mutex_lista_CPUs);
 	cpu_t *cpu = obtener_cpu_por_socket_asociado(socket_asociado);
 	if(cpu != NULL){
-			printf("Desocupo cpu %d\n", socket_asociado);
+			log_info(logger, "Se desocupa cpu %d\n", socket_asociado);
 			cpu->disponible = true;
 			sem_post(&semCPUs_disponibles); // Aumento el semaforo contador de cpus disponibles.
 	}
@@ -306,5 +309,15 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado) {
 	}
 
 	return cpu_asociado;
+}
+
+void imprimirVariable(t_imprimir_variable* imprimir, int socketCPU){
+	info_estadistica_t * info = buscarInformacion(imprimir->pid);
+	header_t header;
+	header.type=IMPRIMIR_VARIABLE_PROGRAMA;
+	header.length=sizeof(t_imprimir_variable);
+
+	sendSocket(info->socketConsola, &header, (void*) imprimir);
+
 }
 

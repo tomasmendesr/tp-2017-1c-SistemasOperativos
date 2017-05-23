@@ -85,6 +85,11 @@ typedef struct {
 	void * stack;
 }__attribute__((__packed__)) t_tamanio_stack;
 
+typedef struct {
+	int pid;
+	int valor;
+}__attribute__((__packed__)) t_imprimir_variable;
+
 t_entrada_stack* crearPosicionStack(void);
 void insertarNuevoStack(t_pcb* pcb);
 void eliminarUltimaPosicionStack(t_pcb* pcb);

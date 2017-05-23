@@ -358,12 +358,8 @@ t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack) {
 		}
 	}
 
-	for(a=0; a<list_size(tamanioStackStack); a++){  // NO DESCOMENTAR ESTO PORQUE ROMPE TOD-O (tira segment fault en cpu)
-		//t_tamanio_stack* tamanioStack = list_get(tamanioStackStack, a);
-		//t_entrada_stack* stack=tamanioStack->stack;
+	for(a=0; a<list_size(tamanioStackStack); a++){
 		free(list_remove(tamanioStackStack, a));
-		//	free(tamanioStack->stack);
-		//free(tamanioStack);
 	}
 
 	free(tamanioStackStack);

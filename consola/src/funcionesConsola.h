@@ -68,6 +68,8 @@ void imprimirInformacion(t_proceso* proceso, int32_t exitCode);
 void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exitCode);
 void cargarFechaFin(t_proceso* proc);
 char* obtenerExitCode(int32_t exitCode);
+void imprimirVariable(t_imprimir_variable* impr);
+
 
 //Funciones de interfaz
 void levantarInterfaz();
