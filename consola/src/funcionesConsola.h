@@ -44,6 +44,7 @@ typedef struct{
 	struct tm* fechaFin;
 	struct timespec start;
 	struct timespec end;
+	int impresiones;
 }t_proceso;
 
 typedef struct{

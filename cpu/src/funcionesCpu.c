@@ -312,8 +312,9 @@ void comenzarEjecucionDePrograma(void* paquete){
 		if(sizeInstruccion == -1){
 			//todo el problema de segmentation fault y el de stackOver
 			//hacen que finalice el proceso, por que la conexion?
-			log_error(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
+			log_error(logger, "No se pudo recibir la instruccion de memoria.");
 //			finalizarConexion(socketConexionMemoria);
+			finalizarPor(ERROR_MEMORIA);
 			return;
 		}
 		char* instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
@@ -396,27 +397,24 @@ void finalizarPor(int type) {
 	}
 	free(paquete->buffer);
 	free(paquete);
-//	freePCB();
+	freePCB();
 	quantum = -1;
 }
 
 void freePCB(){
+	log_debug(logger, "Liberando pcb...");
 	uint16_t i,k;
 	if(pcb->etiquetas != NULL) {
-		printf("libero etiquetas\n");
 		free(pcb->etiquetas);
 	}
 	for(i=0; i<list_size(pcb->indiceCodigo); i++){
-		printf("libero indicecodigo\n");
 		free(list_remove(pcb->indiceCodigo,i));
 	}
 	for(i=0; i<list_size(pcb->indiceStack); i++){
 		t_entrada_stack* stack = list_get(pcb->indiceStack,i);
 		list_remove(pcb->indiceStack, i);
 		if(stack->argumentos != NULL){
-			printf("libero argmentos %d\n",list_size(stack->argumentos) );
 			for(k=0; k<list_size(stack->argumentos); k++){
-				printf("entre al for de los argumentos\n");
 				t_argumento* arg = list_get(stack->argumentos,k);
 				list_remove(stack->argumentos, k);
 				free(arg);
@@ -424,9 +422,7 @@ void freePCB(){
 			free(stack->argumentos);
 		}
 		if(stack->variables != NULL){
-			printf("libero variables %d\n", list_size(stack->variables));
 			for(k=0; k<list_size(stack->variables); k++){
-				printf("libero 1 variable \n");
 				t_var *variable = list_get(stack->variables, k);
 				list_remove(stack->variables, k);
 				free(variable);
@@ -434,13 +430,11 @@ void freePCB(){
 			free(stack->variables);
 		}
 		if(stack->retVar != NULL) {
-			printf("libero retVar\n");
 			free(stack->retVar);
 		}
-		printf("libero stack\n");
 		free(stack);
 	}
-	printf("libero pcb\n");
+	log_info(logger, "PCB liberado exitosamente :D");
 	free(pcb);
 }
 
