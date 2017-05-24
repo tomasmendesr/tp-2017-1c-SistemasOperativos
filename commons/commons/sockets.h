@@ -37,7 +37,6 @@ enum enum_protocolo {// Si yo soy el kernel tengo que enviar handshake_kernel.
 	HANDSHAKE_KERNEL = 4,
 	HANDSHAKE_MEMORIA = 5,
 	HANDSHAKE_FS = 8,
-	NOTIFICACION_DATOS_CPU = 6,
 	OK = 7
 };
 
@@ -120,7 +119,7 @@ enum protocolo_memoria_a_cualquiera{
 enum protocolo_kernel_programa{
 	PID_PROGRAMA = 99,
 	IMPRIMIR_VARIABLE_PROGRAMA = 100,
-	IMPRIMIR_TEXTO_PROGRAMA = 101,
+	IMPRIMIR_POR_PANTALLA = 101,
 	ERROR_GENERAL = 102,
 	SEGMENTATION_FAULT_PROGRAMA = 103,
 	MEMORY_OVERLOAD_PROGRAMA = 104,

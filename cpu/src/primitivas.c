@@ -528,7 +528,19 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
  * @return	void
  */
 void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio){
-	printf("escribir!\n");
+	log_debug(logger, "ANSISOP_escribir");
+	header_t header;
+	header.type = IMPRIMIR_POR_PANTALLA;
+
+	size_t size = sizeof(int) + tamanio + 1;
+	void* buffer = malloc(size);
+	header.length = size;
+
+	memcpy(buffer, &pcb->pid, sizeof(pcb->pid));
+	memcpy(buffer+sizeof(pcb->pid), &informacion, tamanio + 1);
+
+	sendSocket(socketConexionKernel, &header, buffer);
+	free(buffer);
 }
 
 /*
@@ -567,7 +579,7 @@ void liberarMemoria(t_puntero puntero){
 		t_pedido_bytes* pedidoLiberar = malloc(sizeof(t_pedido_bytes));
 
 //		todo tambien se podria mandar el puntero y que el kernel haga este laburo
-		pedidoLiberar->pag = puntero / tamanioPagina; // + pcb->cantPaginasCodigo;  TODO hace falta sumarCantidadPaginas codigo? Porque el t_puntero no lo generamos nosotros como haciamos en el stack
+		pedidoLiberar->pag = puntero / tamanioPagina;
 		pedidoLiberar->offset = puntero % tamanioPagina;
 //		el tamanio no importa
 //		pedidoLiberar->size = 0;

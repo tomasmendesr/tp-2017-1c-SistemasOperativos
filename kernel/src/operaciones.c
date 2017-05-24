@@ -91,8 +91,8 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		break;
 	case LIBERAR_MEMORIA: // TODO
 		break;
-	case IMPRIMIR_VARIABLE_PROGRAMA:
-		imprimirVariable((t_imprimir_variable*) package,socketCPU);
+	case IMPRIMIR_POR_PANTALLA:
+		imprimirPorPantalla(package, socketCPU);
 		break;
 
 	/* CPU DEVUELVE EL PCB */
@@ -311,13 +311,17 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado) {
 	return cpu_asociado;
 }
 
-void imprimirVariable(t_imprimir_variable* imprimir, int socketCPU){
-	info_estadistica_t * info = buscarInformacion(imprimir->pid);
+void imprimirPorPantalla(void* paquete, int socketCpu){
+/*	char* informacion = paquete;
+	int* pid = paquete + strlen(informacion) + 1;
+
+	info_estadistica_t * info = buscarInformacion(pid);
+	printf("pid a escribir %d\n", pid);
 	header_t header;
-	header.type=IMPRIMIR_VARIABLE_PROGRAMA;
-	header.length=sizeof(t_imprimir_variable);
+	header.type=IMPRIMIR_POR_PANTALLA;
+	header.length= strlen(informacion) + 1;
 
-	sendSocket(info->socketConsola, &header, (void*) imprimir);
-
+	printf("imprimo %s\n", informacion);
+*/
+	//sendSocket(info->socketConsola, &header, (void*) imprimir->info);
 }
-

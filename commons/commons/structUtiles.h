@@ -87,8 +87,8 @@ typedef struct {
 
 typedef struct {
 	int pid;
-	int valor;
-}__attribute__((__packed__)) t_imprimir_variable;
+	char* info;
+}__attribute__((__packed__)) t_imprimir;
 
 t_entrada_stack* crearPosicionStack(void);
 void insertarNuevoStack(t_pcb* pcb);
