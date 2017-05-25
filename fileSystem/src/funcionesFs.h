@@ -79,5 +79,6 @@ int socketEscucha;
 int socketConexionKernel;
 t_log* logger;
 t_bitarray* bitarray;
+char* pathBloques, *pathArchivos, *pathMetadata, *pathMetadataArchivo, *pathMetadataBitarray;
 
 #endif /* FUNCIONESFS_H_ */

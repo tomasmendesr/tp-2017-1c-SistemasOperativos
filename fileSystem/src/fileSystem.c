@@ -36,38 +36,37 @@ void esperarConexionKernel(){
 
 void inicializarMetadata(){
 
-	char* metadata_path = string_new();
-	string_append(&metadata_path, conf->punto_montaje);
-	string_append(&metadata_path, METADATA_PATH);
-	printf("%s\n", metadata_path);
+	pathMetadata = string_new();
+	string_append(&pathMetadata, conf->punto_montaje);
+	string_append(&pathMetadata, METADATA_PATH);
+	printf("%s\n", pathMetadata);
 
-	char* bloques_path = string_new();
-	string_append(&bloques_path, conf->punto_montaje);
-	string_append(&bloques_path, BLOQUES_PATH);
+	pathBloques = string_new();
+	string_append(&pathBloques, conf->punto_montaje);
+	string_append(&pathBloques, BLOQUES_PATH);
 
-	char* archivos_path = string_new();
-	string_append(&archivos_path, conf->punto_montaje);
-	string_append(&archivos_path, ARCHIVOS_PATH);
+	pathArchivos = string_new();
+	string_append(&pathArchivos, conf->punto_montaje);
+	string_append(&pathArchivos, ARCHIVOS_PATH);
 
 	mkdir(conf->punto_montaje, 0777);
-	mkdir(metadata_path, 0777);
-	mkdir(bloques_path, 0777);
-	int resultado = mkdir(archivos_path, 0777);
+	mkdir(pathMetadata, 0777);
+	mkdir(pathBloques, 0777);
+	int resultado = mkdir(pathArchivos, 0777);
 	if(resultado == -1){
 		log_error(logger, "No pudo crearse la metadata");
 		exit(1);
 	}
 
-	char* bitmap_path = string_new();
-	string_append(&bitmap_path, metadata_path);
+	pathMetadataArchivo = string_new();
+	string_append(&pathMetadataArchivo, pathMetadata);
+	string_append(&pathMetadataArchivo, METADATA_ARCHIVO);
 
-	string_append(&metadata_path, METADATA_ARCHIVO);
-	FILE* metadata = fopen(metadata_path, "a");
+	FILE* metadata = fopen(pathMetadataArchivo, "a");
 	fprintf(metadata, "TAMANIO_BLOQUES=%d\n", conf->tamanio_bloque);
 	fprintf(metadata, "CANTIDAD_BLOQUES=%d\n", conf->cantidad_bloques);
 	fprintf(metadata, "MAGIC_NUMBER=SADICA\n");
 	fclose(metadata);
-
 
 	int sizeBitArray = conf->cantidad_bloques / 8;//en bytes
 	if((sizeBitArray % 8) != 0)
@@ -83,9 +82,11 @@ void inicializarMetadata(){
 	for(index =0; index <sizeBitArray; index++);
 		data[index] = '\0';
 
-	string_append(&bitmap_path, BITMAP_ARCHIVO);
-	printf("%s\n", bitmap_path);
-	FILE* bitmap = fopen(bitmap_path, "a");
+	pathMetadataBitarray = string_new();
+	string_append(&pathMetadataBitarray, pathMetadata);
+	string_append(&pathMetadataBitarray, BITMAP_ARCHIVO);
+	printf("%s\n", pathMetadataBitarray);
+	FILE* bitmap = fopen(pathMetadataBitarray, "a");
 	fwrite(data, sizeBitArray, 1, bitmap);
 	fclose(bitmap);
 
@@ -93,24 +94,21 @@ void inicializarMetadata(){
 
 	int j;
 	FILE* bloque;
-	strcat(bloques_path, "/");
-	char* path = bloques_path;
-	int null = strlen(bloques_path);
+
+	int null = strlen(pathBloques);
 
 	for (j = 1 ; j<=conf->cantidad_bloques ; j++){
 
-		strcat(path, string_itoa(j));
-		strcat(path, ".bin");
-		printf("%s\n", path);
-		bloque = fopen( path, "a");
-		fclose(bloque);
-		path[null] = '\0';
-	}
+		char* pathBloque = string_new();
+		string_append(&pathBloque, pathBloques);
+		string_append(&pathBloque, "/");
+		string_append(&pathBloque, string_itoa(j));
+		string_append(&pathBloque, ".bin");
 
-	free(metadata_path);
-	free(bloques_path);
-	free(archivos_path);
-	free(bitmap_path);
+		bloque = fopen(pathBloque, "a");
+		fclose(bloque);
+
+	}
 
 	printf("inicialize la metadata\n");
 }
