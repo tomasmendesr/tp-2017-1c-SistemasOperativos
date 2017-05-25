@@ -8,6 +8,9 @@ int main(int argc, char** argv){
 
 	inicializarMetadata();
 
+	escribirValorBitarray(1, 1);
+	//printf("%d\n", buscarBloqueLibre());
+
 	//esperarConexionKernel();
 
 	destruirConfiguracionFS(conf);
@@ -72,7 +75,7 @@ void inicializarMetadata(){
 	if((sizeBitArray % 8) != 0)
 		sizeBitArray++;
 
-	bitarray = bitarray_create_with_mode(string_repeat('0', sizeBitArray), sizeBitArray, MSB_FIRST);
+	bitarray = bitarray_create_with_mode(string_repeat('0', sizeBitArray), sizeBitArray, LSB_FIRST);
 
 	int index;
 	for(index = 0; index < conf->cantidad_bloques; index++)
@@ -94,8 +97,6 @@ void inicializarMetadata(){
 
 	int j;
 	FILE* bloque;
-
-	int null = strlen(pathBloques);
 
 	for (j = 1 ; j<=conf->cantidad_bloques ; j++){
 

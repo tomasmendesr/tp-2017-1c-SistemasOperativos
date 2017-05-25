@@ -165,12 +165,51 @@ void mkdirRecursivo(char* path){
 int buscarBloqueLibre(){
 	int j = 0;
 	bool res = false;
+	char byte;
+	int cantLeida = 0;
+
+	FILE* bitarray = fopen(pathMetadataBitarray, "rb");
+
+	fread(&byte, 1, 1, bitarray);
+
 	while(!res){
-		if(!bitarray_test_bit(bitarray, j)) // cero esta libre
+		if(!(byte & 0x01)){
 			res = true;
+		}else{
+			byte = byte >> 1;
+			cantLeida++;
 			j++;
+		}
+		if(cantLeida == 8){
+			fread(&byte, 1, 1, bitarray);
+			cantLeida = 0;
+		}
+
 	}
+
+	fclose(bitarray);
+
 	return j;
+}
+
+void escribirValorBitarray(int valor, int pos){
+	char c;
+
+	int posByte = pos / 8;
+	int posBit = (pos % 8) * 8;
+
+	FILE* bitarray = fopen(pathMetadataBitarray, "rb");
+
+	fseek(bitarray, posByte, SEEK_SET);
+	if((c = getc(bitarray)) != EOF){
+		c ^= 1 << posBit;
+		fseek(bitarray, -1L, SEEK_CUR);
+		putc(c, bitarray);
+		fflush(bitarray);
+	}
+
+	fclose(bitarray);
+
 }
 
 char** obtenerNumeroBloques(char* path){
