@@ -23,5 +23,6 @@ void finalizacion_segment_fault(void* package,int socketCPU);
 void finalizacion_stackoverflow(void* package,int socketCPU);
 void finalizacion_error_memoria(void* package,int socketCPU);
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu);
+void imprimirPorPantalla(void* imprimir, int socketCpu);
 
 #endif /* OPERACIONES_H_ */

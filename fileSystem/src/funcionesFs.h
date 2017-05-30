@@ -65,6 +65,7 @@ pedido_obtener_datos* deserializar_pedido_obtener_datos(char* paquete);
 pedido_guardar_datos* deserializar_pedido_guardar_datos(char* paquete);
 char* generarPathBloque(int num_bloque);
 char* generarPathArchivo(char* path);
+void escribirValorBitarray(int valor, int pos);
 
 //Operaciones
 bool validarArchivo(char* path);
@@ -79,5 +80,6 @@ int socketEscucha;
 int socketConexionKernel;
 t_log* logger;
 t_bitarray* bitarray;
+char* pathBloques, *pathArchivos, *pathMetadata, *pathMetadataArchivo, *pathMetadataBitarray;
 
 #endif /* FUNCIONESFS_H_ */

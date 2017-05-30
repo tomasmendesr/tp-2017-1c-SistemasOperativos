@@ -297,6 +297,7 @@ t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack) {
 		auxiliar->tamanioStack=tamanioStackParticular;
 		list_add(tamanioStackStack, auxiliar);
 	}
+
 	char* buffer=malloc(tamanioTotalBuffer + sizeof(uint32_t));
 	int tamanioUint32=sizeof(uint32_t),offset=0;
 	uint32_t cantidadItemsEnStack=list_size(indiceStack);
@@ -356,13 +357,11 @@ t_buffer_tamanio* serializarIndiceStack(t_list* indiceStack) {
 			offset+=tamanioUint32;
 		}
 	}
+
 	for(a=0; a<list_size(tamanioStackStack); a++){
-		t_tamanio_stack* tamanioStack=list_get(tamanioStackStack, a);
-		t_entrada_stack* stack=tamanioStack->stack;
-		list_remove(tamanioStackStack, a);
-		free(stack);
-		free(tamanioStack);
+		free(list_remove(tamanioStackStack, a));
 	}
+
 	free(tamanioStackStack);
 	t_buffer_tamanio* bufferTamanio=malloc(sizeof(t_buffer_tamanio));
 	bufferTamanio->tamanioBuffer=tamanioTotalBuffer + sizeof(uint32_t);
@@ -487,6 +486,7 @@ t_list* deserializarIndiceCodigo(char* indice, uint32_t tam) {
 
 t_buffer_tamanio* serializar_pcb(t_pcb* pcb){
 	t_buffer_tamanio* indcod = serializarIndiceDeCodigo(pcb->indiceCodigo);
+
 	char* paqueteSerializado;
 	t_buffer_tamanio* stackSerializado = serializarIndiceStack(pcb->indiceStack);
 

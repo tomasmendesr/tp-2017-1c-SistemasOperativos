@@ -47,7 +47,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	uint32_t offset = pcb->stackPointer % tamanioPagina;
 
 	t_entrada_stack* lineaStack = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
-	if(lineaStack == NULL){
+	if(!list_size(lineaStack)){
 		lineaStack = crearPosicionStack();
 		list_add(pcb->indiceStack, lineaStack);
 	}
@@ -73,10 +73,8 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	pcb->stackPointer += TAMANIO_VARIABLE;
 	uint32_t posAbsoluta = pcb->stackPointer - TAMANIO_VARIABLE;
-
 	log_info(logger, "Posicion relativa de %c: %d %d %d", identificador_variable, pag, offset, TAMANIO_VARIABLE);
 	log_info(logger, "Posicion absoluta de %c: %i", identificador_variable, posAbsoluta);
-
 	return posAbsoluta;
 }
 
@@ -144,7 +142,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	log_info(logger, "Se solicito al kernel asignar el valor %d a la varible %s", valor, variable);
 	requestHandlerKernel();
 	free(header);
-	return valor; //muy trucho
+	return valor;
 }
 
 /*
@@ -198,7 +196,7 @@ void finalizar(void){
 	for(i=0; i<list_size(contexto->argumentos); i++){ // Limpio lista de argumentos del contexto
 		free(list_remove(contexto->argumentos,i));
 	}
-	for(i=0; i<list_size(contexto->variables); i++){ // Limpio lista de variables del contexto
+	for(i=0; i<list_size(contexto->variables); i++){
 		free(list_remove(contexto->variables, i));
 	}
 	list_destroy(contexto->argumentos);
@@ -265,7 +263,6 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 
 /*
  * LLAMAR SIN RETORNO
- *
  * Preserva el contexto de ejecución actual para poder retornar luego al mismo.
  * Modifica las estructuras correspondientes para mostrar un nuevo contexto vacío.
  *
@@ -322,7 +319,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 		}
 	} // es un argumento
 	else{
-		if(identificador_variable - '0'> list_size(contexto->argumentos)){
+		if(identificador_variable -'0'> list_size(contexto->argumentos)){
 			return EXIT_FAILURE;
 		}else{
 			t_argumento* argumento = list_get(contexto->argumentos, identificador_variable-'0');
@@ -368,7 +365,6 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
  */
 void retornar(t_valor_variable retorno){
 	log_debug(logger, "ANSISOP_retornar");
-	//agarro contexto actual
 	t_entrada_stack* contextoEjecucionActual = list_remove(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
 	//Limpio el contexto actual
 	int i;
@@ -402,7 +398,6 @@ void retornar(t_valor_variable retorno){
 
 /*
  * ABRIR ARCHIVO
- *
  * Informa al Kernel que el proceso requiere que se abra un archivo.
  *
  * @syntax 	TEXT_OPEN_FILE (abrir)
@@ -516,7 +511,6 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
 
 /*
  * ESCRIBIR ARCHIVO
- *
  * Informa al Kernel que el proceso requiere que se escriba un archivo previamente abierto.
  * El mismo escribira "tamanio" de bytes de "informacion" luego del cursor
  * No es necesario mover el cursor luego de esta operación
@@ -528,7 +522,19 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
  * @return	void
  */
 void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio){
-	printf("escribir!\n");
+	log_debug(logger, "ANSISOP_escribir");
+	header_t header;
+	header.type = IMPRIMIR_POR_PANTALLA;
+
+	size_t size = sizeof(int) + tamanio + 1;
+	void* buffer = malloc(size);
+	header.length = size;
+
+	memcpy(buffer, &pcb->pid, sizeof(pcb->pid));
+	memcpy(buffer+sizeof(pcb->pid), &informacion, tamanio + 1);
+
+	sendSocket(socketConexionKernel, &header, buffer);
+	free(buffer);
 }
 
 /*
@@ -567,7 +573,7 @@ void liberarMemoria(t_puntero puntero){
 		t_pedido_bytes* pedidoLiberar = malloc(sizeof(t_pedido_bytes));
 
 //		todo tambien se podria mandar el puntero y que el kernel haga este laburo
-		pedidoLiberar->pag = puntero / tamanioPagina; // + pcb->cantPaginasCodigo;  TODO hace falta sumarCantidadPaginas codigo? Porque el t_puntero no lo generamos nosotros como haciamos en el stack
+		pedidoLiberar->pag = puntero / tamanioPagina;
 		pedidoLiberar->offset = puntero % tamanioPagina;
 //		el tamanio no importa
 //		pedidoLiberar->size = 0;
@@ -583,7 +589,7 @@ void liberarMemoria(t_puntero puntero){
 		cantDeReservas--;
 	}else{
 		//esta tratando de liberar memoria no reservada previamente
-		finalizarPor(FIN_ERROR_MEMORIA);
+		finalizarPor(ERROR_MEMORIA);
 	}
 }
 
@@ -665,7 +671,6 @@ void signalAnsisop(t_nombre_semaforo identificador_semaforo){
 
 /*
  * WAIT
- *
  * Informa al kernel que ejecute la función wait para el semáforo con el nombre identificador_semaforo.
  * El kernel deberá decidir si bloquearlo o no.
  *

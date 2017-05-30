@@ -107,9 +107,6 @@ int conexionConFileSystem(){
 		return -1;
 	}
 
-//	void* paquete;
-//	int tipo_mensaje;
-
 	enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionFS);
 
 	printf("Conexion con fs establecida\n");

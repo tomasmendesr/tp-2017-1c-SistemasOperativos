@@ -149,12 +149,12 @@ int32_t requestHandlerKernel(void){
 			tamanioStack=*(uint32_t*)paquete;
 			log_info(logger, "Tamanio stack: %d", tamanioStack);
 			break;
-		case RESPUESTA_SIGNAL_OK:
+		case SIGNAL_OK:
 			break;
-		case RESPUESTA_WAIT_SEGUIR_EJECUCION:
+		case WAIT_SEGUIR_EJECUCION:
 			log_debug(logger,"Proceso no queda bloqueado");
 			break;
-		case RESPUESTA_WAIT_DETENER_EJECUCION:
+		case WAIT_DETENER_EJECUCION:
 			log_debug(logger,"Proceso queda bloqueado");
 			procesoBloqueado = true;
 			pcb->programCounter++;
@@ -164,16 +164,16 @@ int32_t requestHandlerKernel(void){
 			paqueteGlobal=malloc(header.length);
 			memcpy(paqueteGlobal,paquete,header.length);
 			break;
-		case RESPUESTA_ASIG_VAR_COMPARTIDA_OK:
+		case ASIG_VAR_COMPARTIDA_OK:
 			log_info(logger, "Se asigno correctamente la variable compartida");
 			break;
-		case RESPUESTA_RESERVAR:
-			paqueteGlobal=malloc(header.length);
-			memcpy(paqueteGlobal,paquete,header.length);
-			break;
-		case RESPUESTA_LIBERAR:
+//		case RESPUESTA_RESERVAR:
+//			paqueteGlobal=malloc(header.length);
+//			memcpy(paqueteGlobal,paquete,header.length);
+//			break;
+//		case RESPUESTA_LIBERAR:
 		// RESPUESTAS PRIMITIVAS KERNEL:
-		case RESPUESTA_LIBERAR_MEMORIA_OK:
+		case LIBERAR_MEMORIA_OK:
 			log_info(logger, "Memoria liberada");
 			break;
 		default:
@@ -312,8 +312,9 @@ void comenzarEjecucionDePrograma(void* paquete){
 		if(sizeInstruccion == -1){
 			//todo el problema de segmentation fault y el de stackOver
 			//hacen que finalice el proceso, por que la conexion?
-			log_error(logger, "No se pudo recibir la instruccion de memoria. Cierro la conexion");
+			log_error(logger, "No se pudo recibir la instruccion de memoria.");
 //			finalizarConexion(socketConexionMemoria);
+			finalizarPor(ERROR_MEMORIA);
 			return;
 		}
 		char* instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
@@ -396,54 +397,9 @@ void finalizarPor(int type) {
 	}
 	free(paquete->buffer);
 	free(paquete);
-//	freePCB();
+	freePCB(pcb);
 	quantum = -1;
 }
-
-void freePCB(){
-	uint16_t i,k;
-	if(pcb->etiquetas != NULL) {
-		printf("libero etiquetas\n");
-		free(pcb->etiquetas);
-	}
-	for(i=0; i<list_size(pcb->indiceCodigo); i++){
-		printf("libero indicecodigo\n");
-		free(list_remove(pcb->indiceCodigo,i));
-	}
-	for(i=0; i<list_size(pcb->indiceStack); i++){
-		t_entrada_stack* stack = list_get(pcb->indiceStack,i);
-		list_remove(pcb->indiceStack, i);
-		if(stack->argumentos != NULL){
-			printf("libero argmentos %d\n",list_size(stack->argumentos) );
-			for(k=0; k<list_size(stack->argumentos); k++){
-				printf("entre al for de los argumentos\n");
-				t_argumento* arg = list_get(stack->argumentos,k);
-				list_remove(stack->argumentos, k);
-				free(arg);
-			}
-			free(stack->argumentos);
-		}
-		if(stack->variables != NULL){
-			printf("libero variables %d\n", list_size(stack->variables));
-			for(k=0; k<list_size(stack->variables); k++){
-				printf("libero 1 variable \n");
-				t_var *variable = list_get(stack->variables, k);
-				list_remove(stack->variables, k);
-				free(variable);
-			}
-			free(stack->variables);
-		}
-		if(stack->retVar != NULL) {
-			printf("libero retVar\n");
-			free(stack->retVar);
-		}
-		printf("libero stack\n");
-		free(stack);
-	}
-	printf("libero pcb\n");
-	free(pcb);
-}
-
 
 void finalizarCPU(void){
 	finalizarConexion(socketConexionKernel);

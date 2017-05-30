@@ -119,5 +119,6 @@ void enviarTamanioPagina(int fd){
 	header->type=ENVIAR_TAMANIO_PAGINA;
 	header->length=sizeof(config->marcos_Size);
 	sendSocket(fd,header,&config->marcos_Size);
+	free(header);
 }
 

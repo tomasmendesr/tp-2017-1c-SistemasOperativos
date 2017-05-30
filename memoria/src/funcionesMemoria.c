@@ -771,6 +771,8 @@ void dumpCache(){
 	}
 
 	fclose(dumpFile);
+
+	printf("Dump cache exitoso.\n");
 	return;
 }
 void dumpTable(){
@@ -792,6 +794,7 @@ void dumpTable(){
 	}
 
 	fclose(dumpFile);
+	printf("dump tabla pag exitoso.\n");
 	return;
 }
 void dumpMemory(int pid){
@@ -833,6 +836,7 @@ void dumpMemory(int pid){
 	}
 
 	fclose(dumpFile);
+	printf("dump memoria exitoso.\n");
 	return;
 }
 void flush(char* comando, char* param){
@@ -861,6 +865,9 @@ void size(char* comando, char* param){
 	}
 
 	int pid = atoi(param);
+	if(pid==0)
+		pid = -1;
+
 	int i, cant = 0;
 	for(i=0;i<cant_frames;i++){
 		if( tabla_pag[i].pid == pid  )

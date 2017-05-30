@@ -114,6 +114,11 @@ typedef struct{
 	size_t posicion;
 }__attribute__((__packed__))t_cursor;
 
+typedef struct {
+	int pid;
+	char* info;
+}__attribute__((__packed__)) t_imprimir;
+
 void freePCB(t_pcb* pcb);
 t_entrada_stack* crearPosicionStack(void);
 void insertarNuevoStack(t_pcb* pcb);

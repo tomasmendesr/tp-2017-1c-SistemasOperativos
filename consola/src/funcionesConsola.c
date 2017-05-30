@@ -171,6 +171,7 @@ void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
 	proc->socket = socketProceso;
 	proc->thread = threadPrograma;
 	proc->pid = pid;
+	proc->impresiones = 0;
 
 	time_t tiempo = time(0);
     struct tm * inicio = localtime(&tiempo);
@@ -233,11 +234,11 @@ void threadPrograma(dataHilo* data){
 			case FINALIZAR_EJECUCION:
 				finalizarEjecucionProceso(&procesoActivo, data, *(int32_t*) paquete);
 				break;
-			case IMPRIMIR_TEXTO_PROGRAMA:
-				printf("%s\n", (char*)paquete);
-				break;
+				// TODO - enviar pid del programa, buscarlo y aumentar su cantidad de impresiones en 1
+			//case IMPRIMIR_TEXTO_PROGRAMA:
+			//	printf("%s\n", (char*)paquete);
+			//	break;
 			case IMPRIMIR_VARIABLE_PROGRAMA:
-				printf("%d\n", (int)paquete);
 				break;
 			default:
 				break;
@@ -280,6 +281,7 @@ void imprimirInformacion(t_proceso* proceso, int32_t exitCode){
 	printf("Pid %d\n", proceso->pid);
 	printf("Inicio: %d-%d-%d %d%d:%d\n", proceso->fechaInicio->tm_year + 1900, proceso->fechaInicio->tm_mon + 1, proceso->fechaInicio->tm_mday, proceso->fechaInicio->tm_hour, proceso->fechaInicio->tm_min, proceso->fechaInicio->tm_sec);
 	printf("Fin:  %d-%d-%d %d:%d:%d\n", proceso->fechaFin->tm_year + 1900, proceso->fechaFin->tm_mon + 1, proceso->fechaFin->tm_mday, proceso->fechaFin->tm_hour, proceso->fechaFin->tm_min, proceso->fechaFin->tm_sec);
+	printf("Cantidad de impresiones por pantalla: %d\n", proceso->impresiones);
 	uint32_t msInicio = proceso->start.tv_nsec / 1000000 + proceso->start.tv_sec * 1000;
 	uint32_t msFin = proceso->end.tv_nsec / 1000000 + proceso->end.tv_sec * 1000;
 	int segDuracion = proceso->end.tv_sec - proceso->start.tv_sec;
@@ -369,4 +371,17 @@ int crearLog() {
 	} else {
 		return 0;
 	}
+}
+
+void imprimirVariable(t_imprimir* impr){
+	int pid = impr->pid;
+
+	bool buscarProceso(t_proceso* p){
+			return p->pid == pid ? true : false;
+		}
+
+	t_proceso* proceso = list_find(procesos, buscarProceso);
+
+	proceso->impresiones++;
+	//printf("%d", impr->valor);
 }

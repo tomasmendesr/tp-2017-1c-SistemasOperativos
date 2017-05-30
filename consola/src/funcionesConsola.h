@@ -44,6 +44,7 @@ typedef struct{
 	struct tm* fechaFin;
 	struct timespec start;
 	struct timespec end;
+	int impresiones;
 }t_proceso;
 
 typedef struct{
@@ -67,6 +68,7 @@ void imprimirInformacion(t_proceso* proceso, int32_t exitCode);
 void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exitCode);
 void cargarFechaFin(t_proceso* proc);
 char* obtenerExitCode(int32_t exitCode);
+
 
 //Funciones de interfaz
 void levantarInterfaz();
