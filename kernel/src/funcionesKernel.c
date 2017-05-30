@@ -407,9 +407,7 @@ cpu_t* obtenerCpuLibre(void){
 	bool estaLibre(cpu_t* cpu){
 		return cpu->disponible;// != NULL ? false : true;
 	}
-
 	return list_find(listaCPUs, estaLibre);
-
 }
 
 void planificarCortoPlazo(void){
@@ -431,6 +429,7 @@ void planificarCortoPlazo(void){
 		cpu_t* cpu = obtenerCpuLibre();
 		if(cpu != NULL){
 			printf("Obtuve cpu libre\n");
+			cpu->disponible = false;
 		}else{
 			return;
 		}
