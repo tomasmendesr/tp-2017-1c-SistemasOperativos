@@ -101,6 +101,22 @@ typedef struct
 	int globalFD;
 }archivo;
 
+typedef struct{
+	uint32_t pid;
+	uint32_t pag;
+	uint32_t size;
+}reserva_memoria;
+
+typedef struct{
+	bool used;
+	size_t size;
+}metadata_bloque;
+
+typedef struct{
+	uint32_t pid;
+	uint32_t cant;
+}pedido_mem;
+
 enum enum_estado{
 	NEW = 1,
 	READY = 2,
@@ -243,7 +259,6 @@ int socketEscuchaConsolas;
 int max_fd;
 
 //int PAG_SIZE;
-
-
+t_list* mem_dinamica;
 
 #endif /* FUNCIONESKERNEL_H_ */

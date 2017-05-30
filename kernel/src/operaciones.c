@@ -42,7 +42,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		planificarLargoPlazo();
 	break;
 	case FINALIZAR_PROGRAMA:
-		finalizarPrograma(consola_fd,(int*) *package);
+		finalizarPrograma(consola_fd,atoi(package));
 		break;
 	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	break;
@@ -106,7 +106,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case STACKOVERFLOW:
 		finalizacion_stackoverflow(package, socketCPU);
 		break;
-	case FIN_ERROR_MEMORIA:
+	case ERROR_MEMORIA:
 		finalizacion_error_memoria(package, socketCPU);
 		break;
 
@@ -138,14 +138,14 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 	free(variable);
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
-	enviar_paquete_vacio(RESPUESTA_ASIG_VAR_COMPARTIDA_OK, socketCPU);
+	enviar_paquete_vacio(ASIG_VAR_COMPARTIDA_OK, socketCPU);
 }
 
 void realizarSignal(int socketCPU, char* key){
 	semaforoSignal(config->semaforos, key);
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
-	enviar_paquete_vacio(RESPUESTA_SIGNAL_OK, socketCPU);
+	enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 
 	desbloquearProceso(key);
 	log_info(logger, "Desbloqueo un proceso");
@@ -156,15 +156,15 @@ void realizarWait(int socketCPU, char* key){
 	int resultado;
 
 	if(valorSemaforo <= 0){
-		resultado = RESPUESTA_WAIT_DETENER_EJECUCION;
+		resultado = WAIT_DETENER_EJECUCION;
 	}else{
-		resultado = RESPUESTA_WAIT_SEGUIR_EJECUCION;
+		resultado = WAIT_SEGUIR_EJECUCION;
 	}
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(resultado, socketCPU);
 
-	if(resultado == RESPUESTA_WAIT_DETENER_EJECUCION){ //recibo el pcb
+	if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
 
 		int tipo_mensaje;
 		void* paquete;
@@ -197,7 +197,7 @@ void finalizacion_segment_fault(void* paquete_from_cpu, int socket_cpu){
 void finalizacion_error_memoria(void* paquete_from_cpu, int socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso %d por error en memoria", pcbRecibido->pid);
-	pcbRecibido->exitCode = FIN_ERROR_MEMORIA;
+	pcbRecibido->exitCode = ERROR_MEMORIA;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
@@ -308,3 +308,94 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado) {
 	return cpu_asociado;
 }
 
+int buscarEnTabla(pedido_mem pedido, int32_t ind){
+	uint16_t i=0;
+	reserva_memoria* reserva;
+	while(ind>i && (reserva=list_get(mem_dinamica, i++))){
+		if(reserva->pid == pedido.pid && reserva->size - sizeof(metadata_bloque) >= pedido.cant){
+			return --i;
+		}
+	}
+	return -1;
+}
+
+t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
+	void* paquete;
+	int tipo;
+	int offset;
+	metadata_bloque bloque;
+	header_t header;
+	offset = 0;
+	header.type = SOLICITUD_BYTES;
+	header.length = sizeof(metadata_bloque);
+	t_pedido_bytes pedido;
+	while(offset < pagina_size){
+		do{
+			pedido.pid = pid;
+			pedido.pag = pag;
+			pedido.offset = offset;
+			pedido.size = header.length;
+			sendSocket(socketConexionMemoria, &header, &pedido);
+			recibir_paquete(socketConexionMemoria, &paquete, &tipo);
+			memcpy(&bloque, paquete, header.length);
+			offset += pedido.size+bloque.size;
+		}
+		while(bloque.used);
+		if(bloque.size >= cant)
+			return pagina_size * pag + offset - bloque.size;
+	}
+	return 0;
+}
+
+void reservarMemoria(int socket, void* paquete){
+
+	pedido_mem pedido_memoria;
+	t_puntero puntero;
+	header_t* header;
+	int resultado;
+	size_t tamano = sizeof(uint32_t)*2;
+	metadata_bloque bloque;
+	reserva_memoria* reserva;
+	t_pedido_iniciar* pedido;
+
+	memcpy(&pedido_memoria, paquete, tamano);
+
+	uint pos = buscarEnTabla(pedido_memoria,-1);
+	if(pos != -1){
+		reserva = list_get(mem_dinamica, pos);
+		puntero = verificarEspacio(pedido_memoria.cant,reserva->pid,reserva->pag);
+		if(puntero != 0){
+			header=malloc(sizeof(header_t));
+			header->type = RESERVAR_MEMORIA_OK;
+			header->length = sizeof(t_puntero);
+			sendSocket(socket, header, &puntero);
+
+			reserva->size -= pedido_memoria.cant+sizeof(metadata_bloque);
+
+			header->type = GRABAR_BYTES;
+			header->length = sizeof(metadata_bloque);
+			bloque.used = true;
+			bloque.size = pedido_memoria.cant;
+			sendSocket(socketConexionMemoria, header, &bloque);
+			free(header);
+		}
+	}
+	else{
+		pedido = malloc(sizeof(t_pedido_iniciar));
+		pedido->pid = pedido_memoria.pid;
+		pedido->cant_pag = 1;
+		header=malloc(sizeof(header_t));
+		header->type = ASIGNAR_PAGINAS;
+		header->length = sizeof(t_pedido_iniciar);
+		sendSocket(socketConexionMemoria, header, pedido);
+		free(header);
+
+		recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+		if(resultado == OP_OK){
+			reserva = malloc(sizeof(t_pedido_iniciar));
+			reserva->pag = atoi(paquete);
+		}
+
+	}
+	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
+}

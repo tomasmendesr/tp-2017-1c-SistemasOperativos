@@ -378,15 +378,7 @@ t_list* deserializarIndiceStack(char* buffer){
 	uint32_t cantidadElementosEnStack;
 	memcpy(&cantidadElementosEnStack, buffer + offset, tamanioUint32);
 	offset+=tamanioUint32;
-	if(!cantidadElementosEnStack){
-		t_entrada_stack* stack_item=malloc(sizeof(t_entrada_stack));
-		stack_item->variables=list_create();
-		stack_item->argumentos=list_create();
-		stack_item->direcretorno=-1;
-		stack_item->retVar=NULL;
-		list_add(stack,stack_item);
-	}
-	else{
+
 	for(i=0; i<cantidadElementosEnStack; i++){
 		uint32_t tamanioItemStack;
 		memcpy(&tamanioItemStack, buffer + offset, tamanioUint32);
@@ -446,7 +438,6 @@ t_list* deserializarIndiceStack(char* buffer){
 		}
 		stack_item->retVar=retVarStack;
 		list_add(stack, stack_item);
-	}
 	}
 	return stack;
 }

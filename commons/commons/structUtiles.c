@@ -33,7 +33,6 @@ void destruirPosicionStack(t_entrada_stack* stack){
 
 t_var* crearVariableStack(char id, uint32_t pagina, uint32_t offset, uint32_t size){
 	t_var* var = malloc(sizeof(t_var));
-
 	var->id = id;
 	var->pagina = pagina;
 	var->offset = offset;
@@ -84,3 +83,47 @@ char* ansisop_a_string(char* path){
 	return codigo;
 }
 
+void freePCB(t_pcb* pcb){
+	uint16_t i,k;
+	if(pcb->etiquetas != NULL) {
+		printf("libero etiquetas\n");
+		free(pcb->etiquetas);
+	}
+	for(i=0; i<list_size(pcb->indiceCodigo); i++){
+		printf("libero indicecodigo\n");
+		free(list_remove(pcb->indiceCodigo,i));
+	}
+	free(pcb->indiceCodigo);
+	for(i=0; i<list_size(pcb->indiceStack); i++){
+		t_entrada_stack* stack = list_get(pcb->indiceStack,i);
+		list_remove(pcb->indiceStack, i);
+		if(stack->argumentos != NULL){
+			printf("libero argmentos %d\n",list_size(stack->argumentos));
+			for(k=0; k<list_size(stack->argumentos); k++){
+				printf("entre al for de los argumentos\n");
+				t_argumento* arg = list_get(stack->argumentos,k);
+				list_remove(stack->argumentos, k);
+				free(arg);
+			}
+			free(stack->argumentos);
+		}
+		if(stack->variables != NULL){
+			printf("libero variables %d\n", list_size(stack->variables));
+			for(k=0; k<list_size(stack->variables); k++){
+				printf("libero 1 variable \n");
+				t_var* variable = list_get(stack->variables, k);
+				list_remove(stack->variables, k);
+				free(variable);
+			}
+			free(stack->variables);
+		}
+		if(stack->retVar != NULL) {
+			printf("libero retVar\n");
+			free(stack->retVar);
+		}
+		printf("libero stack\n");
+		free(stack);
+	}
+	printf("libero pcb\n");
+	free(pcb);
+}

@@ -62,7 +62,7 @@ int enviarArchivo(int kernel_fd, char* path){
  	fstat(file_fd, &stats);
  	file_size = stats.st_size;
  	header_t header;
- 	char* buffer = malloc(file_size + sizeof(header_t));
+ 	char* buffer = malloc(file_size + sizeof(header_t)+1);
  	int offset = 0;
 
  	if(buffer == NULL){
@@ -72,11 +72,11 @@ int enviarArchivo(int kernel_fd, char* path){
  	}
 
  	header.type = ENVIO_CODIGO;
- 	header.length = file_size;
+ 	header.length = file_size+1;
  	memcpy(buffer, &(header.type),sizeof(header.type)); offset+=sizeof(header.type);
  	memcpy(buffer + offset, &(header.length),sizeof(header.length)); offset+=sizeof(header.length);
 
- 	if( fread(buffer + offset,file_size,1,file) < 1){
+ 	if(fread(buffer + offset,file_size+1,1,file) < 1){
  		log_error(logger, "No pude leer el archivo");
  		free(buffer);
  		fclose(file);
@@ -85,13 +85,12 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	/*Esto lo hago asi porque de la otra forma habría que reservar MAS espacio para
  	 * enviar el paquete */
- 	if ( sendAll(kernel_fd, buffer, file_size + sizeof(header_t), 0) <=0 ){
+ 	if(sendAll(kernel_fd, buffer, file_size + sizeof(header_t)+1, 0) <= 0){
  		log_error(logger, "Error al enviar archivo");
  		free(buffer);
  		fclose(file);
  		return -1;
  	}
-
  	free(buffer);
  	fclose(file);
  	return 0;
@@ -223,7 +222,6 @@ void threadPrograma(dataHilo* data){
 	crearProceso(socketProceso,thread,*pidAsignado);
 
 	while(procesoActivo){
-
 		/*ambos se quedan esperando una respuesta del otro*/
 		if(recibir_paquete(socketProceso, (void*)&paquete, &operacion) <= 0){
 			log_error(logger, "El kernel se desconecto");
@@ -306,7 +304,7 @@ char* obtenerExitCode(int32_t exitCode){
 	case -9: return "SUPERA_LIMITE_ASIGNACION_PAGINAS";
 	case -20: return "ERROR_SIN_DEFINICION";
 	default: return "ERROR DESCONOCIDO";
-	};
+	}
 }
 
 void finalizarPrograma(char* comando, char* param){

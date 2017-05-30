@@ -85,6 +85,36 @@ typedef struct {
 	void * stack;
 }__attribute__((__packed__)) t_tamanio_stack;
 
+typedef struct{
+	uint32_t pid;
+	uint32_t pedido;
+}__attribute__((__packed__))t_reserva;
+
+typedef struct{
+	int32_t descriptor;
+	uint32_t cursor;
+}__attribute__((__packed__))t_descriptor;
+
+typedef struct{
+	uint16_t pid;
+	int32_t descriptor;
+	uint32_t cursor;
+	size_t size;
+}__attribute__((__packed__))t_lectura;
+
+typedef struct{
+	uint16_t pid;
+	int32_t descriptor;
+	size_t size;
+}__attribute__((__packed__))t_escritura;
+
+typedef struct{
+	uint16_t pid;
+	int32_t descriptor;
+	size_t posicion;
+}__attribute__((__packed__))t_cursor;
+
+void freePCB(t_pcb* pcb);
 t_entrada_stack* crearPosicionStack(void);
 void insertarNuevoStack(t_pcb* pcb);
 void eliminarUltimaPosicionStack(t_pcb* pcb);
