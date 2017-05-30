@@ -146,20 +146,23 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 }
 
 void realizarSignal(int socketCPU, char* key){
-	semaforoSignal(config->semaforos, key);
+	int valor;
+	valor = semaforoSignal(config->semaforos, key);
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 
-	desbloquearProceso(key);
-	log_info(logger, "Desbloqueo un proceso");
+	if(valor <= 0){
+		desbloquearProceso(key);
+		log_info(logger, "Desbloqueo un proceso");
+	}
 }
 
 void realizarWait(int socketCPU, char* key){
 	int valorSemaforo = semaforoWait(config->semaforos, key);
 	int resultado;
 
-	if(valorSemaforo <= 0){
+	if(valorSemaforo < 0){
 		resultado = WAIT_DETENER_EJECUCION;
 	}else{
 		resultado = WAIT_SEGUIR_EJECUCION;
@@ -202,7 +205,6 @@ void finalizacion_error_memoria(void* paquete_from_cpu, int socket_cpu){
 	pcbRecibido->exitCode = ERROR_MEMORIA;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
-
 
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	//modifico informacion estadistica
@@ -307,7 +309,6 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado) {
 			nodo = nodo->next;
 		}
 	}
-
 	return cpu_asociado;
 }
 
