@@ -60,12 +60,16 @@ void procesarMensajesKernel();
 void mkdirRecursivo(char* path);
 int buscarBloqueLibre();
 char** obtenerNumeroBloques(char* path);
-int obtenerNumBloque(pedido_obtener_datos* pedido);
+int obtenerNumBloque(char* path, int offset);
 pedido_obtener_datos* deserializar_pedido_obtener_datos(char* paquete);
 pedido_guardar_datos* deserializar_pedido_guardar_datos(char* paquete);
 char* generarPathBloque(int num_bloque);
 char* generarPathArchivo(char* path);
 void escribirValorBitarray(int valor, int pos);
+int reservarNuevoBloque(char* pathArchivo);
+int cantidadBloques(char** bloques);
+void escribirEnArchivo(int bloque, char* buffer, int size);
+void leerArchivo(int bloque, char* buffer, int size);
 
 //Operaciones
 bool validarArchivo(char* path);
