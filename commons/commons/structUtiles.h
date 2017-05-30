@@ -78,7 +78,7 @@ typedef struct{
 typedef struct {
 	uint32_t tamanioBuffer;
 	char *buffer;
-}__attribute__((__packed__))  t_buffer_tamanio;
+}__attribute__((__packed__)) t_buffer_tamanio;
 
 typedef struct {
 	uint32_t tamanioStack;

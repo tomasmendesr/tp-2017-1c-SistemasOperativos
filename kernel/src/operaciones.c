@@ -8,9 +8,10 @@ void trabajarMensajeConsola(int socketConsola){
 
 	FD_SET(socketConsola, &setConsolas);
 
-	if (check <= 0) {
+	if(check <= 0){
 		log_warning(logger, "Se cerro el socket %d\n", socketConsola);
 		close(socketConsola);
+		if(paquete)free(paquete);
 		FD_CLR(socketConsola, &master);
 		FD_CLR(socketConsola, &setConsolas);
 	}else{
@@ -48,7 +49,6 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 	}
 }
 
-
 void trabajarMensajeCPU(int socketCPU){
 
 	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
@@ -56,9 +56,10 @@ void trabajarMensajeCPU(int socketCPU){
 	int check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
 
 	//Chequeo de errores
-	if (check <= 0) {
+	if(check <= 0){
 		log_info(logger,"Se cerro el socket %d", socketCPU);
 		close(socketCPU);
+		if(paquete)free(paquete);
 		FD_CLR(socketCPU, &master);
 		FD_CLR(socketCPU, &setCPUs);
 	}else{
@@ -181,7 +182,7 @@ void realizarWait(int socketCPU, char* key){
 		t_pcb* pcbRecibido = deserializar_pcb(paquete);
 		bloquearProceso(key, pcbRecibido);
 		desocupar_cpu(socketCPU);
-
+		free(paquete);
 		log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
 	}
 }
@@ -293,6 +294,17 @@ int buscarEnTabla(pedido_mem pedido, int32_t ind){
 	return -1;
 }
 
+int buscarPos(uint32_t pid, uint32_t pag){
+	uint16_t i=0;
+	reserva_memoria* reserva;
+	while((reserva=list_get(mem_dinamica, i++))){
+		if(reserva->pid == pid && reserva->pag == pag){
+			return --i;
+		}
+	}
+	return -1;
+}
+
 t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
 	void* paquete;
 	int tipo;
@@ -376,13 +388,63 @@ void reservarMemoria(int socket, char* paquete){
 	free(header);
 	free(pedido);
 
-	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+	recibir_paquete(socketConexionMemoria, (void*)&paquete, &resultado);
 	if(resultado == OP_OK){
 		reserva = malloc(sizeof(t_pedido_iniciar));
 		reserva->pag = atoi(paquete);
 	}
 	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
 	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarAlocar);
+}
+
+void liberarMemoria(int socket, char* paquete){
+
+	t_pedido_bytes pedido;
+	header_t header;
+	void* package;
+	int tipo;
+	size_t size;
+	metadata_bloque metadata;
+	size = sizeof(t_pedido_bytes);
+	header.type = SOLICITUD_BYTES;
+	header.length = sizeof(t_pedido_bytes);
+	memcpy(&pedido, paquete, sizeof(t_pedido_bytes));
+	int valor = buscarPos(pedido.pid, pedido.pag);
+	pedido.size = sizeof(metadata_bloque);
+	pedido.offset -= sizeof(metadata_bloque);
+	if(valor != -1 && pedido.offset > 0){
+		sendSocket(socketConexionMemoria, &header, &pedido);
+		recibir_paquete(socketConexionMemoria, &package, &tipo);
+		memcpy(&metadata, package, pedido.size);
+		free(package);
+		if(tipo == OP_OK){
+			if(metadata.used){
+				pedido.size = sizeof(metadata.used);
+				pedido.offset -= sizeof(metadata.size);
+				header.type = GRABAR_BYTES;
+				header.length = size+pedido.size;
+				metadata.used = false;
+				package = malloc(header.length);
+				memcpy(package, &pedido, size);
+				memcpy(package+sizeof(t_pedido_bytes), &metadata.used, pedido.size);
+				if(sendSocket(socketConexionMemoria, &header, package)<=0){
+					log_debug(logger, "problemas de conexion");
+					free(package);
+				}
+				free(package);
+				recibir_paquete(socketConexionMemoria, &package, &tipo);
+				if(tipo == OP_OK){
+					enviar_paquete_vacio(LIBERAR_MEMORIA_OK, socket);
+					aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
+					aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarLiberar);
+				}
+			}else{
+				info_estadistica_t* info = buscarInformacion(pedido.pid);
+				info->matarSiguienteRafaga = true;
+			}
+		}
+
+	}
 }
 
 void desocupar_cpu(int socket_asociado) {

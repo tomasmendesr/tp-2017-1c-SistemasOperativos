@@ -149,6 +149,7 @@ int32_t requestHandlerKernel(void){
 			tamanioStack=*(uint32_t*)paquete;
 			log_info(logger, "Tamanio stack: %d", tamanioStack);
 			break;
+//		RESPUESTAS PRIMITIVAS KERNEL:
 		case SIGNAL_OK:
 			break;
 		case WAIT_SEGUIR_EJECUCION:
@@ -167,14 +168,14 @@ int32_t requestHandlerKernel(void){
 		case ASIG_VAR_COMPARTIDA_OK:
 			log_info(logger, "Se asigno correctamente la variable compartida");
 			break;
-//		case RESPUESTA_RESERVAR:
-//			paqueteGlobal=malloc(header.length);
-//			memcpy(paqueteGlobal,paquete,header.length);
-//			break;
-//		case RESPUESTA_LIBERAR:
-		// RESPUESTAS PRIMITIVAS KERNEL:
+		case RESERVAR_MEMORIA_OK:
+			paqueteGlobal=malloc(header.length);
+			memcpy(paqueteGlobal,paquete,header.length);
+			break;
 		case LIBERAR_MEMORIA_OK:
 			log_info(logger, "Memoria liberada");
+			break;
+		case FINALIZAR_PROGRAMA:
 			break;
 		default:
 			log_error(logger, "Mensaje Recibido Incorrecto");

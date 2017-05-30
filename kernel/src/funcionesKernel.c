@@ -377,9 +377,7 @@ void agregarNuevaCPU(t_list* lista, int socketCPU){
 }
 
 void liberarCPU(cpu_t* cpu){
-	//no implementado todavia
-	//liberarPCB(cpu->pcb);
-
+	freePCB(cpu->pcb);
 	free(cpu);
 }
 

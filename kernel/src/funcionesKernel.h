@@ -46,8 +46,7 @@ typedef struct {
 	t_dictionary* semaforos;
 	t_dictionary* variablesGlobales;
 	int stack_Size;
-
-} t_config_kernel;
+}t_config_kernel;
 
 typedef struct{
 	uint32_t pid;
@@ -101,7 +100,7 @@ typedef struct{
 	uint32_t pid;
 	uint32_t pag;
 	uint32_t size;
-}reserva_memoria;
+}__attribute__((__packed__))reserva_memoria;
 
 typedef struct{
 	bool used;
@@ -197,6 +196,7 @@ void estadisticaAumentarAlocar(int pid);
 void estadisticaAumentarLiberar(int pid);
 void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado);
 void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid));
+void eliminarEstadistica(int pid);
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado);
 
 //Variables Globales
