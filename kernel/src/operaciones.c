@@ -88,12 +88,15 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case ASIG_VAR_COMPARTIDA:
 		asignarVarCompartida(socketCPU, package);
 		break;
-	case LIBERAR_MEMORIA: // TODO
+	case RESERVAR_MEMORIA:
+		reservarMemoria(socketCPU, package);
+		break;
+	case LIBERAR_MEMORIA:
+		liberarMemoria(socketCPU, package);
 		break;
 	case IMPRIMIR_POR_PANTALLA:
 		imprimirPorPantalla(package, socketCPU);
 		break;
-
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		finalizacion_proceso(package, socketCPU);
@@ -111,7 +114,6 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case ERROR_MEMORIA:
 		finalizacion_error_memoria(package, socketCPU);
 		break;
-
 	default:
 		log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	}
@@ -234,7 +236,7 @@ void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 }
 
 void finalizacion_stackoverflow(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso %d por stack overflow", pcbRecibido->pid);
 	pcbRecibido->exitCode = SUPERO_TAMANIO_PAGINA;
 	terminarProceso(pcbRecibido, socket_cpu);
@@ -249,11 +251,10 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	info_estadistica_t* info = buscarInformacion(pcb_recibido->pid);
 
 	if(info->matarSiguienteRafaga){
-			pcb_recibido->exitCode = info->exitCode;
+		pcb_recibido->exitCode = info->exitCode;
 		terminarProceso(pcb_recibido, socket_cpu);
 		return;
 	}else{
-
 		// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
 		sem_wait(&mutex_cola_exec);
 		//TODO: Remover PCB()
@@ -261,7 +262,7 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 
 		// Se encola el pcb del proceso en READY.
 		sem_wait(&mutex_cola_ready);
-		queue_push(colaReady, pcb_recibido); 		// La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
+		queue_push(colaReady, pcb_recibido); // La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
 		sem_post(&mutex_cola_ready);
 
 		estadisticaCambiarEstado(pcb_recibido->pid, READY);
@@ -269,11 +270,10 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 		//Aumento el semanforo de procesos en ready
 		sem_post(&sem_cola_ready);
 	}
-
 	// Se desocupa la CPU
 	desocupar_cpu(socket_cpu);
-
 }
+
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado) {
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_debug(logger, "Finalizar proceso %d por fin de ejecucion", pcbRecibido->pid);
@@ -282,45 +282,12 @@ void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado) {
 	terminarProceso(pcbRecibido, socket_cpu_asociado);
 }
 
-void desocupar_cpu(int socket_asociado) {
-
-	sem_wait(&mutex_lista_CPUs);
-	cpu_t *cpu = obtener_cpu_por_socket_asociado(socket_asociado);
-	if(cpu != NULL){
-			log_info(logger, "Se desocupa cpu %d\n", socket_asociado);
-			cpu->disponible = true;
-			sem_post(&semCPUs_disponibles); // Aumento el semaforo contador de cpus disponibles.
-	}
-	sem_post(&mutex_lista_CPUs);
-}
-
-/*
- * @NAME: obtener_cpu_por_socket_asociado
- * @DESC: Devuelve un puntero al cpu asociado a soc_asociado, si no lo encuentra devuelve NULL.
- */
-cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado) {
-
-	cpu_t *cpu_asociado = NULL;
-
-	t_link_element *nodo = listaCPUs->head;
-
-	while (nodo != NULL && cpu_asociado == NULL) {
-		cpu_t *cpu_aux = (cpu_t*) nodo->data;
-		if(cpu_aux->socket == soc_asociado) {
-			cpu_asociado = cpu_aux;
-		} else {
-			nodo = nodo->next;
-		}
-	}
-	return cpu_asociado;
-}
-
 int buscarEnTabla(pedido_mem pedido, int32_t ind){
 	uint16_t i=0;
 	reserva_memoria* reserva;
-	while(ind>i && (reserva=list_get(mem_dinamica, i++))){
+	while((reserva=list_get(mem_dinamica, i++))){
 		if(reserva->pid == pedido.pid && reserva->size - sizeof(metadata_bloque) >= pedido.cant){
-			return --i;
+			if(i-1>ind) return --i;
 		}
 	}
 	return -1;
@@ -354,7 +321,7 @@ t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
 	return 0;
 }
 
-void reservarMemoria(int socket, void* paquete){
+void reservarMemoria(int socket, char* paquete){
 
 	pedido_mem pedido_memoria;
 	t_puntero puntero;
@@ -368,7 +335,8 @@ void reservarMemoria(int socket, void* paquete){
 	memcpy(&pedido_memoria, paquete, tamano);
 
 	uint pos = buscarEnTabla(pedido_memoria,-1);
-	if(pos != -1){
+	void* package;
+	while(pos != -1){
 		reserva = list_get(mem_dinamica, pos);
 		puntero = verificarEspacio(pedido_memoria.cant,reserva->pid,reserva->pag);
 		if(puntero != 0){
@@ -378,36 +346,79 @@ void reservarMemoria(int socket, void* paquete){
 			sendSocket(socket, header, &puntero);
 
 			reserva->size -= pedido_memoria.cant+sizeof(metadata_bloque);
-
 			header->type = GRABAR_BYTES;
-			header->length = sizeof(metadata_bloque);
+			header->length = sizeof(metadata_bloque)+sizeof(t_pedido_bytes);
+			package = malloc(header->length);
+			t_pedido_bytes bytes;
+
+			bytes.pid = reserva->pid;
+			bytes.pag = reserva->pag;
+			bytes.size = sizeof(metadata_bloque);
+			bytes.offset = puntero;
 			bloque.used = true;
 			bloque.size = pedido_memoria.cant;
-			sendSocket(socketConexionMemoria, header, &bloque);
+
+			memcpy(package, &bloque, sizeof(metadata_bloque));
+			memcpy(package+sizeof(metadata_bloque), &bytes, sizeof(t_pedido_bytes));
+			sendSocket(socketConexionMemoria, header, package);
 			free(header);
+			return;
 		}
+		pos = buscarEnTabla(pedido_memoria,pos);
 	}
-	else{
-		pedido = malloc(sizeof(t_pedido_iniciar));
-		pedido->pid = pedido_memoria.pid;
-		pedido->cant_pag = 1;
-		header=malloc(sizeof(header_t));
-		header->type = ASIGNAR_PAGINAS;
-		header->length = sizeof(t_pedido_iniciar);
-		sendSocket(socketConexionMemoria, header, pedido);
-		free(header);
+	pedido = malloc(sizeof(t_pedido_iniciar));
+	pedido->pid = pedido_memoria.pid;
+	pedido->cant_pag = 1;
+	header=malloc(sizeof(header_t));
+	header->type = ASIGNAR_PAGINAS;
+	header->length = sizeof(t_pedido_iniciar);
+	sendSocket(socketConexionMemoria, header, pedido);
+	free(header);
+	free(pedido);
 
-		recibir_paquete(socketConexionMemoria, &paquete, &resultado);
-		if(resultado == OP_OK){
-			reserva = malloc(sizeof(t_pedido_iniciar));
-			reserva->pag = atoi(paquete);
-		}
-
+	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+	if(resultado == OP_OK){
+		reserva = malloc(sizeof(t_pedido_iniciar));
+		reserva->pag = atoi(paquete);
 	}
 	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
+	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarAlocar);
 }
 
-	void imprimirPorPantalla(void* paquete, int socketCpu){
+void desocupar_cpu(int socket_asociado) {
+
+	sem_wait(&mutex_lista_CPUs);
+	cpu_t *cpu = obtener_cpu_por_socket_asociado(socket_asociado);
+	if(cpu != NULL){
+			log_info(logger, "Se desocupa cpu %d\n", socket_asociado);
+			cpu->disponible = true;
+			sem_post(&semCPUs_disponibles); // Aumento el semaforo contador de cpus disponibles.
+	}
+	sem_post(&mutex_lista_CPUs);
+}
+
+/*
+ * @NAME: obtener_cpu_por_socket_asociado
+ * @DESC: Devuelve un puntero al cpu asociado a soc_asociado, si no lo encuentra devuelve NULL.
+ */
+cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
+
+	cpu_t *cpu_asociado = NULL;
+
+	t_link_element *nodo = listaCPUs->head;
+
+	while (nodo != NULL && cpu_asociado == NULL) {
+		cpu_t *cpu_aux = (cpu_t*) nodo->data;
+		if(cpu_aux->socket == soc_asociado) {
+			cpu_asociado = cpu_aux;
+		} else {
+			nodo = nodo->next;
+		}
+	}
+	return cpu_asociado;
+}
+
+void imprimirPorPantalla(void* paquete, int socketCpu){
 /*	char* informacion = paquete;
 	int* pid = paquete + strlen(informacion) + 1;
 
