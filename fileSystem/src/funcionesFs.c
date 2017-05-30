@@ -86,7 +86,19 @@ bool validarArchivo(char* path){
 }
 
 void crearArchivo(void* package){
-	//no implementado aun
+	char* pathArchivo = generarPathArchivo(package);
+
+	int bloqueLibre = buscarBloqueLibre();
+
+	escribirValorBitarray(1, bloqueLibre); //pongo el bloque como ocupado
+
+	FILE* archivo = fopen(pathArchivo, "a");
+
+	fprintf(archivo, "TAMANIO=0");
+	fprintf(archivo, "BLOQUES=[%d]", bloqueLibre);
+
+	fclose(archivo);
+
 }
 
 void borrarArchivo(void* package){
@@ -95,9 +107,21 @@ void borrarArchivo(void* package){
 	if(validarArchivo(path_archivo)){
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
 	}else{
-		unlink(generarPathArchivo(path_archivo));
 
-		//tengo que liberar los bloques
+		char* path = generarPathArchivo(path_archivo);
+
+		t_config* data = config_create(path);
+		char** bloques = config_get_array_value(data, "BLOQUES");
+		config_destroy(data);
+
+		int j = 0;
+		while(bloques[j] != NULL){
+			escribirValorBitarray(0, bloques[j]); //libero los bloques
+			j++;
+		}
+
+		//borro el archivo
+		unlink(path);
 
 	}
 }
@@ -105,10 +129,58 @@ void borrarArchivo(void* package){
 void guardarDatos(void* package){
 	pedido_guardar_datos* pedido = deserializar_pedido_guardar_datos(package);
 
+	if(validarArchivo(pedido->path)){
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
+		return;
+	}
+
+	char** bloques = obtenerNumeroBloques(pedido->path);
+	int cantBloques = cantidadBloques(bloques);
+
+	int offsetReal = pedido->offset, j=0;
+	int restoBloque, bytesEscritos = 0, bloque;
+
+	while(offsetReal > conf->tamanio_bloque){
+		offsetReal -= conf->tamanio_bloque;
+		j++;
+	}
+
+	bloque = atoi(bloques[j]);
+
+	while(pedido->size != 0){
+		restoBloque = conf->tamanio_bloque - offsetReal;
+
+		escribirEnArchivo(bloque, pedido->buffer, restoBloque);
+		bytesEscritos += restoBloque;
+		pedido->size -= restoBloque;
+
+		offsetReal = 0;
+
+		if(pedido->size > 0){//aun faltan cosas por escribir
+			if(j == cantBloques){
+				bloque = reservarNuevoBloque(pedido->path);
+			}else{
+				j++;
+				bloque = atoi(bloques[j]);
+			}
+		}
+
+	}
 
 	free(pedido->path);
 	free(pedido->buffer);
 	free(pedido);
+
+	enviar_paquete_vacio(ESCRITURA_OK, socketConexionKernel);
+
+}
+
+void escribirEnArchivo(int bloque, char* buffer, int size){
+	FILE* archivo = fopen(generarPathBloque(bloque), "a");
+
+	fwrite(buffer, size, 1, archivo);
+
+	close(archivo);
 }
 
 void obtenerDatos(void* package){
@@ -119,28 +191,47 @@ void obtenerDatos(void* package){
 		return;
 	}
 
-	int p = obtenerNumBloque(pedido);
-
-	char* path_bloque = generarPathBloque(p);
-
-	FILE* archivo = fopen(path_bloque, "r");
 	char* buffer = malloc(sizeof(pedido->size));
 
-	int offsetReal = pedido->offset;
-	while(offsetReal > conf->tamanio_bloque) offsetReal -= conf->tamanio_bloque;
+	char** bloques = obtenerNumeroBloques(pedido->path);
 
-	fseek(archivo, offsetReal, SEEK_SET);
-	fread(buffer, pedido->size, 1, archivo);
+	int offsetReal = pedido->offset, j=0, bytesLeidos = 0, restoBloque;
+
+	while(offsetReal > conf->tamanio_bloque){
+		offsetReal -= conf->tamanio_bloque;
+		j++;
+	}
+
+	int bloque = atoi(bloques[j]);
+
+	while(bytesLeidos != pedido->size){
+		restoBloque = conf->tamanio_bloque - offsetReal;
+
+		leerArchivo(bloque, buffer+bytesLeidos, restoBloque);
+
+		bytesLeidos += restoBloque;
+
+		j++;
+		bloque = atoi(bloques[j]);
+		offsetReal = 0;
+	}
+
 
 	header_t header;
 	header.length = pedido->size;
 	header.type = LECTURA_OK;
 	sendSocket(socketConexionKernel, &header, buffer);
 
-	fclose(archivo);
-	free(path_bloque);
 	free(pedido->path);
 	free(pedido);
+}
+
+void leerArchivo(int bloque, char* buffer, int size){
+	FILE* archivo = fopen(generarPathBloque(bloque), "a");
+
+	fread(buffer, size, 1, archivo);
+
+	close(archivo);
 }
 
 void mkdirRecursivo(char* path){
@@ -193,18 +284,21 @@ int buscarBloqueLibre(){
 }
 
 void escribirValorBitarray(int valor, int pos){
-	char c;
+	int c;
 
 	int posByte = pos / 8;
 	int posBit = (pos % 8) * 8;
 
-	FILE* bitarray = fopen(pathMetadataBitarray, "rb");
+	FILE* bitarray = fopen(pathMetadataBitarray, "a+");
 
 	fseek(bitarray, posByte, SEEK_SET);
+
 	if((c = getc(bitarray)) != EOF){
-		c ^= 1 << posBit;
+		printf("%d\n", c);
+		c ^= (-1 ^ c) & (1 << posBit);
+		printf("%d\n", c);
 		fseek(bitarray, -1L, SEEK_CUR);
-		putc(c, bitarray);
+		putc(0xFF, bitarray);
 		fflush(bitarray);
 	}
 
@@ -220,11 +314,34 @@ char** obtenerNumeroBloques(char* path){
 	return bloques;
 }
 
-int obtenerNumBloque(pedido_obtener_datos* pedido){
-	char** bloques = obtenerNumeroBloques(generarPathArchivo(pedido->path));
+int obtenerNumBloque(char* path, int offset){
+	char** bloques = obtenerNumeroBloques(generarPathArchivo(path));
 
-	int numBloque = (pedido->offset / conf->tamanio_bloque);
+	int numBloque = (offset / conf->tamanio_bloque);
 	return atoi(bloques[numBloque]);
+}
+
+int reservarNuevoBloque(char* pathArchivo){
+	FILE* archivo = fopen(pathArchivo, "a");
+
+	int bloqueLibre = buscarBloqueLibre();
+	escribirValorBitarray(1, bloqueLibre);
+
+	fseek(archivo, -1, SEEK_END);
+	fprintf(archivo, ",%d]", bloqueLibre);
+
+	fclose(archivo);
+
+	return bloqueLibre;
+}
+
+int cantidadBloques(char** bloques){
+	int j=0;
+
+	while(bloques[j] != NULL)
+		j++;
+
+	return j;
 }
 
 pedido_obtener_datos* deserializar_pedido_obtener_datos(char* paquete){
