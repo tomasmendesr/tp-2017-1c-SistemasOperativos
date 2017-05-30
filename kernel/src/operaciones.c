@@ -31,7 +31,6 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 	case ENVIO_CODIGO:
 		log_info(logger, "Recibo codigo");
 		nuevoProceso = crearProcesoEnEspera(consola_fd, package);
-
 		//sem_wait(&sem_multi);
 		sem_wait(&mutex_cola_new);
 		queue_push(colaNew, nuevoProceso);
@@ -225,6 +224,10 @@ void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	header->type=FINALIZAR_EJECUCION;
 	header->length=sizeof(pcbRecibido->exitCode);
 	sendSocket(info->socketConsola,header,&(pcbRecibido->exitCode));
+
+	header->type = FINALIZAR_PROGRAMA;
+	header->length = sizeof(pcbRecibido->pid);
+	sendSocket(socketConexionMemoria,header,&pcbRecibido->pid);
 
 	cantProcesosSistema--;
 	free(header);

@@ -84,8 +84,8 @@ proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
 
 	proceso_en_espera_t* proc = malloc(sizeof(proceso_en_espera_t));
 	proc->socketConsola = consola_fd;
-	proc->codigo = malloc(strlen(source));
-	memcpy(proc->codigo, source, strlen(source));
+	proc->codigo = malloc(strlen(source)+1);
+	memcpy(proc->codigo, source, strlen(source)+1);
 	proc->pid = asignarPid();
 	//pcb_t* pcb = crearPCB(source, asignarPid() );
 	//pcb->consolaFd = consola_fd;
@@ -413,7 +413,6 @@ cpu_t* obtenerCpuLibre(void){
 void planificarCortoPlazo(void){
 
 	while(1){
-
 		//Espera que halla CPUs Disponibles
 		sem_wait(&semCPUs_disponibles);
 		//Espera procesos para ejecutar
@@ -427,6 +426,7 @@ void planificarCortoPlazo(void){
 		pthread_mutex_unlock(&lockPlanificacion);
 
 		cpu_t* cpu = obtenerCpuLibre();
+
 		if(cpu != NULL){
 			printf("Obtuve cpu libre\n");
 			cpu->disponible = false;
@@ -465,7 +465,7 @@ void enviarPcbCPU(t_pcb* pcb, int socketCPU){
 void planificarLargoPlazo(void){
 
 	if(cantProcesosSistema >= config->grado_MultiProg){
-		printf("el proceso debe esprar, cantidad maxima de procesos en sistema alcanzada\n");
+		printf("el proceso debe esperar, cantidad maxima de procesos en sistema alcanzada\n");
 		return;
 	}
 
@@ -484,13 +484,13 @@ void planificarLargoPlazo(void){
 	t_pedido_iniciar pedido;
 	int pid = proc->pid;
 
-	int cant_pag_cod = (strlen(proc->codigo)+1) / pagina_size;
-	if((strlen(proc->codigo)+1) % pagina_size)
+	int cant_pag_cod = strlen(proc->codigo) / pagina_size;
+	if(strlen(proc->codigo) % pagina_size)
 		cant_pag_cod++;
 
 	pedido.pid = pid;
 	pedido.cant_pag = config->stack_Size + cant_pag_cod;
-	log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags: %d", pid, pedido.cant_pag);
+	log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags:%d", pid, pedido.cant_pag);
 
 	header_t header;
 	header.type = INICIAR_PROGRAMA;
@@ -531,12 +531,10 @@ void planificarLargoPlazo(void){
 		free(proc);
 		printf("fin plp\n");
 	}
-
 }
 
 void alertarConsolaProcesoAceptado(int* pid, int socketConsola){
 	header_t header;
-
 	header.type = PID_PROGRAMA;
 	header.length = sizeof(int);
 	sendSocket(socketConsola, &header, pid);
@@ -544,7 +542,6 @@ void alertarConsolaProcesoAceptado(int* pid, int socketConsola){
 
 void envioCodigoMemoria(char* codigo){
 	header_t header;
-
 	header.type = ENVIO_CODIGO;
 	header.length = strlen(codigo);
 	sendSocket(socketConexionMemoria, &header, codigo);
@@ -574,7 +571,6 @@ info_estadistica_t* buscarInformacion(int pid){
 	}
 
 	return list_find(listadoEstadistico, buscar);
-
 }
 
 void estadisticaAumentarRafaga(int pid){
@@ -645,7 +641,6 @@ void bloquearProceso(char* semaforo, t_pcb* pcb){
 	estadisticaAumentarRafaga(pcb->pid);
 	estadisticaCambiarEstado(pcb->pid, BLOQ);
 }
-
 
 int getArchivoFdMax(void){
 	max_archivo_fd++;
