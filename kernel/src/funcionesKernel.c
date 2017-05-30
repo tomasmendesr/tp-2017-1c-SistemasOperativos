@@ -69,7 +69,6 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 
         conf->stack_Size = config_get_int_value(configKernel, "STACK_SIZE");
 
-
         config_destroy(configKernel);
         return conf;
 }
@@ -94,12 +93,12 @@ proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
 	return proc;
 }
 
-int asignarPid(){
+int asignarPid(void){
 	max_pid++;
 	return max_pid;
 }
 
-int conexionConFileSystem(){
+int conexionConFileSystem(void){
 
 	socketConexionFS = createClient(config->ip_FS, config->puerto_FS);
 
@@ -114,7 +113,7 @@ int conexionConFileSystem(){
 	return 1;
 }
 
-int conexionConMemoria(){
+int conexionConMemoria(void){
 
 	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
 
@@ -125,7 +124,7 @@ int conexionConMemoria(){
 	enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionMemoria);
 
 	int respuesta;
-	void* paquete;
+	char* paquete;
 
 	recibir_paquete(socketConexionMemoria, &paquete, &respuesta);
 	if(respuesta != HANDSHAKE_MEMORIA){
@@ -133,7 +132,7 @@ int conexionConMemoria(){
 	}
 
 	recibir_paquete(socketConexionMemoria, &paquete, &respuesta);
-	pagina_size = *(int*)paquete;
+	pagina_size = atoi(paquete);
 	printf("tamanio de pagina: %d\n", pagina_size);
 	printf("Conexion con memoria establecida\n");
 
@@ -173,7 +172,6 @@ t_dictionary* crearDiccionario(char** array){
                 dictionary_put(dic, array[j], 0);
                 j++;
         }
-
         return dic;
 }
 
@@ -181,7 +179,7 @@ t_dictionary* crearDiccionario(char** array){
  * @NAME: LevantarInterfaz.
  * @DESC: Interfaz de Consola para manejar operaciones del kernel.
  */
-void levantarInterfaz(){
+void levantarInterfaz(void){
 	//creo los comandos y el parametro
 	comando* comandos = malloc(sizeof(comando)*6);
 
@@ -404,7 +402,7 @@ void actualizarReferenciaPCB(int id, t_pcb* pcb){
 	cpu->pcb = pcb;
 }
 
-cpu_t* obtenerCpuLibre(){
+cpu_t* obtenerCpuLibre(void){
 
 	bool estaLibre(cpu_t* cpu){
 		return cpu->disponible;// != NULL ? false : true;
@@ -414,7 +412,7 @@ cpu_t* obtenerCpuLibre(){
 
 }
 
-void planificarCortoPlazo(){
+void planificarCortoPlazo(void){
 
 	while(1){
 
@@ -465,7 +463,7 @@ void enviarPcbCPU(t_pcb* pcb, int socketCPU){
 	sendSocket(socketCPU, &header, &quantum);
 }
 
-void planificarLargoPlazo(){
+void planificarLargoPlazo(void){
 
 	if(cantProcesosSistema >= config->grado_MultiProg){
 		printf("el proceso debe esprar, cantidad maxima de procesos en sistema alcanzada\n");
@@ -487,8 +485,8 @@ void planificarLargoPlazo(){
 	t_pedido_iniciar pedido;
 	int pid = proc->pid;
 
-	int cant_pag_cod = strlen(proc->codigo) / pagina_size;
-	if(strlen(proc->codigo) % pagina_size > 0)
+	int cant_pag_cod = (strlen(proc->codigo)+1) / pagina_size;
+	if((strlen(proc->codigo)+1) % pagina_size)
 		cant_pag_cod++;
 
 	pedido.pid = pid;
@@ -549,7 +547,7 @@ void envioCodigoMemoria(char* codigo){
 	header_t header;
 
 	header.type = ENVIO_CODIGO;
-	header.length = strlen(codigo)+1;
+	header.length = strlen(codigo);
 	sendSocket(socketConexionMemoria, &header, codigo);
 }
 
@@ -650,7 +648,7 @@ void bloquearProceso(char* semaforo, t_pcb* pcb){
 }
 
 
-int getArchivoFdMax(){
+int getArchivoFdMax(void){
 	max_archivo_fd++;
 	return max_archivo_fd;
 }
@@ -719,7 +717,7 @@ void eliminarFd(int fd, int proceso){
 
 }
 
-void imprimirTablaGlobal(){
+void imprimirTablaGlobal(void){
 
 	void imprimirData(entrada_tabla_globlal_archivo* entrada){
 		printf("Nombre del file: %s\n", entrada->archivo);

@@ -34,7 +34,7 @@ int main(int argc, char** argv){
  * @NAME: ConexionConServidores
  * @DESC: Conexiones con Memoria y FS.
  */
-void conectarConServidores(){
+void conectarConServidores(void){
 	if(conexionConMemoria() == -1){
 		log_error(logger,"No se pudo establecer la conexion con la memoria.");
 		exit(1);
@@ -50,7 +50,7 @@ void conectarConServidores(){
  * @NAME: EscucharConexiones
  * @DESC: Escucho conexiones CPU y ConsolaPrograma.
  */
-void escucharConexiones(){
+void escucharConexiones(void){
 	FD_ZERO(&master);
 	FD_ZERO(&setCPUs);
 	FD_ZERO(&setConsolas);
@@ -143,7 +143,7 @@ void inicializaciones(void){
  * @NAME: Planificador corto plazo.
  * @DESC: PCP para administrar las CPUs nuevas y planificar.
  */
-void lanzarHilosPlanificacion(){
+void lanzarHilosPlanificacion(void){
 
 	int resultado;
 

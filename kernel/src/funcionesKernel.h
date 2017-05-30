@@ -52,20 +52,19 @@ typedef struct {
 typedef struct{
 	uint32_t pid;
 	uint32_t cant_pag;
-}t_pedido_iniciar;
+}__attribute__((__packed__)) t_pedido_iniciar;
 
 typedef struct{
 	int socket; //funciona como id del cpu
 	t_pcb* pcb;
 	bool disponible;
-} cpu_t;
+}cpu_t;
 
 typedef struct{
 	int socketConsola;
 	char* codigo;
 	int pid;
 }proceso_en_espera_t;
-
 
 typedef struct{
 	uint32_t pid;
@@ -81,21 +80,18 @@ typedef struct{
 	uint32_t exitCode;
 }info_estadistica_t;
 
-typedef struct
-{
+typedef struct{
 	char* archivo;
 	int vecesAbierto;
 	int ubicacion;
 }entrada_tabla_globlal_archivo;
 
-typedef struct
-{
+typedef struct{
 	int proceso; //id del proceso
 	t_list* archivos;
 }entrada_tabla_archivo_proceso;
 
-typedef struct
-{
+typedef struct{
 	int fd;
 	char* flags;
 	int globalFD;
@@ -110,12 +106,12 @@ typedef struct{
 typedef struct{
 	bool used;
 	size_t size;
-}metadata_bloque;
+}__attribute__((__packed__))metadata_bloque;
 
 typedef struct{
 	uint32_t pid;
 	uint32_t cant;
-}pedido_mem;
+}__attribute__((__packed__))pedido_mem;
 
 enum enum_estado{
 	NEW = 1,
@@ -125,7 +121,7 @@ enum enum_estado{
 	BLOQ = 5
 };
 
-void inicializarColas();
+void inicializarColas(void);
 void inicializaciones(void);
 void crearConfig(int argc, char* argv[]);
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
@@ -138,26 +134,24 @@ int semaforoWait(t_dictionary* dic, char* key);
 int leerVariableGlobal(t_dictionary* dic, char* key);
 void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor);
 
-
-void establecerConexiones();
-int conexionConFileSystem();
-int conexionConMemoria();
-void trabajarConexionCPU();
+void establecerConexiones(void);
+int conexionConFileSystem(void);
+int conexionConMemoria(void);
+void trabajarConexionCPU(void);
 void enviarTamanioStack(int fd);
 
-void conectarConServidores();
-void escucharConexiones();
+void conectarConServidores(void);
+void escucharConexiones(void);
 void aceptarNuevaConexion(int socketEscucha, fd_set* set);
 
 //Mensajes con consola
-void trabajarConexionConsola();
+void trabajarConexionConsola(void);
 void procesarMensajeConsola(int consola_fd, int mensaje, char* package);
 proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* package);
-int asignarPid();
-
+int asignarPid(void);
 
 //Funciones de interfaz
-void levantarInterfaz();
+void levantarInterfaz(void);
 void listProcesses(char* comando, char* param);
 void processInfo(char* comando, char* param);
 void getTablaArchivos(char* comando, char* param);
@@ -170,21 +164,21 @@ void agregarNuevaCPU(t_list* lista, int socketCPU);
 void liberarCPU(cpu_t* cpu);
 void eliminarCPU(t_list* lista, int socketCPU);
 void actualizarReferenciaPCB(int id, t_pcb* pcb);
-cpu_t* obtenerCpuLibre();
+cpu_t* obtenerCpuLibre(void);
 cpu_t *obtener_cpu_por_socket_asociado(int socket_asociado);
 void desocupar_cpu(int socket_asociado);
 
 //Planificacion
-void lanzarHilosPlanificacion();
+void lanzarHilosPlanificacion(void);
 pthread_t hiloPLP;
 pthread_t hiloPCP;
 
 //Planificar Corto Plazo
-void planificarCortoPlazo();
+void planificarCortoPlazo(void);
 void enviarPcbCPU(t_pcb* pcb, int socketCPU);
 
 //Planificacion Largo Plazo
-void planificarLargoPlazo();
+void planificarLargoPlazo(void);
 void alertarConsolaProcesoAceptado(int* pid, int socketConsola);
 void envioCodigoMemoria(char* codigo);
 
@@ -245,11 +239,11 @@ t_dictionary* bloqueos;
 int max_archivo_fd;
 t_list* globalFileTable;
 t_list* processFileTable;
-int getArchivoFdMax();
+int getArchivoFdMax(void);
 void crearEntradaArchivoProceso(int proceso);
 void agregarArchivo_aProceso(int proceso, char* file, char* permisos);
 void eliminarFd(int fd, int proceso);
-void imprimirTablaGlobal();
+void imprimirTablaGlobal(void);
 
 fd_set master;
 fd_set setConsolas;
