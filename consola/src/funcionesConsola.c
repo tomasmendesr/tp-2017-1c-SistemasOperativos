@@ -72,11 +72,11 @@ int enviarArchivo(int kernel_fd, char* path){
  	}
 
  	header.type = ENVIO_CODIGO;
- 	header.length = file_size+1;
+ 	header.length = file_size;
  	memcpy(buffer, &(header.type),sizeof(header.type)); offset+=sizeof(header.type);
  	memcpy(buffer + offset, &(header.length),sizeof(header.length)); offset+=sizeof(header.length);
 
- 	if(fread(buffer + offset,file_size+1,1,file) < 1){
+ 	if(fread(buffer + offset,file_size,1,file) < 1){
  		log_error(logger, "No pude leer el archivo");
  		free(buffer);
  		fclose(file);
@@ -85,7 +85,7 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	/*Esto lo hago asi porque de la otra forma habría que reservar MAS espacio para
  	 * enviar el paquete */
- 	if(sendAll(kernel_fd, buffer, file_size + sizeof(header_t)+1, 0) <= 0){
+ 	if(sendAll(kernel_fd, buffer, file_size + sizeof(header_t), 0) <= 0){
  		log_error(logger, "Error al enviar archivo");
  		free(buffer);
  		fclose(file);

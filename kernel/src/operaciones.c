@@ -42,7 +42,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		planificarLargoPlazo();
 	break;
 	case FINALIZAR_PROGRAMA:
-		finalizarPrograma(consola_fd,atoi(package));
+		finalizarPrograma(consola_fd,(int*) *package);
 		break;
 	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	break;

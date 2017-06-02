@@ -84,8 +84,8 @@ proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
 
 	proceso_en_espera_t* proc = malloc(sizeof(proceso_en_espera_t));
 	proc->socketConsola = consola_fd;
-	proc->codigo = malloc(strlen(source)+1);
-	memcpy(proc->codigo, source, strlen(source)+1);
+	proc->codigo = malloc(strlen(source));
+	memcpy(proc->codigo, source, strlen(source));
 	proc->pid = asignarPid();
 	//pcb_t* pcb = crearPCB(source, asignarPid() );
 	//pcb->consolaFd = consola_fd;
@@ -132,7 +132,7 @@ int conexionConMemoria(void){
 	}
 
 	recibir_paquete(socketConexionMemoria, &paquete, &respuesta);
-	pagina_size = atoi(paquete);
+	pagina_size =  *(int*)paquete;
 	printf("tamanio de pagina: %d\n", pagina_size);
 	printf("Conexion con memoria establecida\n");
 
@@ -466,6 +466,7 @@ void planificarLargoPlazo(void){
 		printf("el proceso debe esperar, cantidad maxima de procesos en sistema alcanzada\n");
 		return;
 	}
+	printf("paso el primer if\n");
 
 	if(queue_size(colaNew) == 0){ //no hay nada que planificar
 		return;
@@ -482,9 +483,16 @@ void planificarLargoPlazo(void){
 	t_pedido_iniciar pedido;
 	int pid = proc->pid;
 
+	printf("antes de lo de cant_pag_codigo\n");
+	printf("asd");
+	printf("pagina size: %d", pagina_size);
+
 	int cant_pag_cod = strlen(proc->codigo) / pagina_size;
-	if(strlen(proc->codigo) % pagina_size)
+	if(strlen(proc->codigo) % pagina_size > 0)
 		cant_pag_cod++;
+
+	printf("pase lo de cant_pag_codigo\n");
+
 
 	pedido.pid = pid;
 	pedido.cant_pag = config->stack_Size + cant_pag_cod;
@@ -494,6 +502,7 @@ void planificarLargoPlazo(void){
 	header.type = INICIAR_PROGRAMA;
 	header.length = sizeof(t_pedido_iniciar);
 	sendSocket(socketConexionMemoria, &header, &pedido);
+
 
 	void* paquete;
 	int resultado;
@@ -541,7 +550,7 @@ void alertarConsolaProcesoAceptado(int* pid, int socketConsola){
 void envioCodigoMemoria(char* codigo){
 	header_t header;
 	header.type = ENVIO_CODIGO;
-	header.length = strlen(codigo);
+	header.length = strlen(codigo)+1;
 	sendSocket(socketConexionMemoria, &header, codigo);
 }
 

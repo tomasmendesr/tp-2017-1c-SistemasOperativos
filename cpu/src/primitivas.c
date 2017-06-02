@@ -47,7 +47,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	uint32_t offset = pcb->stackPointer % tamanioPagina;
 
 	t_entrada_stack* lineaStack = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
-	if(!list_size(lineaStack)){
+	if(lineaStack == NULL){
 		lineaStack = crearPosicionStack();
 		list_add(pcb->indiceStack, lineaStack);
 	}
