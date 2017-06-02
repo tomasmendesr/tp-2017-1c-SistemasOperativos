@@ -142,6 +142,8 @@ void enviarTamanioStack(int fd);
 void conectarConServidores(void);
 void escucharConexiones(void);
 void aceptarNuevaConexion(int socketEscucha, fd_set* set);
+info_estadistica_t* buscarInformacionPorSocketConsola(int socketConsola);
+
 
 //Mensajes con consola
 void trabajarConexionConsola(void);

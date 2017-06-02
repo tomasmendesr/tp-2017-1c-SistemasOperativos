@@ -10,6 +10,7 @@ void trabajarMensajeConsola(int socketConsola){
 
 	if(check <= 0){
 		log_warning(logger, "Se cerro el socket %d\n", socketConsola);
+		verificarProcesosConsolaCaida(socketConsola);
 		close(socketConsola);
 		if(paquete)free(paquete);
 		FD_CLR(socketConsola, &master);
@@ -224,9 +225,11 @@ void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	info_estadistica_t * info = buscarInformacion(pcbRecibido->pid);
 
 	header_t* header=malloc(sizeof(header_t));
-	header->type=FINALIZAR_EJECUCION;
-	header->length=sizeof(pcbRecibido->exitCode);
-	sendSocket(info->socketConsola,header,&(pcbRecibido->exitCode));
+	if(!(pcbRecibido->exitCode == DESCONEXION_CONSOLA)){
+		header->type=FINALIZAR_EJECUCION;
+		header->length=sizeof(pcbRecibido->exitCode);
+		sendSocket(info->socketConsola,header,&(pcbRecibido->exitCode));
+	}
 
 	header->type = FINALIZAR_PROGRAMA;
 	header->length = sizeof(pcbRecibido->pid);
@@ -493,4 +496,20 @@ void imprimirPorPantalla(void* paquete, int socketCpu){
 	printf("imprimo %s\n", informacion);
 */
 	//sendSocket(info->socketConsola, &header, (void*) imprimir->info);
+}
+
+void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber varios procesos
+	info_estadistica_t* info = buscarInformacionPorSocketConsola(socketConsola);
+	info->matarSiguienteRafaga = true;
+	info->exitCode = DESCONEXION_CONSOLA;
+	log_info(logger, "Se termina la ejecucion del proceso %d por desconexion de la consola", info->pid);
+}
+
+info_estadistica_t* buscarInformacionPorSocketConsola(int socketConsola){
+
+	bool buscar(info_estadistica_t* info){
+		return info->socketConsola == socketConsola && !info->matarSiguienteRafaga ? true : false;
+	}
+
+	return list_find(listadoEstadistico, buscar);
 }
