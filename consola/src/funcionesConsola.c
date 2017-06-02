@@ -259,11 +259,9 @@ void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exit
 	t_proceso* proc = list_find(procesos, buscarPorSocket);
 	log_info(logger, "Termino la ejecucion del programa %d", proc->pid);
 
-	cargarFechaFin(proc);
-	imprimirInformacion(proc, exitCode);
+	terminarProceso(proc, exitCode);
 
 	procesoActivo = false;
-	list_remove_and_destroy_by_condition(procesos, buscarPorSocket, free);
 	free(data);
 }
 
@@ -333,10 +331,8 @@ void finalizarPrograma(char* comando, char* param){
 	header->type=FINALIZAR_PROGRAMA;
 	header->length= sizeof(pid);
 	sendSocket(proceso->socket, header, (void*) &pid);
+	free(header);
 
-	//terminarProceso(proceso);
-
-	//log_info(logger, "Proceso finalizado\n");
 }
 
 void desconectarConsola(char* comando, char* param) {
