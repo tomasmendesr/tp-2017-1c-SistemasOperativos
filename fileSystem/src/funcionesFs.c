@@ -254,55 +254,26 @@ void mkdirRecursivo(char* path){
 }
 
 int buscarBloqueLibre(){
-	int j = 0;
-	bool res = false;
-	char byte;
-	int cantLeida = 0;
 
-	FILE* bitarray = fopen(pathMetadataBitarray, "rb");
+	int i;
 
-	fread(&byte, 1, 1, bitarray);
-
-	while(!res){
-		if(!(byte & 0x01)){
-			res = true;
-		}else{
-			byte = byte >> 1;
-			cantLeida++;
-			j++;
-		}
-		if(cantLeida == 8){
-			fread(&byte, 1, 1, bitarray);
-			cantLeida = 0;
-		}
+	for(i=0; bitarray_test_bit(bitarray, i); i++){
 
 	}
 
-	fclose(bitarray);
-
-	return j;
+	return i;
 }
 
-void escribirValorBitarray(int valor, int pos){
-	int c;
+void escribirValorBitarray(bool valor, int pos){
 
-	int posByte = pos / 8;
-	int posBit = (pos % 8) * 8;
+	if(valor)
+		bitarray_set_bit(bitarray, pos);
+	else
+		bitarray_clean_bit(bitarray, pos);
 
-	FILE* bitarray = fopen(pathMetadataBitarray, "a+");
-
-	fseek(bitarray, posByte, SEEK_SET);
-
-	if((c = getc(bitarray)) != EOF){
-		printf("%d\n", c);
-		c ^= (-1 ^ c) & (1 << posBit);
-		printf("%d\n", c);
-		fseek(bitarray, -1L, SEEK_CUR);
-		putc(0xFF, bitarray);
-		fflush(bitarray);
-	}
-
-	fclose(bitarray);
+	FILE* bitmap = fopen(pathMetadataBitarray, "w");
+	fwrite(bitarray->bitarray, bitarray->size, 1, bitmap);
+	fclose(bitmap);
 
 }
 

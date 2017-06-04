@@ -65,7 +65,7 @@ pedido_obtener_datos* deserializar_pedido_obtener_datos(char* paquete);
 pedido_guardar_datos* deserializar_pedido_guardar_datos(char* paquete);
 char* generarPathBloque(int num_bloque);
 char* generarPathArchivo(char* path);
-void escribirValorBitarray(int valor, int pos);
+void escribirValorBitarray(bool valor, int pos);
 int reservarNuevoBloque(char* pathArchivo);
 int cantidadBloques(char** bloques);
 void escribirEnArchivo(int bloque, char* buffer, int size);
