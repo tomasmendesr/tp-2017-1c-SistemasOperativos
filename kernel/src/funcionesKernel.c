@@ -471,74 +471,66 @@ void enviarPcbCPU(t_pcb* pcb, int socketCPU){
 }
 
 void planificarLargoPlazo(void){
+	for(;;){
+		if(cantProcesosSistema < config->grado_MultiProg && queue_size(colaNew) != 0){
+			sem_wait(&mutex_cola_new);
+			proceso_en_espera_t* proc = queue_pop(colaNew);
+			sem_post(&mutex_cola_new);
 
-	if(cantProcesosSistema >= config->grado_MultiProg){
-		printf("el proceso debe esperar, cantidad maxima de procesos en sistema alcanzada\n");
-		return;
-	}
+			//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
+			//si acepta pongo en cola ready y creo pcb;
 
-	if(queue_size(colaNew) == 0){ //no hay nada que planificar
-		return;
-	}
+			//creo el pedido para la memoria
+			t_pedido_iniciar pedido;
+			int pid = proc->pid;
 
-	sem_wait(&mutex_cola_new);
-	proceso_en_espera_t* proc = queue_pop(colaNew);
-	sem_post(&mutex_cola_new);
+			int cant_pag_cod = strlen(proc->codigo) / pagina_size;
+			if(strlen(proc->codigo) % pagina_size > 0)
+				cant_pag_cod++;
 
-	//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
-	//si acepta pongo en cola ready y creo pcb;
+			pedido.pid = pid;
+			pedido.cant_pag = config->stack_Size + cant_pag_cod;
+			log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags:%d", pid, pedido.cant_pag);
 
-	//creo el pedido para la memoria
-	t_pedido_iniciar pedido;
-	int pid = proc->pid;
+			header_t header;
+			header.type = INICIAR_PROGRAMA;
+			header.length = sizeof(t_pedido_iniciar);
+			sendSocket(socketConexionMemoria, &header, &pedido);
 
-	int cant_pag_cod = strlen(proc->codigo) / pagina_size;
-	if(strlen(proc->codigo) % pagina_size > 0)
-		cant_pag_cod++;
+			void* paquete;
+			int resultado;
 
+			//evaluo respuesta
+			recibir_paquete(socketConexionMemoria, &paquete, &resultado);
 
-	pedido.pid = pid;
-	pedido.cant_pag = config->stack_Size + cant_pag_cod;
-	log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags:%d", pid, pedido.cant_pag);
+			if(resultado == SIN_ESPACIO){
+				//aviso a consola que se rechazo
+				enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
+				log_error(logger, "Proceso %d rechazado porque no hay espacio en memoria", proc->pid);
+			}
+			if(resultado == OP_OK){
+				log_info(logger, "Paginas reservadas para el proceso %d", pid);
+				//aviso a consola que se acepto
+				alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
 
-	header_t header;
-	header.type = INICIAR_PROGRAMA;
-	header.length = sizeof(t_pedido_iniciar);
-	sendSocket(socketConexionMemoria, &header, &pedido);
+				//mando a memoria el codigo
+				envioCodigoMemoria(proc->codigo);
 
+				//creo pcb y paso el proceso a ready
+				t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
+				//proceso_t* proceso = crearProceso(pcb);
+				sem_wait(&mutex_cola_ready);
+				queue_push(colaReady, pcb);
+				sem_post(&mutex_cola_ready);
+				sem_post(&sem_cola_ready);
+				estadisticaCambiarEstado(pid, READY);
+				cantProcesosSistema++;
 
-	void* paquete;
-	int resultado;
-
-	//evaluo respuesta
-	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
-
-	if(resultado == SIN_ESPACIO){
-		//aviso a consola que se rechazo
-		enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
-		log_error(logger, "Proceso rechazado porque no hay espacio en memoria");
-	}
-	if(resultado == OP_OK){
-		log_info(logger, "Paginas reservadas para el proceso %d", pid);
-		//aviso a consola que se acepto
-		alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
-
-		//mando a memoria el codigo
-		envioCodigoMemoria(proc->codigo);
-
-		//creo pcb y paso el proceso a ready
-		t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
-		//proceso_t* proceso = crearProceso(pcb);
-		sem_wait(&mutex_cola_ready);
-		queue_push(colaReady, pcb);
-		sem_post(&mutex_cola_ready);
-		sem_post(&sem_cola_ready);
-		estadisticaCambiarEstado(pid, READY);
-		cantProcesosSistema++;
-
-		//destruyo el proceso en espera;
-		free(proc->codigo);
-		free(proc);
+				//destruyo el proceso en espera;
+				free(proc->codigo);
+				free(proc);
+			}
+		}
 	}
 }
 

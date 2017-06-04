@@ -237,8 +237,8 @@ void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	sendSocket(socketConexionMemoria,header,&pcbRecibido->pid);
 
 	cantProcesosSistema--;
+	freePCB(pcbRecibido);
 	free(header);
-	planificarLargoPlazo();
 }
 
 void finalizacion_stackoverflow(void* paquete_from_cpu, int socket_cpu){
