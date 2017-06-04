@@ -87,7 +87,6 @@ void enviarQuantumSleep(int fd){
 	header->length=sizeof( config->quantum_Sleep);
 	sendSocket(fd,header,&config->quantum_Sleep);
 	free(header);
-	printf("envie quantum sleep %d\n", QUANTUM_SLEEP);
 }
 
 proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
@@ -472,64 +471,72 @@ void enviarPcbCPU(t_pcb* pcb, int socketCPU){
 
 void planificarLargoPlazo(void){
 	if(cantProcesosSistema < config->grado_MultiProg && queue_size(colaNew) != 0){
-		sem_wait(&mutex_cola_new);
-		proceso_en_espera_t* proc = queue_pop(colaNew);
-		sem_post(&mutex_cola_new);
+		bool finCola, procesoAceptado = false;
+		int cantProcChequeados = 0;
+		while(!finCola && !procesoAceptado){
 
-		//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
-		//si acepta pongo en cola ready y creo pcb;
+			cantProcChequeados++;
+			finCola = (cantProcChequeados == queue_size(colaNew));
 
-		//creo el pedido para la memoria
-		t_pedido_iniciar pedido;
-		int pid = proc->pid;
+			sem_wait(&mutex_cola_new);
+			proceso_en_espera_t* proc = queue_pop(colaNew);
+			sem_post(&mutex_cola_new);
 
-		int cant_pag_cod = strlen(proc->codigo) / pagina_size;
-		if(strlen(proc->codigo) % pagina_size > 0)
-			cant_pag_cod++;
+			//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
+			//si acepta pongo en cola ready y creo pcb;
 
-		pedido.pid = pid;
-		pedido.cant_pag = config->stack_Size + cant_pag_cod;
-		log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags:%d", pid, pedido.cant_pag);
+			//creo el pedido para la memoria
+			t_pedido_iniciar pedido;
+			int pid = proc->pid;
 
-		header_t header;
-		header.type = INICIAR_PROGRAMA;
-		header.length = sizeof(t_pedido_iniciar);
-		sendSocket(socketConexionMemoria, &header, &pedido);
+			int cant_pag_cod = strlen(proc->codigo) / pagina_size;
+			if(strlen(proc->codigo) % pagina_size > 0)
+				cant_pag_cod++;
 
-		void* paquete;
-		int resultado;
+			pedido.pid = pid;
+			pedido.cant_pag = config->stack_Size + cant_pag_cod;
+			log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags:%d", pid, pedido.cant_pag);
 
-		//evaluo respuesta
-		recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+			header_t header;
+			header.type = INICIAR_PROGRAMA;
+			header.length = sizeof(t_pedido_iniciar);
+			sendSocket(socketConexionMemoria, &header, &pedido);
 
-		if(resultado == SIN_ESPACIO){
-			//aviso a consola que se rechazo
-			enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
-			log_error(logger, "Proceso %d rechazado porque no hay espacio en memoria", proc->pid);
-			if(queue_size(colaNew) != 0) planificarLargoPlazo();
-			return;
-		}
-		if(resultado == OP_OK){
-			log_info(logger, "Paginas reservadas para el proceso %d", pid);
-			//aviso a consola que se acepto
-			alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
+			void* paquete;
+			int resultado;
 
-			//mando a memoria el codigo
-			envioCodigoMemoria(proc->codigo);
+			//evaluo respuesta
+			recibir_paquete(socketConexionMemoria, &paquete, &resultado);
 
-			//creo pcb y paso el proceso a ready
-			t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
-			//proceso_t* proceso = crearProceso(pcb);
-			sem_wait(&mutex_cola_ready);
-			queue_push(colaReady, pcb);
-			sem_post(&mutex_cola_ready);
-			sem_post(&sem_cola_ready);
-			estadisticaCambiarEstado(pid, READY);
-			cantProcesosSistema++;
+			if(resultado == SIN_ESPACIO){
+				//aviso a consola que se rechazo
+				enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
+				log_error(logger, "Proceso %d rechazado porque no hay espacio en memoria", proc->pid);
+				queue_push(colaNew, proc); // Lo pongo al final
+			}
+			if(resultado == OP_OK){
+				procesoAceptado = true;
+				log_info(logger, "Paginas reservadas para el proceso %d", pid);
+				//aviso a consola que se acepto
+				alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
 
-			//destruyo el proceso en espera;
-			free(proc->codigo);
-			free(proc);
+				//mando a memoria el codigo
+				envioCodigoMemoria(proc->codigo);
+
+				//creo pcb y paso el proceso a ready
+				t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
+				//proceso_t* proceso = crearProceso(pcb);
+				sem_wait(&mutex_cola_ready);
+				queue_push(colaReady, pcb);
+				sem_post(&mutex_cola_ready);
+				sem_post(&sem_cola_ready);
+				estadisticaCambiarEstado(pid, READY);
+				cantProcesosSistema++;
+
+				//destruyo el proceso en espera;
+				free(proc->codigo);
+				free(proc);
+			}
 		}
 	}
 }
