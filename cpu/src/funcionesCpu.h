@@ -39,6 +39,7 @@ t_log* logger;
 char* paqueteGlobal;
 /*desde kernel*/
 uint32_t tamanioStack;
+uint32_t quantumSleep;
 int quantum;
 /*desde memoria*/
 uint32_t tamanioPagina;

@@ -351,6 +351,10 @@ void desconectarConsola(char* comando, char* param) {
 void terminarProceso(t_proceso* proc, int32_t exitCode){
 	cargarFechaFin(proc);
 	imprimirInformacion(proc, exitCode);
+	bool buscarPorPid(t_proceso* p){
+		return p->pid == proc->pid ? true : false;
+	}
+	list_remove_by_condition(procesos, buscarPorPid);
 	pthread_cancel(proc->thread);
 	free(proc);
 }

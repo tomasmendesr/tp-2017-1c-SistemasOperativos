@@ -115,7 +115,6 @@ void freePCB(t_pcb* pcb){
  		}
  		free(stack);
  	}
-	printf("libero pcb\n");
  	free(pcb);
- 	printf("PCB Liberado");
+ 	printf("PCB Liberado\n");
  }

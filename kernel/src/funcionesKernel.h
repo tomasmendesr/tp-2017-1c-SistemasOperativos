@@ -138,6 +138,7 @@ int conexionConFileSystem(void);
 int conexionConMemoria(void);
 void trabajarConexionCPU(void);
 void enviarTamanioStack(int fd);
+void enviarQuantumSleep(int fd);
 
 void conectarConServidores(void);
 void escucharConexiones(void);

@@ -76,6 +76,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		log_info(logger,"Conexion con nueva CPU establecida");
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketCPU);
 		enviarTamanioStack(socketCPU);
+		enviarQuantumSleep(socketCPU);
 		agregarNuevaCPU(listaCPUs, socketCPU);
 		break;
 	case SEM_SIGNAL:
@@ -483,7 +484,7 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 	return cpu_asociado;
 }
 
-void imprimirPorPantalla(void* paquete, int socketCpu){
+void imprimirPorPantalla(void* paquete, int socketCpu){ // TODO
 /*	char* informacion = paquete;
 	int* pid = paquete + strlen(informacion) + 1;
 
@@ -500,15 +501,17 @@ void imprimirPorPantalla(void* paquete, int socketCpu){
 
 void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber varios procesos
 	info_estadistica_t* info = buscarInformacionPorSocketConsola(socketConsola);
-	info->matarSiguienteRafaga = true;
-	info->exitCode = DESCONEXION_CONSOLA;
-	log_info(logger, "Se termina la ejecucion del proceso %d por desconexion de la consola", info->pid);
+	if(info->estado != FINISH){
+		info->matarSiguienteRafaga = true;
+		info->exitCode = DESCONEXION_CONSOLA;
+		log_info(logger, "Se termina la ejecucion del proceso %d por desconexion de la consola", info->pid);
+	}
 }
 
 info_estadistica_t* buscarInformacionPorSocketConsola(int socketConsola){
 
 	bool buscar(info_estadistica_t* info){
-		return info->socketConsola == socketConsola && !info->matarSiguienteRafaga ? true : false;
+		return info->socketConsola == socketConsola ? true : false;//&& (info->estado != FINISH) ? true : false;
 	}
 
 	return list_find(listadoEstadistico, buscar);

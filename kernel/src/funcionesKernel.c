@@ -78,6 +78,16 @@ void enviarTamanioStack(int fd){
 	header->type=TAMANIO_STACK_PARA_CPU;
 	header->length=sizeof(config->stack_Size);
 	sendSocket(fd,header,&config->stack_Size);
+	free(header);
+}
+
+void enviarQuantumSleep(int fd){
+	header_t* header=malloc(sizeof(header_t));
+	header->type = QUANTUM_SLEEP;
+	header->length=sizeof( config->quantum_Sleep);
+	sendSocket(fd,header,&config->quantum_Sleep);
+	free(header);
+	printf("envie quantum sleep %d\n", QUANTUM_SLEEP);
 }
 
 proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
@@ -466,7 +476,6 @@ void planificarLargoPlazo(void){
 		printf("el proceso debe esperar, cantidad maxima de procesos en sistema alcanzada\n");
 		return;
 	}
-	printf("paso el primer if\n");
 
 	if(queue_size(colaNew) == 0){ //no hay nada que planificar
 		return;
@@ -483,15 +492,9 @@ void planificarLargoPlazo(void){
 	t_pedido_iniciar pedido;
 	int pid = proc->pid;
 
-	printf("antes de lo de cant_pag_codigo\n");
-	printf("asd");
-	printf("pagina size: %d", pagina_size);
-
 	int cant_pag_cod = strlen(proc->codigo) / pagina_size;
 	if(strlen(proc->codigo) % pagina_size > 0)
 		cant_pag_cod++;
-
-	printf("pase lo de cant_pag_codigo\n");
 
 
 	pedido.pid = pid;
@@ -536,7 +539,6 @@ void planificarLargoPlazo(void){
 		//destruyo el proceso en espera;
 		free(proc->codigo);
 		free(proc);
-		printf("fin plp\n");
 	}
 }
 
