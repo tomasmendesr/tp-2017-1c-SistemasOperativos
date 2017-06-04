@@ -307,8 +307,10 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 		bool notFound = true;
 		for(i=0; i < list_size(contexto->variables); i++){
 			var_local = list_get(contexto->variables, i);
-			if(var_local->id == identificador_variable)
+			if(var_local->id == identificador_variable){
 				notFound = false;
+				break;
+			}
 		}
 		if(notFound){
 			log_error(logger, "No se encontro la variable %c en el stack", identificador_variable);
