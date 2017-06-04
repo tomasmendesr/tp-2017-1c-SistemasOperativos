@@ -234,11 +234,8 @@ void threadPrograma(dataHilo* data){
 			case FINALIZAR_EJECUCION:
 				finalizarEjecucionProceso(&procesoActivo, data, *(int32_t*) paquete);
 				break;
-				// TODO - enviar pid del programa, buscarlo y aumentar su cantidad de impresiones en 1
-			//case IMPRIMIR_TEXTO_PROGRAMA:
-			//	printf("%s\n", (char*)paquete);
-			//	break;
-			case IMPRIMIR_VARIABLE_PROGRAMA:
+			case IMPRIMIR_POR_PANTALLA:
+				imprimirPorPantalla(paquete);
 				break;
 			default:
 				break;
@@ -373,8 +370,8 @@ int crearLog() {
 	}
 }
 
-void imprimirVariable(t_imprimir* impr){
-	int pid = impr->pid;
+void imprimirPorPantalla(void* buffer){
+	int pid = *(int*) buffer;
 
 	bool buscarProceso(t_proceso* p){
 			return p->pid == pid ? true : false;
@@ -383,5 +380,6 @@ void imprimirVariable(t_imprimir* impr){
 	t_proceso* proceso = list_find(procesos, buscarProceso);
 
 	proceso->impresiones++;
-	//printf("%d", impr->valor);
+	char* impresion = buffer + sizeof(int);
+	printf("%s\n", impresion);
 }

@@ -239,6 +239,7 @@ void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	cantProcesosSistema--;
 	freePCB(pcbRecibido);
 	free(header);
+	planificarLargoPlazo();
 }
 
 void finalizacion_stackoverflow(void* paquete_from_cpu, int socket_cpu){
@@ -486,18 +487,23 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 }
 
 void imprimirPorPantalla(void* paquete, int socketCpu){ // TODO
-/*	char* informacion = paquete;
-	int* pid = paquete + strlen(informacion) + 1;
+	int pid = *(int*) paquete;
+
+	char* impresion = paquete + sizeof(int);
 
 	info_estadistica_t * info = buscarInformacion(pid);
-	printf("pid a escribir %d\n", pid);
+
+	int size = sizeof(int) + strlen(impresion) + 1;
+
 	header_t header;
 	header.type=IMPRIMIR_POR_PANTALLA;
-	header.length= strlen(informacion) + 1;
+	header.length= size;
 
-	printf("imprimo %s\n", informacion);
-*/
-	//sendSocket(info->socketConsola, &header, (void*) imprimir->info);
+	char* buffer = malloc(size);
+	memcpy(buffer, &pid, sizeof(int));
+	memcpy(buffer+sizeof(int), impresion, strlen(impresion) + 1);
+
+	sendSocket(info->socketConsola, &header, buffer);
 }
 
 void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber varios procesos

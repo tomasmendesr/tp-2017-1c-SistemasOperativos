@@ -531,7 +531,7 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	header.length = size;
 
 	memcpy(buffer, &pcb->pid, sizeof(pcb->pid));
-	memcpy(buffer+sizeof(pcb->pid), &informacion, tamanio + 1);
+	memcpy(buffer+sizeof(pcb->pid), informacion, tamanio + 1);
 
 	sendSocket(socketConexionKernel, &header, buffer);
 	free(buffer);
