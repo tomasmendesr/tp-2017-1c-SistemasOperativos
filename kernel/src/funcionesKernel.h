@@ -75,6 +75,8 @@ typedef struct{
 	uint32_t cantPaginasHeap;
 	uint32_t cantAlocar;
 	uint32_t cantLiberar;
+	uint32_t cantBytesAlocar;
+	uint32_t cantBytesLiberar;
 	bool matarSiguienteRafaga;
 	uint32_t exitCode;
 }info_estadistica_t;
@@ -197,6 +199,8 @@ void estadisticaAumentarSyscall(int pid);
 void estadisticaAumentarOpPriviligiada(int pid);
 void estadisticaAumentarAlocar(int pid);
 void estadisticaAumentarLiberar(int pid);
+void estadisticaAlocarBytes(int pid, int cant);
+void estadisticaLiberarBytes(int pid, int cant);
 void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado);
 void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid));
 void eliminarEstadistica(int pid);
@@ -255,7 +259,7 @@ int socketEscuchaCPUs;
 int socketEscuchaConsolas;
 int max_fd;
 
-//int PAG_SIZE;
 t_list* mem_dinamica;
+t_dictionary* bloques;
 
 #endif /* FUNCIONESKERNEL_H_ */

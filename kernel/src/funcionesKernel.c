@@ -601,6 +601,14 @@ void estadisticaAumentarLiberar(int pid){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->cantLiberar++;
 }
+void estadisticaAlocarBytes(int pid, int cant){
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->cantBytesAlocar+=cant;
+}
+void estadisticaLiberarBytes(int pid, int cant){
+	info_estadistica_t* info = buscarInformacion(pid);
+	info->cantBytesLiberar+=cant;
+}
 void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->estado = nuevoEstado;
