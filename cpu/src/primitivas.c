@@ -47,7 +47,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	uint32_t offset = pcb->stackPointer % tamanioPagina;
 
 	t_entrada_stack* lineaStack = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
-	if(!list_size(lineaStack)){
+	if(lineaStack == NULL){
 		lineaStack = crearPosicionStack();
 		list_add(pcb->indiceStack, lineaStack);
 	}
@@ -307,8 +307,10 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 		bool notFound = true;
 		for(i=0; i < list_size(contexto->variables); i++){
 			var_local = list_get(contexto->variables, i);
-			if(var_local->id == identificador_variable)
+			if(var_local->id == identificador_variable){
 				notFound = false;
+				break;
+			}
 		}
 		if(notFound){
 			log_error(logger, "No se encontro la variable %c en el stack", identificador_variable);
@@ -531,7 +533,7 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	header.length = size;
 
 	memcpy(buffer, &pcb->pid, sizeof(pcb->pid));
-	memcpy(buffer+sizeof(pcb->pid), &informacion, tamanio + 1);
+	memcpy(buffer+sizeof(pcb->pid), informacion, tamanio + 1);
 
 	sendSocket(socketConexionKernel, &header, buffer);
 	free(buffer);

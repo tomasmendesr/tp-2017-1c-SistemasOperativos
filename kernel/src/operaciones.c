@@ -10,6 +10,7 @@ void trabajarMensajeConsola(int socketConsola){
 
 	if(check <= 0){
 		log_warning(logger, "Se cerro el socket %d\n", socketConsola);
+		verificarProcesosConsolaCaida(socketConsola);
 		close(socketConsola);
 		if(paquete)free(paquete);
 		FD_CLR(socketConsola, &master);
@@ -42,7 +43,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		planificarLargoPlazo();
 	break;
 	case FINALIZAR_PROGRAMA:
-		finalizarPrograma(consola_fd,atoi(package));
+		finalizarPrograma(consola_fd,(int*) *package);
 		break;
 	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	break;
@@ -75,6 +76,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		log_info(logger,"Conexion con nueva CPU establecida");
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,socketCPU);
 		enviarTamanioStack(socketCPU);
+		enviarQuantumSleep(socketCPU);
 		agregarNuevaCPU(listaCPUs, socketCPU);
 		break;
 	case SEM_SIGNAL:
@@ -224,16 +226,20 @@ void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	info_estadistica_t * info = buscarInformacion(pcbRecibido->pid);
 
 	header_t* header=malloc(sizeof(header_t));
-	header->type=FINALIZAR_EJECUCION;
-	header->length=sizeof(pcbRecibido->exitCode);
-	sendSocket(info->socketConsola,header,&(pcbRecibido->exitCode));
+	if(!(pcbRecibido->exitCode == DESCONEXION_CONSOLA)){
+		header->type=FINALIZAR_EJECUCION;
+		header->length=sizeof(pcbRecibido->exitCode);
+		sendSocket(info->socketConsola,header,&(pcbRecibido->exitCode));
+	}
 
 	header->type = FINALIZAR_PROGRAMA;
 	header->length = sizeof(pcbRecibido->pid);
 	sendSocket(socketConexionMemoria,header,&pcbRecibido->pid);
 
 	cantProcesosSistema--;
+	freePCB(pcbRecibido);
 	free(header);
+	planificarLargoPlazo();
 }
 
 void finalizacion_stackoverflow(void* paquete_from_cpu, int socket_cpu){
@@ -480,17 +486,40 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 	return cpu_asociado;
 }
 
-void imprimirPorPantalla(void* paquete, int socketCpu){
-/*	char* informacion = paquete;
-	int* pid = paquete + strlen(informacion) + 1;
+void imprimirPorPantalla(void* paquete, int socketCpu){ // TODO
+	int pid = *(int*) paquete;
+
+	char* impresion = paquete + sizeof(int);
 
 	info_estadistica_t * info = buscarInformacion(pid);
-	printf("pid a escribir %d\n", pid);
+
+	int size = sizeof(int) + strlen(impresion) + 1;
+
 	header_t header;
 	header.type=IMPRIMIR_POR_PANTALLA;
-	header.length= strlen(informacion) + 1;
+	header.length= size;
 
-	printf("imprimo %s\n", informacion);
-*/
-	//sendSocket(info->socketConsola, &header, (void*) imprimir->info);
+	char* buffer = malloc(size);
+	memcpy(buffer, &pid, sizeof(int));
+	memcpy(buffer+sizeof(int), impresion, strlen(impresion) + 1);
+
+	sendSocket(info->socketConsola, &header, buffer);
+}
+
+void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber varios procesos
+	info_estadistica_t* info = buscarInformacionPorSocketConsola(socketConsola);
+	if(info->estado != FINISH){
+		info->matarSiguienteRafaga = true;
+		info->exitCode = DESCONEXION_CONSOLA;
+		log_info(logger, "Se termina la ejecucion del proceso %d por desconexion de la consola", info->pid);
+	}
+}
+
+info_estadistica_t* buscarInformacionPorSocketConsola(int socketConsola){
+
+	bool buscar(info_estadistica_t* info){
+		return info->socketConsola == socketConsola ? true : false;//&& (info->estado != FINISH) ? true : false;
+	}
+
+	return list_find(listadoEstadistico, buscar);
 }

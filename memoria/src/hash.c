@@ -14,12 +14,11 @@ void hashInit(int size){
 
 void createSeed(){
 	srand(time(NULL));
-	seed1 = rand()%500 + 1000;
-	seed2 = rand()%15000 + 5000;
 
+	do{	seed1 = rand()%500 + 1000;
+		seed2 = rand()%15000 + 5000;
+	}while(seed1%10 == 0 || seed2%10 == 0);
 	//Si es multiplo de 10, hago un rerun
-	if(seed1%10 == 0 || seed2%10 == 0)
-		createSeed();
 }
 
 int getPos(int pid, int pag){

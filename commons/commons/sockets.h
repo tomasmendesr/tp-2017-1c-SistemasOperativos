@@ -60,7 +60,8 @@ enum protocolo_kernel_a_cpu{
 	ESCRIBIR_ARCHIVO_OK = 25,
 	LEER_ARCHIVO_OK = 24,
 	TAMANIO_STACK_PARA_CPU = 26,
-	TAMANIO_PAGINAS_NUCLEO = 27
+	TAMANIO_PAGINAS_NUCLEO = 27,
+	QUANTUM_SLEEP = 125
 };
 
 //Mensajes que el CPU le envia al kernel

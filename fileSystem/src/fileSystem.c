@@ -8,7 +8,7 @@ int main(int argc, char** argv){
 
 	inicializarMetadata();
 
-	escribirValorBitarray(1, 1);
+	escribirValorBitarray(0, 1);
 	//printf("%d\n", buscarBloqueLibre());
 
 	//esperarConexionKernel();
@@ -55,11 +55,7 @@ void inicializarMetadata(){
 	mkdir(conf->punto_montaje, 0777);
 	mkdir(pathMetadata, 0777);
 	mkdir(pathBloques, 0777);
-	int resultado = mkdir(pathArchivos, 0777);
-	if(resultado == -1){
-		log_error(logger, "No pudo crearse la metadata");
-		exit(1);
-	}
+	mkdir(pathArchivos, 0777);
 
 	pathMetadataArchivo = string_new();
 	string_append(&pathMetadataArchivo, pathMetadata);
@@ -75,23 +71,41 @@ void inicializarMetadata(){
 	if((sizeBitArray % 8) != 0)
 		sizeBitArray++;
 
-	bitarray = bitarray_create_with_mode(string_repeat('0', sizeBitArray), sizeBitArray, LSB_FIRST);
-
-	int index;
-	for(index = 0; index < conf->cantidad_bloques; index++)
-		bitarray_clean_bit(bitarray, index);
-
-	char* data = malloc(sizeBitArray);
-	for(index =0; index <sizeBitArray; index++);
-		data[index] = '\0';
-
 	pathMetadataBitarray = string_new();
 	string_append(&pathMetadataBitarray, pathMetadata);
 	string_append(&pathMetadataBitarray, BITMAP_ARCHIVO);
-	printf("%s\n", pathMetadataBitarray);
-	FILE* bitmap = fopen(pathMetadataBitarray, "a");
-	fwrite(data, sizeBitArray, 1, bitmap);
-	fclose(bitmap);
+
+	if(validarArchivo(pathMetadataBitarray)){
+		FILE* bitmap = fopen(pathMetadataBitarray, "rb");
+
+		struct stat stats;
+		fstat(fileno(bitmap),&stats);
+
+		char* data = malloc(stats.st_size);
+
+		fread(data, stats.st_size, 1, bitmap);
+
+		fclose(bitmap);
+
+		bitarray = bitarray_create_with_mode(data,stats.st_size, LSB_FIRST);
+
+	}else{
+
+		bitarray = bitarray_create_with_mode(string_repeat('0', sizeBitArray), sizeBitArray, LSB_FIRST);
+
+		int index;
+		for(index = 0; index < conf->cantidad_bloques; index++)
+			bitarray_clean_bit(bitarray, index);
+
+		char* data = malloc(sizeBitArray);
+		for(index =0; index <sizeBitArray; index++);
+			data[index] = '\0';
+
+		FILE* bitmap = fopen(pathMetadataBitarray, "a");
+		fwrite(data, sizeBitArray, 1, bitmap);
+		fclose(bitmap);
+
+	}
 
 	//para crear los n bloques.bin
 

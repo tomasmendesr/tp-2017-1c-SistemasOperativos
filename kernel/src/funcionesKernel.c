@@ -78,14 +78,23 @@ void enviarTamanioStack(int fd){
 	header->type=TAMANIO_STACK_PARA_CPU;
 	header->length=sizeof(config->stack_Size);
 	sendSocket(fd,header,&config->stack_Size);
+	free(header);
+}
+
+void enviarQuantumSleep(int fd){
+	header_t* header=malloc(sizeof(header_t));
+	header->type = QUANTUM_SLEEP;
+	header->length=sizeof( config->quantum_Sleep);
+	sendSocket(fd,header,&config->quantum_Sleep);
+	free(header);
 }
 
 proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
 
 	proceso_en_espera_t* proc = malloc(sizeof(proceso_en_espera_t));
 	proc->socketConsola = consola_fd;
-	proc->codigo = malloc(strlen(source)+1);
-	memcpy(proc->codigo, source, strlen(source)+1);
+	proc->codigo = malloc(strlen(source));
+	memcpy(proc->codigo, source, strlen(source));
 	proc->pid = asignarPid();
 	//pcb_t* pcb = crearPCB(source, asignarPid() );
 	//pcb->consolaFd = consola_fd;
@@ -132,7 +141,7 @@ int conexionConMemoria(void){
 	}
 
 	recibir_paquete(socketConexionMemoria, &paquete, &respuesta);
-	pagina_size = atoi(paquete);
+	pagina_size =  *(int*)paquete;
 	printf("tamanio de pagina: %d\n", pagina_size);
 	printf("Conexion con memoria establecida\n");
 
@@ -461,73 +470,74 @@ void enviarPcbCPU(t_pcb* pcb, int socketCPU){
 }
 
 void planificarLargoPlazo(void){
+	if(cantProcesosSistema < config->grado_MultiProg && queue_size(colaNew) != 0){
+		bool finCola, procesoAceptado = false;
+		int cantProcChequeados = 0;
+		while(!finCola && !procesoAceptado){
 
-	if(cantProcesosSistema >= config->grado_MultiProg){
-		printf("el proceso debe esperar, cantidad maxima de procesos en sistema alcanzada\n");
-		return;
-	}
+			cantProcChequeados++;
+			finCola = (cantProcChequeados == queue_size(colaNew));
 
-	if(queue_size(colaNew) == 0){ //no hay nada que planificar
-		return;
-	}
+			sem_wait(&mutex_cola_new);
+			proceso_en_espera_t* proc = queue_pop(colaNew);
+			sem_post(&mutex_cola_new);
 
-	sem_wait(&mutex_cola_new);
-	proceso_en_espera_t* proc = queue_pop(colaNew);
-	sem_post(&mutex_cola_new);
+			//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
+			//si acepta pongo en cola ready y creo pcb;
 
-	//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
-	//si acepta pongo en cola ready y creo pcb;
+			//creo el pedido para la memoria
+			t_pedido_iniciar pedido;
+			int pid = proc->pid;
 
-	//creo el pedido para la memoria
-	t_pedido_iniciar pedido;
-	int pid = proc->pid;
+			int cant_pag_cod = strlen(proc->codigo) / pagina_size;
+			if(strlen(proc->codigo) % pagina_size > 0)
+				cant_pag_cod++;
 
-	int cant_pag_cod = strlen(proc->codigo) / pagina_size;
-	if(strlen(proc->codigo) % pagina_size)
-		cant_pag_cod++;
+			pedido.pid = pid;
+			pedido.cant_pag = config->stack_Size + cant_pag_cod;
+			log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags:%d", pid, pedido.cant_pag);
 
-	pedido.pid = pid;
-	pedido.cant_pag = config->stack_Size + cant_pag_cod;
-	log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags:%d", pid, pedido.cant_pag);
+			header_t header;
+			header.type = INICIAR_PROGRAMA;
+			header.length = sizeof(t_pedido_iniciar);
+			sendSocket(socketConexionMemoria, &header, &pedido);
 
-	header_t header;
-	header.type = INICIAR_PROGRAMA;
-	header.length = sizeof(t_pedido_iniciar);
-	sendSocket(socketConexionMemoria, &header, &pedido);
+			void* paquete;
+			int resultado;
 
-	void* paquete;
-	int resultado;
+			//evaluo respuesta
+			recibir_paquete(socketConexionMemoria, &paquete, &resultado);
 
-	//evaluo respuesta
-	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+			if(resultado == SIN_ESPACIO){
+				//aviso a consola que se rechazo
+				enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
+				log_error(logger, "Proceso %d rechazado porque no hay espacio en memoria", proc->pid);
+				queue_push(colaNew, proc); // Lo pongo al final
+			}
+			if(resultado == OP_OK){
+				procesoAceptado = true;
+				log_info(logger, "Paginas reservadas para el proceso %d", pid);
+				//aviso a consola que se acepto
+				alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
 
-	if(resultado == SIN_ESPACIO){
-		//aviso a consola que se rechazo
-		enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
-		log_error(logger, "Proceso rechazado porque no hay espacio en memoria");
-	}
-	if(resultado == OP_OK){
-		log_info(logger, "Paginas reservadas para el proceso %d", pid);
-		//aviso a consola que se acepto
-		alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
+				//mando a memoria el codigo
+				envioCodigoMemoria(proc->codigo);
 
-		//mando a memoria el codigo
-		envioCodigoMemoria(proc->codigo);
+				//creo pcb y paso el proceso a ready
+				t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
+				//proceso_t* proceso = crearProceso(pcb);
+				sem_wait(&mutex_cola_ready);
+				queue_push(colaReady, pcb);
+				sem_post(&mutex_cola_ready);
+				sem_post(&sem_cola_ready);
+				estadisticaCambiarEstado(pid, READY);
+				cantProcesosSistema++;
 
-		//creo pcb y paso el proceso a ready
-		t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
-		//proceso_t* proceso = crearProceso(pcb);
-		sem_wait(&mutex_cola_ready);
-		queue_push(colaReady, pcb);
-		sem_post(&mutex_cola_ready);
-		sem_post(&sem_cola_ready);
-		estadisticaCambiarEstado(pid, READY);
-		cantProcesosSistema++;
-
-		//destruyo el proceso en espera;
-		free(proc->codigo);
-		free(proc);
-		printf("fin plp\n");
+				//destruyo el proceso en espera;
+				free(proc->codigo);
+				free(proc);
+			}
+		}
 	}
 }
 
@@ -541,7 +551,7 @@ void alertarConsolaProcesoAceptado(int* pid, int socketConsola){
 void envioCodigoMemoria(char* codigo){
 	header_t header;
 	header.type = ENVIO_CODIGO;
-	header.length = strlen(codigo);
+	header.length = strlen(codigo)+1;
 	sendSocket(socketConexionMemoria, &header, codigo);
 }
 

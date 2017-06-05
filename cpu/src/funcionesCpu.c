@@ -101,6 +101,11 @@ int conexionConKernel(void){
 		log_error(logger,"Error al recibir tamanio de stack");
 		return -1;
 	}
+	rta = requestHandlerKernel();
+	if(rta == -1){
+		log_error(logger,"Error al recibir el quantum sleep");
+		return -1;
+	}
 	return EXIT_SUCCESS;
 }
 
@@ -149,6 +154,9 @@ int32_t requestHandlerKernel(void){
 			tamanioStack=*(uint32_t*)paquete;
 			log_info(logger, "Tamanio stack: %d", tamanioStack);
 			break;
+		case QUANTUM_SLEEP:
+			quantumSleep = *(uint32_t*) paquete;
+			break;
 //		RESPUESTAS PRIMITIVAS KERNEL:
 		case SIGNAL_OK:
 			break;
@@ -178,7 +186,8 @@ int32_t requestHandlerKernel(void){
 		case FINALIZAR_PROGRAMA:
 			break;
 		default:
-			log_error(logger, "Mensaje Recibido Incorrecto");
+			log_warning(logger, "Mensaje Recibido Incorrecto");
+			printf("recibi: %d\n", header.type);
 			if(paquete)free(paquete);
 			return -1;
 		}
@@ -311,10 +320,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 	while(i <= quantum || quantum == 0){ // Si el quantum es 0 significa que es FIFO ---> ejecuto hasta terminar.
 		int16_t sizeInstruccion = solicitarProximaInstruccion(); // carga la instruccion en el paquete global bytes
 		if(sizeInstruccion == -1){
-			//todo el problema de segmentation fault y el de stackOver
-			//hacen que finalice el proceso, por que la conexion?
 			log_error(logger, "No se pudo recibir la instruccion de memoria.");
-//			finalizarConexion(socketConexionMemoria);
 			finalizarPor(ERROR_MEMORIA);
 			return;
 		}
@@ -327,7 +333,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 		revisarFinalizarCPU();
 		i++;
 		pcb->programCounter++;
-		// usleep --------> todo no se para que es esto
+		usleep(quantumSleep * 1000);
 	}
 	if(!procesoBloqueado){
 		finalizarPor(FIN_EJECUCION);

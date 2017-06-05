@@ -72,11 +72,11 @@ int enviarArchivo(int kernel_fd, char* path){
  	}
 
  	header.type = ENVIO_CODIGO;
- 	header.length = file_size+1;
+ 	header.length = file_size;
  	memcpy(buffer, &(header.type),sizeof(header.type)); offset+=sizeof(header.type);
  	memcpy(buffer + offset, &(header.length),sizeof(header.length)); offset+=sizeof(header.length);
 
- 	if(fread(buffer + offset,file_size+1,1,file) < 1){
+ 	if(fread(buffer + offset,file_size,1,file) < 1){
  		log_error(logger, "No pude leer el archivo");
  		free(buffer);
  		fclose(file);
@@ -85,7 +85,7 @@ int enviarArchivo(int kernel_fd, char* path){
 
  	/*Esto lo hago asi porque de la otra forma habría que reservar MAS espacio para
  	 * enviar el paquete */
- 	if(sendAll(kernel_fd, buffer, file_size + sizeof(header_t)+1, 0) <= 0){
+ 	if(sendAll(kernel_fd, buffer, file_size + sizeof(header_t), 0) <= 0){
  		log_error(logger, "Error al enviar archivo");
  		free(buffer);
  		fclose(file);
@@ -234,11 +234,8 @@ void threadPrograma(dataHilo* data){
 			case FINALIZAR_EJECUCION:
 				finalizarEjecucionProceso(&procesoActivo, data, *(int32_t*) paquete);
 				break;
-				// TODO - enviar pid del programa, buscarlo y aumentar su cantidad de impresiones en 1
-			//case IMPRIMIR_TEXTO_PROGRAMA:
-			//	printf("%s\n", (char*)paquete);
-			//	break;
-			case IMPRIMIR_VARIABLE_PROGRAMA:
+			case IMPRIMIR_POR_PANTALLA:
+				imprimirPorPantalla(paquete);
 				break;
 			default:
 				break;
@@ -259,11 +256,9 @@ void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exit
 	t_proceso* proc = list_find(procesos, buscarPorSocket);
 	log_info(logger, "Termino la ejecucion del programa %d", proc->pid);
 
-	cargarFechaFin(proc);
-	imprimirInformacion(proc, exitCode);
+	terminarProceso(proc, exitCode);
 
 	procesoActivo = false;
-	list_remove_and_destroy_by_condition(procesos, buscarPorSocket, free);
 	free(data);
 }
 
@@ -333,10 +328,8 @@ void finalizarPrograma(char* comando, char* param){
 	header->type=FINALIZAR_PROGRAMA;
 	header->length= sizeof(pid);
 	sendSocket(proceso->socket, header, (void*) &pid);
+	free(header);
 
-	//terminarProceso(proceso);
-
-	//log_info(logger, "Proceso finalizado\n");
 }
 
 void desconectarConsola(char* comando, char* param) {
@@ -355,6 +348,10 @@ void desconectarConsola(char* comando, char* param) {
 void terminarProceso(t_proceso* proc, int32_t exitCode){
 	cargarFechaFin(proc);
 	imprimirInformacion(proc, exitCode);
+	bool buscarPorPid(t_proceso* p){
+		return p->pid == proc->pid ? true : false;
+	}
+	list_remove_by_condition(procesos, buscarPorPid);
 	pthread_cancel(proc->thread);
 	free(proc);
 }
@@ -373,8 +370,8 @@ int crearLog() {
 	}
 }
 
-void imprimirVariable(t_imprimir* impr){
-	int pid = impr->pid;
+void imprimirPorPantalla(void* buffer){
+	int pid = *(int*) buffer;
 
 	bool buscarProceso(t_proceso* p){
 			return p->pid == pid ? true : false;
@@ -383,5 +380,6 @@ void imprimirVariable(t_imprimir* impr){
 	t_proceso* proceso = list_find(procesos, buscarProceso);
 
 	proceso->impresiones++;
-	//printf("%d", impr->valor);
+	char* impresion = buffer + sizeof(int);
+	printf("%s\n", impresion);
 }
