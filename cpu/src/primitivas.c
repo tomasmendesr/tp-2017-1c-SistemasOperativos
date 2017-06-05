@@ -566,7 +566,7 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
 	paquete = malloc(header.length);
 	memcpy(paquete, &lectura, header.length);
 
-	if(sendSocket(socketConexionKernel, header, lectura) <= 0){
+	if(sendSocket(socketConexionKernel, &header, paquete) <= 0){
 		if(paquete)free(paquete);
 		finalizarCPU();
 	}
@@ -634,9 +634,8 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
 	cursor.posicion = posicion;
 	cursor.descriptor = descriptor_archivo;
 	paquete = malloc(header.length);
-	memcpy(paquete, cursor, header.length);
 
-	if(sendSocket(socketConexionKernel, header, paquete) <= 0){
+	if(sendSocket(socketConexionKernel, &header, paquete) <= 0){
 		if(paquete)free(paquete);
 		finalizarCPU();
 	}
