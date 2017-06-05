@@ -162,13 +162,12 @@ void destruirConfiguracionKernel(t_config_kernel* config){
 t_dictionary* crearDiccionarioConValue(char** array, char** valores){
 
         t_dictionary* dic = dictionary_create();
-        int j = 0;
-
+        uint16_t j = 0;
         while(array[j] != NULL){
-        	dictionary_put(dic, array[j], valores[j]);
+        	valor[j]=atoi(valores[j]);
+        	dictionary_put(dic, array[j], &valor[j]);
         	j++;
         }
-
         return dic;
 }
 
@@ -176,10 +175,9 @@ t_dictionary* crearDiccionario(char** array){
 
         t_dictionary* dic = dictionary_create();
         int j = 0;
-
         while(array[j] != NULL){
-                dictionary_put(dic, array[j], 0);
-                j++;
+			dictionary_put(dic, array[j], 0);
+			j++;
         }
         return dic;
 }
@@ -241,17 +239,15 @@ void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor){
 }
 
 int semaforoSignal(t_dictionary* dic, char* key){
-	char* previo = dictionary_get(dic, key);
-	*previo = *previo + 1;
-
-	return atoi(previo);
+	int32_t* previo = dictionary_get(dic, key);
+	short valor = ++*previo;
+	return valor;
 }
 
 int semaforoWait(t_dictionary* dic, char* key){
-	char* previo = dictionary_get(dic, key);
-	*previo = *previo - 1;
-
-	return atoi(previo);
+	int32_t* previo = dictionary_get(dic, key);
+	short valor = --*previo;
+	return valor;
 }
 
 void listProcesses(char* comando, char* param){

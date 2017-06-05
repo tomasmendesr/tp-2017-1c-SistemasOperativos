@@ -150,29 +150,25 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 }
 
 void realizarSignal(int socketCPU, char* key){
-	int valor;
-	valor = semaforoSignal(config->semaforos, key);
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
-	enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 
-	if(valor <= 0){
+	if(semaforoSignal(config->semaforos, key) <= 0){
 		desbloquearProceso(key);
 		log_info(logger, "Desbloqueo un proceso");
 	}
+	enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 }
 
 void realizarWait(int socketCPU, char* key){
-	int valorSemaforo = semaforoWait(config->semaforos, key);
 	int resultado;
+	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 
-	if(valorSemaforo < 0){
+	if(semaforoWait(config->semaforos, key) < 0){
 		resultado = WAIT_DETENER_EJECUCION;
 	}else{
 		resultado = WAIT_SEGUIR_EJECUCION;
 	}
-
-	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	enviar_paquete_vacio(resultado, socketCPU);
 
 	if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb

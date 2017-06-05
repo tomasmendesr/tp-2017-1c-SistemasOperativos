@@ -258,7 +258,7 @@ fd_set setCPUs;
 int socketEscuchaCPUs;
 int socketEscuchaConsolas;
 int max_fd;
-
+int valor[3];
 t_list* mem_dinamica;
 t_dictionary* bloques;
 
