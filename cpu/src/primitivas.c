@@ -551,7 +551,25 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
  * @return	void
  */
 void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valor_variable tamanio){
-	printf("leer!\n");
+	log_debug(logger, "ANSISOP_leer");
+	void* paquete;
+	t_lectura lectura;
+	header_t header;
+	lectura.pid = pcb->pid;
+	lectura.descriptor = descriptor_archivo;
+	lectura.informacion = informacion;
+	lectura.size = tamanio;
+	header.type = LEER_ARCHIVO;
+	header.length = sizeof(t_lectura);
+	paquete = malloc(header.length);
+	memcpy(paquete, &lectura, header.length);
+
+	if(sendSocket(socketConexionKernel, header, lectura) <= 0){
+		if(paquete)free(paquete);
+		finalizarCPU();
+	}
+	requestHandlerKernel();
+	if(paquete)free(paquete);
 }
 
 /*
@@ -604,7 +622,24 @@ void liberarMemoria(t_puntero puntero){
  * @return	void
  */
 void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion){
-	printf("moverCursor!\n");
+	log_debug(logger, "ANSISOP_moverCursor");
+	void* paquete;
+	header_t header;
+	t_cursor cursor;
+	header.type = MOVER_CURSOR;
+	header.length = sizeof(t_cursor);
+	cursor.pid = pcb->pid;
+	cursor.posicion = posicion;
+	cursor.descriptor = descriptor_archivo;
+	paquete = malloc(header.length);
+	memcpy(paquete, cursor, header.length);
+
+	if(sendSocket(socketConexionKernel, header, paquete) <= 0){
+		if(paquete)free(paquete);
+		finalizarCPU();
+	}
+	requestHandlerKernel();
+	if(paquete)free(paquete);
 }
 
 /*
