@@ -473,10 +473,11 @@ void planificarLargoPlazo(void){
 	if(cantProcesosSistema < config->grado_MultiProg && queue_size(colaNew) != 0){
 		bool finCola, procesoAceptado = false;
 		int cantProcChequeados = 0;
+		int cantidadDeProcesosEnNew = queue_size(colaNew);
 		while(!finCola && !procesoAceptado){
 
 			cantProcChequeados++;
-			finCola = (cantProcChequeados == queue_size(colaNew));
+			finCola = (cantProcChequeados == cantidadDeProcesosEnNew);
 
 			sem_wait(&mutex_cola_new);
 			proceso_en_espera_t* proc = queue_pop(colaNew);
@@ -508,13 +509,15 @@ void planificarLargoPlazo(void){
 			//evaluo respuesta
 			recibir_paquete(socketConexionMemoria, &paquete, &resultado);
 
-			if(resultado == SIN_ESPACIO){
+			if(resultado == SIN_ESPACIO){ // TODO verificar que este bien esto
 				//aviso a consola que se rechazo
 				enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
 				log_error(logger, "Proceso %d rechazado porque no hay espacio en memoria", proc->pid);
-				queue_push(colaNew, proc); // Lo pongo al final
+				info_estadistica_t* info = buscarInformacion(pid);
+				info->estado = FINISH;
+				info->exitCode = FALLA_RESERVAR_RECURSOS;
 			}
-			if(resultado == OP_OK){
+			else if(resultado == OP_OK){
 				procesoAceptado = true;
 				log_info(logger, "Paginas reservadas para el proceso %d", pid);
 				//aviso a consola que se acepto
