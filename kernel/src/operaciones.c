@@ -43,7 +43,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		planificarLargoPlazo();
 	break;
 	case FINALIZAR_PROGRAMA:
-		finalizarPrograma(consola_fd,(int*) *package);
+		finalizarPrograma(consola_fd,*(int*)package);
 		break;
 	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	break;
@@ -349,6 +349,7 @@ void reservarMemoria(int socket, char* paquete){
 	metadata_bloque bloque;
 	reserva_memoria* reserva;
 	t_pedido_iniciar* pedido;
+	t_pedido_bytes bytes;
 
 	memcpy(&pedido_memoria, paquete, tamano);
 
@@ -367,7 +368,6 @@ void reservarMemoria(int socket, char* paquete){
 			header->type = GRABAR_BYTES;
 			header->length = sizeof(metadata_bloque)+sizeof(t_pedido_bytes);
 			package = malloc(header->length);
-			t_pedido_bytes bytes;
 
 			bytes.pid = reserva->pid;
 			bytes.pag = reserva->pag;
@@ -384,6 +384,7 @@ void reservarMemoria(int socket, char* paquete){
 		}
 		pos = buscarEnTabla(pedido_memoria,pos);
 	}
+	if(paquete)free(paquete);
 	pedido = malloc(sizeof(t_pedido_iniciar));
 	pedido->pid = pedido_memoria.pid;
 	pedido->cant_pag = 1;
@@ -393,14 +394,35 @@ void reservarMemoria(int socket, char* paquete){
 	sendSocket(socketConexionMemoria, header, pedido);
 	free(header);
 	free(pedido);
-
+	info_estadistica_t* info = buscarInformacion(pedido_memoria.pid);
 	recibir_paquete(socketConexionMemoria, (void*)&paquete, &resultado);
 	if(resultado == OP_OK){
+		header_t header;
+		header.type = RESERVAR_MEMORIA_OK;
+		header.length = sizeof(uint32_t);
+		metadata_bloque metadata;
+		metadata.used = true;
+		metadata.size = pedido_memoria.cant;
 		reserva = malloc(sizeof(t_pedido_iniciar));
-		reserva->pag = atoi(paquete);
+		reserva->pag = info->cantPaginasHeap; //TODO
+		reserva->size = pagina_size - sizeof(metadata_bloque);
+		reserva->pid = pedido_memoria.pid;
+		list_add(mem_dinamica, reserva);
+		bytes.pid = pedido_memoria.pid;
+		bytes.size = sizeof(metadata);
+		bytes.offset = 0;
+		bytes.pag = reserva->pag;
+		puntero = bytes.pag*pagina_size + sizeof(metadata);
+		estadisticaAlocarBytes(pedido_memoria.pid, pedido_memoria.cant);
+		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarAlocar);
+		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
+		sendSocket(socket, &header, &puntero);
+		header.type = GRABAR_BYTES;
+		header.length = sizeof(metadata);
+		sendSocket(socketConexionMemoria, &header, &metadata);
+		dictionary_put(bloques, string_itoa(bytes.pag), &metadata);
 	}
-	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
-	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarAlocar);
+
 }
 
 void liberarMemoria(int socket, char* paquete){
