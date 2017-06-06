@@ -159,8 +159,11 @@ void realizarSignal(int socketCPU, char* key){
 			desbloquearProceso(key);
 			log_info(logger, "Desbloqueo un proceso");
 		}
+		enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 	}
-	enviar_paquete_vacio(SIGNAL_OK, socketCPU);
+	else{
+		enviar_paquete_vacio(SIGNAL_OK, socketCPU);
+	}
 }
 
 void realizarWait(int socketCPU, char* key){
@@ -186,6 +189,9 @@ void realizarWait(int socketCPU, char* key){
 			free(paquete);
 			log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
 		}
+	}
+	else{
+		enviar_paquete_vacio(WAIT_SEGUIR_EJECUCION, socketCPU);
 	}
 }
 
