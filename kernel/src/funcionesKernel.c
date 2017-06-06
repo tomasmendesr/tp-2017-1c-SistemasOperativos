@@ -336,6 +336,8 @@ void gradoMultiprogramacion(char* comando, char* param){
 	}
 	config->grado_MultiProg = atoi(param);
 	printf("Grado de Multiprogramacion cambiado con exito, ahora es %d\n", config->grado_MultiProg);
+	
+	planificarLargoPlazo();
 }
 void killProcess(char* comando, char* param){
         if(!esNumero(param)){
