@@ -154,9 +154,11 @@ void realizarSignal(int socketCPU, char* key){
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 
-	if(semaforoSignal(config->semaforos, key) <= 0){
-		desbloquearProceso(key);
-		log_info(logger, "Desbloqueo un proceso");
+	if(dictionary_has_key(config->semaforos, key)){
+		if(semaforoSignal(config->semaforos, key) <= 0){
+			desbloquearProceso(key);
+			log_info(logger, "Desbloqueo un proceso");
+		}
 	}
 	enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 }
@@ -164,28 +166,33 @@ void realizarSignal(int socketCPU, char* key){
 void realizarWait(int socketCPU, char* key){
 	int resultado;
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
-	if(semaforoWait(config->semaforos, key) < 0){
-		resultado = WAIT_DETENER_EJECUCION;
+
+	if(dictionary_has_key(config->semaforos,key)){
+			if(semaforoWait(config->semaforos, key) < 0){
+				resultado = WAIT_DETENER_EJECUCION;
+			}else{
+				resultado = WAIT_SEGUIR_EJECUCION;
+			}
+		enviar_paquete_vacio(resultado, socketCPU);
+
+		if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
+
+			int tipo_mensaje;
+			void* paquete;
+			recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
+			if(tipo_mensaje == PROC_BLOCKED){
+				t_pcb* pcbRecibido = deserializar_pcb(paquete);
+				bloquearProceso(key, pcbRecibido);
+				desocupar_cpu(socketCPU);
+				log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
+				free(paquete);
+			}
+			else{
+				log_error(logger, "Se esperaba el mensaje PROC_BLOCKED y se recibio otro");
+			}
+		}
 	}else{
-		resultado = WAIT_SEGUIR_EJECUCION;
-	}
-	enviar_paquete_vacio(resultado, socketCPU);
-
-	if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
-
-		int tipo_mensaje;
-		void* paquete;
-		recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
-		if(tipo_mensaje == PROC_BLOCKED){
-			t_pcb* pcbRecibido = deserializar_pcb(paquete);
-			bloquearProceso(key, pcbRecibido);
-			desocupar_cpu(socketCPU);
-			log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
-			free(paquete);
-		}
-		else{
-			log_error(logger, "Se esperaba el mensaje PROC_BLOCKED y se recibio otro");
-		}
+		log_warning(logger ,"No se encontro el semaforo %s", key);
 	}
 }
 

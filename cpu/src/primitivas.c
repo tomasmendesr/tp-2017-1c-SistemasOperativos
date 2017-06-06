@@ -121,6 +121,7 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
 	log_debug(logger, "ANSISOP_asignarValorCompartida var: %s, valor: %d", variable, valor);
 	uint32_t offset = 0;
+	int16_t var;
 	void* buffer; // Contiene el size del nombre, el nombre y el valor.
 	uint32_t sizeVariable = strlen(variable) + 1;
 	uint32_t sizeTotal = sizeof(sizeVariable) + sizeVariable + sizeof(valor);
@@ -140,8 +141,15 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 		return -1;
 	}
 	log_info(logger, "Se solicito al kernel asignar el valor %d a la varible %s", valor, variable);
-	requestHandlerKernel();
+	var=requestHandlerKernel();
+	if(var == -1){
+		log_debug(logger, "Variable no asignada");
+		free(header);
+		if(buffer)free(buffer);
+		return EXIT_FAILURE;
+	}
 	free(header);
+	if(buffer)free(buffer);
 	return valor;
 }
 
@@ -191,17 +199,21 @@ void finalizar(void){
 	log_debug(logger,"ANSISOP_finalizar");
 	//Obtengo contexto quitado de la lista y lo limpio.
 	t_entrada_stack* contexto = list_remove(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
-	uint32_t i = list_size(contexto->argumentos) + list_size(contexto->variables);
-	pcb->stackPointer-=TAMANIO_VARIABLE*i; // Disminuyo stackPointer del pcb
-	for(i=0; i<list_size(contexto->argumentos); i++){ // Limpio lista de argumentos del contexto
-		free(list_remove(contexto->argumentos,i));
+	uint16_t i;
+	if(contexto != NULL){
+		pcb->stackPointer -= TAMANIO_VARIABLE * (list_size(contexto->argumentos) + i<list_size(contexto->variables)); // Disminuyo stackPointer del pcb
+		if(pcb->stackPointer >= 0){
+			for(i=0; i<list_size(contexto->argumentos); i++){ // Limpio lista de argumentos del contexto
+				free(list_remove(contexto->argumentos,i));
+			}
+			for(i=0; i<list_size(contexto->variables); i++){
+				free(list_remove(contexto->variables, i));
+			}
+		}
+		list_destroy(contexto->argumentos);
+		list_destroy(contexto->variables);
+		if(contexto->retVar)free(contexto->retVar);
 	}
-	for(i=0; i<list_size(contexto->variables); i++){
-		free(list_remove(contexto->variables, i));
-	}
-	list_destroy(contexto->argumentos);
-	list_destroy(contexto->variables);
-	if(contexto->retVar)free(contexto->retVar);
 	if(list_size(pcb->indiceStack) == 0){
 		finPrograma = true;
 		log_info(logger, "Finalizó la ejecucion del programa.");
@@ -369,13 +381,14 @@ void retornar(t_valor_variable retorno){
 	log_debug(logger, "ANSISOP_retornar");
 	t_entrada_stack* contextoEjecucionActual = list_remove(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
 	//Limpio el contexto actual
-	int i;
+	uint32_t i;
+	if(contextoEjecucionActual == NULL)return;
 	for(i=0; i < list_size(contextoEjecucionActual->argumentos); i++){
 		t_argumento* arg = list_get(contextoEjecucionActual->argumentos, i);
 		free(arg);
 		pcb->stackPointer = pcb->stackPointer - TAMANIO_VARIABLE;
 	}
-	for(i=0; i<list_size(contextoEjecucionActual->variables); i++){
+	for(i=0; i < list_size(contextoEjecucionActual->variables); i++){
 		t_var* var = list_get(contextoEjecucionActual->variables, i);
 		free(var);
 		pcb->stackPointer = pcb->stackPointer-TAMANIO_VARIABLE;
