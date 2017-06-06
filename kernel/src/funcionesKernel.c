@@ -324,6 +324,26 @@ void processInfo(char* comando, char* param){
 		printf("Cantidad syscalls: %d\n", info->cantSyscalls);
 	}
 
+	printf("Archivos Abiertos: \n");
+
+	bool buscarArchivos(entrada_tabla_archivo_proceso* entrada){
+		return entrada->proceso == pid ? true : false;
+	}
+
+	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarArchivos);
+
+	if(!list_is_empty(entrada->archivos)){
+
+		void mostrarArchivos(archivo* archivo){
+			printf("fd: %d , ", archivo->fd);
+			printf("flags : %s \n", archivo->flags);
+		}
+
+		list_iterate(entrada->archivos, mostrarArchivos);
+	}else{
+		printf("El proceso no tiene archivos abiertos.\n");
+	}
+
 }
 
 void getTablaArchivos(char* comando, char* param){
