@@ -246,7 +246,7 @@ int semaforoSignal(t_dictionary* dic, char* key){
 
 int semaforoWait(t_dictionary* dic, char* key){
 	int32_t* previo = dictionary_get(dic, key);
-	short valor = --*previo;
+	int valor = (int) previo - 1;
 	return valor;
 }
 
@@ -463,11 +463,11 @@ void planificarCortoPlazo(void){
 		t_pcb* pcb = queue_pop(colaReady);
 		sem_post(&mutex_cola_ready);
 
+		cpu->pcb = pcb;
 		enviarPcbCPU(pcb, cpu->socket);
 		//TODO: Agregar proceso a la lista de ejecuccion.
 		estadisticaCambiarEstado(pcb->pid, EXEC);
 
-		cpu->pcb = pcb;
 	}
 }
 
@@ -675,10 +675,9 @@ void desbloquearProceso(char* semaforo){
 }
 
 void bloquearProceso(char* semaforo, t_pcb* pcb){
-
 	t_queue* cola = (t_queue*)dictionary_get(bloqueos, semaforo);
-	queue_push(cola, pcb);
-
+	if(cola == NULL) log_warning(logger, "No se encontro la cola con el semaforo %s", semaforo);
+	else queue_push(cola, pcb);
 	estadisticaAumentarRafaga(pcb->pid);
 	estadisticaCambiarEstado(pcb->pid, BLOQ);
 }

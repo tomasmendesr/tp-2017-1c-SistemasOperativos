@@ -164,7 +164,6 @@ void realizarSignal(int socketCPU, char* key){
 void realizarWait(int socketCPU, char* key){
 	int resultado;
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
-
 	if(semaforoWait(config->semaforos, key) < 0){
 		resultado = WAIT_DETENER_EJECUCION;
 	}else{
@@ -177,12 +176,16 @@ void realizarWait(int socketCPU, char* key){
 		int tipo_mensaje;
 		void* paquete;
 		recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
-
-		t_pcb* pcbRecibido = deserializar_pcb(paquete);
-		bloquearProceso(key, pcbRecibido);
-		desocupar_cpu(socketCPU);
-		free(paquete);
-		log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
+		if(tipo_mensaje == PROC_BLOCKED){
+			t_pcb* pcbRecibido = deserializar_pcb(paquete);
+			bloquearProceso(key, pcbRecibido);
+			desocupar_cpu(socketCPU);
+			log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
+			free(paquete);
+		}
+		else{
+			log_error(logger, "Se esperaba el mensaje PROC_BLOCKED y se recibio otro");
+		}
 	}
 }
 
