@@ -539,14 +539,21 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
 void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio){
 	log_debug(logger, "ANSISOP_escribir");
 	header_t header;
-	header.type = IMPRIMIR_POR_PANTALLA;
+	header.type = ESCRIBIR;
 
-	size_t size = sizeof(int) + tamanio + 1;
+	printf("fd: %d\n", descriptor_archivo);
+
+	size_t size = sizeof(int)*2 + tamanio + 1;
 	void* buffer = malloc(size);
 	header.length = size;
 
-	memcpy(buffer, &pcb->pid, sizeof(pcb->pid));
-	memcpy(buffer+sizeof(pcb->pid), informacion, tamanio + 1);
+	uint32_t offset = 0;
+
+	memcpy(buffer, &descriptor_archivo, sizeof(descriptor_archivo));
+	offset += sizeof(descriptor_archivo);
+	memcpy(buffer + offset, &pcb->pid, sizeof(pcb->pid));
+	offset += sizeof(pcb->pid);
+	memcpy(buffer + offset, informacion, tamanio + 1);
 
 	sendSocket(socketConexionKernel, &header, buffer);
 	free(buffer);

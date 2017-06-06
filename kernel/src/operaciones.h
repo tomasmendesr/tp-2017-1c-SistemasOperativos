@@ -26,7 +26,7 @@ void finalizacion_semaforo_no_existe(void* paquete_from_cpu, int socket_cpu);
 void reservarMemoria(int socket, char* paquete);
 void liberarMemoria(int socket, char* paquete);
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu);
-void imprimirPorPantalla(void* imprimir, int socketCpu);
+void escribir(void* imprimir, int socketCpu);
 void verificarProcesosConsolaCaida(int socketConsola);
 
 #endif /* OPERACIONES_H_ */

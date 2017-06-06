@@ -98,8 +98,8 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case LIBERAR_MEMORIA:
 		liberarMemoria(socketCPU, package);
 		break;
-	case IMPRIMIR_POR_PANTALLA:
-		imprimirPorPantalla(package, socketCPU);
+	case ESCRIBIR:
+		escribir(package, socketCPU);
 		break;
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -528,24 +528,27 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 	return cpu_asociado;
 }
 
-void imprimirPorPantalla(void* paquete, int socketCpu){ // TODO
-	int pid = *(int*)paquete;
+void escribir(void* paquete, int socketCpu){ // TODO
+	uint32_t fd = *(uint32_t*)paquete;
+	int pid = *(int*) (paquete + sizeof(uint32_t));
 
-	char* impresion = paquete + sizeof(int);
+	char* impresion = paquete + sizeof(int) + sizeof(uint32_t);
 
 	info_estadistica_t * info = buscarInformacion(pid);
 
 	int size = sizeof(int) + strlen(impresion) + 1;
 
-	header_t header;
-	header.type=IMPRIMIR_POR_PANTALLA;
-	header.length= size;
+	if(fd == info->socketConsola){ // TODO - FALTA MANDARLE EL PAQUETE A FS
+		header_t header;
+		header.type=IMPRIMIR_POR_PANTALLA;
+		header.length= size;
 
-	char* buffer = malloc(size);
-	memcpy(buffer, &pid, sizeof(int));
-	memcpy(buffer+sizeof(int), impresion, strlen(impresion) + 1);
+		char* buffer = malloc(size);
+		memcpy(buffer, &pid, sizeof(int));
+		memcpy(buffer+sizeof(int), impresion, strlen(impresion) + 1);
 
-	sendSocket(info->socketConsola, &header, buffer);
+		sendSocket(info->socketConsola, &header, buffer);
+	}
 }
 
 void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber varios procesos
