@@ -154,9 +154,9 @@ void realizarSignal(int socketCPU, char* key){
 
 	int valor;
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
-	valor = semaforoSignal(config->semaforos, key);
 
 	if(dictionary_has_key(config->semaforos, key)){
+		valor = semaforoSignal(config->semaforos, key);
 		if(valor <= 0){
 			desbloquearProceso(key);
 			log_info(logger, "Desbloqueo un proceso");
@@ -173,9 +173,9 @@ void realizarWait(int socketCPU, char* key){
 	int resultado;
 	int valor;
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
-	valor = semaforoWait(config->semaforos, key);
 
 	if(dictionary_has_key(config->semaforos,key)){
+		valor = semaforoWait(config->semaforos, key);
 		if(valor < 0){
 			resultado = WAIT_DETENER_EJECUCION;
 		}else{
