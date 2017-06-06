@@ -662,12 +662,16 @@ void crearColasBloqueados(char** semaforos){
 
 void desbloquearProceso(char* semaforo){
 	t_queue* cola = (t_queue*)dictionary_get(bloqueos, semaforo);
-	t_pcb* pcb = queue_pop(cola);
 
-	queue_push(colaReady, pcb);
-	estadisticaCambiarEstado(pcb->pid, READY);
+	if(!queue_is_empty(cola)){
 
-	sem_post(&sem_cola_ready);
+		t_pcb* pcb = queue_pop(cola);
+
+		queue_push(colaReady, pcb);
+		estadisticaCambiarEstado(pcb->pid, READY);
+
+		sem_post(&sem_cola_ready);
+	}
 }
 
 void bloquearProceso(char* semaforo, t_pcb* pcb){
