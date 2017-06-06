@@ -154,9 +154,11 @@ void realizarSignal(int socketCPU, char* key){
 
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 
-	if(semaforoSignal(config->semaforos, key) <= 0){
-		desbloquearProceso(key);
-		log_info(logger, "Desbloqueo un proceso");
+	if(dictionary_has_key(config->semaforos, key)){
+		if(semaforoSignal(config->semaforos, key) <= 0){
+			desbloquearProceso(key);
+			log_info(logger, "Desbloqueo un proceso");
+		}
 	}
 	enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 }
@@ -165,24 +167,25 @@ void realizarWait(int socketCPU, char* key){
 	int resultado;
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 
-	if(semaforoWait(config->semaforos, key) < 0){
-		resultado = WAIT_DETENER_EJECUCION;
-	}else{
-		resultado = WAIT_SEGUIR_EJECUCION;
-	}
-	enviar_paquete_vacio(resultado, socketCPU);
+	if(dictionary_has_key(config->semaforos,key)){
+		if(semaforoWait(config->semaforos, key) < 0){
+			resultado = WAIT_DETENER_EJECUCION;
+		}else{
+			resultado = WAIT_SEGUIR_EJECUCION;
+		}
+		enviar_paquete_vacio(resultado, socketCPU);
 
-	if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
+		if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
+			int tipo_mensaje;
+			void* paquete;
+			recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
 
-		int tipo_mensaje;
-		void* paquete;
-		recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
-
-		t_pcb* pcbRecibido = deserializar_pcb(paquete);
-		bloquearProceso(key, pcbRecibido);
-		desocupar_cpu(socketCPU);
-		free(paquete);
-		log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
+			t_pcb* pcbRecibido = deserializar_pcb(paquete);
+			bloquearProceso(key, pcbRecibido);
+			desocupar_cpu(socketCPU);
+			free(paquete);
+			log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
+		}
 	}
 }
 
