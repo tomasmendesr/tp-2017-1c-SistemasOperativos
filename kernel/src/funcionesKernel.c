@@ -240,14 +240,12 @@ void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor){
 
 int semaforoSignal(t_dictionary* dic, char* key){
 	int32_t* previo = dictionary_get(dic, key);
-	short valor = ++*previo;
-	return valor;
+	return ++*previo;
 }
 
 int semaforoWait(t_dictionary* dic, char* key){
 	int32_t* previo = dictionary_get(dic, key);
-	int valor = (int) previo - 1;
-	return valor;
+	return --*previo;
 }
 
 void listProcesses(char* comando, char* param){
