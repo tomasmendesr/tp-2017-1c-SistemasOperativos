@@ -162,6 +162,7 @@ void realizarSignal(int socketCPU, char* key){
 		enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 	}
 	else{
+		log_warning(logger ,"No se encontro el semaforo %s", key);
 		enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 	}
 }
@@ -196,8 +197,6 @@ void realizarWait(int socketCPU, char* key){
 		}
 	}else{
 		log_warning(logger ,"No se encontro el semaforo %s", key);
-	}
-	else{
 		enviar_paquete_vacio(WAIT_SEGUIR_EJECUCION, socketCPU);
 	}
 }
