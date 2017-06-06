@@ -39,6 +39,7 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		sem_post(&mutex_cola_new);
 		//sem_post(&sem_cola_new);
 		crearInfoEstadistica(nuevoProceso->pid, consola_fd);
+		crearEntradaArchivoProceso(nuevoProceso->pid);
 		log_info(logger,"Proceso agregado a la cola New");
 		planificarLargoPlazo();
 	break;

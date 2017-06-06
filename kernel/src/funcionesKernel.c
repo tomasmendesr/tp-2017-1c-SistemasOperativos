@@ -324,6 +324,26 @@ void processInfo(char* comando, char* param){
 		printf("Cantidad syscalls: %d\n", info->cantSyscalls);
 	}
 
+	printf("Archivos Abiertos: \n");
+
+	bool buscarArchivos(entrada_tabla_archivo_proceso* entrada){
+		return entrada->proceso == pid ? true : false;
+	}
+
+	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarArchivos);
+
+	if(!list_is_empty(entrada->archivos)){
+
+		void mostrarArchivos(archivo* archivo){
+			printf("fd: %d , ", archivo->fd);
+			printf("flags : %s \n", archivo->flags);
+		}
+
+		list_iterate(entrada->archivos, mostrarArchivos);
+	}else{
+		printf("El proceso no tiene archivos abiertos.\n");
+	}
+
 }
 
 void getTablaArchivos(char* comando, char* param){
@@ -336,6 +356,8 @@ void gradoMultiprogramacion(char* comando, char* param){
 	}
 	config->grado_MultiProg = atoi(param);
 	printf("Grado de Multiprogramacion cambiado con exito, ahora es %d\n", config->grado_MultiProg);
+	
+	planificarLargoPlazo();
 }
 void killProcess(char* comando, char* param){
         if(!esNumero(param)){
@@ -640,12 +662,16 @@ void crearColasBloqueados(char** semaforos){
 
 void desbloquearProceso(char* semaforo){
 	t_queue* cola = (t_queue*)dictionary_get(bloqueos, semaforo);
-	t_pcb* pcb = queue_pop(cola);
 
-	queue_push(colaReady, pcb);
-	estadisticaCambiarEstado(pcb->pid, READY);
+	if(!queue_is_empty(cola)){
 
-	sem_post(&sem_cola_ready);
+		t_pcb* pcb = queue_pop(cola);
+
+		queue_push(colaReady, pcb);
+		estadisticaCambiarEstado(pcb->pid, READY);
+
+		sem_post(&sem_cola_ready);
+	}
 }
 
 void bloquearProceso(char* semaforo, t_pcb* pcb){
