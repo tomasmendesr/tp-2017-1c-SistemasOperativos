@@ -118,6 +118,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case ERROR_MEMORIA:
 		finalizacion_error_memoria(package, socketCPU);
 		break;
+	case SEMAFORO_NO_EXISTE:
+		finalizacion_semaforo_no_existe(package, socketCPU);
+		break;
 	default:
 		log_warning(logger,"Se recibio un codigo de operacion invalido.");
 	}
@@ -163,8 +166,8 @@ void realizarSignal(int socketCPU, char* key){
 		enviar_paquete_vacio(SIGNAL_OK, socketCPU);
 	}
 	else{
-		log_warning(logger ,"No se encontro el semaforo %s", key);
-		enviar_paquete_vacio(SIGNAL_OK, socketCPU);
+		log_error(logger ,"No se encontro el semaforo %s. Se finaliza la ejecucion", key);
+		enviar_paquete_vacio(SEMAFORO_NO_EXISTE, socketCPU);
 	}
 }
 
@@ -198,8 +201,8 @@ void realizarWait(int socketCPU, char* key){
 			}
 		}
 	}else{
-		log_warning(logger ,"No se encontro el semaforo %s", key);
-		enviar_paquete_vacio(WAIT_SEGUIR_EJECUCION, socketCPU);
+		log_error(logger ,"No se encontro el semaforo %s. Se finaliza la ejecucion", key);
+		enviar_paquete_vacio(SEMAFORO_NO_EXISTE, socketCPU);
 	}
 }
 
@@ -221,6 +224,13 @@ void finalizacion_error_memoria(void* paquete_from_cpu, int socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso %d por error en memoria", pcbRecibido->pid);
 	pcbRecibido->exitCode = ERROR_MEMORIA;
+	terminarProceso(pcbRecibido, socket_cpu);
+}
+
+void finalizacion_semaforo_no_existe(void* paquete_from_cpu, int socket_cpu){
+	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso %d por querer acceder a un semaforo no inicializado", pcbRecibido->pid);
+	pcbRecibido->exitCode = SEMAFORO_NO_EXISTE;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 

@@ -183,11 +183,12 @@ int32_t requestHandlerKernel(void){
 		case LIBERAR_MEMORIA_OK:
 			log_info(logger, "Memoria liberada");
 			break;
-		case FINALIZAR_PROGRAMA:
+		case SEMAFORO_NO_EXISTE:
+			finalizarPor(SEMAFORO_NO_EXISTE);
+			finPrograma = true;
 			break;
 		default:
 			log_warning(logger, "Mensaje Recibido Incorrecto");
-			printf("recibi: %d\n", header.type);
 			if(paquete)free(paquete);
 			return -1;
 		}

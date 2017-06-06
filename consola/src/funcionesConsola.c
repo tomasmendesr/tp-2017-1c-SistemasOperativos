@@ -299,6 +299,7 @@ char* obtenerExitCode(int32_t exitCode){
 	case -7: return "FINALIZAR_DESDE_CONSOLA";
 	case -8: return "SUPERO_TAMANIO_PAGINA";
 	case -9: return "SUPERA_LIMITE_ASIGNACION_PAGINAS";
+	case -10: return "SEMAFORO_NO_INICIALIZADO";
 	case -20: return "ERROR_SIN_DEFINICION";
 	default: return "ERROR DESCONOCIDO";
 	}
