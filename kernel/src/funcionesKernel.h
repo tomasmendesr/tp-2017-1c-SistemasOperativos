@@ -261,5 +261,6 @@ int max_fd;
 int valor[3];
 t_list* mem_dinamica;
 t_dictionary* bloques;
+t_list* datos;
 
 #endif /* FUNCIONESKERNEL_H_ */

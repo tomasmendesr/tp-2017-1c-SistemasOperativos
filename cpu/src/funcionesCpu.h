@@ -31,7 +31,6 @@ typedef struct{
 }t_config_cpu;
 
 t_pcb* pcb;
-
 int socketConexionKernel;
 int socketConexionMemoria;
 t_config_cpu* config;

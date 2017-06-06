@@ -308,35 +308,30 @@ int buscarPos(uint32_t pid, uint32_t pag){
 }
 
 t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
-	void* paquete;
-	int tipo;
-	int offset;
-	metadata_bloque bloque;
+	uint ind=0;
+	uint offset;
+	t_list* datos;
+	metadata_bloque* bloque;
 	header_t header;
 	offset = 0;
 	header.type = SOLICITUD_BYTES;
 	header.length = sizeof(metadata_bloque);
 	t_pedido_bytes pedido;
-	while(offset < pagina_size){
+	datos=dictionary_get(bloques,string_itoa(pag));
+	while(ind<list_size(datos) && offset<pagina_size){
 		do{
-			pedido.pid = pid;
-			pedido.pag = pag;
-			pedido.offset = offset;
+			bloque=list_get(datos,ind);
 			pedido.size = header.length;
-			sendSocket(socketConexionMemoria, &header, &pedido);
-			recibir_paquete(socketConexionMemoria, &paquete, &tipo);
-			memcpy(&bloque, paquete, header.length);
-			offset += pedido.size+bloque.size;
+			offset += pedido.size+bloque->size;
 		}
-		while(bloque.used);
-		if(bloque.size >= cant)
-			return pagina_size * pag + offset - bloque.size;
+		while(bloque->used);
+		if(bloque->size >= cant)
+			return pagina_size * pag + offset - bloque->size;
 	}
 	return 0;
 }
 
 void reservarMemoria(int socket, char* paquete){
-
 	pedido_mem pedido_memoria;
 	t_puntero puntero;
 	header_t* header;
@@ -381,6 +376,7 @@ void reservarMemoria(int socket, char* paquete){
 		pos = buscarEnTabla(pedido_memoria,pos);
 	}
 	if(paquete)free(paquete);
+	datos = list_create();
 	pedido = malloc(sizeof(t_pedido_iniciar));
 	pedido->pid = pedido_memoria.pid;
 	pedido->cant_pag = 1;
@@ -396,11 +392,12 @@ void reservarMemoria(int socket, char* paquete){
 		header_t header;
 		header.type = RESERVAR_MEMORIA_OK;
 		header.length = sizeof(uint32_t);
-		metadata_bloque metadata;
-		metadata.used = true;
-		metadata.size = pedido_memoria.cant;
+		metadata_bloque* metadata;
+		metadata = malloc(sizeof(metadata_bloque));
+		metadata->used = true;
+		metadata->size = pedido_memoria.cant;
 		reserva = malloc(sizeof(t_pedido_iniciar));
-		reserva->pag = info->cantPaginasHeap; //TODO
+		reserva->pag = info->cantPaginasHeap;
 		reserva->size = pagina_size - sizeof(metadata_bloque);
 		reserva->pid = pedido_memoria.pid;
 		list_add(mem_dinamica, reserva);
@@ -408,21 +405,20 @@ void reservarMemoria(int socket, char* paquete){
 		bytes.size = sizeof(metadata);
 		bytes.offset = 0;
 		bytes.pag = reserva->pag;
-		puntero = bytes.pag*pagina_size + sizeof(metadata);
+		puntero = bytes.pag * pagina_size + sizeof(metadata_bloque);
 		estadisticaAlocarBytes(pedido_memoria.pid, pedido_memoria.cant);
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarAlocar);
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
 		sendSocket(socket, &header, &puntero);
 		header.type = GRABAR_BYTES;
-		header.length = sizeof(metadata);
-		sendSocket(socketConexionMemoria, &header, &metadata);
-		dictionary_put(bloques, string_itoa(bytes.pag), &metadata);
+		header.length = sizeof(metadata_bloque);
+		sendSocket(socketConexionMemoria, &header, metadata);
+		list_add(datos, metadata);
+		dictionary_put(bloques, string_itoa(bytes.pag), datos);
 	}
-
 }
 
 void liberarMemoria(int socket, char* paquete){
-
 	t_pedido_bytes pedido;
 	header_t header;
 	void* package;
@@ -433,7 +429,7 @@ void liberarMemoria(int socket, char* paquete){
 	header.type = SOLICITUD_BYTES;
 	header.length = sizeof(t_pedido_bytes);
 	memcpy(&pedido, paquete, sizeof(t_pedido_bytes));
-	int valor = buscarPos(pedido.pid, pedido.pag);
+	int32_t valor = buscarPos(pedido.pid, pedido.pag);
 	pedido.size = sizeof(metadata_bloque);
 	pedido.offset -= sizeof(metadata_bloque);
 	if(valor != -1 && pedido.offset > 0){
@@ -441,6 +437,7 @@ void liberarMemoria(int socket, char* paquete){
 		recibir_paquete(socketConexionMemoria, &package, &tipo);
 		memcpy(&metadata, package, pedido.size);
 		free(package);
+		info_estadistica_t* info = buscarInformacion(pedido.pid);
 		if(tipo == OP_OK){
 			if(metadata.used){
 				pedido.size = sizeof(metadata.used);
@@ -463,7 +460,6 @@ void liberarMemoria(int socket, char* paquete){
 					aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarLiberar);
 				}
 			}else{
-				info_estadistica_t* info = buscarInformacion(pedido.pid);
 				info->matarSiguienteRafaga = true;
 			}
 		}
@@ -493,7 +489,7 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 
 	t_link_element *nodo = listaCPUs->head;
 
-	while (nodo != NULL && cpu_asociado == NULL) {
+	while(nodo != NULL && cpu_asociado == NULL){
 		cpu_t *cpu_aux = (cpu_t*) nodo->data;
 		if(cpu_aux->socket == soc_asociado) {
 			cpu_asociado = cpu_aux;
@@ -505,7 +501,7 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 }
 
 void imprimirPorPantalla(void* paquete, int socketCpu){ // TODO
-	int pid = *(int*) paquete;
+	int pid = *(int*)paquete;
 
 	char* impresion = paquete + sizeof(int);
 
