@@ -84,6 +84,7 @@ char* ansisop_a_string(char* path){
 }
 
 void freePCB(t_pcb* pcb){
+	int pid = pcb->pid;
  	uint16_t i,k;
  	if(pcb->etiquetas != NULL) {
  		free(pcb->etiquetas);
@@ -116,5 +117,5 @@ void freePCB(t_pcb* pcb){
  		free(stack);
  	}
  	free(pcb);
- 	printf("PCB Liberado\n");
+ 	printf("PCB #%d Liberado\n", pid);
  }

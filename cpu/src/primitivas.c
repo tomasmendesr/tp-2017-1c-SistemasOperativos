@@ -541,8 +541,6 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	header_t header;
 	header.type = ESCRIBIR;
 
-	printf("fd: %d\n", descriptor_archivo);
-
 	size_t size = sizeof(int)*2 + tamanio + 1;
 	void* buffer = malloc(size);
 	header.length = size;

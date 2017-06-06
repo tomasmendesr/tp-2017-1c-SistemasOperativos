@@ -252,7 +252,7 @@ int32_t requestHandlerMemoria(void){
 void recibirPCB(void* paquete){
 	pcb = deserializar_pcb(paquete);
 	setPCB(pcb);
-	log_info(logger, "Recibo PCB id: %i", pcb->pid);
+	log_info(logger, "PCB #%d recibido", pcb->pid);
 }
 
 int16_t solicitarBytes(t_pedido_bytes* pedido){
