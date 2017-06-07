@@ -119,6 +119,7 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
  * @return	Valor que se asigno
  */
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
+	if(finPrograma) return -1;
 	log_debug(logger, "ANSISOP_asignarValorCompartida var: %s, valor: %d", variable, valor);
 	uint32_t offset = 0;
 	int16_t var;
@@ -140,10 +141,10 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 		free(buffer);
 		return -1;
 	}
-	log_info(logger, "Se solicito al kernel asignar el valor %d a la varible %s", valor, variable);
+	log_info(logger, "Se solicito al kernel asignar el valor %d a la variable %s", valor, variable);
 	var=requestHandlerKernel();
 	if(var == -1){
-		log_debug(logger, "Variable no asignada");
+		log_error(logger, "No se pudo asignar la variable %s", variable);
 		free(header);
 		if(buffer)free(buffer);
 		return EXIT_FAILURE;
@@ -359,7 +360,10 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	header.type = LEER_VAR_COMPARTIDA;
 	header.length = strlen(variable)+1;
 	sendSocket(socketConexionKernel, &header, variable);
-	requestHandlerKernel();
+	if (requestHandlerKernel() == -1) {
+		log_error(logger, "Variable %s no definida");
+		return -1;
+	}
 	int32_t valor = *(int32_t*)paqueteGlobal;
 	free(paqueteGlobal);
 	log_info(logger, "Valor de %s: %d", variable, valor);
@@ -553,7 +557,12 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	offset += sizeof(pcb->pid);
 	memcpy(buffer + offset, informacion, tamanio + 1);
 
-	sendSocket(socketConexionKernel, &header, buffer);
+	if(sendSocket(socketConexionKernel, &header, buffer) <= 0){
+		if(buffer)free(buffer);
+		log_error(logger, "Conexion con kernel perdida...");
+		finalizarCPU();
+	}
+	log_info(logger, "Informacion enviada al kernel");
 	free(buffer);
 }
 

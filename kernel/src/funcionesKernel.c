@@ -17,11 +17,11 @@ void crearConfig(int argc, char* argv[]){
 	if(verificarExistenciaDeArchivo(pathConfig)){
 		config = levantarConfiguracionKernel(pathConfig);
 	}else{
-		printf("No se pudo levantar archivo de configuracion");
+		log_error(logger, "No se pudo levantar archivo de configuracion");
 		exit(EXIT_FAILURE);
 	}
 
-	printf("Configuracion levantada correctamente\n");
+	log_info(logger, "Configuracion levantada correctamente\n");
 	return;
 }
 
@@ -117,7 +117,7 @@ int conexionConFileSystem(void){
 
 	enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionFS);
 
-	printf("Conexion con fs establecida\n");
+	log_info(logger, "Conexion con File System establecida");
 
 	return 1;
 }
@@ -141,9 +141,10 @@ int conexionConMemoria(void){
 	}
 
 	recibir_paquete(socketConexionMemoria, &paquete, &respuesta);
+	if(respuesta != ENVIAR_TAMANIO_PAGINA) return -1;
 	pagina_size =  *(int*)paquete;
-	printf("tamanio de pagina: %d\n", pagina_size);
-	printf("Conexion con memoria establecida\n");
+	log_info(logger, "Conexion con memoria establecida");
+	log_info(logger, "Tamanio de pagina recibido: %d", pagina_size);
 
 	return 1;
 }
@@ -224,18 +225,12 @@ void modificarValorDiccionario(t_dictionary* dic, char* key, void* data){
 }
 
 int leerVariableGlobal(t_dictionary* dic, char* key){
-	if(dictionary_has_key(dic, key)){
-		int* valor = dictionary_get(dic, key);
-		return valor;
-	}
-	return NULL;
+	int* valor = dictionary_get(dic, key);
+	return *valor;
 }
 
 void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor){
-	if(dictionary_has_key(dic, key)){
-		dictionary_remove_and_destroy(dic, key, free);
-		dictionary_put(dic, key, nuevoValor);
-	}
+	modificarValorDiccionario(dic, key, nuevoValor);
 }
 
 int semaforoSignal(t_dictionary* dic, char* key){
@@ -451,7 +446,6 @@ void planificarCortoPlazo(void){
 		cpu_t* cpu = obtenerCpuLibre();
 
 		if(cpu != NULL){
-			printf("Obtuve cpu libre\n");
 			cpu->disponible = false;
 		}else{
 			return;

@@ -121,42 +121,51 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case SEMAFORO_NO_EXISTE:
 		finalizacion_semaforo_no_existe(package, socketCPU);
 		break;
+	case GLOBAL_NO_DEFINIDA:
+		finalizacion_global_no_definida(package, socketCPU);
+		break;
 	default:
-		log_warning(logger,"Se recibio un codigo de operacion invalido.");
+		log_warning(logger,"Se recibio el codigo de operacion invalido.");
 	}
 }
 
 void leerVarCompartida(int socketCPU, char* variable){
-	int valor = leerVariableGlobal(config->variablesGlobales, variable);
+	if(dictionary_has_key(config->variablesGlobales, variable)){
+		int valor = leerVariableGlobal(config->variablesGlobales, variable);
 
-	header_t* header = malloc(sizeof(header_t));
-	header->type = VALOR_VAR_COMPARTIDA;
-	header->length = sizeof(valor);
+		header_t* header = malloc(sizeof(header_t));
+		header->type = VALOR_VAR_COMPARTIDA;
+		header->length = sizeof(valor);
 
-	sendSocket(socketCPU, header, &valor);
-	free(header);
+		sendSocket(socketCPU, header, &valor);
+		free(header);
+	}else{
+		log_error(logger, "Error al leer var compartida %s. No se encontro", variable);
+		enviar_paquete_vacio(GLOBAL_NO_DEFINIDA, socketCPU);
+	}
 }
 
 void asignarVarCompartida(int socketCPU, void* buffer){
 	char* variable;
 	int valor, sizeVariable;
-
 	memcpy(&sizeVariable, buffer, 4);
 	variable = malloc(sizeof(sizeVariable));
 	memcpy(variable, buffer+4, sizeVariable);
-	memcpy(&valor, buffer+4+sizeVariable, 4);
-
-	escribirVariableGlobal(config->variablesGlobales, variable, &valor);
-	free(variable);
-
-	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
-	enviar_paquete_vacio(ASIG_VAR_COMPARTIDA_OK, socketCPU);
+	if(dictionary_has_key(config->variablesGlobales, variable)){
+		memcpy(&valor, buffer+4+sizeVariable, 4);
+		escribirVariableGlobal(config->variablesGlobales, variable, &valor);
+		free(variable);
+		aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
+		enviar_paquete_vacio(ASIG_VAR_COMPARTIDA_OK, socketCPU);
+	}
+	else{
+		log_error(logger, "No se encontro la variable compartida %s. Se finaliza ejecucion", variable);
+		enviar_paquete_vacio(GLOBAL_NO_DEFINIDA, socketCPU);
+	}
 }
 
 void realizarSignal(int socketCPU, char* key){
-
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
-
 	if(dictionary_has_key(config->semaforos, key)){
 		int valor = semaforoSignal(config->semaforos, key);
 		if(valor <= 0){
@@ -229,8 +238,15 @@ void finalizacion_error_memoria(void* paquete_from_cpu, int socket_cpu){
 
 void finalizacion_semaforo_no_existe(void* paquete_from_cpu, int socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso %d por querer acceder a un semaforo no inicializado", pcbRecibido->pid);
+	log_error(logger, "Finaliza el proceso #%d por querer acceder a un semaforo no inicializado", pcbRecibido->pid);
 	pcbRecibido->exitCode = SEMAFORO_NO_EXISTE;
+	terminarProceso(pcbRecibido, socket_cpu);
+}
+
+void finalizacion_global_no_definida(void* paquete_from_cpu, int socket_cpu){
+	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso #%d por intentar acceder a un una variable global no definida", pcbRecibido->pid);
+	pcbRecibido->exitCode = GLOBAL_NO_DEFINIDA;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
@@ -538,7 +554,7 @@ void escribir(void* paquete, int socketCpu){ // TODO
 
 	int size = sizeof(int) + strlen(impresion) + 1;
 
-	if(fd == info->socketConsola){ // TODO - FALTA MANDARLE EL PAQUETE A FS
+	if(fd == 1){ // TODO - FALTA MANDARLE EL PAQUETE A FS - tiene que ser 1?
 		header_t header;
 		header.type=IMPRIMIR_POR_PANTALLA;
 		header.length= size;

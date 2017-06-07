@@ -172,7 +172,7 @@ int32_t requestHandlerKernel(void){
 		case VALOR_VAR_COMPARTIDA:
 			paqueteGlobal=malloc(header.length);
 			memcpy(paqueteGlobal,paquete,header.length);
-			break;
+			return EXIT_SUCCESS;
 		case ASIG_VAR_COMPARTIDA_OK:
 			log_info(logger, "Se asigno correctamente la variable compartida");
 			break;
@@ -183,10 +183,15 @@ int32_t requestHandlerKernel(void){
 		case LIBERAR_MEMORIA_OK:
 			log_info(logger, "Memoria liberada");
 			break;
+		// errores
 		case SEMAFORO_NO_EXISTE:
 			finalizarPor(SEMAFORO_NO_EXISTE);
 			finPrograma = true;
 			break;
+		case GLOBAL_NO_DEFINIDA:
+			finalizarPor(GLOBAL_NO_DEFINIDA);
+			finPrograma = true;
+			return -1;
 		default:
 			log_warning(logger, "Mensaje Recibido Incorrecto");
 			if(paquete)free(paquete);
@@ -396,12 +401,14 @@ int16_t solicitarProximaInstruccion(void) {
 }
 
 void finalizarPor(int type) {
+	log_info(logger, "Se finaliza la ejecucion del programa #%d", pcb->pid);
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type = type;
 	header.length = paquete->tamanioBuffer;
 	if(sendSocket(socketConexionKernel, &header, (void*)paquete->buffer) <= 0){
 		log_error(logger,"Error al notificar kernel el fin de ejecucion");
+		finalizarCPU();
 	}
 	free(paquete->buffer);
 	free(paquete);

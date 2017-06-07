@@ -8,10 +8,10 @@ void crearConfig(int argc, char* argv[]) {
 	if (verificarExistenciaDeArchivo(pathConfig)) {
 		config = levantarConfiguracionConsola(pathConfig);
 	} else {
-		log_info(logger, "No Pudo levantarse el archivo de configuracion");
+		log_info(logger, "No pudo levantarse el archivo de configuracion");
 		exit(EXIT_FAILURE);
 	}
-	printf("Configuracion levantada correctamente\n");
+	log_info(logger,"Configuracion levantada correctamente");
 	return;
 }
 
@@ -42,7 +42,7 @@ int enviarArchivo(int kernel_fd, char* path){
 
 	//Verifico existencia archivo (Aguante esta funcion loco!)
  	if( !verificarExistenciaDeArchivo(path) ){
- 		log_error(logger, "no existe el archivo");
+ 		log_error(logger, "No existe el archivo");
  		return -1;
  	}
 
@@ -66,7 +66,7 @@ int enviarArchivo(int kernel_fd, char* path){
  	int offset = 0;
 
  	if(buffer == NULL){
- 		log_error(logger, "no pude reservar memoria para enviar archivo");
+ 		log_error(logger, "No se pudo reservar memoria para enviar archivo");
  		fclose(file);
  		return -1;
  	}
@@ -77,7 +77,7 @@ int enviarArchivo(int kernel_fd, char* path){
  	memcpy(buffer + offset, &(header.length),sizeof(header.length)); offset+=sizeof(header.length);
 
  	if(fread(buffer + offset,file_size,1,file) < 1){
- 		log_error(logger, "No pude leer el archivo");
+ 		log_error(logger, "No es posible leer el archivo");
  		free(buffer);
  		fclose(file);
  		return -1;
@@ -127,16 +127,15 @@ void iniciarPrograma(char* comando, char* param) {
 	int socket_cliente;
 
 	if(!verificarExistenciaDeArchivo(param)){
-		log_warning(logger, "no existe el archivo");
-		printf("El archivo no se encuentra\n");
+		log_warning(logger, "No se encontro el archivo ingresado");
 		return;
 	}
 
 	socket_cliente = createClient(config->ip_Kernel, config->puerto_Kernel);
 	if (socket_cliente != -1) {
-		printf("Cliente creado satisfactoriamente.\n");
+		log_info(logger, "Cliente creado satisfactoriamente");
 	}else{
-		perror("No se pudo crear el cliente");
+		log_error(logger, "No se pudo crear el cliente");
 	}
 	enviar_paquete_vacio(HANDSHAKE_PROGRAMA, socket_cliente);
 	int operacion = 0;
@@ -149,11 +148,11 @@ void iniciarPrograma(char* comando, char* param) {
 	}
 
 	if (operacion == HANDSHAKE_KERNEL) {
-		printf("Conexion con Kernel establecida! :D \n");
-		printf("Se procede a mandar el archivo: %s\n", param);
+		log_info(logger, "Conexion con Kernel establecida");
+		log_debug(logger, "Se procede a mandar el archivo: '%s'", param);
 
 	} else {
-		printf("El Kernel no devolvio handshake :( \n");
+		log_error(logger, "El Kernel no devolvio handshake");
 	}
 
 	dataHilo* data = malloc(sizeof(dataHilo));
@@ -194,8 +193,7 @@ void threadPrograma(dataHilo* data){
 	pthread_t thread = pthread_self();
 
 	if((enviarArchivo(socketProceso, data->pathAnsisop))==-1){
-		log_error(logger,"No se pudo mandar el archivo");
-		printf("No pudo enviarse el archivo\n");
+		log_error(logger,"No pudo enviarse el archivo");
 		return;
 	}
 	log_info(logger,"Archivo enviado correctamente");
@@ -208,15 +206,15 @@ void threadPrograma(dataHilo* data){
 
 	switch(operacion){
 	case PROCESO_RECHAZADO:
-		log_error(logger, "El kernel rechazo el proceso");
+		log_error(logger, "El kernel rechazo el programa #%d por falta de recursos", *pidAsignado );
 		return;
 		break;
 	case PID_PROGRAMA:
 		pidAsignado = (int*)paquete;
-		log_info(logger, "Programa %d aceptado por el kernel", *pidAsignado);
+		log_info(logger, "Programa #%d aceptado por el kernel", *pidAsignado);
 		break;
 	default:
-		log_warning(logger, "Se recibio una operacion invalida\n");
+		log_warning(logger, "Se recibio una operacion invalida");
 		break;
 	}
 
@@ -254,7 +252,7 @@ void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exit
 	}
 
 	t_proceso* proc = list_find(procesos, buscarPorSocket);
-	log_info(logger, "Termino la ejecucion del programa %d", proc->pid);
+	log_info(logger, "Termino la ejecucion del programa #%d", proc->pid);
 
 	terminarProceso(proc, exitCode);
 
@@ -273,7 +271,7 @@ void cargarFechaFin(t_proceso* proc){
 
 void imprimirInformacion(t_proceso* proceso, int32_t exitCode){
 	printf("-----FIN PROGRAMA-----\n");
-	printf("Pid %d\n", proceso->pid);
+	printf("Pid #%d\n", proceso->pid);
 	printf("Inicio: %d-%d-%d %d%d:%d\n", proceso->fechaInicio->tm_year + 1900, proceso->fechaInicio->tm_mon + 1, proceso->fechaInicio->tm_mday, proceso->fechaInicio->tm_hour, proceso->fechaInicio->tm_min, proceso->fechaInicio->tm_sec);
 	printf("Fin:  %d-%d-%d %d:%d:%d\n", proceso->fechaFin->tm_year + 1900, proceso->fechaFin->tm_mon + 1, proceso->fechaFin->tm_mday, proceso->fechaFin->tm_hour, proceso->fechaFin->tm_min, proceso->fechaFin->tm_sec);
 	printf("Cantidad de impresiones por pantalla: %d\n", proceso->impresiones);
@@ -289,18 +287,19 @@ void imprimirInformacion(t_proceso* proceso, int32_t exitCode){
 
 char* obtenerExitCode(int32_t exitCode){
 	switch(exitCode){
-	case 0: return "FINALIZO_BIEN";
-	case -1: return "FALLA_RESERVAR_RECURSOS";
-	case -2: return "ARCHIVO_INEXISTENTE";
-	case -3: return "LEER_ARCHIVO_SIN_PERMISOS";
-	case -4: return "ESCRIBIR_ARCHIVO_SIN_PERMISOS";
-	case -5: return "ERROR_MEMORIA";
-	case -6: return "DESCONEXION_CONSOLA";
-	case -7: return "FINALIZAR_DESDE_CONSOLA";
-	case -8: return "SUPERO_TAMANIO_PAGINA";
-	case -9: return "SUPERA_LIMITE_ASIGNACION_PAGINAS";
-	case -10: return "SEMAFORO_NO_INICIALIZADO";
-	case -20: return "ERROR_SIN_DEFINICION";
+	case FINALIZO_BIEN: return "FINALIZO_BIEN";
+	case FALLA_RESERVAR_RECURSOS: return "FALLA_RESERVAR_RECURSOS";
+	case ARCHIVO_INEXISTENTE: return "ARCHIVO_INEXISTENTE";
+	case LEER_ARCHIVO_SIN_PERMISOS: return "LEER_ARCHIVO_SIN_PERMISOS";
+	case ESCRIBIR_ARCHIVO_SIN_PERMISOS: return "ESCRIBIR_ARCHIVO_SIN_PERMISOS";
+	case ERROR_MEMORIA: return "ERROR_MEMORIA";
+	case DESCONEXION_CONSOLA: return "DESCONEXION_CONSOLA";
+	case FINALIZAR_DESDE_CONSOLA: return "FINALIZAR_DESDE_CONSOLA";
+	case SUPERO_TAMANIO_PAGINA: return "SUPERO_TAMANIO_PAGINA";
+	case SUPERA_LIMITE_ASIGNACION_PAGINAS: return "SUPERA_LIMITE_ASIGNACION_PAGINAS";
+	case SEMAFORO_NO_EXISTE: return "ERROR_SEMAFORO_NO_INICIALIZADO";
+	case GLOBAL_NO_DEFINIDA: return "ERROR_VAR_GLOBAL_NO_DEFINDIDA";
+	case ERROR_SIN_DEFINICION: return "ERROR_SIN_DEFINICION";
 	default: return "ERROR DESCONOCIDO";
 	}
 }
@@ -308,7 +307,7 @@ char* obtenerExitCode(int32_t exitCode){
 void finalizarPrograma(char* comando, char* param){
 
 	if(!esNumero(param)){
-		log_warning(logger, "Valor de pid invalido");
+		log_warning(logger, "Pid invalido");
 		return;
 	}
 
@@ -321,7 +320,7 @@ void finalizarPrograma(char* comando, char* param){
 	t_proceso* proceso = list_find(procesos, buscarProceso);
 
 	if(proceso == NULL){
-		log_warning(logger, "El proceso %d no se encuentra", pid);
+		log_warning(logger, "El proceso #%d no se encuentra", pid);
 		return;
 	}
 
@@ -358,7 +357,6 @@ void terminarProceso(t_proceso* proc, int32_t exitCode){
 }
 
 void limpiarMensajes(char* comando, char* param) {
-	//me doy asco por usar system
 	system("clear");
 }
 
@@ -382,5 +380,5 @@ void imprimirPorPantalla(void* buffer){
 
 	proceso->impresiones++;
 	char* impresion = buffer + sizeof(int);
-	printf("%s\n", impresion);
+	printf("-- IMPRESION PROGRAMA #%d: %s\n", pid, impresion);
 }
