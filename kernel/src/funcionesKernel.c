@@ -220,13 +220,15 @@ void levantarInterfaz(void){
 }
 
 void modificarValorDiccionario(t_dictionary* dic, char* key, void* data){
+	// No hago un get porque si es null tira segmentation fault.
 	dictionary_remove(dic, key);
 	dictionary_put(dic, key, data);
 }
 
 int leerVariableGlobal(t_dictionary* dic, char* key){
 	int* valor = dictionary_get(dic, key);
-	return *valor;
+	if(valor == NULL) return NULL;
+	else return *valor;
 }
 
 void escribirVariableGlobal(t_dictionary* dic, char* key, int nuevoValor){

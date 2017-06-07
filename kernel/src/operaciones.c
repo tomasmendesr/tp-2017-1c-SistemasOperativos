@@ -124,6 +124,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case GLOBAL_NO_DEFINIDA:
 		finalizacion_global_no_definida(package, socketCPU);
 		break;
+	case NULL_POINTER_EXCEPTION:
+		finalizacion_null_pointer(package, socketCPU);
+		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido.");
 	}
@@ -133,12 +136,16 @@ void leerVarCompartida(int socketCPU, char* variable){
 	if(dictionary_has_key(config->variablesGlobales, variable)){
 		int valor = leerVariableGlobal(config->variablesGlobales, variable);
 
-		header_t* header = malloc(sizeof(header_t));
-		header->type = VALOR_VAR_COMPARTIDA;
-		header->length = sizeof(valor);
-
-		sendSocket(socketCPU, header, &valor);
-		free(header);
+		if(valor == NULL) {
+			log_error(logger, "El valor de %s es NULL", variable);
+			enviar_paquete_vacio(NULL_POINTER_EXCEPTION, socketCPU);
+		}else{
+			header_t* header = malloc(sizeof(header_t));
+			header->type = VALOR_VAR_COMPARTIDA;
+			header->length = sizeof(valor);
+			sendSocket(socketCPU, header, &valor);
+			free(header);
+		}
 	}else{
 		log_error(logger, "Error al leer var compartida %s. No se encontro", variable);
 		enviar_paquete_vacio(GLOBAL_NO_DEFINIDA, socketCPU);
@@ -153,7 +160,6 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 	memcpy(variable, buffer+4, sizeVariable);
 	if(dictionary_has_key(config->variablesGlobales, variable)){
 		memcpy(&valor, buffer+4+sizeVariable, 4);
-		printf("valor %d\n", valor);
 		escribirVariableGlobal(config->variablesGlobales, variable, valor);
 		free(variable);
 		aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
@@ -169,7 +175,12 @@ void realizarSignal(int socketCPU, char* key){
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	if(dictionary_has_key(config->semaforos, key)){
 		int valor = semaforoSignal(config->semaforos, key);
-		if(valor <= 0){
+		if(valor == NULL){
+			log_error(logger, "El valor de %s es NULL", variable);
+			enviar_paquete_vacio(NULL_POINTER_EXCEPTION, socketCPU);
+			return;
+		}
+		else if(valor <= 0){
 			desbloquearProceso(key);
 			log_info(logger, "Desbloqueo un proceso");
 		}
@@ -187,11 +198,13 @@ void realizarWait(int socketCPU, char* key){
 
 	if(dictionary_has_key(config->semaforos,key)){
 		int valor = semaforoWait(config->semaforos, key);
-		if(valor < 0){
-			resultado = WAIT_DETENER_EJECUCION;
-		}else{
-			resultado = WAIT_SEGUIR_EJECUCION;
+		if(valor == NULL){
+			log_error(logger, "El valor de %s es NULL", variable);
+			enviar_paquete_vacio(NULL_POINTER_EXCEPTION, socketCPU);
+			return;
 		}
+		else if(valor < 0) resultado = WAIT_DETENER_EJECUCION;
+		else resultado = WAIT_SEGUIR_EJECUCION;
 		enviar_paquete_vacio(resultado, socketCPU);
 
 		if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
@@ -248,6 +261,13 @@ void finalizacion_global_no_definida(void* paquete_from_cpu, int socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d por intentar acceder a un una variable global no definida", pcbRecibido->pid);
 	pcbRecibido->exitCode = GLOBAL_NO_DEFINIDA;
+	terminarProceso(pcbRecibido, socket_cpu);
+}
+
+void finalizacion_null_pointer(void* paquete_from_cpu, int socket_cpu){
+	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso #%d por null pointer exception", pcbRecibido->pid);
+	pcbRecibido->exitCode = NULL_POINTER_EXCEPTION;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
