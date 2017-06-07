@@ -300,6 +300,7 @@ char* obtenerExitCode(int32_t exitCode){
 	case SEMAFORO_NO_EXISTE: return "ERROR_SEMAFORO_NO_INICIALIZADO";
 	case GLOBAL_NO_DEFINIDA: return "ERROR_VAR_GLOBAL_NO_DEFINDIDA";
 	case ERROR_SIN_DEFINICION: return "ERROR_SIN_DEFINICION";
+	case NULL_POINTER: return "NULL_POINTER";
 	default: return "ERROR DESCONOCIDO";
 	}
 }

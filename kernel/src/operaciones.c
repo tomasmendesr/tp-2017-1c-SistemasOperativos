@@ -124,6 +124,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case GLOBAL_NO_DEFINIDA:
 		finalizacion_global_no_definida(package, socketCPU);
 		break;
+	case NULL_POINTER:
+		finalizacion_null_pointer(package, socketCPU);
+		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido.");
 	}
@@ -131,13 +134,19 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 
 void leerVarCompartida(int socketCPU, char* variable){
 	if(dictionary_has_key(config->variablesGlobales, variable)){
-		int valor = leerVariableGlobal(config->variablesGlobales, variable);
-		log_debug(logger, "Valor de %s: %d", variable, valor);
-		header_t* header = malloc(sizeof(header_t));
-		header->type = VALOR_VAR_COMPARTIDA;
-		header->length = sizeof(valor);
-		sendSocket(socketCPU, header, &valor);
-		free(header);
+		if(dictionary_get(config->variablesGlobales, variable) == NULL){
+			log_error(logger, "El valor de %s es NULL", variable);
+			 enviar_paquete_vacio(NULL_POINTER, socketCPU);
+		}
+		else{
+			int valor = leerVariableGlobal(config->variablesGlobales, variable);
+			log_debug(logger, "Valor de %s: %d", variable, valor);
+			header_t* header = malloc(sizeof(header_t));
+			header->type = VALOR_VAR_COMPARTIDA;
+			header->length = sizeof(valor);
+			sendSocket(socketCPU, header, &valor);
+			free(header);
+		}
 	}else{
 		log_error(logger, "Error al leer var compartida %s. No se encontro", variable);
 		enviar_paquete_vacio(GLOBAL_NO_DEFINIDA, socketCPU);
@@ -166,12 +175,19 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 void realizarSignal(int socketCPU, char* key){
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	if(dictionary_has_key(config->semaforos, key)){
-		int valor = semaforoSignal(config->semaforos, key);
-		if(valor <= 0){
-			desbloquearProceso(key);
-			log_info(logger, "Desbloqueo un proceso");
+		if(dictionary_get(config->semaforos, key) == NULL){
+			log_error(logger, "El valor de %s es NULL", key);
+			 enviar_paquete_vacio(NULL_POINTER, socketCPU);
+			 return;
 		}
-		enviar_paquete_vacio(SIGNAL_OK, socketCPU);
+		else{
+			int valor = semaforoSignal(config->semaforos, key);
+			if(valor <= 0){
+				desbloquearProceso(key);
+				log_info(logger, "Desbloqueo un proceso");
+			}
+			enviar_paquete_vacio(SIGNAL_OK, socketCPU);
+		}
 	}
 	else{
 		log_error(logger ,"No se encontro el semaforo %s. Se finaliza la ejecucion", key);
@@ -184,26 +200,33 @@ void realizarWait(int socketCPU, char* key){
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 
 	if(dictionary_has_key(config->semaforos,key)){
-		int valor = semaforoWait(config->semaforos, key);
-		if(valor < 0) resultado = WAIT_DETENER_EJECUCION;
-		else resultado = WAIT_SEGUIR_EJECUCION;
+		if(dictionary_get(config->semaforos, key) == NULL){
+			log_error(logger, "El valor de %s es NULL", key);
+			 enviar_paquete_vacio(NULL_POINTER, socketCPU);
+			 return;
+		}
+		else{
+			int valor = semaforoWait(config->semaforos, key);
+			if(valor < 0) resultado = WAIT_DETENER_EJECUCION;
+			else resultado = WAIT_SEGUIR_EJECUCION;
 
-		enviar_paquete_vacio(resultado, socketCPU);
+			enviar_paquete_vacio(resultado, socketCPU);
 
-		if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
+			if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
 
-			int tipo_mensaje;
-			void* paquete;
-			recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
-			if(tipo_mensaje == PROC_BLOCKED){
-				t_pcb* pcbRecibido = deserializar_pcb(paquete);
-				bloquearProceso(key, pcbRecibido);
-				desocupar_cpu(socketCPU);
-				log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
-				free(paquete);
-			}
-			else{
-				log_error(logger, "Se esperaba el mensaje PROC_BLOCKED y se recibio otro");
+				int tipo_mensaje;
+				void* paquete;
+				recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
+				if(tipo_mensaje == PROC_BLOCKED){
+					t_pcb* pcbRecibido = deserializar_pcb(paquete);
+					bloquearProceso(key, pcbRecibido);
+					desocupar_cpu(socketCPU);
+					log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
+					free(paquete);
+				}
+				else{
+					log_error(logger, "Se esperaba el mensaje PROC_BLOCKED y se recibio otro");
+				}
 			}
 		}
 	}else{
@@ -244,6 +267,13 @@ void finalizacion_global_no_definida(void* paquete_from_cpu, int socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d por intentar acceder a un una variable global no definida", pcbRecibido->pid);
 	pcbRecibido->exitCode = GLOBAL_NO_DEFINIDA;
+	terminarProceso(pcbRecibido, socket_cpu);
+}
+
+void finalizacion_null_pointer(void* paquete_from_cpu, int socket_cpu){
+	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso #%d por null pointer", pcbRecibido->pid);
+	pcbRecibido->exitCode = NULL_POINTER;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
