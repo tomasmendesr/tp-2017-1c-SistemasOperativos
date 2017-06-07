@@ -124,9 +124,6 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case GLOBAL_NO_DEFINIDA:
 		finalizacion_global_no_definida(package, socketCPU);
 		break;
-	case NULL_POINTER_EXCEPTION:
-		finalizacion_null_pointer(package, socketCPU);
-		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido.");
 	}
@@ -247,13 +244,6 @@ void finalizacion_global_no_definida(void* paquete_from_cpu, int socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d por intentar acceder a un una variable global no definida", pcbRecibido->pid);
 	pcbRecibido->exitCode = GLOBAL_NO_DEFINIDA;
-	terminarProceso(pcbRecibido, socket_cpu);
-}
-
-void finalizacion_null_pointer(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso #%d por null pointer exception", pcbRecibido->pid);
-	pcbRecibido->exitCode = NULL_POINTER_EXCEPTION;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 

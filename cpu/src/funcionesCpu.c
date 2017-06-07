@@ -143,7 +143,6 @@ int32_t requestHandlerKernel(void){
 	void* paquete;
 	paquete=NULL;
 	conecFailKernel(recvMsj(socketConexionKernel,&paquete,&header));
-	printf("TIPO %d\n", header.type);
 	switch(header.type){
 		case EXEC_PCB:
 			recibirPCB(paquete);
@@ -191,10 +190,6 @@ int32_t requestHandlerKernel(void){
 			break;
 		case GLOBAL_NO_DEFINIDA:
 			finalizarPor(GLOBAL_NO_DEFINIDA);
-			finPrograma = true;
-			return -1;
-		case NULL_POINTER_EXCEPTION:
-			finalizarPor(NULL_POINTER_EXCEPTION);
 			finPrograma = true;
 			return -1;
 		default:
