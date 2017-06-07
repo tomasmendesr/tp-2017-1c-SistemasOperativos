@@ -220,8 +220,8 @@ void levantarInterfaz(void){
 }
 
 void modificarValorDiccionario(t_dictionary* dic, char* key, void* data){
-	void* previo = dictionary_get(dic, key);
-	previo = data;
+	dictionary_remove(dic, key);
+	dictionary_put(dic, key, data);
 }
 
 int leerVariableGlobal(t_dictionary* dic, char* key){
@@ -229,8 +229,9 @@ int leerVariableGlobal(t_dictionary* dic, char* key){
 	return *valor;
 }
 
-void escribirVariableGlobal(t_dictionary* dic, char* key, void* nuevoValor){
-	modificarValorDiccionario(dic, key, nuevoValor);
+void escribirVariableGlobal(t_dictionary* dic, char* key, int nuevoValor){
+	log_debug(logger, "Se asigna el valor %d a la variable %s", nuevoValor, key);
+	modificarValorDiccionario(dic, key, &nuevoValor);
 }
 
 int semaforoSignal(t_dictionary* dic, char* key){

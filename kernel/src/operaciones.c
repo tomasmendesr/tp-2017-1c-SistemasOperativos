@@ -153,7 +153,8 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 	memcpy(variable, buffer+4, sizeVariable);
 	if(dictionary_has_key(config->variablesGlobales, variable)){
 		memcpy(&valor, buffer+4+sizeVariable, 4);
-		escribirVariableGlobal(config->variablesGlobales, variable, &valor);
+		printf("valor %d\n", valor);
+		escribirVariableGlobal(config->variablesGlobales, variable, valor);
 		free(variable);
 		aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 		enviar_paquete_vacio(ASIG_VAR_COMPARTIDA_OK, socketCPU);
