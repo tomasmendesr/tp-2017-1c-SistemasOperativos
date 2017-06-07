@@ -175,12 +175,7 @@ void realizarSignal(int socketCPU, char* key){
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	if(dictionary_has_key(config->semaforos, key)){
 		int valor = semaforoSignal(config->semaforos, key);
-		if(valor == NULL){
-			log_error(logger, "El valor de %s es NULL", key);
-			enviar_paquete_vacio(NULL_POINTER_EXCEPTION, socketCPU);
-			return;
-		}
-		else if(valor <= 0){
+		if(valor <= 0){
 			desbloquearProceso(key);
 			log_info(logger, "Desbloqueo un proceso");
 		}
@@ -198,13 +193,9 @@ void realizarWait(int socketCPU, char* key){
 
 	if(dictionary_has_key(config->semaforos,key)){
 		int valor = semaforoWait(config->semaforos, key);
-		if(valor == NULL){
-			log_error(logger, "El valor de %s es NULL", key);
-			enviar_paquete_vacio(NULL_POINTER_EXCEPTION, socketCPU);
-			return;
-		}
-		else if(valor < 0) resultado = WAIT_DETENER_EJECUCION;
+		if(valor < 0) resultado = WAIT_DETENER_EJECUCION;
 		else resultado = WAIT_SEGUIR_EJECUCION;
+
 		enviar_paquete_vacio(resultado, socketCPU);
 
 		if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
