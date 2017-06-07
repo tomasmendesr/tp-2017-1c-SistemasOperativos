@@ -176,7 +176,7 @@ void realizarSignal(int socketCPU, char* key){
 	if(dictionary_has_key(config->semaforos, key)){
 		int valor = semaforoSignal(config->semaforos, key);
 		if(valor == NULL){
-			log_error(logger, "El valor de %s es NULL", variable);
+			log_error(logger, "El valor de %s es NULL", key);
 			enviar_paquete_vacio(NULL_POINTER_EXCEPTION, socketCPU);
 			return;
 		}
@@ -199,7 +199,7 @@ void realizarWait(int socketCPU, char* key){
 	if(dictionary_has_key(config->semaforos,key)){
 		int valor = semaforoWait(config->semaforos, key);
 		if(valor == NULL){
-			log_error(logger, "El valor de %s es NULL", variable);
+			log_error(logger, "El valor de %s es NULL", key);
 			enviar_paquete_vacio(NULL_POINTER_EXCEPTION, socketCPU);
 			return;
 		}
