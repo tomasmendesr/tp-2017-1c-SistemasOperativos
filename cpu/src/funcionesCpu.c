@@ -385,16 +385,13 @@ int16_t solicitarProximaInstruccion(void) {
 	t_indice_codigo *indice = list_get(pcb->indiceCodigo, pcb->programCounter);
 	uint32_t requestStart = indice->offset;
 	uint32_t requestSize = indice->size;
-	uint32_t i = 0;
-	while (requestStart >= (tamanioPagina + (tamanioPagina * i++)));
-	uint32_t paginaAPedir = --i;
 	t_pedido_bytes* solicitar = malloc(sizeof(t_pedido_bytes));
-	solicitar->pag = paginaAPedir;
-	solicitar->offset = requestStart - tamanioPagina * paginaAPedir;
+	solicitar->pag = requestStart / tamanioPagina;
+	solicitar->offset = requestStart % tamanioPagina;
 	solicitar->size = requestSize;
 	solicitar->pid = pcb->pid;
 	log_debug(logger, "Pido instruccion a Memoria -> Pid: %d - Pagina: %d - Offset: %d - Size: %d",
-		solicitar->pid, paginaAPedir, solicitar->offset, requestSize);
+		solicitar->pid, solicitar->pag, solicitar->offset, requestSize);
 	if(solicitarBytes(solicitar) != 0 ){
 		free(solicitar);
 		log_error(logger, "Error al solicitar bytes (instruccion) a memoria.");
