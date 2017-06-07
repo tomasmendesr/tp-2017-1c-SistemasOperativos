@@ -228,7 +228,7 @@ void modificarValorDiccionario(t_dictionary* dic, char* key, void* data){
 int leerVariableGlobal(t_dictionary* dic, char* key){
 	int* valor = dictionary_get(dic, key);
 	if(valor == NULL) return NULL;
-	else return *valor;
+	else return (int) *valor;
 }
 
 void escribirVariableGlobal(t_dictionary* dic, char* key, int nuevoValor){

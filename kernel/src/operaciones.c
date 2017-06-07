@@ -135,17 +135,12 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 void leerVarCompartida(int socketCPU, char* variable){
 	if(dictionary_has_key(config->variablesGlobales, variable)){
 		int valor = leerVariableGlobal(config->variablesGlobales, variable);
-
-		if(valor == NULL) {
-			log_error(logger, "El valor de %s es NULL", variable);
-			enviar_paquete_vacio(NULL_POINTER_EXCEPTION, socketCPU);
-		}else{
-			header_t* header = malloc(sizeof(header_t));
-			header->type = VALOR_VAR_COMPARTIDA;
-			header->length = sizeof(valor);
-			sendSocket(socketCPU, header, &valor);
-			free(header);
-		}
+		log_debug(logger, "Valor de %s: %d", variable, valor);
+		header_t* header = malloc(sizeof(header_t));
+		header->type = VALOR_VAR_COMPARTIDA;
+		header->length = sizeof(valor);
+		sendSocket(socketCPU, header, &valor);
+		free(header);
 	}else{
 		log_error(logger, "Error al leer var compartida %s. No se encontro", variable);
 		enviar_paquete_vacio(GLOBAL_NO_DEFINIDA, socketCPU);

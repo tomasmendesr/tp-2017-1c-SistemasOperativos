@@ -365,7 +365,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 		return -1;
 	}
 	int32_t valor = *(int32_t*)paqueteGlobal;
-	free(paqueteGlobal);
+	if(paqueteGlobal) free(paqueteGlobal);
 	log_info(logger, "Valor de %s: %d", variable, valor);
 	return valor;
 }
@@ -730,6 +730,7 @@ void signalAnsisop(t_nombre_semaforo identificador_semaforo){
 	header->length=strlen(identificador_semaforo)+1;
 	sendSocket(socketConexionKernel,header,identificador_semaforo);
 	free(header);
+	requestHandlerKernel(); // PARA QUE ME DEVUELVA SIGNAL OK
 }
 
 /*

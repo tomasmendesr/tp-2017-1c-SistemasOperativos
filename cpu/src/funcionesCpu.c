@@ -143,6 +143,7 @@ int32_t requestHandlerKernel(void){
 	void* paquete;
 	paquete=NULL;
 	conecFailKernel(recvMsj(socketConexionKernel,&paquete,&header));
+	printf("TIPO %d\n", header.type);
 	switch(header.type){
 		case EXEC_PCB:
 			recibirPCB(paquete);
