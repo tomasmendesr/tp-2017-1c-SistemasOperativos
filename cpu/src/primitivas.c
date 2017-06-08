@@ -46,11 +46,12 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	uint32_t pag = pcb->stackPointer / tamanioPagina;
 	uint32_t offset = pcb->stackPointer % tamanioPagina;
 
-	t_entrada_stack* lineaStack = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
-	if(lineaStack == NULL){
+	t_entrada_stack* lineaStack;
+	if(list_size(pcb->indiceStack) == 0){
 		lineaStack = crearPosicionStack();
 		list_add(pcb->indiceStack, lineaStack);
-	}
+	}else
+		lineaStack = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
 
 	if(!esArgumento(identificador_variable)){ // Es una variable
 		log_debug(logger, "ANSISOP_definirVariable %c", identificador_variable);
@@ -200,10 +201,10 @@ void finalizar(void){
 	log_debug(logger,"ANSISOP_finalizar");
 	//Obtengo contexto quitado de la lista y lo limpio.
 	t_entrada_stack* contexto = list_remove(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
-	uint16_t i;
 	if(contexto != NULL){
-		pcb->stackPointer -= TAMANIO_VARIABLE * (list_size(contexto->argumentos) + i<list_size(contexto->variables)); // Disminuyo stackPointer del pcb
+		pcb->stackPointer -= TAMANIO_VARIABLE * (list_size(contexto->argumentos) + list_size(contexto->variables)); // Disminuyo stackPointer del pcb
 		if(pcb->stackPointer >= 0){
+			uint16_t i;
 			for(i=0; i<list_size(contexto->argumentos); i++){ // Limpio lista de argumentos del contexto
 				free(list_remove(contexto->argumentos,i));
 			}
@@ -241,7 +242,7 @@ void irAlLabel(t_nombre_etiqueta etiqueta){
 			log_error(logger,"No se encontro la etiqueta");
 			return;
 		}
-		pcb->programCounter = numeroInstr;
+		pcb->programCounter = numeroInstr -1;
 }
 
 /*
@@ -310,7 +311,6 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 		log_error(logger, "No hay nada en el indice de stack");
 		return EXIT_FAILURE;
 	}
-
 	uint32_t i;
 	t_puntero posicionAbsoluta;
 	t_entrada_stack* contexto = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
