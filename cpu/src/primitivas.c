@@ -202,7 +202,7 @@ void finalizar(void){
 	t_entrada_stack* contexto = list_remove(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
 	uint16_t i;
 	if(contexto != NULL){
-		pcb->stackPointer -= TAMANIO_VARIABLE * (list_size(contexto->argumentos) + i<list_size(contexto->variables)); // Disminuyo stackPointer del pcb
+		pcb->stackPointer -= TAMANIO_VARIABLE * (list_size(contexto->argumentos) + list_size(contexto->variables)); // Disminuyo stackPointer del pcb
 		if(pcb->stackPointer >= 0){
 			for(i=0; i<list_size(contexto->argumentos); i++){ // Limpio lista de argumentos del contexto
 				free(list_remove(contexto->argumentos,i));
