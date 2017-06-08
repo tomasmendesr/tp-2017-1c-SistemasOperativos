@@ -140,7 +140,6 @@ void leerVarCompartida(int socketCPU, char* variable){
 		}
 		else{
 			int valor = leerVariableGlobal(config->variablesGlobales, variable);
-			log_debug(logger, "Valor de %s: %d", variable, valor);
 			header_t* header = malloc(sizeof(header_t));
 			header->type = VALOR_VAR_COMPARTIDA;
 			header->length = sizeof(valor);

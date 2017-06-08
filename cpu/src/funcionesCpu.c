@@ -398,7 +398,6 @@ int16_t solicitarProximaInstruccion(void) {
 }
 
 void finalizarPor(int type) {
-	log_info(logger, "Se finaliza la ejecucion del programa #%d", pcb->pid);
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type = type;
