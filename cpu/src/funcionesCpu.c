@@ -192,6 +192,10 @@ int32_t requestHandlerKernel(void){
 			finalizarPor(GLOBAL_NO_DEFINIDA);
 			finPrograma = true;
 			return -1;
+		case NULL_POINTER:
+			finalizarPor(NULL_POINTER);
+			finPrograma = true;
+			return -1;
 		default:
 			log_warning(logger, "Mensaje Recibido Incorrecto");
 			if(paquete)free(paquete);
