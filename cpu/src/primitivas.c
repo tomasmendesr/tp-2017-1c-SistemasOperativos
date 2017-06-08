@@ -64,7 +64,6 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	}
 	else{ // Es un argumento.
 		log_debug(logger, "ANSISOP_definirVariable (argumento) %c", identificador_variable);
-		lineaStack->direcretorno = pcb->programCounter;
 		t_argumento* nuevoArg = malloc(sizeof(t_argumento));
 		nuevoArg->pagina = pag;
 		nuevoArg->offset = offset;
@@ -242,7 +241,7 @@ void irAlLabel(t_nombre_etiqueta etiqueta){
 			log_error(logger,"No se encontro la etiqueta");
 			return;
 		}
-		pcb->programCounter = numeroInstr -1;
+		pcb->programCounter = numeroInstr - 1;
 }
 
 /*

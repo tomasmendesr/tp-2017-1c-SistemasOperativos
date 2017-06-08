@@ -279,6 +279,7 @@ void imprimirInformacion(t_proceso* proceso, int32_t exitCode){
 	uint32_t msFin = proceso->end.tv_nsec / 1000000 + proceso->end.tv_sec * 1000;
 	int segDuracion = proceso->end.tv_sec - proceso->start.tv_sec;
 	int msDuracion = msFin - msInicio - (segDuracion * 1000);
+	if(msDuracion < 0) msDuracion += 1000;
 	printf("Duracion: %d seg - %d ms\n", segDuracion, msDuracion);
 	char* exitCodeString = obtenerExitCode(exitCode);
 	printf("Exit code: %s\n", exitCodeString);
