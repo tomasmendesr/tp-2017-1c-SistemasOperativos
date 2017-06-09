@@ -32,5 +32,7 @@ void escribir(void* imprimir, int socketCpu);
 void verificarProcesosConsolaCaida(int socketConsola);
 void borrarArchivo(int socketCpu, void* package);
 void cerrarArchivo(int socketCpu, void* package);
+void leerArchivo(int socketCpu, void* package);
+void abrirArchivo(int socketCpu, void* package);
 
 #endif /* OPERACIONES_H_ */

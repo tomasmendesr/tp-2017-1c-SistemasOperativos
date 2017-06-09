@@ -98,6 +98,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case LIBERAR_MEMORIA:
 		liberarMemoria(socketCPU, package);
 		break;
+	case ABRIR_ARCHIVO:
+		abrirArchivo(socketCPU, package);
+		break;
 	case CERRAR_ARCHIVO:
 		cerrarArchivo(socketCPU, package);
 		break;
@@ -106,6 +109,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		break;
 	case ESCRIBIR:
 		escribir(package, socketCPU);
+		break;
+	case LEER_ARCHIVO:
+		leerArchivo(socketCPU, package);
 		break;
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -576,17 +582,31 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 	return cpu_asociado;
 }
 
+void abrirArchivo(int socketCpu, void* package){
+	int sizePath, sizePermisos, pid, offset = 0;
+	char* path;
+	char* permisos;
+
+	memcpy(package, &pid, sizeof(int)); offset += sizeof(int);
+	memcpy(package, &sizePath, sizeof(int)); offset += sizeof(int);
+	memcpy(package+offset, path, sizePath); offset += sizePath;
+	memcpy(package+offset, &sizePermisos, sizeof(int)); offset += sizeof(int);
+	memcpy(package+offset, permisos, sizePermisos);
+
+	agregarArchivo_aProceso(pid, path, permisos);
+
+	enviar_paquete_vacio(ABRIR_ARCHIVO_OK, socketCpu);
+}
+
 void borrarArchivo(int socketCpu, void* package){
 	uint32_t fd = *(uint32_t*)package;
 	int pid = *(int*) (package + sizeof(uint32_t));
 
 	char* path = buscarPathDeArchivo(fd);
 
-	eliminarFd(fd, pid);
-
 	header_t header;
-	header->type = BORRAR_ARCHIVO;
-	header->type = strlen(path);
+	header.type = BORRAR_ARCHIVO;
+	header.type = strlen(path);
 
 	sendSocket(socketConexionFS, &header, path);
 
@@ -606,7 +626,12 @@ void borrarArchivo(int socketCpu, void* package){
 }
 
 void cerrarArchivo(int socketCpu, void* package){
+	uint32_t fd = *(uint32_t*)package;
+	int pid = *(int*) (package + sizeof(uint32_t));
 
+	eliminarFd(fd, pid);
+
+	enviar_paquete_vacio(CERRAR_ARCHIVO_OK, socketCpu);
 }
 
 void escribir(void* paquete, int socketCpu){ // TODO
@@ -635,6 +660,41 @@ void escribir(void* paquete, int socketCpu){ // TODO
 		pedidoFs->path = path;
 		pedidoFs->size = size;
 	}
+}
+
+void leerArchivo(int socketCpu, void* package){
+	int offset = 0;
+	uint32_t fd = *(uint32_t*)package; offset += sizeof(uint32_t);
+	int pid = *(int*) (package + offset); offset += sizeof(int);
+	int offsetPedidoLectura = *(int*) (package + offset); offset += sizeof(int);
+	int size = *(int*) (package + offset);
+
+	char* path = buscarPathDeArchivo(fd);
+	void* buffer = malloc(2*sizeof(int)+strlen(path));
+
+	offset = 0;
+	memcpy(&offsetPedidoLectura, buffer, sizeof(int)); offset += sizeof(int);
+	memcpy(&size, buffer+offset, sizeof(int)); offset += sizeof(int);
+	memcpy(path, buffer+offset, strlen(path));
+
+	header_t header;
+	header.length = 2*sizeof(int)+strlen(path);
+	header.type = OBTENER_DATOS;
+
+	sendSocket(socketConexionFS, &header, buffer);
+
+	void* paquete;
+	int tipo;
+
+	recibir_paquete(socketConexionFS, &paquete, &tipo);
+	if(tipo == LEER_ARCHIVO_OK){
+		header.length = size;
+		header.type = LEER_ARCHIVO_OK;
+		sendSocket(socketCpu, &header, paquete);
+	}else{
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+	}
+
 }
 
 void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber varios procesos
