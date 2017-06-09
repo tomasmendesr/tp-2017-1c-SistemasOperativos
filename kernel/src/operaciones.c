@@ -98,6 +98,12 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case LIBERAR_MEMORIA:
 		liberarMemoria(socketCPU, package);
 		break;
+	case CERRAR_ARCHIVO:
+		cerrarArchivo(socketCPU, package);
+		break;
+	case BORRAR_ARCHIVO:
+		borrarArchivo(socketCPU, package);
+		break;
 	case ESCRIBIR:
 		escribir(package, socketCPU);
 		break;
@@ -570,6 +576,39 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 	return cpu_asociado;
 }
 
+void borrarArchivo(int socketCpu, void* package){
+	uint32_t fd = *(uint32_t*)package;
+	int pid = *(int*) (package + sizeof(uint32_t));
+
+	char* path = buscarPathDeArchivo(fd);
+
+	eliminarFd(fd, pid);
+
+	header_t header;
+	header->type = BORRAR_ARCHIVO;
+	header->type = strlen(path);
+
+	sendSocket(socketConexionFS, &header, path);
+
+	int tipo;
+	void* paquete;
+	recibir_paquete(socketConexionFS, &paquete, &tipo);
+
+	int respuesta;
+
+	if(tipo == BORRAR_ARCHIVO_OK)
+		respuesta = BORRAR_ARCHIVO_OK;
+	else
+		respuesta = ARCHIVO_INEXISTENTE;
+
+	enviar_paquete_vacio(respuesta, socketCpu);
+
+}
+
+void cerrarArchivo(int socketCpu, void* package){
+
+}
+
 void escribir(void* paquete, int socketCpu){ // TODO
 	uint32_t fd = *(uint32_t*)paquete;
 	int pid = *(int*) (paquete + sizeof(uint32_t));
@@ -590,6 +629,11 @@ void escribir(void* paquete, int socketCpu){ // TODO
 		memcpy(buffer+sizeof(int), impresion, strlen(impresion) + 1);
 
 		sendSocket(info->socketConsola, &header, buffer);
+	}else{
+		char* path = buscarPathDeArchivo(fd);
+		pedido_guardar_datos* pedidoFs = malloc(sizeof(pedido_guardar_datos));
+		pedidoFs->path = path;
+		pedidoFs->size = size;
 	}
 }
 

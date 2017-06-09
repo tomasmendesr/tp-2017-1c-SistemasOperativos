@@ -114,6 +114,22 @@ typedef struct{
 	uint32_t cant;
 }__attribute__((__packed__))pedido_mem;
 
+//para comunicacion con fs
+typedef struct
+{
+	char* path;
+	int offset;
+	int size;
+} pedido_obtener_datos;
+
+typedef struct
+{
+	char* path;
+	int offset;
+	int size;
+	char* buffer;
+}pedido_guardar_datos;
+
 enum enum_estado{
 	NEW = 1,
 	READY = 2,
@@ -251,7 +267,7 @@ void crearEntradaArchivoProceso(int proceso);
 void agregarArchivo_aProceso(int proceso, char* file, char* permisos);
 void eliminarFd(int fd, int proceso);
 void imprimirTablaGlobal(void);
-
+char* buscarPathDeArchivo(int globalFD);
 fd_set master;
 fd_set setConsolas;
 fd_set setCPUs;

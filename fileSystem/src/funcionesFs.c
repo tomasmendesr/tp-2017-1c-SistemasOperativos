@@ -122,7 +122,7 @@ void borrarArchivo(void* package){
 
 		//borro el archivo
 		unlink(path);
-
+		enviar_paquete_vacio(BORRAR_ARCHIVO_OK, socketConexionKernel);
 	}
 }
 
