@@ -34,5 +34,6 @@ void borrarArchivo(int socketCpu, void* package);
 void cerrarArchivo(int socketCpu, void* package);
 void leerArchivo(int socketCpu, void* package);
 void abrirArchivo(int socketCpu, void* package);
+void moverCursor(int socketCpu, t_cursor* cursor);
 
 #endif /* OPERACIONES_H_ */

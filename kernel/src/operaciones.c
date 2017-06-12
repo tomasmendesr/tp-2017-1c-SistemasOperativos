@@ -113,6 +113,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case LEER_ARCHIVO:
 		leerArchivo(socketCPU, package);
 		break;
+	case MOVER_CURSOR:
+		moverCursor(socketCPU, (t_cursor*) package);
+		break;
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		finalizacion_proceso(package, socketCPU);
@@ -637,28 +640,29 @@ void cerrarArchivo(int socketCpu, void* package){
 void escribir(void* paquete, int socketCpu){ // TODO
 	uint32_t fd = *(uint32_t*)paquete;
 	int pid = *(int*) (paquete + sizeof(uint32_t));
-
-	char* impresion = paquete + sizeof(int) + sizeof(uint32_t);
+	int sizeEscritura = *(int*) (paquete + sizeof(uint32_t) + sizeof(int));
+	char* escritura = paquete + sizeof(int) * 2 + sizeof(uint32_t);
 
 	info_estadistica_t * info = buscarInformacion(pid);
 
-	int size = sizeof(int) + strlen(impresion) + 1;
 
 	if(fd == 1){ // TODO - FALTA MANDARLE EL PAQUETE A FS - tiene que ser 1?
+		int sizePedido = sizeof(int) + strlen(escritura) + 1;
+
 		header_t header;
 		header.type=IMPRIMIR_POR_PANTALLA;
-		header.length= size;
+		header.length= sizePedido;
 
-		char* buffer = malloc(size);
+		char* buffer = malloc(sizePedido);
 		memcpy(buffer, &pid, sizeof(int));
-		memcpy(buffer+sizeof(int), impresion, strlen(impresion) + 1);
+		memcpy(buffer+sizeof(int), escritura, strlen(escritura) + 1);
 
 		sendSocket(info->socketConsola, &header, buffer);
 	}else{
 		char* path = buscarPathDeArchivo(fd);
 		pedido_guardar_datos* pedidoFs = malloc(sizeof(pedido_guardar_datos));
 		pedidoFs->path = path;
-		pedidoFs->size = size;
+		pedidoFs->size = sizeEscritura;
 	}
 }
 
@@ -694,6 +698,21 @@ void leerArchivo(int socketCpu, void* package){
 	}else{
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
 	}
+
+}
+
+void moverCursor(int socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
+	bool buscarPorProceso(entrada_tabla_archivo_proceso* entrada){
+			return entrada->proceso == cursor->pid ? true : false;
+		}
+
+		bool buscarPorFd(archivo* archivo){
+			return archivo->fd == cursor->descriptor ? true : false;
+		}
+
+		entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
+		archivo* archivo = 	list_find(entrada->archivos, eliminar);
+		archivo->cursor = cursor->posicion;
 
 }
 

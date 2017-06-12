@@ -96,6 +96,7 @@ typedef struct{
 	int fd;
 	char* flags;
 	int globalFD;
+	int cursor;
 }archivo;
 
 typedef struct{

@@ -719,6 +719,7 @@ void agregarArchivo_aProceso(int proceso, char* file, char* permisos){
 	archivo->flags = permisos;
 	archivo->fd = getArchivoFdMax(); //aca tengo que pasarselo a la cpu
 	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
+	archivo->cursor = 0;
 	list_add(entrada->archivos, archivo);
 
 }

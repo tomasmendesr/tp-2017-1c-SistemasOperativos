@@ -544,7 +544,7 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	header_t header;
 	header.type = ESCRIBIR;
 
-	size_t size = sizeof(int)*2 + tamanio + 1;
+	size_t size = sizeof(int)*3 + tamanio + 1;
 	void* buffer = malloc(size);
 	header.length = size;
 
@@ -554,6 +554,8 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	offset += sizeof(descriptor_archivo);
 	memcpy(buffer + offset, &pcb->pid, sizeof(pcb->pid));
 	offset += sizeof(pcb->pid);
+	memcpy(buffer + offset , &tamanio, sizeof(tamanio));
+	offset =+ sizeof(tamanio);
 	memcpy(buffer + offset, informacion, tamanio + 1);
 
 	if(sendSocket(socketConexionKernel, &header, buffer) <= 0){
