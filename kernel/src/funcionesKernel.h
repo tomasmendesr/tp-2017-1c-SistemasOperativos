@@ -269,6 +269,9 @@ void agregarArchivo_aProceso(int proceso, char* file, char* permisos);
 void eliminarFd(int fd, int proceso);
 void imprimirTablaGlobal(void);
 char* buscarPathDeArchivo(int globalFD);
+archivo* buscarArchivo(int pid, int fd);
+
+
 fd_set master;
 fd_set setConsolas;
 fd_set setCPUs;

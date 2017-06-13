@@ -767,3 +767,19 @@ char* buscarPathDeArchivo(int globalFD){
 	entrada_tabla_globlal_archivo* entrada = list_find(globalFileTable, buscarPorUbicacion);
 	return entrada->archivo;
 }
+
+archivo* buscarArchivo(int pid, int fd){
+
+	bool buscarPorPid(entrada_tabla_archivo_proceso* entrada){
+		return entrada->proceso == pid ? true : false;
+	}
+
+	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorPid);
+
+	bool buscarPorArchivo(archivo* arch){
+		return arch->fd == fd ? true : false;
+	}
+
+	return list_find(entrada->archivos, buscarPorArchivo);
+
+}

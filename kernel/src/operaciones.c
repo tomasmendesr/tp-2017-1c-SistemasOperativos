@@ -643,13 +643,16 @@ void escribir(void* paquete, int socketCpu){ // TODO
 	int sizeEscritura = *(int*) (paquete + sizeof(uint32_t) + sizeof(int));
 	char* escritura = paquete + sizeof(int) * 2 + sizeof(uint32_t);
 
+	archivo* archivo = buscarArchivo(pid, fd);
+	int offsetEscritura = archivo->cursor;
+
 	info_estadistica_t * info = buscarInformacion(pid);
 
+	header_t header;
 
 	if(fd == 1){ // TODO - FALTA MANDARLE EL PAQUETE A FS - tiene que ser 1?
 		int sizePedido = sizeof(int) + strlen(escritura) + 1;
 
-		header_t header;
 		header.type=IMPRIMIR_POR_PANTALLA;
 		header.length= sizePedido;
 
@@ -660,9 +663,36 @@ void escribir(void* paquete, int socketCpu){ // TODO
 		sendSocket(info->socketConsola, &header, buffer);
 	}else{
 		char* path = buscarPathDeArchivo(fd);
-		pedido_guardar_datos* pedidoFs = malloc(sizeof(pedido_guardar_datos));
-		pedidoFs->path = path;
-		pedidoFs->size = sizeEscritura;
+		void * buffer = malloc(2*sizeof(int)+strlen(path)+strlen(escritura));
+		int offset = 0, sizePath, sizeEscritura;
+
+
+		memcpy(&offsetEscritura, buffer, sizeof(int)); offset += sizeof(int);
+		memcpy(&sizeEscritura, buffer+offset, sizeof(int)); offset += sizeof(int);
+		sizePath = strlen(path);
+		memcpy(&sizePath, buffer+offset, sizeof(int)); offset += sizeof(int);
+		memcpy(path, buffer+offset, strlen(path)); offset += strlen(path);
+		sizeEscritura = strlen(sizeEscritura);
+		memcpy(&sizeEscritura, buffer+offset, sizeof(int)); offset += sizeof(int);
+		memcpy(escritura, buffer+offset, strlen(path));
+
+		header.length = 2*sizeof(int)+strlen(path)+strlen(escritura);
+		header.type = OBTENER_DATOS;
+
+		sendSocket(socketConexionFS, &header, buffer);
+
+		free(buffer);
+
+		void* paquete;
+		int tipo;
+
+		recibir_paquete(socketConexionFS, &paquete, &tipo);
+		if(tipo == ESCRITURA_OK){
+			enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
+		}else{
+			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+		}
+
 	}
 }
 
@@ -670,8 +700,10 @@ void leerArchivo(int socketCpu, void* package){
 	int offset = 0;
 	uint32_t fd = *(uint32_t*)package; offset += sizeof(uint32_t);
 	int pid = *(int*) (package + offset); offset += sizeof(int);
-	int offsetPedidoLectura = *(int*) (package + offset); offset += sizeof(int);
 	int size = *(int*) (package + offset);
+
+	archivo* archivo = buscarArchivo(pid, fd);
+	int offsetPedidoLectura = archivo->cursor;
 
 	char* path = buscarPathDeArchivo(fd);
 	void* buffer = malloc(2*sizeof(int)+strlen(path));
@@ -679,6 +711,8 @@ void leerArchivo(int socketCpu, void* package){
 	offset = 0;
 	memcpy(&offsetPedidoLectura, buffer, sizeof(int)); offset += sizeof(int);
 	memcpy(&size, buffer+offset, sizeof(int)); offset += sizeof(int);
+	int sizePath = strlen(path);
+	memcpy(&sizePath, buffer+offset, sizeof(int)); offset += sizeof(int);
 	memcpy(path, buffer+offset, strlen(path));
 
 	header_t header;
