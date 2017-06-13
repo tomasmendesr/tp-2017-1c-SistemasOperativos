@@ -99,7 +99,7 @@ int enviarArchivo(int kernel_fd, char* path){
 //funciones interfaz
 void levantarInterfaz() {
 	//creo los comandos y el parametro
-	comando* comandos = malloc(sizeof(comando) * 4);
+	comando* comandos = malloc(sizeof(comando) * 5);
 
 	strcpy(comandos[0].comando, "start");
 	comandos[0].funcion = iniciarPrograma;
@@ -109,10 +109,12 @@ void levantarInterfaz() {
 	comandos[2].funcion = desconectarConsola;
 	strcpy(comandos[3].comando, "clean");
 	comandos[3].funcion = limpiarMensajes;
+	strcpy(comandos[4].comando, "help");
+	comandos[4].funcion = showHelp;
 
 	interface_thread_param* params = malloc(sizeof(interface_thread_param));
 	params->comandos = comandos;
-	params->cantComandos = 4;
+	params->cantComandos = 5;
 
 	//Lanzo el thread
 	pthread_attr_t atributos;
@@ -120,6 +122,14 @@ void levantarInterfaz() {
 	pthread_create(&threadInterfaz, &atributos, (void*)interface, params);
 
 	return;
+}
+
+void showHelp(char* comando, char* param){
+	puts("start <path> 	  - envia a ejecutar el codigo del programa ingresado");
+	puts("stop <pid>  	  - detiene la ejecucion del programa asociado al PID ingresado");
+ 	puts("disconnect      - deconexion de la consola y finalizacion de los programas asociados");
+ 	puts("clean		      - limpia la pantalla");
+ 	puts("help            - muestra comandos y descripciones");
 }
 
 void iniciarPrograma(char* comando, char* param) {

@@ -179,6 +179,7 @@ void getTablaArchivos(char* comando, char* param);
 void gradoMultiprogramacion(char* comando, char* param);
 void killProcess(char*,char*);
 void stopPlanification(char*,char*);
+void showHelp(char* comando, char* param);
 
 //Funciones de manejo de CPUs
 void agregarNuevaCPU(t_list* lista, int socketCPU);
