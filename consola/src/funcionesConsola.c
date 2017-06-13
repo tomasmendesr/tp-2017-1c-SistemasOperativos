@@ -125,11 +125,11 @@ void levantarInterfaz() {
 }
 
 void showHelp(char* comando, char* param){
-	puts("start <path> 	  - envia a ejecutar el codigo del programa ingresado");
-	puts("stop <pid>  	  - detiene la ejecucion del programa asociado al PID ingresado");
- 	puts("disconnect      - deconexion de la consola y finalizacion de los programas asociados");
- 	puts("clean		      - limpia la pantalla");
- 	puts("help            - muestra comandos y descripciones");
+	puts("start <path>	- envia a ejecutar el codigo del programa ingresado");
+	puts("stop <pid>	- detiene la ejecucion del programa asociado al PID ingresado");
+ 	puts("disconnect	- desconecta la consola y finaliza los programas");
+ 	puts("clean			- limpia la pantalla");
+ 	puts("help			- muestra comandos y descripciones");
 }
 
 void iniciarPrograma(char* comando, char* param) {
@@ -216,7 +216,7 @@ void threadPrograma(dataHilo* data){
 
 	switch(operacion){
 	case PROCESO_RECHAZADO:
-		log_error(logger, "El kernel rechazo el programa #%d por falta de recursos", *pidAsignado );
+		log_error(logger, "El kernel rechazo el programa '%s' por falta de recursos", data->pathAnsisop);
 		return;
 		break;
 	case PID_PROGRAMA:

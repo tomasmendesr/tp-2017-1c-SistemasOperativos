@@ -745,7 +745,7 @@ void moverCursor(int socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
 		}
 
 		entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
-		archivo* archivo = 	list_find(entrada->archivos, eliminar);
+		archivo* archivo = 	list_find(entrada->archivos, buscarPorFd);
 		archivo->cursor = cursor->posicion;
 
 }
