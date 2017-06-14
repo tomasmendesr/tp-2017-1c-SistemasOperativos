@@ -655,7 +655,7 @@ void liberarMemoria(t_puntero puntero){
 void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion){
 	log_debug(logger, "ANSISOP_moverCursor");
 	header_t header;
-	t_cursor* cursor;
+	t_cursor* cursor = malloc(sizeof(t_cursor));
 	header.type = MOVER_CURSOR;
 	header.length = sizeof(t_cursor);
 	cursor->pid = pcb->pid;
