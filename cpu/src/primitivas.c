@@ -544,7 +544,7 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	header_t header;
 	header.type = ESCRIBIR;
 
-	size_t size = sizeof(int)*3 + tamanio + 1;
+	size_t size = sizeof(int) * 2+ sizeof(uint32_t) + tamanio + 1;
 	void* buffer = malloc(size);
 	header.length = size;
 
@@ -555,7 +555,7 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	memcpy(buffer + offset, &pcb->pid, sizeof(pcb->pid));
 	offset += sizeof(pcb->pid);
 	memcpy(buffer + offset , &tamanio, sizeof(tamanio));
-	offset =+ sizeof(tamanio);
+	offset += sizeof(tamanio);
 	memcpy(buffer + offset, informacion, tamanio + 1);
 
 	if(sendSocket(socketConexionKernel, &header, buffer) <= 0){
@@ -563,7 +563,7 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 		log_error(logger, "Conexion con kernel perdida...");
 		finalizarCPU();
 	}
-	log_info(logger, "Informacion enviada al kernel");
+	log_info(logger, "Informacion enviada al kernel -> fd:%d - info:%s", descriptor_archivo, informacion);
 	free(buffer);
 }
 
@@ -653,22 +653,21 @@ void liberarMemoria(t_puntero puntero){
  */
 void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion){
 	log_debug(logger, "ANSISOP_moverCursor");
-	void* paquete;
 	header_t header;
-	t_cursor cursor;
+	t_cursor* cursor;
 	header.type = MOVER_CURSOR;
 	header.length = sizeof(t_cursor);
-	cursor.pid = pcb->pid;
-	cursor.posicion = posicion;
-	cursor.descriptor = descriptor_archivo;
-	paquete = malloc(header.length);
+	cursor->pid = pcb->pid;
+	cursor->posicion = posicion;
+	cursor->descriptor = descriptor_archivo;
 
-	if(sendSocket(socketConexionKernel, &header, paquete) <= 0){
-		if(paquete)free(paquete);
+	if(sendSocket(socketConexionKernel, &header, cursor) <= 0){
+		free(cursor);
 		finalizarCPU();
+	}else{
+		requestHandlerKernel();
+		free(cursor);
 	}
-	requestHandlerKernel();
-	if(paquete)free(paquete);
 }
 
 /*

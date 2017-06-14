@@ -637,20 +637,17 @@ void cerrarArchivo(int socketCpu, void* package){
 	enviar_paquete_vacio(CERRAR_ARCHIVO_OK, socketCpu);
 }
 
-void escribir(void* paquete, int socketCpu){ // TODO
-	uint32_t fd = *(uint32_t*)paquete;
+void escribir(void* paquete, int socketCpu){
+	uint32_t fd = *(uint32_t*) paquete;
 	int pid = *(int*) (paquete + sizeof(uint32_t));
 	int sizeEscritura = *(int*) (paquete + sizeof(uint32_t) + sizeof(int));
-	char* escritura = paquete + sizeof(int) * 2 + sizeof(uint32_t);
-
-	archivo* archivo = buscarArchivo(pid, fd);
-	int offsetEscritura = archivo->cursor;
+	char* escritura = paquete + sizeof(int) * 2  + sizeof(uint32_t);
 
 	info_estadistica_t * info = buscarInformacion(pid);
 
 	header_t header;
 
-	if(fd == 1){ // TODO - FALTA MANDARLE EL PAQUETE A FS - tiene que ser 1?
+	if(fd == 1){
 		int sizePedido = sizeof(int) + strlen(escritura) + 1;
 
 		header.type=IMPRIMIR_POR_PANTALLA;
@@ -662,9 +659,11 @@ void escribir(void* paquete, int socketCpu){ // TODO
 
 		sendSocket(info->socketConsola, &header, buffer);
 	}else{
+		archivo* archivo = buscarArchivo(pid, fd);
+		int offsetEscritura = archivo->cursor;
 		char* path = buscarPathDeArchivo(fd);
 		void * buffer = malloc(2*sizeof(int)+strlen(path)+strlen(escritura));
-		int offset = 0, sizePath, sizeEscritura;
+		int offset = 0, sizePath;//, sizeEscritura;
 
 
 		memcpy(&offsetEscritura, buffer, sizeof(int)); offset += sizeof(int);
@@ -672,7 +671,7 @@ void escribir(void* paquete, int socketCpu){ // TODO
 		sizePath = strlen(path);
 		memcpy(&sizePath, buffer+offset, sizeof(int)); offset += sizeof(int);
 		memcpy(path, buffer+offset, strlen(path)); offset += strlen(path);
-		sizeEscritura = strlen(sizeEscritura);
+		//sizeEscritura = strlen(sizeEscritura);
 		memcpy(&sizeEscritura, buffer+offset, sizeof(int)); offset += sizeof(int);
 		memcpy(escritura, buffer+offset, strlen(path));
 
