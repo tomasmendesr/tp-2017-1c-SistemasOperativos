@@ -25,6 +25,7 @@ void finalizacion_error_memoria(void* package,int socketCPU);
 void finalizacion_semaforo_no_existe(void* paquete_from_cpu, int socket_cpu);
 void finalizacion_global_no_definida(void* paquete_from_cpu, int socket_cpu);
 void finalizacion_null_pointer(void* paquete_from_cpu, int socket_cpu);
+void finalizacion_archivo_inexistente(void* paquete_from_cpu, int socket_cpu);
 void reservarMemoria(int socket, char* paquete);
 void liberarMemoria(int socket, char* paquete);
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu);

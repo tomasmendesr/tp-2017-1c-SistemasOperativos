@@ -183,6 +183,8 @@ int32_t requestHandlerKernel(void){
 		case LIBERAR_MEMORIA_OK:
 			log_info(logger, "Memoria liberada");
 			break;
+		case ESCRITURA_OK:
+			break;
 		// errores
 		case SEMAFORO_NO_EXISTE:
 			finalizarPor(SEMAFORO_NO_EXISTE);
@@ -194,6 +196,10 @@ int32_t requestHandlerKernel(void){
 			return -1;
 		case NULL_POINTER:
 			finalizarPor(NULL_POINTER);
+			finPrograma = true;
+			return -1;
+		case ARCHIVO_INEXISTENTE:
+			finalizarPor(ARCHIVO_INEXISTENTE);
 			finPrograma = true;
 			return -1;
 		default:

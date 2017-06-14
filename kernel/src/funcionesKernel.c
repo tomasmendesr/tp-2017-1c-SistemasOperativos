@@ -788,11 +788,14 @@ archivo* buscarArchivo(int pid, int fd){
 	}
 
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorPid);
+	if(entrada == NULL) return NULL;
 
 	bool buscarPorArchivo(archivo* arch){
 		return arch->fd == fd ? true : false;
 	}
 
-	return list_find(entrada->archivos, buscarPorArchivo);
+	archivo* archivo = list_find(entrada->archivos, buscarPorArchivo);
+	if(archivo == NULL) return NULL;
+	return archivo;
 
 }

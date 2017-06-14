@@ -565,6 +565,7 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	}
 	log_info(logger, "Informacion enviada al kernel -> fd:%d - info:%s", descriptor_archivo, informacion);
 	free(buffer);
+	requestHandlerKernel();
 }
 
 /*

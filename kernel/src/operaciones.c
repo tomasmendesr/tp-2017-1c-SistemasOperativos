@@ -142,6 +142,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case NULL_POINTER:
 		finalizacion_null_pointer(package, socketCPU);
 		break;
+	case ARCHIVO_INEXISTENTE:
+		finalizacion_archivo_inexistente(package, socketCPU);
+		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido.");
 	}
@@ -288,6 +291,13 @@ void finalizacion_null_pointer(void* paquete_from_cpu, int socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d por null pointer", pcbRecibido->pid);
 	pcbRecibido->exitCode = NULL_POINTER;
+	terminarProceso(pcbRecibido, socket_cpu);
+}
+
+void finalizacion_archivo_inexistente(void* paquete_from_cpu, int socket_cpu){
+	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso #%d intentar acceder a un archivo inexistente", pcbRecibido->pid);
+	pcbRecibido->exitCode = ARCHIVO_INEXISTENTE;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
@@ -644,7 +654,6 @@ void escribir(void* paquete, int socketCpu){
 	char* escritura = paquete + sizeof(int) * 2  + sizeof(uint32_t);
 
 	info_estadistica_t * info = buscarInformacion(pid);
-
 	header_t header;
 
 	if(fd == 1){
@@ -660,6 +669,11 @@ void escribir(void* paquete, int socketCpu){
 		sendSocket(info->socketConsola, &header, buffer);
 	}else{
 		archivo* archivo = buscarArchivo(pid, fd);
+		if(archivo == NULL){
+			log_error(logger, "No se encontro el archivo para escribir");
+			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+			return;
+		}
 		int offsetEscritura = archivo->cursor;
 		char* path = buscarPathDeArchivo(fd);
 		void * buffer = malloc(2*sizeof(int)+strlen(path)+strlen(escritura));
