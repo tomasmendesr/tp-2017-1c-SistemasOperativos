@@ -46,11 +46,12 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	uint32_t pag = pcb->stackPointer / tamanioPagina;
 	uint32_t offset = pcb->stackPointer % tamanioPagina;
 
-	t_entrada_stack* lineaStack = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
-	if(lineaStack == NULL){
+	t_entrada_stack* lineaStack;
+	if(list_size(pcb->indiceStack) == 0){
 		lineaStack = crearPosicionStack();
 		list_add(pcb->indiceStack, lineaStack);
-	}
+	}else
+		lineaStack = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
 
 	if(!esArgumento(identificador_variable)){ // Es una variable
 		log_debug(logger, "ANSISOP_definirVariable %c", identificador_variable);
@@ -63,7 +64,6 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	}
 	else{ // Es un argumento.
 		log_debug(logger, "ANSISOP_definirVariable (argumento) %c", identificador_variable);
-		lineaStack->direcretorno = pcb->programCounter;
 		t_argumento* nuevoArg = malloc(sizeof(t_argumento));
 		nuevoArg->pagina = pag;
 		nuevoArg->offset = offset;
@@ -200,10 +200,10 @@ void finalizar(void){
 	log_debug(logger,"ANSISOP_finalizar");
 	//Obtengo contexto quitado de la lista y lo limpio.
 	t_entrada_stack* contexto = list_remove(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
-	uint16_t i;
 	if(contexto != NULL){
 		pcb->stackPointer -= TAMANIO_VARIABLE * (list_size(contexto->argumentos) + list_size(contexto->variables)); // Disminuyo stackPointer del pcb
 		if(pcb->stackPointer >= 0){
+			uint16_t i;
 			for(i=0; i<list_size(contexto->argumentos); i++){ // Limpio lista de argumentos del contexto
 				free(list_remove(contexto->argumentos,i));
 			}
@@ -241,7 +241,7 @@ void irAlLabel(t_nombre_etiqueta etiqueta){
 			log_error(logger,"No se encontro la etiqueta");
 			return;
 		}
-		pcb->programCounter = numeroInstr;
+		pcb->programCounter = numeroInstr - 1;
 }
 
 /*
@@ -310,7 +310,6 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 		log_error(logger, "No hay nada en el indice de stack");
 		return EXIT_FAILURE;
 	}
-
 	uint32_t i;
 	t_puntero posicionAbsoluta;
 	t_entrada_stack* contexto = list_get(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
@@ -545,7 +544,7 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	header_t header;
 	header.type = ESCRIBIR;
 
-	size_t size = sizeof(int)*2 + tamanio + 1;
+	size_t size = sizeof(int) * 2+ sizeof(uint32_t) + tamanio + 1;
 	void* buffer = malloc(size);
 	header.length = size;
 
@@ -555,6 +554,8 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	offset += sizeof(descriptor_archivo);
 	memcpy(buffer + offset, &pcb->pid, sizeof(pcb->pid));
 	offset += sizeof(pcb->pid);
+	memcpy(buffer + offset , &tamanio, sizeof(tamanio));
+	offset += sizeof(tamanio);
 	memcpy(buffer + offset, informacion, tamanio + 1);
 
 	if(sendSocket(socketConexionKernel, &header, buffer) <= 0){
@@ -562,8 +563,9 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 		log_error(logger, "Conexion con kernel perdida...");
 		finalizarCPU();
 	}
-	log_info(logger, "Informacion enviada al kernel");
+	log_info(logger, "Informacion enviada al kernel -> fd:%d - info:%s", descriptor_archivo, informacion);
 	free(buffer);
+	requestHandlerKernel();
 }
 
 /*
@@ -613,18 +615,17 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
  */
 void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion){
 	log_debug(logger, "ANSISOP_moverCursor");
-	header_t* header;
+	header_t header;
 	t_cursor* cursor;
 	int32_t var;
 	header = malloc(sizeof(header_t));
-	header->type = MOVER_CURSOR;
-	header->length = sizeof(t_cursor);
+	header.type = MOVER_CURSOR;
+	header.length = sizeof(t_cursor);
 	cursor = malloc(sizeof(t_cursor));
 	cursor->pid = pcb->pid;
 	cursor->posicion = posicion;
 	cursor->descriptor = descriptor_archivo;
-	if(sendSocket(socketConexionKernel, header, cursor) <= 0){
-		free(header);
+	if(sendSocket(socketConexionKernel, &header, cursor) <= 0){
 		free(cursor);
 		finalizarCPU();
 	}
@@ -632,7 +633,6 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
 	if(var == -1){
 		log_debug(logger, "no se pudo mover el cursor");
 	}
-	free(header);
 	free(cursor);
 }
 
@@ -647,35 +647,35 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
  * @return	puntero a donde esta reservada la memoria
  */
 t_puntero reservar(t_valor_variable espacio){
-
 	log_debug(logger, "ANSISOP_reservar -> espacio: %d", espacio);
-
-	//defino variables
 	header_t* header = malloc(sizeof(header_t));
 	char* paquete;
 	size_t size = sizeof(t_valor_variable);
 	t_valor_variable valor;
+	int32_t var;
 
-	//armo el pedido
 	header->type = RESERVAR_MEMORIA;
-	header->length = sizeof(t_valor_variable)*2;
+	header->length = sizeof(t_valor_variable)*3;
 	paquete = malloc(header->length);
-	memcpy(paquete, (void*)&pcb->pid, sizeof(t_valor_variable));
-	memcpy(paquete+size, (void*)&espacio, sizeof(t_valor_variable));
+	memcpy(paquete, &pcb->pid, sizeof(t_valor_variable));
+	memcpy(paquete+size, &pcb->cantPaginasCodigo, sizeof(t_valor_variable));size += size;
+	memcpy(paquete+size, &espacio, sizeof(t_valor_variable));
 
-	//pido el espacio al kernel
-	sendSocket(socketConexionKernel,header,(void*)paquete);
-
-	//respuesta
-	requestHandlerKernel();
-
-	//hago esto para poder liberar paqueteGlobal
+	if(sendSocket(socketConexionKernel,header,paquete) <= 0){
+		log_debug(logger, "problemas de conexion");
+		finalizarCPU();
+	}
+	var = requestHandlerKernel();
+	if(var == -1){
+		log_info("error al reservar memoria");
+		free(header);
+		free(paquete);
+	}
 	valor = *(t_valor_variable*)paqueteGlobal;
 	free(paqueteGlobal);
-
-	//aumento la cantidad de reservas
+	free(header);
+	free(paquete);
 	cantDeReservas++;
-
 	return valor;
 }
 

@@ -98,8 +98,23 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case LIBERAR_MEMORIA:
 		liberarMemoria(socketCPU, package);
 		break;
+	case ABRIR_ARCHIVO:
+		abrirArchivo(socketCPU, package);
+		break;
+	case CERRAR_ARCHIVO:
+		cerrarArchivo(socketCPU, package);
+		break;
+	case BORRAR_ARCHIVO:
+		borrarArchivo(socketCPU, package);
+		break;
 	case ESCRIBIR:
 		escribir(package, socketCPU);
+		break;
+	case LEER_ARCHIVO:
+		leerArchivo(socketCPU, package);
+		break;
+	case MOVER_CURSOR:
+		moverCursor(socketCPU, (t_cursor*) package);
 		break;
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -127,6 +142,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case NULL_POINTER:
 		finalizacion_null_pointer(package, socketCPU);
 		break;
+	case ARCHIVO_INEXISTENTE:
+		finalizacion_archivo_inexistente(package, socketCPU);
+		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido.");
 	}
@@ -140,7 +158,6 @@ void leerVarCompartida(int socketCPU, char* variable){
 		}
 		else{
 			int valor = leerVariableGlobal(config->variablesGlobales, variable);
-			log_debug(logger, "Valor de %s: %d", variable, valor);
 			header_t* header = malloc(sizeof(header_t));
 			header->type = VALOR_VAR_COMPARTIDA;
 			header->length = sizeof(valor);
@@ -274,6 +291,13 @@ void finalizacion_null_pointer(void* paquete_from_cpu, int socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d por null pointer", pcbRecibido->pid);
 	pcbRecibido->exitCode = NULL_POINTER;
+	terminarProceso(pcbRecibido, socket_cpu);
+}
+
+void finalizacion_archivo_inexistente(void* paquete_from_cpu, int socket_cpu){
+	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso #%d intentar acceder a un archivo inexistente", pcbRecibido->pid);
+	pcbRecibido->exitCode = ARCHIVO_INEXISTENTE;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
@@ -571,27 +595,172 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 	return cpu_asociado;
 }
 
-void escribir(void* paquete, int socketCpu){ // TODO
-	uint32_t fd = *(uint32_t*)paquete;
-	int pid = *(int*) (paquete + sizeof(uint32_t));
+void abrirArchivo(int socketCpu, void* package){
+	int sizePath, sizePermisos, pid, offset = 0;
+	char* path;
+	char* permisos;
 
-	char* impresion = paquete + sizeof(int) + sizeof(uint32_t);
+	memcpy(package, &pid, sizeof(int)); offset += sizeof(int);
+	memcpy(package, &sizePath, sizeof(int)); offset += sizeof(int);
+	memcpy(package+offset, path, sizePath); offset += sizePath;
+	memcpy(package+offset, &sizePermisos, sizeof(int)); offset += sizeof(int);
+	memcpy(package+offset, permisos, sizePermisos);
+
+	agregarArchivo_aProceso(pid, path, permisos);
+
+	enviar_paquete_vacio(ABRIR_ARCHIVO_OK, socketCpu);
+}
+
+void borrarArchivo(int socketCpu, void* package){
+	uint32_t fd = *(uint32_t*)package;
+	int pid = *(int*) (package + sizeof(uint32_t));
+
+	char* path = buscarPathDeArchivo(fd);
+
+	header_t header;
+	header.type = BORRAR_ARCHIVO;
+	header.type = strlen(path);
+
+	sendSocket(socketConexionFS, &header, path);
+
+	int tipo;
+	void* paquete;
+	recibir_paquete(socketConexionFS, &paquete, &tipo);
+
+	int respuesta;
+
+	if(tipo == BORRAR_ARCHIVO_OK)
+		respuesta = BORRAR_ARCHIVO_OK;
+	else
+		respuesta = ARCHIVO_INEXISTENTE;
+
+	enviar_paquete_vacio(respuesta, socketCpu);
+
+}
+
+void cerrarArchivo(int socketCpu, void* package){
+	uint32_t fd = *(uint32_t*)package;
+	int pid = *(int*) (package + sizeof(uint32_t));
+
+	eliminarFd(fd, pid);
+
+	enviar_paquete_vacio(CERRAR_ARCHIVO_OK, socketCpu);
+}
+
+void escribir(void* paquete, int socketCpu){
+	uint32_t fd = *(uint32_t*) paquete;
+	int pid = *(int*) (paquete + sizeof(uint32_t));
+	int sizeEscritura = *(int*) (paquete + sizeof(uint32_t) + sizeof(int));
+	char* escritura = paquete + sizeof(int) * 2  + sizeof(uint32_t);
 
 	info_estadistica_t * info = buscarInformacion(pid);
+	header_t header;
 
-	int size = sizeof(int) + strlen(impresion) + 1;
+	if(fd == 1){
+		int sizePedido = sizeof(int) + strlen(escritura) + 1;
 
-	if(fd == 1){ // TODO - FALTA MANDARLE EL PAQUETE A FS - tiene que ser 1?
-		header_t header;
 		header.type=IMPRIMIR_POR_PANTALLA;
-		header.length= size;
+		header.length= sizePedido;
 
-		char* buffer = malloc(size);
+		char* buffer = malloc(sizePedido);
 		memcpy(buffer, &pid, sizeof(int));
-		memcpy(buffer+sizeof(int), impresion, strlen(impresion) + 1);
+		memcpy(buffer+sizeof(int), escritura, strlen(escritura) + 1);
 
 		sendSocket(info->socketConsola, &header, buffer);
+	}else{
+		archivo* archivo = buscarArchivo(pid, fd);
+		if(archivo == NULL){
+			log_error(logger, "No se encontro el archivo para escribir");
+			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+			return;
+		}
+		int offsetEscritura = archivo->cursor;
+		char* path = buscarPathDeArchivo(fd);
+		void * buffer = malloc(2*sizeof(int)+strlen(path)+strlen(escritura));
+		int offset = 0, sizePath;//, sizeEscritura;
+
+
+		memcpy(&offsetEscritura, buffer, sizeof(int)); offset += sizeof(int);
+		memcpy(&sizeEscritura, buffer+offset, sizeof(int)); offset += sizeof(int);
+		sizePath = strlen(path);
+		memcpy(&sizePath, buffer+offset, sizeof(int)); offset += sizeof(int);
+		memcpy(path, buffer+offset, strlen(path)); offset += strlen(path);
+		//sizeEscritura = strlen(sizeEscritura);
+		memcpy(&sizeEscritura, buffer+offset, sizeof(int)); offset += sizeof(int);
+		memcpy(escritura, buffer+offset, strlen(path));
+
+		header.length = 2*sizeof(int)+strlen(path)+strlen(escritura);
+		header.type = OBTENER_DATOS;
+
+		sendSocket(socketConexionFS, &header, buffer);
+
+		free(buffer);
+
+		void* paquete;
+		int tipo;
+
+		recibir_paquete(socketConexionFS, &paquete, &tipo);
+		if(tipo == ESCRITURA_OK){
+			enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
+		}else{
+			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+		}
+
 	}
+}
+
+void leerArchivo(int socketCpu, void* package){
+	int offset = 0;
+	uint32_t fd = *(uint32_t*)package; offset += sizeof(uint32_t);
+	int pid = *(int*) (package + offset); offset += sizeof(int);
+	int size = *(int*) (package + offset);
+
+	archivo* archivo = buscarArchivo(pid, fd);
+	int offsetPedidoLectura = archivo->cursor;
+
+	char* path = buscarPathDeArchivo(fd);
+	void* buffer = malloc(2*sizeof(int)+strlen(path));
+
+	offset = 0;
+	memcpy(&offsetPedidoLectura, buffer, sizeof(int)); offset += sizeof(int);
+	memcpy(&size, buffer+offset, sizeof(int)); offset += sizeof(int);
+	int sizePath = strlen(path);
+	memcpy(&sizePath, buffer+offset, sizeof(int)); offset += sizeof(int);
+	memcpy(path, buffer+offset, strlen(path));
+
+	header_t header;
+	header.length = 2*sizeof(int)+strlen(path);
+	header.type = OBTENER_DATOS;
+
+	sendSocket(socketConexionFS, &header, buffer);
+
+	void* paquete;
+	int tipo;
+
+	recibir_paquete(socketConexionFS, &paquete, &tipo);
+	if(tipo == LEER_ARCHIVO_OK){
+		header.length = size;
+		header.type = LEER_ARCHIVO_OK;
+		sendSocket(socketCpu, &header, paquete);
+	}else{
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+	}
+
+}
+
+void moverCursor(int socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
+	bool buscarPorProceso(entrada_tabla_archivo_proceso* entrada){
+			return entrada->proceso == cursor->pid ? true : false;
+		}
+
+		bool buscarPorFd(archivo* archivo){
+			return archivo->fd == cursor->descriptor ? true : false;
+		}
+
+		entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
+		archivo* archivo = 	list_find(entrada->archivos, buscarPorFd);
+		archivo->cursor = cursor->posicion;
+
 }
 
 void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber varios procesos

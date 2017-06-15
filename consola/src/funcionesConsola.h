@@ -77,6 +77,7 @@ void iniciarPrograma(char* comando, char* param);
 void finalizarPrograma(char* comando, char* param);
 void desconectarConsola(char* comando, char* param);
 void limpiarMensajes(char* comando, char* param);
+void showHelp(char* comando, char* param);
 
 //Variables Globales
 

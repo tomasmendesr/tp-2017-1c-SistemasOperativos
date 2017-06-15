@@ -189,7 +189,7 @@ t_dictionary* crearDiccionario(char** array){
  */
 void levantarInterfaz(void){
 	//creo los comandos y el parametro
-	comando* comandos = malloc(sizeof(comando)*6);
+	comando* comandos = malloc(sizeof(comando)*7);
 
 	strcpy(comandos[0].comando, "list");
 	comandos[0].funcion = listProcesses;
@@ -203,10 +203,13 @@ void levantarInterfaz(void){
 	comandos[4].funcion = killProcess;
 	strcpy(comandos[5].comando, "stopPlan");
 	comandos[5].funcion = stopPlanification;
+	strcpy(comandos[6].comando, "help");
+	comandos[6].funcion = showHelp;
+
 
 	interface_thread_param* params = malloc(sizeof(interface_thread_param));
 	params->comandos = comandos;
-	params->cantComandos = 6;
+	params->cantComandos = 7;
 
 	//Lanzo el thread
 	pthread_t threadInterfaz;
@@ -387,6 +390,16 @@ void stopPlanification(char* comando, char* param){
     	   pthread_mutex_unlock(&lockPlanificacion);
     	   printf("Planificacion Activada\n");
        }
+}
+
+void showHelp(char* comando, char* param){
+	puts("list [<status>] - muestra todos los programas en un determinado estado (new, ready, exec, bloq, finish)");
+	puts("tablaArchivos   - muestra la tabla de archivos");
+ 	puts("info <pid>      - muestra información del programa asociado al PID ingresado");
+ 	puts("kill <pid>      - finaliza el programa correspondiente al PID ingresado");
+ 	puts("grMulti <grado> - cambia del grado de multiprogramación del sistema");
+ 	puts("stopPlan        - inicia/detiene la planificación de los procesos");
+ 	puts("help            - muestra comandos y descripciones");
 }
 
 void agregarNuevaCPU(t_list* lista, int socketCPU){
@@ -719,6 +732,7 @@ void agregarArchivo_aProceso(int proceso, char* file, char* permisos){
 	archivo->flags = permisos;
 	archivo->fd = getArchivoFdMax(); //aca tengo que pasarselo a la cpu
 	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
+	archivo->cursor = 0;
 	list_add(entrada->archivos, archivo);
 
 }
@@ -757,3 +771,31 @@ void imprimirTablaGlobal(void){
 
 }
 
+char* buscarPathDeArchivo(int globalFD){
+
+	bool buscarPorUbicacion(entrada_tabla_globlal_archivo* entrada){
+		return entrada->ubicacion = globalFD ? true : false;
+	}
+
+	entrada_tabla_globlal_archivo* entrada = list_find(globalFileTable, buscarPorUbicacion);
+	return entrada->archivo;
+}
+
+archivo* buscarArchivo(int pid, int fd){
+
+	bool buscarPorPid(entrada_tabla_archivo_proceso* entrada){
+		return entrada->proceso == pid ? true : false;
+	}
+
+	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorPid);
+	if(entrada == NULL) return NULL;
+
+	bool buscarPorArchivo(archivo* arch){
+		return arch->fd == fd ? true : false;
+	}
+
+	archivo* archivo = list_find(entrada->archivos, buscarPorArchivo);
+	if(archivo == NULL) return NULL;
+	return archivo;
+
+}

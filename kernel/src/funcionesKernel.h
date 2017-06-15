@@ -96,6 +96,7 @@ typedef struct{
 	int fd;
 	char* flags;
 	int globalFD;
+	int cursor;
 }archivo;
 
 typedef struct{
@@ -113,6 +114,22 @@ typedef struct{
 	uint32_t pid;
 	uint32_t cant;
 }__attribute__((__packed__))pedido_mem;
+
+//para comunicacion con fs
+typedef struct
+{
+	char* path;
+	int offset;
+	int size;
+} pedido_obtener_datos;
+
+typedef struct
+{
+	char* path;
+	int offset;
+	int size;
+	char* buffer;
+}pedido_guardar_datos;
 
 enum enum_estado{
 	NEW = 1,
@@ -162,6 +179,7 @@ void getTablaArchivos(char* comando, char* param);
 void gradoMultiprogramacion(char* comando, char* param);
 void killProcess(char*,char*);
 void stopPlanification(char*,char*);
+void showHelp(char* comando, char* param);
 
 //Funciones de manejo de CPUs
 void agregarNuevaCPU(t_list* lista, int socketCPU);
@@ -251,6 +269,9 @@ void crearEntradaArchivoProceso(int proceso);
 void agregarArchivo_aProceso(int proceso, char* file, char* permisos);
 void eliminarFd(int fd, int proceso);
 void imprimirTablaGlobal(void);
+char* buscarPathDeArchivo(int globalFD);
+archivo* buscarArchivo(int pid, int fd);
+
 
 fd_set master;
 fd_set setConsolas;
