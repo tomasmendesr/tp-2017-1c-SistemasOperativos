@@ -137,12 +137,14 @@ void borrarArchivo(void* package){
 void guardarDatos(void* package){
 	pedido_guardar_datos* pedido = deserializar_pedido_guardar_datos(package);
 
-	if(validarArchivo(pedido->path)){
+	char* path = generarPathArchivo(pedido->path);
+
+	if(validarArchivo(path)){
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
 		return;
 	}
 
-	char** bloques = obtenerNumeroBloques(pedido->path);
+	char** bloques = obtenerNumeroBloques(path);
 	int cantBloques = cantidadBloques(bloques);
 
 	int offsetReal = pedido->offset, j=0;
@@ -166,7 +168,7 @@ void guardarDatos(void* package){
 
 		if(pedido->size > 0){//aun faltan cosas por escribir
 			if(j == cantBloques){
-				bloque = reservarNuevoBloque(pedido->path);
+				bloque = reservarNuevoBloque(path);
 			}else{
 				j++;
 				bloque = atoi(bloques[j]);
@@ -188,20 +190,22 @@ void escribirEnArchivo(int bloque, char* buffer, int size){
 
 	fwrite(buffer, size, 1, archivo);
 
-	close(archivo);
+	fclose(archivo);
 }
 
 void obtenerDatos(void* package){
 	pedido_obtener_datos* pedido = deserializar_pedido_obtener_datos(package);
 
-	if(validarArchivo(pedido->path)){
+	char* path = generarPathArchivo(pedido->path);
+
+	if(validarArchivo(path)){
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
 		return;
 	}
 
 	char* buffer = malloc(sizeof(pedido->size));
 
-	char** bloques = obtenerNumeroBloques(pedido->path);
+	char** bloques = obtenerNumeroBloques(path);
 
 	int offsetReal = pedido->offset, j=0, bytesLeidos = 0, restoBloque;
 
@@ -239,7 +243,7 @@ void leerArchivo(int bloque, char* buffer, int size){
 
 	fread(buffer, size, 1, archivo);
 
-	close(archivo);
+	fclose(archivo);
 }
 
 void mkdirRecursivo(char* path){
