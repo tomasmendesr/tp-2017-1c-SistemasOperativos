@@ -39,11 +39,10 @@ void conectarConServidores(void){
 		log_error(logger,"No se pudo establecer la conexion con la memoria.");
 		exit(1);
 	}
-	//TODO:Cuando se haga el filesystem descomentar la liea.
-	//if(conexionConFileSystem() == -1){
-	//	log_error(logger,"No se pudo establecer la conexion con el File System.");
-	//	exit(1);
-	//}
+	if(conexionConFileSystem() == -1){
+		log_error(logger,"No se pudo establecer la conexion con el File System.");
+		exit(1);
+	}
 }
 
 /**

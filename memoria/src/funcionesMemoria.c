@@ -49,22 +49,29 @@ void inicializarGlobales(){
 
 void crearConfig(int argc, char* argv[]){
 
-	char* pathConfig=string_new();
-
 	if(argc>1){
-		string_append(&pathConfig,argv[1]);
+			if(verificarExistenciaDeArchivo(argv[1])){
+				config=levantarConfiguracionMemoria(argv[1]);
+				log_info(logger, "Configuracion levantada");
+			}else{
+				log_error(logger,"Ruta incorrecta");
+				exit(EXIT_FAILURE);
+			}
 	}
-		else string_append(&pathConfig,configuracionMemoria);
-	if(verificarExistenciaDeArchivo(pathConfig)){
-		config = levantarConfiguracionMemoria(pathConfig);
-	}else{
-		log_info(logger,"No se pudo levantar archivo de configuracion\n");
+	else if(verificarExistenciaDeArchivo(configuracionMemoria)){
+		config=levantarConfiguracionMemoria(configuracionMemoria);
+		log_info(logger,"Configuracion levantada");
+	}
+	else if(verificarExistenciaDeArchivo(string_substring_from(configuracionMemoria,3))){
+		config=levantarConfiguracionMemoria(string_substring_from(configuracionMemoria,3));
+		log_info(logger,"Configuracion levantada");
+	}
+	else{
+		log_error(logger,"No pudimos levantar el archivo");
 		exit(EXIT_FAILURE);
 	}
-	log_info(logger,"Se levanto la configuracion correctamente\n");
-	printf("Se levanto la configuracion correctamente\n");
-
 }
+
 t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
 
         t_config_memoria* config = malloc(sizeof(t_config_memoria));

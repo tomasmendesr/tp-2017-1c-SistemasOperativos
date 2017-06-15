@@ -10,19 +10,27 @@ void inicializarColas(){
 }
 
 void crearConfig(int argc, char* argv[]){
-	char* pathConfig=string_new();
-
-	if(argc>1)string_append(&pathConfig,argv[1]);
-		else string_append(&pathConfig,configuracionKernel);
-	if(verificarExistenciaDeArchivo(pathConfig)){
-		config = levantarConfiguracionKernel(pathConfig);
-	}else{
-		log_error(logger, "No se pudo levantar archivo de configuracion");
+	if(argc>1){
+			if(verificarExistenciaDeArchivo(argv[1])){
+				config=levantarConfiguracionKernel(argv[1]);
+				log_info(logger, "Configuracion levantada");
+			}else{
+				log_error(logger,"Ruta incorrecta");
+				exit(EXIT_FAILURE);
+			}
+	}
+	else if(verificarExistenciaDeArchivo(configuracionKernel)){
+		config=levantarConfiguracionKernel(configuracionKernel);
+		log_info(logger,"Configuracion levantada");
+	}
+	else if(verificarExistenciaDeArchivo(string_substring_from(configuracionKernel,3))){
+		config=levantarConfiguracionKernel(string_substring_from(configuracionKernel,3));
+		log_info(logger,"Configuracion levantada");
+	}
+	else{
+		log_error(logger,"No pudimos levantar el archivo");
 		exit(EXIT_FAILURE);
 	}
-
-	log_info(logger, "Configuracion levantada correctamente\n");
-	return;
 }
 
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {

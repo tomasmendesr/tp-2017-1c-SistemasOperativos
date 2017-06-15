@@ -424,7 +424,7 @@ void retornar(t_valor_variable retorno){
  * @return	El valor del descriptor de archivo abierto por el sistema
  */
 t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
-
+	log_debug(logger, "ANSISOP_abrir '%s", direccion);
 	//defino las variables
 	header_t* header = malloc(sizeof(header_t));
 	size_t offset = 0;
@@ -475,7 +475,7 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
  * @return	void
  */
 void borrar(t_descriptor_archivo direccion){
-
+	log_debug(logger, "ANSISOP_borrar");
 	//armo lo que voy a mandar
 	header_t* header = malloc(sizeof(header_t));
 	char* paquete;
@@ -506,7 +506,7 @@ void borrar(t_descriptor_archivo direccion){
  * @return	void
  */
 void cerrar(t_descriptor_archivo descriptor_archivo){
-
+	log_debug(logger, "ANSISOP_cerrar");
 	//armo lo que voy a mandar
 	header_t* header = malloc(sizeof(header_t));
 	char* paquete;

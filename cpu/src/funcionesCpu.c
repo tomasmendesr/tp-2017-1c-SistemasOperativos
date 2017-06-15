@@ -31,9 +31,10 @@ int crearLog(void){
 
 void crearConfig(int argc, char* argv[]){
 	if(argc>1){
-		if(verificarExistenciaDeArchivo(argv[1]))
+		if(verificarExistenciaDeArchivo(argv[1])){
 			config=levantarConfiguracionCPU(argv[1]);
-		else{
+			log_info(logger, "Configuracion levantada");
+		}else{
 			log_error(logger,"Ruta incorrecta");
 			exit(EXIT_FAILURE);
 		}

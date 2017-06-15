@@ -3,16 +3,26 @@
 void crearConfig(int argc, char* argv[]) {
 	char* pathConfig = string_new();
 
-	if (argc>1)string_append(&pathConfig, argv[1]);
-		else string_append(&pathConfig, configuracionConsola);
-	if (verificarExistenciaDeArchivo(pathConfig)) {
-		config = levantarConfiguracionConsola(pathConfig);
-	} else {
-		log_info(logger, "No pudo levantarse el archivo de configuracion");
+	if(argc>1){
+			if(verificarExistenciaDeArchivo(argv[1]))
+				config=levantarConfiguracionConsola(argv[1]);
+			else{
+				log_error(logger,"Ruta incorrecta");
+				exit(EXIT_FAILURE);
+			}
+	}
+	else if(verificarExistenciaDeArchivo(configuracionConsola)){
+		config=levantarConfiguracionConsola(configuracionConsola);
+		log_info(logger,"Configuracion levantada");
+	}
+	else if(verificarExistenciaDeArchivo(string_substring_from(configuracionConsola,3))){
+		config=levantarConfiguracionConsola(string_substring_from(configuracionConsola,3));
+		log_info(logger,"Configuracion levantada");
+	}
+	else{
+		log_error(logger,"No pudimos levantar el archivo");
 		exit(EXIT_FAILURE);
 	}
-	log_info(logger,"Configuracion levantada correctamente");
-	return;
 }
 
 t_config_consola* levantarConfiguracionConsola(char * archivo) {
