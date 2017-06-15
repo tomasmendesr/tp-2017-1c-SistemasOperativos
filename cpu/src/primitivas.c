@@ -602,45 +602,6 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
 }
 
 /*
- * LIBERAR MEMORIA
- *
- * Informa al kernel que libera la memoria previamente reservada con RESERVAR.
- * Solo se podra liberar memoria previamente asignada con RESERVAR.
- *
- * @sintax	TEXT_FREE (liberar)
- * @param	puntero Inicio de espacio de memoria a liberar (previamente retornado por RESERVAR)
- * @return	void
- */
-void liberarMemoria(t_puntero puntero){
-	log_debug(logger, "ANSISOP_liberarMemoria -> posicion: %d", puntero);
-
-	if(cantDeReservas > 0){
-
-//	    con el puntero alcanza porque me dice en que pagina del heap esta lo que quiero reservar
-		t_pedido_bytes* pedidoLiberar = malloc(sizeof(t_pedido_bytes));
-
-//		todo tambien se podria mandar el puntero y que el kernel haga este laburo
-		pedidoLiberar->pag = puntero / tamanioPagina;
-		pedidoLiberar->offset = puntero % tamanioPagina;
-//		el tamanio no importa
-//		pedidoLiberar->size = 0;
-		pedidoLiberar->pid = pcb->pid;
-		header_t header;
-		header.type= LIBERAR_MEMORIA;
-		header.length = sizeof(t_pedido_bytes);
-		if(sendSocket(socketConexionKernel, &header,(void*)pedidoLiberar) <= 0 ){
-			log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
-			finalizarCPU();
-		}
-		requestHandlerKernel();
-		cantDeReservas--;
-	}else{
-		//esta tratando de liberar memoria no reservada previamente
-		finalizarPor(ERROR_MEMORIA);
-	}
-}
-
-/*
  * MOVER CURSOR DE ARCHIVO
  *
  * Informa al Kernel que el proceso requiere que se mueva el cursor a la posicion indicada.
@@ -652,22 +613,27 @@ void liberarMemoria(t_puntero puntero){
  */
 void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion){
 	log_debug(logger, "ANSISOP_moverCursor");
-	void* paquete;
-	header_t header;
-	t_cursor cursor;
-	header.type = MOVER_CURSOR;
-	header.length = sizeof(t_cursor);
-	cursor.pid = pcb->pid;
-	cursor.posicion = posicion;
-	cursor.descriptor = descriptor_archivo;
-	paquete = malloc(header.length);
-
-	if(sendSocket(socketConexionKernel, &header, paquete) <= 0){
-		if(paquete)free(paquete);
+	header_t* header;
+	t_cursor* cursor;
+	int32_t var;
+	header = malloc(sizeof(header_t));
+	header->type = MOVER_CURSOR;
+	header->length = sizeof(t_cursor);
+	cursor = malloc(sizeof(t_cursor));
+	cursor->pid = pcb->pid;
+	cursor->posicion = posicion;
+	cursor->descriptor = descriptor_archivo;
+	if(sendSocket(socketConexionKernel, header, cursor) <= 0){
+		free(header);
+		free(cursor);
 		finalizarCPU();
 	}
-	requestHandlerKernel();
-	if(paquete)free(paquete);
+	var = requestHandlerKernel();
+	if(var == -1){
+		log_debug(logger, "no se pudo mover el cursor");
+	}
+	free(header);
+	free(cursor);
 }
 
 /*
@@ -711,6 +677,36 @@ t_puntero reservar(t_valor_variable espacio){
 	cantDeReservas++;
 
 	return valor;
+}
+
+/*
+ * LIBERAR MEMORIA
+ *
+ * Informa al kernel que libera la memoria previamente reservada con RESERVAR.
+ * Solo se podra liberar memoria previamente asignada con RESERVAR.
+ *
+ * @sintax	TEXT_FREE (liberar)
+ * @param	puntero Inicio de espacio de memoria a liberar (previamente retornado por RESERVAR)
+ * @return	void
+ */
+void liberarMemoria(t_puntero posicion){
+	log_debug(logger, "ANSISOP_liberarMemoria -> posicion: %d", posicion);
+	int32_t var;
+	header_t header;
+	header.type= LIBERAR_MEMORIA;
+	header.length = sizeof(t_liberar);
+	t_liberar pedido;
+	pedido.pid = pcb->pid;
+	pedido.pos = posicion;
+	if(sendSocket(socketConexionKernel, &header, &pedido) <= 0 ){
+		log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
+		finalizarCPU();
+	}
+	var = requestHandlerKernel();
+	if(var == -1){
+		log_debug(logger, "error al liberar");
+	}
+	else cantDeReservas--;
 }
 
 /*
