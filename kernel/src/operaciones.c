@@ -667,6 +667,7 @@ void escribir(void* paquete, int socketCpu){
 		memcpy(buffer+sizeof(int), escritura, strlen(escritura) + 1);
 
 		sendSocket(info->socketConsola, &header, buffer);
+		enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
 	}else{
 		archivo* archivo = buscarArchivo(pid, fd);
 		if(archivo == NULL){

@@ -618,7 +618,6 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
 	header_t header;
 	t_cursor* cursor;
 	int32_t var;
-	header = malloc(sizeof(header_t));
 	header.type = MOVER_CURSOR;
 	header.length = sizeof(t_cursor);
 	cursor = malloc(sizeof(t_cursor));
@@ -662,12 +661,12 @@ t_puntero reservar(t_valor_variable espacio){
 	memcpy(paquete+size, &espacio, sizeof(t_valor_variable));
 
 	if(sendSocket(socketConexionKernel,header,paquete) <= 0){
-		log_debug(logger, "problemas de conexion");
+		log_error(logger, "problemas de conexion");
 		finalizarCPU();
 	}
 	var = requestHandlerKernel();
 	if(var == -1){
-		log_info("error al reservar memoria");
+		log_error(logger, "error al reservar memoria");
 		free(header);
 		free(paquete);
 	}
@@ -704,7 +703,7 @@ void liberarMemoria(t_puntero posicion){
 	}
 	var = requestHandlerKernel();
 	if(var == -1){
-		log_debug(logger, "error al liberar");
+		log_error(logger, "error al liberar");
 	}
 	else cantDeReservas--;
 }
