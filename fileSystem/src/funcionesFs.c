@@ -4,6 +4,7 @@ void crearConfig(int argc, char* argv[]){
 	if(argc>1){
 		if(verificarExistenciaDeArchivo(argv[1]))
 			conf=levantarConfiguracion(argv[1]);
+			log_info(logger, "Configuracion levantada correctamente");
 		else{
 			log_error(logger,"La ruta especificada es incorrecta");
 			exit(EXIT_FAILURE);

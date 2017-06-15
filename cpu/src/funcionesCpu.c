@@ -33,7 +33,7 @@ void crearConfig(int argc, char* argv[]){
 	if(argc>1){
 		if(verificarExistenciaDeArchivo(argv[1])){
 			config=levantarConfiguracionCPU(argv[1]);
-			log_info(logger, "Configuracion levantada");
+			log_info(logger, "Configuracion levantada correctamente");
 		}else{
 			log_error(logger,"Ruta incorrecta");
 			exit(EXIT_FAILURE);
@@ -41,14 +41,14 @@ void crearConfig(int argc, char* argv[]){
 	}
 	else if(verificarExistenciaDeArchivo(configuracionCPU)){
 		config=levantarConfiguracionCPU(configuracionCPU);
-		log_info(logger,"Configuracion levantada");
+		log_info(logger,"Configuracion levantada correctamente");
 	}
 	else if(verificarExistenciaDeArchivo(string_substring_from(configuracionCPU,3))){
 		config=levantarConfiguracionCPU(string_substring_from(configuracionCPU,3));
-		log_info(logger,"Configuracion levantada");
+		log_info(logger,"Configuracion levantada correctamente");
 	}
 	else{
-		log_error(logger,"No pudimos levantar el archivo");
+		log_error(logger,"No se pudo levantar el archivo de configuracion");
 		exit(EXIT_FAILURE);
 	}
 }

@@ -23,7 +23,6 @@
 #include "peticiones.h"
 
 #define configuracionMemoria "../confMemoria.init"
-#define configuracionMemoria2 "confMemoria.init"
 #define MAX_LEN_PUERTO 6
 #define IP "127.0.0.1"
 #define BACKLOG 10
