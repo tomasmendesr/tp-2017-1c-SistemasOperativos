@@ -8,10 +8,7 @@ int main(int argc, char** argv){
 
 	inicializarMetadata();
 
-	escribirValorBitarray(0, 1);
-	//printf("%d\n", buscarBloqueLibre());
-
-	//esperarConexionKernel();
+	esperarConexionKernel();
 
 	destruirConfiguracionFS(conf);
 	return EXIT_SUCCESS;
@@ -52,7 +49,7 @@ void inicializarMetadata(){
 	string_append(&pathArchivos, conf->punto_montaje);
 	string_append(&pathArchivos, ARCHIVOS_PATH);
 
-	mkdir(conf->punto_montaje, 0777);
+	mkdirRecursivo(conf->punto_montaje);
 	mkdir(pathMetadata, 0777);
 	mkdir(pathBloques, 0777);
 	mkdir(pathArchivos, 0777);
