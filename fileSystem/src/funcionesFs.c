@@ -53,30 +53,36 @@ void destruirConfiguracionFS(t_config_FS* conf){
 void procesarMensajesKernel(){
 	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
-	int check = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
+	int check;
 
-	if (check <= 0) {
-		log_error(logger, "El kernel se desconecto");
-		close(socketConexionKernel);
-		exit(1);
-	}
+	while(1){
 
-	switch (tipo_mensaje) {
-		case CREAR_ARCHIVO:
-			crearArchivo(paquete);
-			break;
-		case BORRAR_ARCHIVO:
-			borrarArchivo(paquete);
-			break;
-		case GUARDAR_DATOS:
-			guardarDatos(paquete);
-			break;
-		case OBTENER_DATOS:
-			obtenerDatos(paquete);
-			break;
-		default:
-			log_warning(logger, "se recivio una operacion invalida");
-			break;
+		check = recibir_paquete(socketConexionKernel, &paquete, &tipo_mensaje);
+
+		if (check <= 0) {
+			log_error(logger, "El kernel se desconecto");
+			close(socketConexionKernel);
+			exit(1);
+		}
+
+		switch (tipo_mensaje) {
+			case CREAR_ARCHIVO:
+				crearArchivo(paquete);
+				break;
+			case BORRAR_ARCHIVO:
+				borrarArchivo(paquete);
+				break;
+			case GUARDAR_DATOS:
+				guardarDatos(paquete);
+				break;
+			case OBTENER_DATOS:
+				obtenerDatos(paquete);
+				break;
+			default:
+				log_warning(logger, "se recivio una operacion invalida");
+				break;
+		}
+
 	}
 
 }
@@ -92,10 +98,12 @@ void crearArchivo(void* package){
 
 	escribirValorBitarray(1, bloqueLibre); //pongo el bloque como ocupado
 
-	FILE* archivo = fopen(pathArchivo, "a");
+	char* p = generarPathArchivo(pathArchivo);
 
-	fprintf(archivo, "TAMANIO=0");
-	fprintf(archivo, "BLOQUES=[%d]", bloqueLibre);
+	FILE* archivo = fopen(p, "a");
+
+	fprintf(archivo, "TAMANIO=0\n");
+	fprintf(archivo, "BLOQUES=[%d]\n", bloqueLibre);
 
 	fclose(archivo);
 
