@@ -67,8 +67,7 @@
 		/*
 		 * DEFINIR VARIABLE
 		 *
-		 * Reserva en el Contexto de Ejecución Actual el espacio necesario para una variable llamada identificador_variable y la registra tanto en el Stack como en el Diccionario
-		 * de Variables. Retornando la posición del valor de esta nueva variable del stack
+		 * Reserva en el Contexto de Ejecución Actual el espacio necesario para una variable llamada identificador_variable y la registra tanto en el Stack como en el Diccionario de Variables. Retornando la posición del valor de esta nueva variable del stack
 		 * El valor de la variable queda indefinido: no deberá inicializarlo con ningún valor default.
 		 * Esta función se invoca una vez por variable, a pesar que este varias veces en una línea.
 		 * Ej: Evaluar "variables a, b, c" llamará tres veces a esta función con los parámetros "a", "b" y "c"
@@ -273,10 +272,10 @@
 		 * Informa al Kernel que el proceso requiere que se borre un archivo.
 		 *
 		 * @syntax 	TEXT_DELETE_FILE (borrar)
-		 * @param	direccion		Ruta al archivo a abrir
+		 * @param	descriptor_archivo		Descriptor de archivo del archivo a borrar
 		 * @return	void
 		 */
-		void (*AnSISOP_borrar)(t_descriptor_archivo direccion);
+		void (*AnSISOP_borrar)(t_descriptor_archivo descriptor_archivo);
 
 		/*
 		 * CERRAR ARCHIVO

@@ -4,10 +4,10 @@ void crearConfig(int argc, char* argv[]) {
 	char* pathConfig = string_new();
 
 	if(argc>1){
-			if(verificarExistenciaDeArchivo(argv[1]))
+			if(verificarExistenciaDeArchivo(argv[1])){
 				config=levantarConfiguracionConsola(argv[1]);
 				log_info(logger, "Configuracion levantada correctamente");
-			else{
+			}else{
 				log_error(logger,"Ruta incorrecta");
 				exit(EXIT_FAILURE);
 			}

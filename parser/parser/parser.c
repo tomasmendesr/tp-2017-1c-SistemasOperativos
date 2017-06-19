@@ -113,7 +113,8 @@ void analizadorLinea(char* const instruccion, AnSISOP_funciones *AnSISOP_funcion
 		AnSISOP_funciones_kernel->AnSISOP_wait( _string_trim(linea + strlen(TEXT_WAIT)) );
 	} else if( _esAbrirArchivo(linea) ){
 		char **operation = string_split(linea + strlen(TEXT_OPEN_FILE), " ");
-		AnSISOP_funciones_kernel->AnSISOP_abrir(_string_trim(operation[1]), _interpretarBanderas(operation[0]));
+		t_descriptor_archivo fdAbierto = AnSISOP_funciones_kernel->AnSISOP_abrir(_string_trim(operation[2]), _interpretarBanderas(operation[1]));
+		AnSISOP_funciones->AnSISOP_asignar(_obtenerPosicion(operation[0], AnSISOP_funciones), fdAbierto);
 		free(operation);
 	} else if( _esBorrarArchivo(linea) ){
 		AnSISOP_funciones_kernel->AnSISOP_borrar(
@@ -161,7 +162,7 @@ void analizadorLinea(char* const instruccion, AnSISOP_funciones *AnSISOP_funcion
 		free(operation);
 	} else if( _esLiberar(linea) ){
 		//FREE POSICION
-		AnSISOP_funciones_kernel->AnSISOP_liberar( _obtenerPosicion(_string_trim(linea + strlen(TEXT_FREE)), AnSISOP_funciones) );
+		AnSISOP_funciones_kernel->AnSISOP_liberar( _operar(_string_trim(linea + strlen(TEXT_FREE)), AnSISOP_funciones) );
 	} else if( _esLlamadaFuncion(linea) ){
 		//RETORNO <- ETIQUETA PARAMETROS
 		char* *ret = _separarOperadores(linea, TEXT_CALL);
