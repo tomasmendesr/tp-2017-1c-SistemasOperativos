@@ -184,7 +184,11 @@ int32_t requestHandlerKernel(void){
 		case LIBERAR_MEMORIA_OK:
 			log_info(logger, "Memoria liberada");
 			break;
+		case ABRIR_ARCHIVO_OK:
+			break;
 		case ESCRITURA_OK:
+			break;
+		case LECTURA_OK:
 			break;
 		// errores
 		case SEMAFORO_NO_EXISTE:

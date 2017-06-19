@@ -610,9 +610,13 @@ void abrirArchivo(int socketCpu, void* package){
 	if(banderas->escritura) string_append(permisos, "E");
 	if(banderas->lectura) string_append(permisos, "L");
 
-	agregarArchivo_aProceso(pid, path, permisos);
+	int fd = agregarArchivo_aProceso(pid, path, permisos);
 
-	enviar_paquete_vacio(ABRIR_ARCHIVO_OK, socketCpu);
+	header_t header;
+	header.length = sizeof(int);
+	header.type = ABRIR_ARCHIVO_OK;
+
+	sendSocket(socketCpu, &header, &fd);
 }
 
 void borrarArchivo(int socketCpu, void* package){

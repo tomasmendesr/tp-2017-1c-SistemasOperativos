@@ -711,7 +711,7 @@ void crearEntradaArchivoProceso(int proceso){
 	list_add(processFileTable, entrada);
 }
 
-void agregarArchivo_aProceso(int proceso, char* file, char* permisos){
+int agregarArchivo_aProceso(int proceso, char* file, char* permisos){
 
 	bool buscar(entrada_tabla_archivo_proceso* entrada){
 		return entrada->proceso == proceso ? true : false;
@@ -743,6 +743,7 @@ void agregarArchivo_aProceso(int proceso, char* file, char* permisos){
 	archivo->cursor = 0;
 	list_add(entrada->archivos, archivo);
 
+	return archivo->fd;
 }
 
 void eliminarFd(int fd, int proceso){
