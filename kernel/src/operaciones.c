@@ -596,15 +596,19 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 }
 
 void abrirArchivo(int socketCpu, void* package){
-	int sizePath, sizePermisos, pid, offset = 0;
+	uint32_t sizePath, pid, offset = 0;
 	char* path;
-	char* permisos;
+	t_banderas* banderas;
 
-	memcpy(package, &pid, sizeof(int)); offset += sizeof(int);
-	memcpy(package, &sizePath, sizeof(int)); offset += sizeof(int);
+	memcpy(package, &pid, sizeof(uint32_t)); offset += sizeof(uint32_t);
+	memcpy(package, &sizePath, sizeof(uint32_t)); offset += sizeof(uint32_t);
 	memcpy(package+offset, path, sizePath); offset += sizePath;
-	memcpy(package+offset, &sizePermisos, sizeof(int)); offset += sizeof(int);
-	memcpy(package+offset, permisos, sizePermisos);
+	memcpy(package+offset, banderas, sizeof(t_banderas));
+
+	char* permisos = string_new();
+	if(banderas->creacion) string_append(permisos, "C");
+	if(banderas->escritura) string_append(permisos, "E");
+	if(banderas->lectura) string_append(permisos, "L");
 
 	agregarArchivo_aProceso(pid, path, permisos);
 
