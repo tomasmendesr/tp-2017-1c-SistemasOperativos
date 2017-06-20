@@ -34,6 +34,7 @@
 typedef struct{
 	char* ip_Kernel;
 	char* puerto_Kernel;
+	char* program_path;
 }t_config_consola;
 
 typedef struct{
@@ -78,6 +79,10 @@ void finalizarPrograma(char* comando, char* param);
 void desconectarConsola(char* comando, char* param);
 void limpiarMensajes(char* comando, char* param);
 void showHelp(char* comando, char* param);
+
+//Creo el path con la direccion del archivo de config y el nombre del archivo seguido por .ansisop
+char* crearPath(char* program_name);
+
 
 //Variables Globales
 

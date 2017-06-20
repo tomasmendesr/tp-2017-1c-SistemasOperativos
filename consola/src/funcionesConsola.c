@@ -43,6 +43,11 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 	strcpy(config->puerto_Kernel,
 			config_get_string_value(configConsola, "PUERTO_KERNEL"));
 
+	config->program_path = malloc(
+			strlen(config_get_string_value(configConsola, "PROGRAM_PATH")) + 1);
+	strcpy(config->program_path,
+			config_get_string_value(configConsola, "PROGRAM_PATH"));
+
 	config_destroy(configConsola);
 
 	return config;
@@ -147,7 +152,9 @@ void iniciarPrograma(char* comando, char* param) {
 
 	int socket_cliente;
 
-	if(!verificarExistenciaDeArchivo(param)){
+	char* absolute_path = crearPath(param);
+
+	if(!verificarExistenciaDeArchivo(absolute_path)){
 		log_warning(logger, "No se encontro el archivo ingresado");
 		return;
 	}
@@ -404,4 +411,21 @@ void imprimirPorPantalla(void* buffer){
 	proceso->impresiones++;
 	char* impresion = buffer + sizeof(int);
 	printf("-- IMPRESION PROGRAMA #%d: %s\n", pid, impresion);
+}
+
+char* crearPath(char* program_name){
+
+	char* absolute_path = string_new();
+
+	string_append(&absolute_path,config->program_path);
+
+	if( !string_ends_with(absolute_path, "/") )
+		string_append(&absolute_path,"/");
+
+	string_append(&absolute_path,program_name);
+	string_append(&absolute_path,".ansisop");
+
+	printf("(DEBUG)path absoluto: %s\n",absolute_path);
+
+	return absolute_path;
 }
