@@ -633,7 +633,7 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
 	}
 	var = requestHandlerKernel();
 	if(var == -1){
-		log_debug(logger, "no se pudo mover el cursor");
+		log_error(logger, "No se pudo mover el cursor");
 	}
 	free(cursor);
 }
@@ -693,7 +693,6 @@ t_puntero reservar(t_valor_variable espacio){
  */
 void liberarMemoria(t_puntero posicion){
 	log_debug(logger, "ANSISOP_liberarMemoria -> posicion: %d", posicion);
-	int32_t var;
 	header_t header;
 	header.type= LIBERAR_MEMORIA;
 	header.length = sizeof(t_liberar);
@@ -704,11 +703,11 @@ void liberarMemoria(t_puntero posicion){
 		log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
 		finalizarCPU();
 	}
-	var = requestHandlerKernel();
-	if(var == -1){
-		log_error(logger, "error al liberar");
+	if(requestHandlerKernel() == -1) log_error(logger, "error al liberar");
+	else {
+		log_info(logger, "Memoria liberada");
+		cantDeReservas--;
 	}
-	else cantDeReservas--;
 }
 
 /*

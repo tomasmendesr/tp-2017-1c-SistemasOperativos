@@ -758,17 +758,16 @@ void leerArchivo(int socketCpu, void* package){
 }
 
 void moverCursor(int socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
-	bool buscarPorProceso(entrada_tabla_archivo_proceso* entrada){
-			return entrada->proceso == cursor->pid ? true : false;
-		}
+	archivo* archivo = buscarArchivo(cursor->pid, cursor->descriptor);
+	if(archivo == NULL){
+		log_error(logger, "No se encontro el archivo para escribir");
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+		return;
+	}
 
-		bool buscarPorFd(archivo* archivo){
-			return archivo->fd == cursor->descriptor ? true : false;
-		}
+	archivo->cursor = cursor->posicion;
+	enviar_paquete_vacio(MOVER_CURSOR_OK, socketCPU);
 
-		entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
-		archivo* archivo = 	list_find(entrada->archivos, buscarPorFd);
-		archivo->cursor = cursor->posicion;
 
 }
 

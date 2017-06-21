@@ -173,7 +173,7 @@ int32_t requestHandlerKernel(void){
 		case VALOR_VAR_COMPARTIDA:
 			paqueteGlobal=malloc(header.length);
 			memcpy(paqueteGlobal,paquete,header.length);
-			return EXIT_SUCCESS;
+			break;
 		case ASIG_VAR_COMPARTIDA_OK:
 			log_info(logger, "Se asigno correctamente la variable compartida");
 			break;
@@ -181,14 +181,16 @@ int32_t requestHandlerKernel(void){
 			paqueteGlobal=malloc(header.length);
 			memcpy(paqueteGlobal,paquete,header.length);
 			break;
-		case LIBERAR_MEMORIA_OK:
-			log_info(logger, "Memoria liberada");
-			break;
 		case ABRIR_ARCHIVO_OK:
+			paqueteGlobal=malloc(header.length); // guardo el fd
+			memcpy(paqueteGlobal,paquete,header.length);
 			break;
 		case ESCRITURA_OK:
-			break;
 		case LECTURA_OK:
+		case BORRAR_ARCHIVO_OK:
+		case CERRAR_ARCHIVO_OK:
+		case MOVER_CURSOR_OK:
+		case LIBERAR_MEMORIA_OK:
 			break;
 		// errores
 		case SEMAFORO_NO_EXISTE:

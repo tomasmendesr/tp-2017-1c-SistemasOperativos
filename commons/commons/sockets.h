@@ -145,6 +145,7 @@ enum protocolo_fs_a_kernel{
  	LECTURA_OK = 28,
  	ESCRITURA_OK = 29,
  	BORRADO_OK = 51,
+ 	MOVER_CURSOR_OK = 53,
  	ERROR = 52
  };
 
