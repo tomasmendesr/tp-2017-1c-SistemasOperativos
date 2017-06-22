@@ -453,7 +453,10 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	//se lo mando a kernel
 	sendSocket(socketConexionKernel,header,(void*)paquete);
 	log_info(logger, "Flags enviadas: lectura:%d - escritura:%d - creacion: %d", flags.lectura, flags.escritura, flags.creacion);
-
+	// libero memoria
+	free(header);
+	free(bFlags);
+	free(paquete);
 	//espero respuesta
 	requestHandlerKernel();
 
@@ -465,7 +468,7 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 
 	//devuelvo el descriptor
 	if(fd == -1) log_error(logger, "Error al abrir el archivo");
-	else log_info(logger, "file descriptor recibido: %d", fd);
+	else log_info(logger, "File descriptor recibido: %d", fd);
 	return fd;
 }
 
