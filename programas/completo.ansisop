@@ -1,0 +1,42 @@
+#!/usr/bin/ansisop
+
+function imprimir
+    wait mutexA
+        print $0+1
+    signal mutexB
+end
+
+begin
+variables f,  A,  g
+    A = 	0
+    !Global = 1+A
+    prints n !Global
+    jnz !Global Siguiente 
+:Proximo
+	
+    f = 8	  
+    g <- doble !Global	
+	:Siguiente	
+    prints n A
+    
+    sumar1 &g		
+    prints n g    
+    
+    sinParam
+    
+end
+
+function sinParam
+end
+
+#Devolver el doble del
+#primer parametro
+function doble
+variables f
+    f = $0 + $0
+    return f
+end
+
+function sumar1
+	$0 = 1 + $0
+end

@@ -1,8 +1,6 @@
 #include "funcionesConsola.h"
 
 void crearConfig(int argc, char* argv[]) {
-	char* pathConfig = string_new();
-
 	if(argc>1){
 			if(verificarExistenciaDeArchivo(argv[1])){
 				config=levantarConfiguracionConsola(argv[1]);
@@ -184,8 +182,8 @@ void iniciarPrograma(char* comando, char* param) {
 	}
 
 	dataHilo* data = malloc(sizeof(dataHilo));
-	data->pathAnsisop = malloc(strlen(param)+1);
-	memcpy(data->pathAnsisop, param, strlen(param)+1);
+	data->pathAnsisop = malloc(strlen(absolute_path)+1);
+	memcpy(data->pathAnsisop, absolute_path, strlen(absolute_path)+1);
 	data->socket = socket_cliente;
 
 	pthread_t thread;
@@ -423,9 +421,9 @@ char* crearPath(char* program_name){
 		string_append(&absolute_path,"/");
 
 	string_append(&absolute_path,program_name);
-	string_append(&absolute_path,".ansisop");
+	if(!string_ends_with(program_name, ".ansisop")) string_append(&absolute_path,".ansisop");
 
-	printf("(DEBUG)path absoluto: %s\n",absolute_path);
+	log_debug(logger, "Path absoluto: %s\n",absolute_path);
 
 	return absolute_path;
 }

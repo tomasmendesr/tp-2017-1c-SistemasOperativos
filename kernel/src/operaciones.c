@@ -761,7 +761,7 @@ void moverCursor(int socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
 	archivo* archivo = buscarArchivo(cursor->pid, cursor->descriptor);
 	if(archivo == NULL){
 		log_error(logger, "No se encontro el archivo para escribir");
-		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCPU);
 		return;
 	}
 
