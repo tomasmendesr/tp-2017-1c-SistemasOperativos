@@ -424,47 +424,48 @@ void retornar(t_valor_variable retorno){
  * @return	El valor del descriptor de archivo abierto por el sistema
  */
 t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
-	log_debug(logger, "ANSISOP_abrir '%s", direccion);
-	//defino las variables
-	header_t* header = malloc(sizeof(header_t));
-	size_t offset = 0;
-	t_descriptor_archivo fd;
-	size_t size;
-	char* paquete;
-	void* bFlags;
+	log_debug(logger, "ANSISOP_abrir '%s'", direccion);
+	uint32_t offset = 0;
 
-	//armo el header y el paquete de las banderas
+	//armo el header
+	uint32_t sizeDireccion = strlen(direccion) + 1;
+	uint32_t sizeBanderas = sizeof(t_banderas);
+	uint32_t sizeTotal = sizeDireccion + sizeof(uint32_t) * 2 + sizeBanderas; // un int es el pid y el otro el strlen de direccion
+
+	header_t* header = malloc(sizeof(header_t));
 	header->type = ABRIR_ARCHIVO;
-	bFlags = malloc(sizeof(t_banderas));
+	header->length = sizeTotal;
+
+	// armo el paquete de las banderas
+	void* bFlags = malloc(sizeof(t_banderas));
 	memcpy(bFlags, (void*)&flags, sizeof(t_banderas));
-	size_t len = strlen(direccion) + sizeof(t_banderas) + 1 + 2*sizeof(uint32_t);
-	header->length = len;
-	size = strlen(direccion) + 1;
 
 	//armo el paquete con la direccion del archivo, las banderas y el pid del proceso
-	paquete = malloc(len);
+	char* paquete = malloc(sizeTotal);
 	memcpy(paquete+offset, (void*)&pcb->pid, sizeof(uint32_t));
 	offset+=sizeof(uint32_t);
-	int sizeDireccion = strlen(direccion);
 	memcpy(paquete+offset, &sizeDireccion, sizeof(uint32_t));
 	offset+=sizeof(uint32_t);
-	memcpy(paquete+offset, direccion, size);
-	offset+=size;
-	memcpy(paquete+offset, bFlags, sizeof(t_banderas));
+	memcpy(paquete+offset, direccion, sizeDireccion);
+	offset+=sizeDireccion;
+	memcpy(paquete+offset, bFlags, sizeBanderas);
 
 	//se lo mando a kernel
-	sendSocket(socketConexionKernel,header,(void*)&paquete);
+	sendSocket(socketConexionKernel,header,(void*)paquete);
+	log_info(logger, "Flags enviadas: lectura:%d - escritura:%d - creacion: %d", flags.lectura, flags.escritura, flags.creacion);
 
 	//espero respuesta
 	requestHandlerKernel();
 
 	//recibo el descriptor del archivo abierto
-	fd = *(t_descriptor_archivo*)paqueteGlobal;
+	t_descriptor_archivo fd = *(t_descriptor_archivo*)paqueteGlobal;
 
 	//libero la variable global para que pueda ser usada de nuevo
 	free(paqueteGlobal);
 
 	//devuelvo el descriptor
+	if(fd == -1) log_error(logger, "Error al abrir el archivo");
+	else log_info(logger, "file descriptor recibido: %d", fd);
 	return fd;
 }
 

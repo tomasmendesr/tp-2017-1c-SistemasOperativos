@@ -97,7 +97,7 @@ typedef struct{
 	char* flags;
 	int globalFD;
 	int cursor;
-}archivo;
+}t_archivo;
 
 typedef struct{
 	uint32_t pid;
@@ -270,7 +270,7 @@ int agregarArchivo_aProceso(int proceso, char* file, char* permisos);
 void eliminarFd(int fd, int proceso);
 void imprimirTablaGlobal(void);
 char* buscarPathDeArchivo(int globalFD);
-archivo* buscarArchivo(int pid, int fd);
+t_archivo* buscarArchivo(int pid, int fd);
 
 
 fd_set master;

@@ -341,7 +341,7 @@ void processInfo(char* comando, char* param){
 
 	if(!list_is_empty(entrada->archivos)){
 
-		void mostrarArchivos(archivo* archivo){
+		void mostrarArchivos(t_archivo* archivo){
 			printf("fd: %d , ", archivo->fd);
 			printf("flags : %s \n", archivo->flags);
 		}
@@ -722,11 +722,14 @@ int agregarArchivo_aProceso(int proceso, char* file, char* permisos){
 	}
 
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscar);
+	printf("encontre entrada tabla archivo proceso\n");
 
 	entrada_tabla_globlal_archivo* entradaGlobal = list_find(globalFileTable, buscarArchivo);
+	printf("encontre entrada tabla global archivo\n");
 
 	if(entradaGlobal == NULL){ // no existe
-		entradaGlobal = malloc(sizeof(entradaGlobal));
+		uint32_t sizeEntrada = strlen(file) + 1 + sizeof(int) * 2;
+		entradaGlobal = malloc(sizeEntrada);
 		memcpy(entradaGlobal->archivo, file, strlen(file));
 		entradaGlobal->vecesAbierto = 1;
 		entradaGlobal->ubicacion = list_size(globalFileTable);
@@ -736,7 +739,7 @@ int agregarArchivo_aProceso(int proceso, char* file, char* permisos){
 		entradaGlobal->vecesAbierto++;
 	}
 
-	archivo* archivo = malloc(sizeof(archivo));
+	t_archivo* archivo = malloc(sizeof(archivo));
 	archivo->flags = permisos;
 	archivo->fd = getArchivoFdMax(); //aca tengo que pasarselo a la cpu
 	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
@@ -752,7 +755,7 @@ void eliminarFd(int fd, int proceso){
 		return entrada->proceso == proceso ? true : false;
 	}
 
-	bool eliminar(archivo* archivo){
+	bool eliminar(t_archivo* archivo){
 		return archivo->fd == fd ? true : false;
 	}
 
@@ -790,7 +793,7 @@ char* buscarPathDeArchivo(int globalFD){
 	return entrada->archivo;
 }
 
-archivo* buscarArchivo(int pid, int fd){
+t_archivo* buscarArchivo(int pid, int fd){
 
 	bool buscarPorPid(entrada_tabla_archivo_proceso* entrada){
 		return entrada->proceso == pid ? true : false;
@@ -799,11 +802,11 @@ archivo* buscarArchivo(int pid, int fd){
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorPid);
 	if(entrada == NULL) return NULL;
 
-	bool buscarPorArchivo(archivo* arch){
+	bool buscarPorArchivo(t_archivo* arch){
 		return arch->fd == fd ? true : false;
 	}
 
-	archivo* archivo = list_find(entrada->archivos, buscarPorArchivo);
+	t_archivo* archivo = list_find(entrada->archivos, buscarPorArchivo);
 	if(archivo == NULL) return NULL;
 	return archivo;
 

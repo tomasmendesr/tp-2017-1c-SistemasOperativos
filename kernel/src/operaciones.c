@@ -596,21 +596,18 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 }
 
 void abrirArchivo(int socketCpu, void* package){
-	uint32_t sizePath, pid, offset = 0;
-	char* path;
-	t_banderas* banderas;
-
-	memcpy(package, &pid, sizeof(uint32_t)); offset += sizeof(uint32_t);
-	memcpy(package, &sizePath, sizeof(uint32_t)); offset += sizeof(uint32_t);
-	memcpy(package+offset, path, sizePath); offset += sizePath;
-	memcpy(package+offset, banderas, sizeof(t_banderas));
+	uint32_t pid = *(uint32_t*) package;
+	uint32_t sizeDireccion = *(uint32_t*) (package + sizeof(uint32_t));
+	char* direccion = package + (sizeof(uint32_t) * 2);
+	t_banderas* banderas = package + sizeof(uint32_t) * 2  + sizeDireccion;
 
 	char* permisos = string_new();
-	if(banderas->creacion) string_append(permisos, "C");
-	if(banderas->escritura) string_append(permisos, "E");
-	if(banderas->lectura) string_append(permisos, "L");
+	if(banderas->creacion) string_append(&permisos, "C");
+	if(banderas->escritura) string_append(&permisos, "E");
+	if(banderas->lectura) string_append(&permisos, "L");
 
-	int fd = agregarArchivo_aProceso(pid, path, permisos);
+	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
+	printf("fd: %d\n", fd);
 
 	header_t header;
 	header.length = sizeof(int);
@@ -677,7 +674,7 @@ void escribir(void* paquete, int socketCpu){
 		sendSocket(info->socketConsola, &header, buffer);
 		enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
 	}else{
-		archivo* archivo = buscarArchivo(pid, fd);
+		t_archivo* archivo = buscarArchivo(pid, fd);
 		if(archivo == NULL){
 			log_error(logger, "No se encontro el archivo para escribir");
 			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
@@ -724,7 +721,7 @@ void leerArchivo(int socketCpu, void* package){
 	int pid = *(int*) (package + offset); offset += sizeof(int);
 	int size = *(int*) (package + offset);
 
-	archivo* archivo = buscarArchivo(pid, fd);
+	t_archivo* archivo = buscarArchivo(pid, fd);
 	int offsetPedidoLectura = archivo->cursor;
 
 	char* path = buscarPathDeArchivo(fd);
@@ -758,7 +755,7 @@ void leerArchivo(int socketCpu, void* package){
 }
 
 void moverCursor(int socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
-	archivo* archivo = buscarArchivo(cursor->pid, cursor->descriptor);
+	t_archivo* archivo = buscarArchivo(cursor->pid, cursor->descriptor);
 	if(archivo == NULL){
 		log_error(logger, "No se encontro el archivo para escribir");
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCPU);
