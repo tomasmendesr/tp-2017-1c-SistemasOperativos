@@ -814,26 +814,19 @@ t_archivo* buscarArchivo(int pid, int fd){
 }
 
 void verificarProcesosEnCpuCaida(int socketCPU){
-	bool buscarCpuPorSocket(cpu_t* cpu){
-		return cpu->socket == socketCPU ? true : false;
-	}
-
-	cpu_t* cpu = obtener_cpu_por_socket_asociado(socketCPU);
-	if(cpu != NULL){
-		if(cpu->disponible) return; // si esta dispnible es porque no tiene nada corriendo
-		if(cpu->pcb != NULL){
-			log_info(logger, "Se termina la ejecucion del proceso #%d por desconexion de la CPU", cpu->pcb->pid);
-			cpu->pcb->exitCode = DESCONEXION_CPU;
-			terminarProceso(cpu->pcb, socketCPU);
-		}
 		int i;
 		for(i = 0; i<list_size(listaCPUs); i++){
-			cpu_t* cpuAux = list_get(listaCPUs, i);
-			if(cpuAux->socket == socketCPU){
+			cpu_t* cpu = list_get(listaCPUs, i);
+			if(cpu->socket == socketCPU){
 				list_remove(listaCPUs, i);
-				log_info(logger, "CPU %d quitado de la lista", cpuAux->socket);
-				free(cpuAux);
+				log_info(logger, "CPU %d quitado de la lista", cpu->socket);
+				// si esta disponible es porque no tiene nada corriendo
+				if(!(cpu->disponible) && cpu->pcb != NULL){
+					log_info(logger, "Se termina la ejecucion del proceso #%d por desconexion de la CPU", cpu->pcb->pid);
+					cpu->pcb->exitCode = DESCONEXION_CPU;
+					terminarProceso(cpu->pcb, socketCPU);
+				}
+				free(cpu);
 			}
 		}
-	}
 }
