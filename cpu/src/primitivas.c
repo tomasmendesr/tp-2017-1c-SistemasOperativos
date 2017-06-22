@@ -436,7 +436,7 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	header->length = sizeTotal;
 
 	//armo el paquete con la direccion del archivo, las banderas y el pid del proceso
-	char* paquete = malloc(sizeof(sizeTotal));
+	char* paquete = malloc(sizeTotal);
 	memcpy(paquete+offset, (void*)&pcb->pid, sizeof(uint32_t));
 	offset+=sizeof(uint32_t);
 	memcpy(paquete+offset, &sizeDireccion, sizeof(uint32_t));

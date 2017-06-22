@@ -822,10 +822,6 @@ void verificarProcesosEnCpuCaida(int socketCPU){
 	if(cpu != NULL){
 		if(cpu->disponible) return; // si esta dispnible es porque no tiene nada corriendo
 		if(cpu->pcb != NULL){
-			/*info_estadistica_t* info = buscarInformacion(cpu->pcb->pid);
-			info->estado = FINISH;
-			info->matarSiguienteRafaga = true;
-			info->exitCode = DESCONEXION_CPU;*/
 			log_info(logger, "Se termina la ejecucion del proceso #%d por desconexion de la CPU", cpu->pcb->pid);
 			cpu->pcb->exitCode = DESCONEXION_CPU;
 			terminarProceso(cpu->pcb, socketCPU);
