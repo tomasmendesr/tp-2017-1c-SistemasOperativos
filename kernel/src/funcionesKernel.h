@@ -223,6 +223,7 @@ void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado);
 void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid));
 void eliminarEstadistica(int pid);
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado);
+void verificarProcesosEnCpuCaida(int socketCPU);
 
 //Variables Globales
 t_config_kernel* config;

@@ -59,7 +59,8 @@ void trabajarMensajeCPU(int socketCPU){
 
 	//Chequeo de errores
 	if(check <= 0){
-		log_info(logger,"Se cerro el socket %d", socketCPU);
+		log_warning(logger,"Se cerro el socket %d (cpu)", socketCPU);
+		verificarProcesosEnCpuCaida(socketCPU);
 		close(socketCPU);
 		if(paquete)free(paquete);
 		FD_CLR(socketCPU, &master);
