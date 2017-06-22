@@ -607,7 +607,6 @@ void abrirArchivo(int socketCpu, void* package){
 	if(banderas->lectura) string_append(&permisos, "L");
 
 	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
-	printf("fd: %d\n", fd);
 
 	header_t header;
 	header.length = sizeof(int);

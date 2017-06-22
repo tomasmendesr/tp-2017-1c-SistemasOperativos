@@ -307,9 +307,13 @@ void listProcesses(char* comando, char* param){
 }
 
 void processInfo(char* comando, char* param){
+	if(param == NULL || strlen(param) == 0 ){
+		log_warning(logger, "Se necesida el pid del proceso.");
+		return;
+	}
 
 	if(!esNumero(param)){
-		printf("Ingrese un valor numerico valido para el proceso\n");
+		log_warning(logger, "Ingrese un valor numerico valido para el proceso");
 		return;
 	}
 
@@ -318,10 +322,9 @@ void processInfo(char* comando, char* param){
 	bool buscar(info_estadistica_t* info){
 		return info->pid == pid ? true : false;
 	}
-
 	info_estadistica_t* info = list_find(listadoEstadistico, buscar);
 	if(info == NULL){
-		printf("no se encuentra ese poceso en el sistema\n");
+		printf("No se encuentra ese poceso en el sistema\n");
 	}else{
 		printf("Cantidad rafagas: %d\n", info->cantRafagas);
 		printf("Cantidad operaciones privilegiadas: %d\n", info->cantOpPrivi);
@@ -339,7 +342,7 @@ void processInfo(char* comando, char* param){
 
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarArchivos);
 
-	if(!list_is_empty(entrada->archivos)){
+	if(entrada != NULL && !list_is_empty(entrada->archivos)){
 
 		void mostrarArchivos(t_archivo* archivo){
 			printf("fd: %d , ", archivo->fd);
@@ -722,10 +725,8 @@ int agregarArchivo_aProceso(int proceso, char* file, char* permisos){
 	}
 
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscar);
-	printf("encontre entrada tabla archivo proceso\n");
 
 	entrada_tabla_globlal_archivo* entradaGlobal = list_find(globalFileTable, buscarArchivo);
-	printf("encontre entrada tabla global archivo\n");
 
 	if(entradaGlobal == NULL){ // no existe
 		uint32_t sizeEntrada = strlen(file) + 1 + sizeof(int) * 2;
