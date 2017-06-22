@@ -607,6 +607,7 @@ void abrirArchivo(int socketCpu, void* package){
 	if(banderas->lectura) string_append(&permisos, "L");
 
 	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
+	printf("fd %d: \n", fd);
 
 	header_t header;
 	header.length = sizeof(int);
@@ -763,8 +764,6 @@ void moverCursor(int socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
 
 	archivo->cursor = cursor->posicion;
 	enviar_paquete_vacio(MOVER_CURSOR_OK, socketCPU);
-
-
 }
 
 void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber varios procesos

@@ -731,7 +731,7 @@ int agregarArchivo_aProceso(int proceso, char* file, char* permisos){
 	if(entradaGlobal == NULL){ // no existe
 		uint32_t sizeEntrada = strlen(file) + 1 + sizeof(int) * 2;
 		entradaGlobal = malloc(sizeEntrada);
-		memcpy(entradaGlobal->archivo, file, strlen(file));
+		entradaGlobal->archivo = file;
 		entradaGlobal->vecesAbierto = 1;
 		entradaGlobal->ubicacion = list_size(globalFileTable);
 

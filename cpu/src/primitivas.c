@@ -147,7 +147,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 		log_error(logger, "No se pudo asignar la variable %s", variable);
 		free(header);
 		if(buffer)free(buffer);
-		return EXIT_FAILURE;
+		return -1;
 	}
 	free(header);
 	if(buffer)free(buffer);
@@ -308,7 +308,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 	log_debug(logger, "ANSISOP_obtenerPosicion %c", identificador_variable);
 	if(list_size(pcb->indiceStack) == 0){
 		log_error(logger, "No hay nada en el indice de stack");
-		return EXIT_FAILURE;
+		return -1;
 	}
 	uint32_t i;
 	t_puntero posicionAbsoluta;
@@ -326,7 +326,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 		}
 		if(notFound){
 			log_error(logger, "No se encontro la variable %c en el stack", identificador_variable);
-			return EXIT_FAILURE;
+			return -1;
 		}
 		else{
 			posicionAbsoluta = var_local->pagina * tamanioPagina + var_local->offset;
@@ -334,7 +334,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
 	} // es un argumento
 	else{
 		if(identificador_variable -'0'> list_size(contexto->argumentos)){
-			return EXIT_FAILURE;
+			return -1;
 		}else{
 			t_argumento* argumento = list_get(contexto->argumentos, identificador_variable-'0');
 			posicionAbsoluta = argumento->pagina * tamanioPagina + argumento->offset;
@@ -429,16 +429,11 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 
 	//armo el header
 	uint32_t sizeDireccion = strlen(direccion) + 1;
-	uint32_t sizeBanderas = sizeof(t_banderas);
-	uint32_t sizeTotal = sizeDireccion + sizeof(uint32_t) * 2 + sizeBanderas; // un int es el pid y el otro el strlen de direccion
+	uint32_t sizeTotal = sizeDireccion + sizeof(uint32_t) * 2 + sizeof(t_banderas); // un int es el pid y el otro el strlen de direccion
 
 	header_t* header = malloc(sizeof(header_t));
 	header->type = ABRIR_ARCHIVO;
 	header->length = sizeTotal;
-
-	// armo el paquete de las banderas
-	void* bFlags = malloc(sizeof(t_banderas));
-	memcpy(bFlags, (void*)&flags, sizeof(t_banderas));
 
 	//armo el paquete con la direccion del archivo, las banderas y el pid del proceso
 	char* paquete = malloc(sizeTotal);
@@ -448,14 +443,13 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	offset+=sizeof(uint32_t);
 	memcpy(paquete+offset, direccion, sizeDireccion);
 	offset+=sizeDireccion;
-	memcpy(paquete+offset, bFlags, sizeBanderas);
+	memcpy(paquete+offset, &flags, sizeof(t_banderas));
 
 	//se lo mando a kernel
 	sendSocket(socketConexionKernel,header,(void*)paquete);
 	log_info(logger, "Flags enviadas: lectura:%d - escritura:%d - creacion: %d", flags.lectura, flags.escritura, flags.creacion);
 	// libero memoria
 	free(header);
-	free(bFlags);
 	free(paquete);
 	//espero respuesta
 	requestHandlerKernel();
