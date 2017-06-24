@@ -93,17 +93,9 @@ bool validarArchivo(char* path){
 }
 
 void crearArchivo(void* package){
-	char* pathArchivo;
-
-	if(!string_starts_with(package, "/")){
-		pathArchivo = generarPathArchivo("/");
-		strcat(pathArchivo, package);
-	}else{
-		pathArchivo = generarPathArchivo(package);
-	}
+	char* pathArchivo = generarPathArchivo(package);
 
 	log_debug(logger, "creando archivo : %s", pathArchivo);
-
 
 	if(!verificarExistenciaDeArchivo(pathArchivo)){
 
@@ -114,6 +106,7 @@ void crearArchivo(void* package){
 		char* subCarpetas = string_substring_until(pathArchivo, string_pos_char(pathArchivo, '/'));
 		log_debug(logger, "subcarpetas: %s", subCarpetas);
 		mkdirRecursivo(subCarpetas);
+		free(subCarpetas);
 
 		FILE* archivo = fopen(pathArchivo, "a");
 
@@ -128,27 +121,31 @@ void crearArchivo(void* package){
 }
 
 void borrarArchivo(void* package){
-	char* path_archivo = (char*)package;
 
-	if(validarArchivo(path_archivo)){
+	char* path_archivo = generarPathArchivo(package);
+
+	if(!verificarExistenciaDeArchivo(path_archivo)){
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
+		log_debug(logger, "se intento borrar un archivo inexistente");
 	}else{
 
-		char* path = generarPathArchivo(path_archivo);
-
-		t_config* data = config_create(path);
+		t_config* data = config_create(path_archivo);
 		char** bloques = config_get_array_value(data, "BLOQUES");
 		config_destroy(data);
 
 		int j = 0;
 		while(bloques[j] != NULL){
-			escribirValorBitarray(0, bloques[j]); //libero los bloques
+			printf("bloque a liberar: %d\n", atoi(bloques[j]));
+			escribirValorBitarray(0, atoi(bloques[j])); //libero los bloques
 			j++;
 		}
 
 		//borro el archivo
-		unlink(path);
+		unlink(path_archivo);
+		log_debug(logger, "archivo borrado con exito");
 		enviar_paquete_vacio(BORRAR_ARCHIVO_OK, socketConexionKernel);
+
+		free(path_archivo);
 	}
 }
 
@@ -157,7 +154,7 @@ void guardarDatos(void* package){
 
 	char* path = generarPathArchivo(pedido->path);
 
-	if(validarArchivo(path)){
+	if(!verificarExistenciaDeArchivo(path)){
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
 		return;
 	}
@@ -216,7 +213,7 @@ void obtenerDatos(void* package){
 
 	char* path = generarPathArchivo(pedido->path);
 
-	if(validarArchivo(path)){
+	if(!verificarExistenciaDeArchivo(path)){
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
 		return;
 	}
@@ -398,6 +395,10 @@ char* generarPathArchivo(char* path){
 	char* path_archivo = string_new();
 	strcat(path_archivo, conf->punto_montaje);
 	strcat(path_archivo, "Archivos");
+
+	if(!string_starts_with(path, "/"))
+		strcat(path_archivo, "/");
+
 	strcat(path_archivo, path);
 
 	return path_archivo;
