@@ -115,3 +115,37 @@ bool verificarExistenciaDeArchivo(char* path) {
 	return false;
 }
 
+void config_set_value(t_config *self, char *key, char *value) {
+	t_dictionary* dictionary = self->properties;
+	char* duplicate_value = string_duplicate(value);
+
+	if(dictionary_has_key(dictionary, key)) {
+		dictionary_remove_and_destroy(dictionary, key, free);
+	}
+
+	dictionary_put(self->properties, key, (void*)duplicate_value);
+}
+
+int config_save(t_config *self) {
+	return config_save_in_file(self, self->path);
+}
+
+int config_save_in_file(t_config *self, char* path) {
+	FILE* file = fopen(path, "wb+");
+
+	if (file == NULL) {
+		return -1;
+	}
+
+	char* lines = string_new();
+	void add_line(char* key, void* value) {
+		string_append_with_format(&lines, "%s=%s\n", key, value);
+	}
+
+	dictionary_iterator(self->properties, add_line);
+	int result = fwrite(lines, strlen(lines), 1, file);
+	fclose(file);
+	free(lines);
+	return result;
+}
+
