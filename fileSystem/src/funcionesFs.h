@@ -70,6 +70,7 @@ int reservarNuevoBloque(char* pathArchivo);
 int cantidadBloques(char** bloques);
 void escribirEnArchivo(int bloque, char* buffer, int size);
 void leerArchivo(int bloque, char* buffer, int size);
+int string_pos_char(char* string, char caracter);
 
 //Operaciones
 bool validarArchivo(char* path);

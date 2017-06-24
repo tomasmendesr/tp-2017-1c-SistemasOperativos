@@ -93,20 +93,37 @@ bool validarArchivo(char* path){
 }
 
 void crearArchivo(void* package){
-	char* pathArchivo = generarPathArchivo(package);
+	char* pathArchivo;
 
-	int bloqueLibre = buscarBloqueLibre();
+	if(!string_starts_with(package, "/")){
+		pathArchivo = generarPathArchivo("/");
+		strcat(pathArchivo, package);
+	}else{
+		pathArchivo = generarPathArchivo(package);
+	}
 
-	escribirValorBitarray(1, bloqueLibre); //pongo el bloque como ocupado
+	log_debug(logger, "creando archivo : %s", pathArchivo);
 
-	char* p = generarPathArchivo(pathArchivo);
 
-	FILE* archivo = fopen(p, "a");
+	if(!verificarExistenciaDeArchivo(pathArchivo)){
 
-	fprintf(archivo, "TAMANIO=0\n");
-	fprintf(archivo, "BLOQUES=[%d]\n", bloqueLibre);
+		int bloqueLibre = buscarBloqueLibre();
 
-	fclose(archivo);
+		escribirValorBitarray(1, bloqueLibre); //pongo el bloque como ocupado
+
+		char* subCarpetas = string_substring_until(pathArchivo, string_pos_char(pathArchivo, '/'));
+		log_debug(logger, "subcarpetas: %s", subCarpetas);
+		mkdirRecursivo(subCarpetas);
+
+		FILE* archivo = fopen(pathArchivo, "a");
+
+		fprintf(archivo, "TAMANIO=0\n");
+		fprintf(archivo, "BLOQUES=[%d]\n", bloqueLibre);
+
+		fclose(archivo);
+
+		log_info(logger, "Se creo el archivo %s\n", pathArchivo);
+	}
 
 }
 
@@ -380,8 +397,18 @@ char* generarPathBloque(int num_bloque){
 char* generarPathArchivo(char* path){
 	char* path_archivo = string_new();
 	strcat(path_archivo, conf->punto_montaje);
-	strcat(path_archivo, "Archivos/");
+	strcat(path_archivo, "Archivos");
 	strcat(path_archivo, path);
 
 	return path_archivo;
 }
+
+int string_pos_char(char* string, char caracter){
+	int len = strlen(string), j;
+
+	for(j=0; *(string+len-j) != caracter; j++){
+		printf("pos: %c", *(string+len-j));
+	}
+	return len-j;
+}
+
