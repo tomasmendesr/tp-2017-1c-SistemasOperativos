@@ -162,35 +162,36 @@ void guardarDatos(void* package){
 	char** bloques = obtenerNumeroBloques(path);
 	int cantBloques = cantidadBloques(bloques);
 
-	int offsetReal = pedido->offset, j=0;
-	int restoBloque, bytesEscritos = 0, bloque;
+	int offsetBloque;
+	int restoBloque, bloque;
 
-	while(offsetReal > conf->tamanio_bloque){
-		offsetReal -= conf->tamanio_bloque;
-		j++;
-	}
+	offsetBloque = (pedido->offset % conf->tamanio_bloque);
+	int numBloque = (pedido->offset / conf->tamanio_bloque);
+	int j = numBloque;
 
-	bloque = atoi(bloques[j]);
+	bloque = atoi(bloques[numBloque]);
 
 	while(pedido->size != 0){
-		restoBloque = conf->tamanio_bloque - offsetReal;
+		restoBloque = conf->tamanio_bloque - offsetBloque;
 
-		escribirEnArchivo(bloque, pedido->buffer, restoBloque);
-		bytesEscritos += restoBloque;
+		escribirEnArchivo(bloque, pedido->buffer, restoBloque, offsetBloque);
+
 		pedido->size -= restoBloque;
 
-		offsetReal = 0;
+		offsetBloque = 0;
 
 		if(pedido->size > 0){//aun faltan cosas por escribir
-			if(j == cantBloques){
+			if(numBloque == cantBloques){
 				bloque = reservarNuevoBloque(path);
 			}else{
 				j++;
-				bloque = atoi(bloques[j]);
+				bloque = atoi(bloques[numBloque + j]);
 			}
 		}
 
 	}
+
+	aumentarTamanioArchivo(pedido, path);
 
 	free(pedido->path);
 	free(pedido->buffer);
@@ -200,8 +201,10 @@ void guardarDatos(void* package){
 
 }
 
-void escribirEnArchivo(int bloque, char* buffer, int size){
+void escribirEnArchivo(int bloque, char* buffer, int size, int offset){
 	FILE* archivo = fopen(generarPathBloque(bloque), "a");
+
+	fseek(archivo, offset, SEEK_SET);
 
 	fwrite(buffer, size, 1, archivo);
 
@@ -222,25 +225,24 @@ void obtenerDatos(void* package){
 
 	char** bloques = obtenerNumeroBloques(path);
 
-	int offsetReal = pedido->offset, j=0, bytesLeidos = 0, restoBloque;
+	int offsetBloque, bytesLeidos = 0, restoBloque;
 
-	while(offsetReal > conf->tamanio_bloque){
-		offsetReal -= conf->tamanio_bloque;
-		j++;
-	}
+	offsetBloque = (pedido->offset % conf->tamanio_bloque);
+	int numBloque = (pedido->offset / conf->tamanio_bloque);
+	int j = numBloque;
 
-	int bloque = atoi(bloques[j]);
+	int bloque = atoi(bloques[numBloque]);
 
 	while(bytesLeidos != pedido->size){
-		restoBloque = conf->tamanio_bloque - offsetReal;
+		restoBloque = conf->tamanio_bloque - offsetBloque;
 
-		leerArchivo(bloque, buffer+bytesLeidos, restoBloque);
+		leerArchivo(bloque, buffer+bytesLeidos, restoBloque, offsetBloque);
 
 		bytesLeidos += restoBloque;
 
 		j++;
 		bloque = atoi(bloques[j]);
-		offsetReal = 0;
+		offsetBloque = 0;
 	}
 
 
@@ -253,8 +255,10 @@ void obtenerDatos(void* package){
 	free(pedido);
 }
 
-void leerArchivo(int bloque, char* buffer, int size){
+void leerArchivo(int bloque, char* buffer, int size, int offset){
 	FILE* archivo = fopen(generarPathBloque(bloque), "a");
+
+	fseek(archivo, offset, SEEK_END);
 
 	fread(buffer, size, 1, archivo);
 
@@ -284,7 +288,7 @@ int buscarBloqueLibre(){
 
 	int i;
 
-	for(i=0; bitarray_test_bit(bitarray, i); i++){
+	for(i=0; bitarray_test_bit(bitarray, i) && i<conf->cantidad_bloques; i++){
 
 	}
 
@@ -320,15 +324,18 @@ int obtenerNumBloque(char* path, int offset){
 }
 
 int reservarNuevoBloque(char* pathArchivo){
-	FILE* archivo = fopen(pathArchivo, "a");
 
 	int bloqueLibre = buscarBloqueLibre();
 	escribirValorBitarray(1, bloqueLibre);
 
-	fseek(archivo, -1, SEEK_END);
-	fprintf(archivo, ",%d]", bloqueLibre);
-
-	fclose(archivo);
+	t_config* c = config_create(pathArchivo);
+	char* bloques = config_get_string_value(c, "BLOQUES");
+	bloques[strlen(bloques)-1] = '\0';
+	strcat(bloques, ",");
+	strcat(bloques, string_itoa(bloqueLibre));
+	strcat(bloques, "]");
+	config_save(c);
+	config_destroy(c);
 
 	return bloqueLibre;
 }
@@ -408,8 +415,21 @@ int string_pos_char(char* string, char caracter){
 	int len = strlen(string), j;
 
 	for(j=0; *(string+len-j) != caracter; j++){
-		printf("pos: %c", *(string+len-j));
 	}
+
 	return len-j;
 }
+
+void aumentarTamanioArchivo(pedido_guardar_datos* pedido, char* path){
+	t_config* c = config_create(path);
+ 	int tamanio = config_get_int_value(c, "TAMANIO");
+
+ 	int bytesEscritos = pedido->offset + pedido->size - tamanio;
+ 	if(bytesEscritos > 0){
+ 		config_set_value(c, "TAMANIO", string_itoa(tamanio));
+ 		config_save(c);
+ 	}
+
+ 	config_destroy(c);
+ }
 

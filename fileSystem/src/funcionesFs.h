@@ -68,9 +68,10 @@ char* generarPathArchivo(char* path);
 void escribirValorBitarray(bool valor, int pos);
 int reservarNuevoBloque(char* pathArchivo);
 int cantidadBloques(char** bloques);
-void escribirEnArchivo(int bloque, char* buffer, int size);
-void leerArchivo(int bloque, char* buffer, int size);
+void escribirEnArchivo(int bloque, char* buffer, int size, int offset);
+void leerArchivo(int bloque, char* buffer, int size, int offset);
 int string_pos_char(char* string, char caracter);
+void aumentarTamanioArchivo(pedido_guardar_datos* pedido, char* path);
 
 //Operaciones
 bool validarArchivo(char* path);
