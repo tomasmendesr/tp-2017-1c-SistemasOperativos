@@ -400,8 +400,11 @@ int grabarBytes(int fd, char* paquete){
 	t_pedido_memoria* pedido = paquete;
 	char* buf = paquete + sizeof(t_pedido_memoria);
 
-	log_info("Pedido escritura. pid: %d pag: %d offset: %d size: %d contenido: %s",
+	log_info("Pedido escritura. pid: %d pag: %d offset: %d size: %d contenido:\n",
 			pedido->pid,pedido->pag,pedido->offset,pedido->size,buf);
+
+	write(stdout,buf,pedido->size);
+	putchar('\n');
 
 	if(pedidoIncorrecto(pedido)){
 		enviarRespuesta(fd, SEGMENTATION_FAULT);

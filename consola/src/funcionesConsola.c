@@ -86,7 +86,7 @@ int enviarArchivo(int kernel_fd, char* path){
  	}
 
  	header.type = ENVIO_CODIGO;
- 	header.length = file_size;
+ 	header.length = file_size + 1;
  	memcpy(buffer, &(header.type),sizeof(header.type)); offset+=sizeof(header.type);
  	memcpy(buffer + offset, &(header.length),sizeof(header.length)); offset+=sizeof(header.length);
 
@@ -97,9 +97,19 @@ int enviarArchivo(int kernel_fd, char* path){
  		return -1;
  	}
 
+ 	printf("Archivo a enviar:\n%s\n",buffer + offset);
+ 	printf("Info header. type: %d length: %d\n",ENVIO_CODIGO,file_size);
+
+ 	FILE* dumpFile = fopen("Dump","w");
+
+ 	printf("Paquete a enviar escrito en archivo Dump.\n");
+ 	write(fileno(dumpFile),buffer,file_size + sizeof(header_t) + 1);
+
+ 	fclose(dumpFile);
+
  	/*Esto lo hago asi porque de la otra forma habría que reservar MAS espacio para
  	 * enviar el paquete */
- 	if(sendAll(kernel_fd, buffer, file_size + sizeof(header_t), 0) <= 0){
+ 	if(sendAll(kernel_fd, buffer, file_size + sizeof(header_t) + 1, 0) <= 0){
  		log_error(logger, "Error al enviar archivo");
  		free(buffer);
  		fclose(file);

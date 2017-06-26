@@ -594,11 +594,12 @@ void envioCodigoMemoria(char* codigo, int pid, int cant_pag){
 	header.length = strlen(codigo)+1;
 	sendSocket(socketConexionMemoria, &header, codigo);*/
 
-	int cod_size = strlen(codigo + 1);
+	int cod_size = strlen(codigo) + 1;
+
+	printf("------------CODIGO SIZE: %d------------\n%s\n",cod_size,codigo);
 
 	header_t header;
 	header.type = GRABAR_BYTES;
-	header.length = pagina_size + sizeof(t_pedido_bytes);
 
 	void* buf = malloc(pagina_size + sizeof(t_pedido_bytes));
 	if(buf == NULL)
@@ -614,6 +615,7 @@ void envioCodigoMemoria(char* codigo, int pid, int cant_pag){
 		size = min(cod_size - i * pagina_size, pagina_size);
 
 		//Termino de armar el header
+		header.length = sizeof(t_pedido_bytes) + size;
 		((t_pedido_bytes*)buf)->pag = i;
 		((t_pedido_bytes*)buf)->size = size;
 
