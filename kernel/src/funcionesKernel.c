@@ -101,8 +101,8 @@ proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
 
 	proceso_en_espera_t* proc = malloc(sizeof(proceso_en_espera_t));
 	proc->socketConsola = consola_fd;
-	proc->codigo = malloc(strlen(source));
-	memcpy(proc->codigo, source, strlen(source));
+	proc->codigo = malloc(strlen(source) + 1);
+	strcpy(proc->codigo,source);
 	proc->pid = asignarPid();
 	//pcb_t* pcb = crearPCB(source, asignarPid() );
 	//pcb->consolaFd = consola_fd;
