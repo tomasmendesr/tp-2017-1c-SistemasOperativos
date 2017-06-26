@@ -118,8 +118,9 @@ void inicializarMetadata(){
 		string_append(&pathBloque, ".bin");
 
 		bloque = fopen(pathBloque, "a");
+		fwrite(string_repeat('\0', conf->tamanio_bloque),conf->tamanio_bloque, 1, bloque);
 		fclose(bloque);
-
+		free(pathBloque);
 	}
 
 	printf("inicialize la metadata\n");
