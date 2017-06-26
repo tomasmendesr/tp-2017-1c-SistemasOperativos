@@ -66,6 +66,8 @@ bool esNumero(char* string);
 void threadPrograma(dataHilo* data);
 void terminarProceso(t_proceso* proc, int32_t exitCode);
 void imprimirInformacion(t_proceso* proceso, int32_t exitCode);
+void imprimirInformacionProcesoRechazado(int pid, int32_t exitCode);
+void notificarProcesoRechazado(void* paquete, char* pathAnsisop);
 void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exitCode);
 void cargarFechaFin(t_proceso* proc);
 char* obtenerExitCode(int32_t exitCode);

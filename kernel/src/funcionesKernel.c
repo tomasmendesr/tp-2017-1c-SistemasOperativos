@@ -526,6 +526,7 @@ void planificarLargoPlazo(void){
 			//creo el pedido para la memoria
 			t_pedido_iniciar pedido;
 			int pid = proc->pid;
+			t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
 
 			int cant_pag_cod = strlen(proc->codigo) / pagina_size;
 			if(strlen(proc->codigo) % pagina_size > 0)
@@ -546,16 +547,24 @@ void planificarLargoPlazo(void){
 			//evaluo respuesta
 			recibir_paquete(socketConexionMemoria, &paquete, &resultado);
 
-			if(resultado == SIN_ESPACIO){ // TODO verificar que este bien esto
+			if(resultado == SIN_ESPACIO){
 				//aviso a consola que se rechazo
-				enviar_paquete_vacio(proc->socketConsola, PROCESO_RECHAZADO);
-				log_error(logger, "Proceso %d rechazado porque no hay espacio en memoria", proc->pid);
+				log_error(logger, "Proceso %d rechazado porque no hay espacio en memoria", pid);
+				int exitCode = FALLA_RESERVAR_RECURSOS;
+				header_t header;
+				header.type = PROCESO_RECHAZADO;
+				header.length = sizeof(int) * 2;
+				void* paquete = malloc(sizeof(int) * 2);
+				memcpy(paquete, &pid, sizeof(int));
+				memcpy(paquete + sizeof(int), &exitCode, sizeof(int));
+				sendSocket(proc->socketConsola, &header, paquete);
+				free(paquete);
 				info_estadistica_t* info = buscarInformacion(pid);
 				info->estado = FINISH;
-				info->exitCode = FALLA_RESERVAR_RECURSOS;
-
-				//Reinserto en la cola
-				queue_push(colaNew,proc);
+				info->exitCode = exitCode;
+				queue_push(colaFinished, pcb);
+				log_info(logger, "Proceso #%d agrego a la cola de FINISHED", pid);
+				freePCB(pcb);
 			}
 			else if(resultado == OP_OK){
 				log_info(logger, "Paginas reservadas para el proceso %d", pid);
@@ -565,9 +574,6 @@ void planificarLargoPlazo(void){
 				//mando a memoria el codigo
 				envioCodigoMemoria(proc->codigo, pid, cant_pag_cod);
 
-				//creo pcb y paso el proceso a ready
-				t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
-				//proceso_t* proceso = crearProceso(pcb);
 				sem_wait(&mutex_cola_ready);
 				queue_push(colaReady, pcb);
 				sem_post(&mutex_cola_ready);
@@ -591,21 +597,12 @@ void alertarConsolaProcesoAceptado(int* pid, int socketConsola){
 }
 
 void envioCodigoMemoria(char* codigo, int pid, int cant_pag){
-	/*header_t header;
-	header.type = ENVIO_CODIGO;
-	header.length = strlen(codigo)+1;
-	sendSocket(socketConexionMemoria, &header, codigo);*/
-
 	int cod_size = strlen(codigo) + 1;
-
-	printf("------------CODIGO SIZE: %d------------\n%s\n",cod_size,codigo);
 
 	header_t header;
 	header.type = GRABAR_BYTES;
 
 	void* buf = malloc(pagina_size + sizeof(t_pedido_bytes));
-	if(buf == NULL)
-		log_error(logger,"MALLOC MAL SE PUDRIO TODOOOOO");
 
 	((t_pedido_bytes*)buf)->pid = pid;
 	((t_pedido_bytes*)buf)->offset = 0;

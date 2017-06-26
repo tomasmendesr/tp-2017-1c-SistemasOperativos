@@ -101,12 +101,8 @@ int enviarArchivo(int kernel_fd, char* path){
  	//Agrego \0
  	(buffer + offset)[file_size] = '\0';
 
- 	printf("Archivo a enviar:\n%s\n",buffer + offset);
- 	printf("Info header. type: %d length: %d\n",ENVIO_CODIGO,file_size + 1);
-
  	FILE* dumpFile = fopen("Dump","w");
 
- 	printf("Paquete a enviar escrito en archivo Dump.\n");
  	write(fileno(dumpFile),buffer,file_size + sizeof(header_t) + 1);
 
  	fclose(dumpFile);
@@ -246,7 +242,7 @@ void threadPrograma(dataHilo* data){
 
 	switch(operacion){
 	case PROCESO_RECHAZADO:
-		log_error(logger, "El kernel rechazo el programa '%s' por falta de recursos", data->pathAnsisop);
+		notificarProcesoRechazado(paquete, data->pathAnsisop);
 		return;
 		break;
 	case PID_PROGRAMA:
@@ -285,6 +281,12 @@ void threadPrograma(dataHilo* data){
 	}
 }
 
+void notificarProcesoRechazado(void* paquete, char* pathAnsisop){
+	log_error(logger, "Programa '%s' rechazado", pathAnsisop);
+	int pid = *(int*) paquete;
+	int exitCode = *(int*) (paquete + sizeof(int));
+	imprimirInformacionProcesoRechazado(pid, exitCode);
+}
 
 void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exitCode){
 	bool buscarPorSocket(t_proceso* proc){
@@ -323,6 +325,17 @@ void imprimirInformacion(t_proceso* proceso, int32_t exitCode){
 	printf("Duracion: %d seg - %d ms\n", segDuracion, msDuracion);
 	char* exitCodeString = obtenerExitCode(exitCode);
 	printf("Exit code: %s\n", exitCodeString);
+	printf("----------------------\n");
+}
+
+void imprimirInformacionProcesoRechazado(int pid, int32_t exitCode){
+	printf("-----FIN PROGRAMA-----\n");
+	printf("Pid #%d\n", pid);
+	printf("Inicio: -\n");
+	printf("Fin: -\n");
+	printf("Cantidad de impresiones por pantalla: -\n");
+	printf("Duracion: -\n");
+	printf("Exit code: %s\n", obtenerExitCode(exitCode));
 	printf("----------------------\n");
 }
 

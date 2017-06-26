@@ -32,15 +32,10 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 		break;
 	case ENVIO_CODIGO:
 		log_info(logger, "Recibo codigo");
-
-		printf("CODIGO RECIBIDO:\n%s\n",package);
-
 		nuevoProceso = crearProcesoEnEspera(consola_fd, package);
-		//sem_wait(&sem_multi);
 		sem_wait(&mutex_cola_new);
 		queue_push(colaNew, nuevoProceso);
 		sem_post(&mutex_cola_new);
-		//sem_post(&sem_cola_new);
 		crearInfoEstadistica(nuevoProceso->pid, consola_fd);
 		crearEntradaArchivoProceso(nuevoProceso->pid);
 		log_info(logger,"Proceso agregado a la cola New");
