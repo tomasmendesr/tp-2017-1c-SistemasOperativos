@@ -508,10 +508,10 @@ void enviarPcbCPU(t_pcb* pcb, int socketCPU){
 
 void planificarLargoPlazo(void){
 	if(cantProcesosSistema < config->grado_MultiProg && queue_size(colaNew) != 0){
-		bool finCola, procesoAceptado = false;
+		bool finCola;
 		int cantProcChequeados = 0;
 		int cantidadDeProcesosEnNew = queue_size(colaNew);
-		while(!finCola && !procesoAceptado){
+		while(!finCola && (cantProcesosSistema < config->grado_MultiProg) ){
 
 			cantProcChequeados++;
 			finCola = (cantProcChequeados == cantidadDeProcesosEnNew);
@@ -553,9 +553,11 @@ void planificarLargoPlazo(void){
 				info_estadistica_t* info = buscarInformacion(pid);
 				info->estado = FINISH;
 				info->exitCode = FALLA_RESERVAR_RECURSOS;
+
+				//Reinserto en la cola
+				queue_push(colaNew,proc);
 			}
 			else if(resultado == OP_OK){
-				procesoAceptado = true;
 				log_info(logger, "Paginas reservadas para el proceso %d", pid);
 				//aviso a consola que se acepto
 				alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
