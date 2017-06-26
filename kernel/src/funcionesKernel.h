@@ -202,7 +202,7 @@ void enviarPcbCPU(t_pcb* pcb, int socketCPU);
 //Planificacion Largo Plazo
 void planificarLargoPlazo(void);
 void alertarConsolaProcesoAceptado(int* pid, int socketConsola);
-void envioCodigoMemoria(char* codigo);
+void envioCodigoMemoria(char* codigo, int fd, int cant_pag);
 
 //Palnificacion Mediano Plazo
 void crearColasBloqueados(char** semaforos);

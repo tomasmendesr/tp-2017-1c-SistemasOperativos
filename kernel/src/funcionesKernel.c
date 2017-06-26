@@ -561,7 +561,7 @@ void planificarLargoPlazo(void){
 				alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
 
 				//mando a memoria el codigo
-				envioCodigoMemoria(proc->codigo);
+				envioCodigoMemoria(proc->codigo, pid, cant_pag_cod);
 
 				//creo pcb y paso el proceso a ready
 				t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
@@ -588,11 +588,41 @@ void alertarConsolaProcesoAceptado(int* pid, int socketConsola){
 	sendSocket(socketConsola, &header, pid);
 }
 
-void envioCodigoMemoria(char* codigo){
-	header_t header;
+void envioCodigoMemoria(char* codigo, int pid, int cant_pag){
+	/*header_t header;
 	header.type = ENVIO_CODIGO;
 	header.length = strlen(codigo)+1;
-	sendSocket(socketConexionMemoria, &header, codigo);
+	sendSocket(socketConexionMemoria, &header, codigo);*/
+
+	int cod_size = strlen(codigo + 1);
+
+	header_t header;
+	header.type = GRABAR_BYTES;
+	header.length = pagina_size + sizeof(t_pedido_bytes);
+
+	void* buf = malloc(pagina_size + sizeof(t_pedido_bytes));
+	if(buf == NULL)
+		log_error(logger,"MALLOC MAL SE PUDRIO TODOOOOO");
+
+	((t_pedido_bytes*)buf)->pid = pid;
+	((t_pedido_bytes*)buf)->offset = 0;
+
+	int i, size;
+	for(i=0;i<cant_pag;i++){
+
+		//Cuanto voy a enviar
+		size = min(cod_size - i * pagina_size, pagina_size);
+
+		//Termino de armar el header
+		((t_pedido_bytes*)buf)->pag = i;
+		((t_pedido_bytes*)buf)->size = size;
+
+		memcpy(buf + sizeof(t_pedido_bytes),codigo + i*pagina_size, size);
+
+		sendSocket(socketConexionMemoria, &header, buf);
+	}
+
+	free(buf);
 }
 
 void crearInfoEstadistica(int pid, uint32_t socketConsola){

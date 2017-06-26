@@ -192,8 +192,16 @@ void requestHandlerKernel(int fd){
 			asignarPaginas(fd, (t_pedido_asignar*)paquete);
 			break;
 
+		case SOLICITUD_BYTES:
+			solicitudBytes(fd, (t_pedido_memoria*)paquete);
+			break;
+
+		case GRABAR_BYTES:
+			grabarBytes(fd, paquete);
+			break;
+
 		default:
-			log_warning(logger, "Mensaje Recibido Incorrecto");
+			log_warning(logger, "Mensaje Recibido Incorrecto cod: %d", tipo_mensaje);
 		}
 
 		free(paquete);
@@ -250,7 +258,7 @@ int iniciarPrograma(int fd, t_pedido_iniciar* pedido){
 	//Envio el ok al kernel y espero el resto del codigo
 	enviarRespuesta(fd, OP_OK);
 
-	char* codigo = NULL;
+/*	char* codigo = NULL;
 	int tipo;
 
 	if( recibir_paquete(fd, &codigo, &tipo) <= 0 ){
@@ -266,7 +274,7 @@ int iniciarPrograma(int fd, t_pedido_iniciar* pedido){
 				codigo + i*frame_size,
 				frame_size);
 	}
-
+*/
 	return 0;
 }
 
