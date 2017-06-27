@@ -145,7 +145,7 @@ void borrarArchivo(void* package){
 		log_debug(logger, "archivo borrado con exito");
 		enviar_paquete_vacio(BORRAR_ARCHIVO_OK, socketConexionKernel);
 
-		free(path_archivo);
+		//free(path_archivo);
 	}
 }
 
@@ -159,7 +159,9 @@ void guardarDatos(void* package){
 		return;
 	}
 
-	char** bloques = obtenerNumeroBloques(path);
+	t_config* c = config_create(path);
+
+	char** bloques = config_get_array_value(c, "BLOQUES");
 	int cantBloques = cantidadBloques(bloques);
 
 	int offsetBloque;
@@ -167,22 +169,33 @@ void guardarDatos(void* package){
 
 	offsetBloque = (pedido->offset % conf->tamanio_bloque);
 	int numBloque = (pedido->offset / conf->tamanio_bloque);
-	int j = numBloque;
+	int j = 0, bytesEscritos = 0;
 
 	bloque = atoi(bloques[numBloque]);
 
-	while(pedido->size != 0){
+	while(bytesEscritos < pedido->size){
 		restoBloque = conf->tamanio_bloque - offsetBloque;
+		printf("Bloque: %d\n", bloque);
+		escribirEnArchivo(bloque, pedido->buffer+bytesEscritos, restoBloque, offsetBloque);
 
-		escribirEnArchivo(bloque, pedido->buffer, restoBloque, offsetBloque);
-
-		pedido->size -= restoBloque;
+		bytesEscritos += restoBloque;
 
 		offsetBloque = 0;
 
-		if(pedido->size > 0){//aun faltan cosas por escribir
+		if(bytesEscritos < pedido->size){//aun faltan cosas por escribir
 			if(numBloque == cantBloques){
-				bloque = reservarNuevoBloque(path);
+				bloque = buscarBloqueLibre();
+				escribirValorBitarray(1, bloque);
+
+				char* bloques = config_get_string_value(c, "BLOQUES");
+
+				bloques[strlen(bloques)-1] = '\0';
+				strcat(bloques, ",");
+				strcat(bloques, string_itoa(bloque));
+				strcat(bloques, "]");
+				config_set_value(c, "BLOQUES", bloques);
+				config_save(c);
+
 			}else{
 				j++;
 				bloque = atoi(bloques[numBloque + j]);
@@ -191,7 +204,7 @@ void guardarDatos(void* package){
 
 	}
 
-	aumentarTamanioArchivo(pedido, path);
+	//aumentarTamanioArchivo(pedido, path);
 
 	free(pedido->path);
 	free(pedido->buffer);
@@ -202,7 +215,7 @@ void guardarDatos(void* package){
 }
 
 void escribirEnArchivo(int bloque, char* buffer, int size, int offset){
-	FILE* archivo = fopen(generarPathBloque(bloque), "a");
+	FILE* archivo = fopen(generarPathBloque(bloque), "r+");
 
 	fseek(archivo, offset, SEEK_SET);
 
@@ -256,7 +269,7 @@ void obtenerDatos(void* package){
 }
 
 void leerArchivo(int bloque, char* buffer, int size, int offset){
-	FILE* archivo = fopen(generarPathBloque(bloque), "a");
+	FILE* archivo = fopen(generarPathBloque(bloque), "r+");
 
 	fseek(archivo, offset, SEEK_END);
 
@@ -292,15 +305,15 @@ int buscarBloqueLibre(){
 
 	}
 
-	return i;
+	return i+1;
 }
 
 void escribirValorBitarray(bool valor, int pos){
 
 	if(valor)
-		bitarray_set_bit(bitarray, pos);
+		bitarray_set_bit(bitarray, pos-1);
 	else
-		bitarray_clean_bit(bitarray, pos);
+		bitarray_clean_bit(bitarray, pos-1);
 
 	FILE* bitmap = fopen(pathMetadataBitarray, "w");
 	fwrite(bitarray->bitarray, bitarray->size, 1, bitmap);
@@ -330,10 +343,12 @@ int reservarNuevoBloque(char* pathArchivo){
 
 	t_config* c = config_create(pathArchivo);
 	char* bloques = config_get_string_value(c, "BLOQUES");
+
 	bloques[strlen(bloques)-1] = '\0';
 	strcat(bloques, ",");
 	strcat(bloques, string_itoa(bloqueLibre));
 	strcat(bloques, "]");
+	config_set_value(c, "BLOQUES", bloques);
 	config_save(c);
 	config_destroy(c);
 
