@@ -132,7 +132,6 @@ void borrarArchivo(void* package){
 
 		t_config* data = config_create(path_archivo);
 		char** bloques = config_get_array_value(data, "BLOQUES");
-		config_destroy(data);
 
 		int j = 0;
 		while(bloques[j] != NULL){
@@ -146,7 +145,8 @@ void borrarArchivo(void* package){
 		log_debug(logger, "archivo borrado con exito");
 		enviar_paquete_vacio(BORRAR_ARCHIVO_OK, socketConexionKernel);
 
-		//free(path_archivo);
+		config_destroy(data);
+		free(path_archivo);
 	}
 }
 
@@ -170,7 +170,7 @@ void guardarDatos(void* package){
 
 	offsetBloque = (pedido->offset % conf->tamanio_bloque);
 	int numBloque = (pedido->offset / conf->tamanio_bloque);
-	int j = 0, bytesEscritos = 0;
+	int j = numBloque, bytesEscritos = 0;
 
 	bloque = atoi(bloques[numBloque]);
 
@@ -233,8 +233,10 @@ void obtenerDatos(void* package){
 
 	char* buffer = malloc(sizeof(pedido->size));
 
-	char** bloques = obtenerNumeroBloques(path);
+	t_config* c = config_create(path);
+	char** bloques = config_get_array_value(c, "BLOQUES");
 
+	printf("pase");
 	int offsetBloque, bytesLeidos = 0, restoBloque;
 
 	offsetBloque = (pedido->offset % conf->tamanio_bloque);
@@ -244,14 +246,21 @@ void obtenerDatos(void* package){
 	int bloque = atoi(bloques[numBloque]);
 
 	while(bytesLeidos != pedido->size){
-		restoBloque = conf->tamanio_bloque - offsetBloque;
+		restoBloque = pedido->size - bytesLeidos;
+
+		if(restoBloque > conf->tamanio_bloque)
+			restoBloque = conf->tamanio_bloque;
+
+		log_info(logger, "accedo al bloque %d", bloque);
 
 		leerArchivo(bloque, buffer+bytesLeidos, restoBloque, offsetBloque);
 
 		bytesLeidos += restoBloque;
 
 		j++;
-		bloque = atoi(bloques[j]);
+		if(bloques[j] != NULL)
+			bloque = atoi(bloques[j]);
+
 		offsetBloque = 0;
 	}
 
@@ -263,12 +272,15 @@ void obtenerDatos(void* package){
 
 	free(pedido->path);
 	free(pedido);
+
+	config_destroy(c);
+	free(path);
 }
 
 void leerArchivo(int bloque, char* buffer, int size, int offset){
 	FILE* archivo = fopen(generarPathBloque(bloque), "r+");
 
-	fseek(archivo, offset, SEEK_END);
+	fseek(archivo, offset, SEEK_SET);
 
 	fread(buffer, size, 1, archivo);
 

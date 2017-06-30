@@ -110,9 +110,12 @@ void inicializarMetadata(){
 		string_append(&pathBloque, string_itoa(j));
 		string_append(&pathBloque, ".bin");
 
-		bloque = fopen(pathBloque, "w");
-		fwrite(string_repeat('\0', conf->tamanio_bloque),conf->tamanio_bloque, 1, bloque);
-		fclose(bloque);
+		if(!verificarExistenciaDeArchivo(pathBloque)){
+			bloque = fopen(pathBloque, "w");
+			fwrite(string_repeat('\0', conf->tamanio_bloque),conf->tamanio_bloque, 1, bloque);
+			fclose(bloque);
+		}
+
 		free(pathBloque);
 	}
 
