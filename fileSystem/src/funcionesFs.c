@@ -93,6 +93,7 @@ bool validarArchivo(char* path){
 }
 
 void crearArchivo(void* package){
+
 	char* pathArchivo = generarPathArchivo(package);
 
 	log_debug(logger, "creando archivo : %s", pathArchivo);
@@ -117,7 +118,7 @@ void crearArchivo(void* package){
 
 		log_info(logger, "Se creo el archivo %s\n", pathArchivo);
 	}
-
+	free(pathArchivo);
 }
 
 void borrarArchivo(void* package){
@@ -174,8 +175,13 @@ void guardarDatos(void* package){
 	bloque = atoi(bloques[numBloque]);
 
 	while(bytesEscritos < pedido->size){
-		restoBloque = conf->tamanio_bloque - offsetBloque;
-		printf("Bloque: %d\n", bloque);
+		restoBloque = pedido->size - bytesEscritos;
+
+		if(restoBloque > conf->tamanio_bloque)
+			restoBloque = conf->tamanio_bloque;
+
+		log_info(logger, "accedo al bloque %d", bloque);
+
 		escribirEnArchivo(bloque, pedido->buffer+bytesEscritos, restoBloque, offsetBloque);
 
 		bytesEscritos += restoBloque;
@@ -183,19 +189,9 @@ void guardarDatos(void* package){
 		offsetBloque = 0;
 
 		if(bytesEscritos < pedido->size){//aun faltan cosas por escribir
-			if(numBloque == cantBloques){
-				bloque = buscarBloqueLibre();
-				escribirValorBitarray(1, bloque);
-
-				char* bloques = config_get_string_value(c, "BLOQUES");
-
-				bloques[strlen(bloques)-1] = '\0';
-				strcat(bloques, ",");
-				strcat(bloques, string_itoa(bloque));
-				strcat(bloques, "]");
-				config_set_value(c, "BLOQUES", bloques);
-				config_save(c);
-
+			if(numBloque+1 == cantBloques){
+				log_info(logger, "reservo nuevo bloque");
+				bloque = reservarNuevoBloque(path);
 			}else{
 				j++;
 				bloque = atoi(bloques[numBloque + j]);
@@ -204,11 +200,12 @@ void guardarDatos(void* package){
 
 	}
 
-	//aumentarTamanioArchivo(pedido, path);
+	aumentarTamanioArchivo(pedido, path);
 
 	free(pedido->path);
 	free(pedido->buffer);
 	free(pedido);
+	free(path);
 
 	enviar_paquete_vacio(ESCRITURA_OK, socketConexionKernel);
 
@@ -342,15 +339,17 @@ int reservarNuevoBloque(char* pathArchivo){
 	escribirValorBitarray(1, bloqueLibre);
 
 	t_config* c = config_create(pathArchivo);
-	char* bloques = config_get_string_value(c, "BLOQUES");
+	char* bloques = string_new();
+	string_append(&bloques, config_get_string_value(c, "BLOQUES"));
 
 	bloques[strlen(bloques)-1] = '\0';
-	strcat(bloques, ",");
-	strcat(bloques, string_itoa(bloqueLibre));
-	strcat(bloques, "]");
+	string_append(&bloques, ",");
+	string_append(&bloques, string_itoa(bloqueLibre));
+	string_append(&bloques, "]");
 	config_set_value(c, "BLOQUES", bloques);
 	config_save(c);
 	config_destroy(c);
+	free(bloques);
 
 	return bloqueLibre;
 }
@@ -405,25 +404,25 @@ pedido_guardar_datos* deserializar_pedido_guardar_datos(char* paquete){
 
 char* generarPathBloque(int num_bloque){
 	char* path_bloque = string_new();
-	strcat(path_bloque, conf->punto_montaje);
-	strcat(path_bloque, "Bloques/");
-	strcat(path_bloque, string_itoa(num_bloque));
-	strcat(path_bloque, ".bin");
+	string_append(&path_bloque, conf->punto_montaje);
+	string_append(&path_bloque, "Bloques/");
+	string_append(&path_bloque, string_itoa(num_bloque));
+	string_append(&path_bloque, ".bin");
 
 	return path_bloque;
 }
 
 char* generarPathArchivo(char* path){
-	char* path_archivo = string_new();
-	strcat(path_archivo, conf->punto_montaje);
-	strcat(path_archivo, "Archivos");
+	char* pathArchivo=string_new();
+	string_append(&pathArchivo, conf->punto_montaje);
+	string_append(&pathArchivo, "Archivos");
 
 	if(!string_starts_with(path, "/"))
-		strcat(path_archivo, "/");
+		string_append(&pathArchivo, "/");
 
-	strcat(path_archivo, path);
+	string_append(&pathArchivo, path);
 
-	return path_archivo;
+	return pathArchivo;
 }
 
 int string_pos_char(char* string, char caracter){
@@ -440,6 +439,7 @@ void aumentarTamanioArchivo(pedido_guardar_datos* pedido, char* path){
  	int tamanio = config_get_int_value(c, "TAMANIO");
 
  	int bytesEscritos = pedido->offset + pedido->size - tamanio;
+ 	tamanio += bytesEscritos;
  	if(bytesEscritos > 0){
  		config_set_value(c, "TAMANIO", string_itoa(tamanio));
  		config_save(c);

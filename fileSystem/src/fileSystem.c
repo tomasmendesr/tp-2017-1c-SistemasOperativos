@@ -58,7 +58,7 @@ void inicializarMetadata(){
 	string_append(&pathMetadataArchivo, pathMetadata);
 	string_append(&pathMetadataArchivo, METADATA_ARCHIVO);
 
-	FILE* metadata = fopen(pathMetadataArchivo, "a");
+	FILE* metadata = fopen(pathMetadataArchivo, "w");
 	fprintf(metadata, "TAMANIO_BLOQUES=%d\n", conf->tamanio_bloque);
 	fprintf(metadata, "CANTIDAD_BLOQUES=%d\n", conf->cantidad_bloques);
 	fprintf(metadata, "MAGIC_NUMBER=SADICA\n");
