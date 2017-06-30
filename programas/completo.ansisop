@@ -2,12 +2,13 @@
 
 function imprimir
     wait mutexA
-        print $0+1
+        prints n $0+1
     signal mutexB
+    return 0
 end
 
 begin
-variables f,  A,  g
+    variables f,  A,  g
     A = 	0
     !Global = 1+A
     prints n !Global
@@ -16,17 +17,13 @@ variables f,  A,  g
 	
     f = 8	  
     g <- doble !Global	
+    io impresora 20
 	:Siguiente	
-    prints n A
+    imprimir A
+    prints l Hola Mundo!
     
-    sumar1 &g		
-    prints n g    
-    
-    sinParam
-    
-end
-
-function sinParam
+    f <- sumar1 &g		
+    prints n 		g  
 end
 
 #Devolver el doble del
@@ -38,5 +35,8 @@ variables f
 end
 
 function sumar1
-	$0 = 1 + $0
+	*$0 = 1 + *$0
+    return 1
 end
+
+

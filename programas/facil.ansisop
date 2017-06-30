@@ -1,6 +1,9 @@
-begin	
-	variables a, b, c
-	a = 1
-	b = 3
-	c = a + b
+#!/usr/bin/ansisop
+begin
+	variables a, b
+	a = 3
+	b = 5
+	a = b + 12
 end
+
+
