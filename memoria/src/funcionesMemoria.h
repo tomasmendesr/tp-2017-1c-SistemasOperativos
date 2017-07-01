@@ -80,6 +80,7 @@ void inicializarMemoria();
 int framesLibres();
 int buscarFrame(int pid, int pag);
 int reservarFrames(int pid, int cantPag);
+int liberarFrame(int pid, int nroPag);
 int escribir(int pid, int pag, int offset, char* contenido, int size); //Devuelve codigos error
 int leer(int pid, int pag, int offset, int size, char* resultado); //Devuelve codigos error
 
@@ -113,6 +114,7 @@ void enviarTamanioPagina(int fd);
 int iniciarPrograma(int fd, t_pedido_iniciar* pedido);
 int finalizarPrograma(t_pedido_finalizar *pid);
 int asignarPaginas(int fd, t_pedido_asignar* pedido);
+int liberarPagina(int fd, t_pedido_liberar* pedido);
 
 //Pedidos cpu
 int solicitudBytes(int fd, t_pedido_memoria* pedido);

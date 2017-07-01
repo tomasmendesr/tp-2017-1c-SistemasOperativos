@@ -96,6 +96,7 @@ enum protocolo_a_memoria{
 	DESTRUIR_SEGMENTOS = 64,
 	INICIAR_PROGRAMA = 65,
 	LEER_VAR = 66,
+	LIBERAR_PAGINA = 67
 };
 
 //Mensajes que la memoria le envia el resto de los procesos.

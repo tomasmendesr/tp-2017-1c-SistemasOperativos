@@ -192,6 +192,10 @@ void requestHandlerKernel(int fd){
 			asignarPaginas(fd, (t_pedido_asignar*)paquete);
 			break;
 
+		case LIBERAR_PAGINA:
+			liberarPagina(fd, (t_pedido_liberar*)paquete);
+			break;
+
 		case SOLICITUD_BYTES:
 			solicitudBytes(fd, (t_pedido_memoria*)paquete);
 			break;
@@ -308,6 +312,20 @@ int asignarPaginas(int fd, t_pedido_asignar* pedido){
 	return 0;
 }
 
+int liberarPagina(int fd, t_pedido_liberar* pedido){
+
+	log_info(logger, "Pedido liberar pid: %d pag: %d",pedido->pid,pedido->nroPag);
+
+	if( liberarFrame(pedido->pid,pedido->nroPag) == -1 ){
+		log_error("No existe la pagina pedida.");
+		enviarRespuesta(fd, QUILOMBO);
+		return -1;
+	}
+
+	enviarRespuesta(fd,OP_OK);
+	return 0;
+}
+
 /* Asigna la cantidad de paginas al proceso especifico
  * Devuelve 0 en caso de poder asignar las paginas
  * -1 en caso de no haber frames disponibles para realizar la operacion */
@@ -356,6 +374,24 @@ int reservarFrames(int pid, int cantPag){
 	return 0;
 }
 
+int liberarFrame(int pid, int nroPag){
+
+	int frame = buscarFrame(pid,nroPag);
+
+	if(frame == -1){
+		printf("No existe la pagina pid: %d pag: %d\n",pid,nroPag);
+		return -1;
+	}
+
+	//Cambio los valores de la tabla de paginas
+	pthread_mutex_lock(&tablaPag_mutex);
+	tabla_pag[frame].pag = -1;
+	tabla_pag[frame].pid = -1;
+	pthread_mutex_unlock(&tablaPag_mutex); //TODO: REVISAR ESTO!!!
+
+	return 0;
+}
+
 int solicitudBytes(int fd, t_pedido_memoria* pedido){
 
 	log_info("Pedido lectura. pid: %d pag: %d offset: %d size: %d",
@@ -399,12 +435,6 @@ int grabarBytes(int fd, char* paquete){
 
 	t_pedido_memoria* pedido = paquete;
 	char* buf = paquete + sizeof(t_pedido_memoria);
-
-	log_info("Pedido escritura. pid: %d pag: %d offset: %d size: %d contenido:\n",
-			pedido->pid,pedido->pag,pedido->offset,pedido->size,buf);
-
-	write(stdout,buf,pedido->size);
-	putchar('\n');
 
 	if(pedidoIncorrecto(pedido)){
 		enviarRespuesta(fd, SEGMENTATION_FAULT);
@@ -541,7 +571,7 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 
 int escribir(int pid, int pag, int offset, char* contenido, int size){
 
-	log_info(logger,"Escribir pid: %d pag:%d offset: %d size: %d contenido: %s",pid,pag,offset,size,contenido);
+	log_info(logger,"Escribir pid: %d pag:%d offset: %d size: %d contenido: %s\n",pid,pag,offset,size);
 
 	int frame;
 	int cant_escrita = 0;
