@@ -92,6 +92,14 @@ t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
 
         config->retardo_Memoria = config_get_int_value(configMemoria, "RETARDO_MEMORIA");
 
+        if( config_get_int_value(configMemoria,"RETARDO_ACTIVADO") == 1 )
+        	config->retardoActivado = true;
+        else config->retardoActivado = false;
+
+        if( config_get_int_value(configMemoria,"IMPRIMIR_RETARDO") == 0)
+        	config->imprimirRetardo = true;
+        else config->imprimirRetardo = false;
+
         config_destroy(configMemoria);
         return config;
 
@@ -286,6 +294,8 @@ int finalizarPrograma(t_pedido_finalizar* pid){
 
 	log_info(logger,"Pedido finalizar. pid: %d",*pid);
 
+	pthread_mutex_lock(&tablaPag_mutex);
+	esperar();//Accedo a tabla pag
 	int i;
 	for(i=0;i<cant_frames;i++){
 		if(tabla_pag[i].pid == *pid){
@@ -293,6 +303,7 @@ int finalizarPrograma(t_pedido_finalizar* pid){
 			tabla_pag[i].pag = -1;
 		}
 	}
+	pthread_mutex_unlock(&tablaPag_mutex);
 
 	return 0;
 }
@@ -338,6 +349,8 @@ int reservarFrames(int pid, int cantPag){
 
 	int maxPag = 0;
 	int i;
+
+	esperar();//Accedo a tabla de paginas->memoria
 
 	//Saco la max pagina de un frame
 	for(i=0;i<cant_frames;i++){
@@ -385,6 +398,7 @@ int liberarFrame(int pid, int nroPag){
 
 	//Cambio los valores de la tabla de paginas
 	pthread_mutex_lock(&tablaPag_mutex);
+	esperar();//Acceso a tabla pag
 	tabla_pag[frame].pag = -1;
 	tabla_pag[frame].pid = -1;
 	pthread_mutex_unlock(&tablaPag_mutex); //TODO: REVISAR ESTO!!!
@@ -496,6 +510,8 @@ int framesLibres(){
 /* Busqueda secuencial, despues implementamos hash */
 int buscarFrame(int pid, int pag){
 
+	esperar();
+
 	pthread_mutex_lock(&tablaPag_mutex);
 
 	int posInicial = getPos(pid,pag);
@@ -544,6 +560,9 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 
 		if( leerCache(pid,pag,&pos_leer) == -1 ){//No Esta en cache, debo leer de memoria
 
+			//Si no esta en cache, debo leer de memoria, 1 acceso mas
+			esperar();
+
 			frame = buscarFrame(pid,pag);
 			if(frame == -1)
 				return -1;
@@ -582,6 +601,9 @@ int escribir(int pid, int pag, int offset, char* contenido, int size){
 		frame = buscarFrame(pid,pag);
 		if(frame == -1)
 			return -1;
+
+		//Cada frame escrito es un acceso
+		esperar();
 
 		cant_a_escribir = min(size - cant_escrita, frame_size - offset);
 		memcpy(memoria + frame * frame_size + offset, contenido + cant_escrita, cant_a_escribir);
@@ -937,4 +959,13 @@ char* getTimeStamp(){
 	string[strlen(string) - 1] = '\0'; //saco el \n del string
 
 	return string;
+}
+
+void esperar(){
+	if( config->retardoActivado ){
+		usleep(config->retardo_Memoria);
+
+		if( config->imprimirRetardo )
+			log_debug(logger,"RETARDO");
+	}
 }

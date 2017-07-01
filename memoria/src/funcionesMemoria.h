@@ -46,6 +46,8 @@ typedef struct{
         int cache_x_Proceso;
         char* reemplazo_cache;
         int retardo_Memoria;
+        bool retardoActivado;
+        bool imprimirRetardo;
 }t_config_memoria;
 
 typedef struct{
@@ -62,6 +64,7 @@ typedef struct{
 
 void testHash();
 void inicializarGlobales();
+void esperar();
 
 t_config_memoria* levantarConfiguracionMemoria(char* archivo);
 void crearConfig(int argc, char* argv[]);
