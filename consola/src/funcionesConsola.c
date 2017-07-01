@@ -417,7 +417,7 @@ void limpiarMensajes(char* comando, char* param) {
 }
 
 int crearLog() {
-	logger = log_create("logConsola","consola", 1, LOG_LEVEL_TRACE);
+	logger = log_create("../logConsola","consola", 1, LOG_LEVEL_TRACE);
 	if (logger) {
 		return 1;
 	} else {

@@ -11,7 +11,7 @@
 #include "funcionesKernel.h"
 
 int main(int argc, char** argv){
-	logger = log_create("logKernel","kernel", 1, LOG_LEVEL_TRACE);
+	logger = log_create("../logKernel","kernel", 1, LOG_LEVEL_TRACE);
 
 	crearConfig(argc,argv);
 

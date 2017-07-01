@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv){
 
-	logger = log_create("logFS","FS", 1, LOG_LEVEL_TRACE);
+	logger = log_create("../logFS","FS", 1, LOG_LEVEL_TRACE);
 
 	crearConfig(argc, argv);
 
@@ -58,7 +58,7 @@ void inicializarMetadata(){
 	string_append(&pathMetadataArchivo, pathMetadata);
 	string_append(&pathMetadataArchivo, METADATA_ARCHIVO);
 
-	FILE* metadata = fopen(pathMetadataArchivo, "a");
+	FILE* metadata = fopen(pathMetadataArchivo, "w");
 	fprintf(metadata, "TAMANIO_BLOQUES=%d\n", conf->tamanio_bloque);
 	fprintf(metadata, "CANTIDAD_BLOQUES=%d\n", conf->cantidad_bloques);
 	fprintf(metadata, "MAGIC_NUMBER=SADICA\n");
@@ -88,18 +88,11 @@ void inicializarMetadata(){
 
 	}else{
 
-		bitarray = bitarray_create_with_mode(string_repeat('0', sizeBitArray), sizeBitArray, LSB_FIRST);
+		bitarray = bitarray_create_with_mode(string_repeat('\0', sizeBitArray), sizeBitArray, LSB_FIRST);
 
-		int index;
-		for(index = 0; index < conf->cantidad_bloques; index++)
-			bitarray_clean_bit(bitarray, index);
 
-		char* data = malloc(sizeBitArray);
-		for(index =0; index <sizeBitArray; index++);
-			data[index] = '\0';
-
-		FILE* bitmap = fopen(pathMetadataBitarray, "a");
-		fwrite(data, sizeBitArray, 1, bitmap);
+		FILE* bitmap = fopen(pathMetadataBitarray, "w");
+		fwrite(bitarray->bitarray, sizeBitArray, 1, bitmap);
 		fclose(bitmap);
 
 	}
@@ -117,9 +110,12 @@ void inicializarMetadata(){
 		string_append(&pathBloque, string_itoa(j));
 		string_append(&pathBloque, ".bin");
 
-		bloque = fopen(pathBloque, "a");
-		fwrite(string_repeat('\0', conf->tamanio_bloque),conf->tamanio_bloque, 1, bloque);
-		fclose(bloque);
+		if(!verificarExistenciaDeArchivo(pathBloque)){
+			bloque = fopen(pathBloque, "w");
+			fwrite(string_repeat('\0', conf->tamanio_bloque),conf->tamanio_bloque, 1, bloque);
+			fclose(bloque);
+		}
+
 		free(pathBloque);
 	}
 

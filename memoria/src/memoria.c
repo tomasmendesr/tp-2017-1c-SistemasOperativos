@@ -14,7 +14,7 @@ int main(int argc, char** argv){
 
 	//testHash();
 
-	logger = log_create("logMemoria","memoria",true,LOG_LEVEL_TRACE);
+	logger = log_create("../logMemoria","memoria",1,LOG_LEVEL_TRACE);
 
 	crearConfig(argc, argv);
 
