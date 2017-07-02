@@ -328,7 +328,7 @@ int liberarPagina(int fd, t_pedido_liberar* pedido){
 	log_info(logger, "Pedido liberar pid: %d pag: %d",pedido->pid,pedido->nroPag);
 
 	if( liberarFrame(pedido->pid,pedido->nroPag) == -1 ){
-		log_error("No existe la pagina pedida.");
+		log_error(logger, "No existe la pagina pedida.");
 		enviarRespuesta(fd, QUILOMBO);
 		return -1;
 	}

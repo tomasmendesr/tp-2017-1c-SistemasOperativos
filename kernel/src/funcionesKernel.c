@@ -67,7 +67,7 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
 
         conf->grado_MultiProg = config_get_int_value(configKernel, "GRADO_MULTIPROG");
 
-        semID = config_get_array_value(configKernel, "SEM_ID");
+        semID = config_get_array_value(configKernel, "SEM_IDS");
         semInit = config_get_array_value(configKernel, "SEM_INIT");
         conf->semaforos = crearDiccionarioConValue(semID,semInit);
         crearColasBloqueados(semID);
@@ -78,6 +78,7 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         conf->stack_Size = config_get_int_value(configKernel, "STACK_SIZE");
 
         config_destroy(configKernel);
+        printf("Configuracion levantada correctamente.\n");
         return conf;
 }
 

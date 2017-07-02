@@ -12,9 +12,7 @@
 
 int main(int argc, char** argv){
 	logger = log_create("../logKernel","kernel", 1, LOG_LEVEL_TRACE);
-
 	crearConfig(argc,argv);
-
 	inicializaciones();
 
 	levantarInterfaz();
@@ -39,10 +37,11 @@ void conectarConServidores(void){
 		log_error(logger,"No se pudo establecer la conexion con la memoria.");
 		exit(1);
 	}
-/*	if(conexionConFileSystem() == -1){
+	if(conexionConFileSystem() == -1){
 		log_error(logger,"No se pudo establecer la conexion con el File System.");
 		exit(1);
-	}*/
+	}
+	printf("Conexion exitosa con FileSystem y Memoria\n");
 }
 
 /**
