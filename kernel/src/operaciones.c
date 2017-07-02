@@ -147,6 +147,12 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case RESERVA_INSATISFECHA:
 		finalizacion_reservaNoPermitida(package, socketCPU);
 		break;
+	case SIN_ESPACIO:
+		finalizacion_faltaEspacio(package, socketCPU);
+		break;
+	case PUNTERO_VACIO:
+		finalizacion_punteroVacio(package, socketCPU);
+		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido.");
 	}
@@ -307,6 +313,18 @@ void finalizacion_reservaNoPermitida(void* paquete, int socket){
 	t_pcb* pcb = deserializar_pcb(paquete);
 	log_error(logger, "Finaliza proceso #%d por tamano de reserva mayor al permitido", pcb->pid);
 	pcb->exitCode = RESERVA_INSATISFECHA;
+	terminarProceso(pcb, socket);
+}
+void finalizacion_faltaEspacio(void* paquete, int socket){
+	t_pcb* pcb = deserializar_pcb(paquete);
+	log_error(logger, "Finaliza proceso #%d por falta de espacio en Memoria", pcb->pid);
+	pcb->exitCode = SIN_ESPACIO;
+	terminarProceso(pcb, socket);
+}
+void finalizacion_punteroVacio(void* paquete, int socket){
+	t_pcb* pcb = deserializar_pcb(paquete);
+	log_error(logger, "Finaliza proceso #%d por intentar liberar memoria no reservada", pcb->pid);
+	pcb->exitCode = PUNTERO_VACIO;
 	terminarProceso(pcb, socket);
 }
 
@@ -495,11 +513,21 @@ void reservarMemoria(int socket, char* paquete){
 				header->length = sizeof(t_puntero);
 
 				if(resultado == OP_OK){
-					log_debug(logger,"reserva exitosa con posicion %d",posicion);
+					log_debug(logger,"Reserva exitosa con posicion %d",posicion);
 					sendSocket(socket, header, &posicion);
 					free(header);
 					return;
 				}
+				else{
+					log_error(logger,"Segmentation fault");
+					enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
+					return;
+				}
+			}
+			else{
+				log_error(logger,"Segmentation fault");
+				enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
+				return;
 			}
 		}
 	}
@@ -583,11 +611,23 @@ void reservarMemoria(int socket, char* paquete){
 				entrada->pid = pedido_memoria.pid;
 				entrada->list = datos;
 				list_add(bloques, entrada);
-				log_debug(logger, "reserva exitosa con posicion %d",posicion);
+				log_debug(logger, "Reserva exitosa con posicion %d",posicion);
 				sendSocket(socket, &header, &posicion);
+			}
+			else{
+				log_error(logger,"Segmentation fault");
+				enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
 			}
 			return;
 		}
+		else{
+			log_error(logger,"Segmentation fault");
+			enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
+		}
+	}
+	else{
+		log_error(logger,"Memoria se quedo sin espacio");
+		enviar_paquete_vacio(SIN_ESPACIO,socket);
 	}
 }
 
@@ -618,7 +658,7 @@ void liberarMemoria(int socket, char* paquete){
 	while((reserva = list_get(mem_dinamica, pos++))){
 
 		if(reserva->pid == pid && reserva->pag == pedido.pag){
-			if(reserva->size <= pagina_size - sizeof(meta_bloque)  && reserva->size > 0){
+			if(reserva->size <= pagina_size - sizeof(meta_bloque) && reserva->size > 0){
 				bool buscarEntrada(t_entrada_datos* entrada){
 					return entrada->pid == pid;
 				}
@@ -630,7 +670,7 @@ void liberarMemoria(int socket, char* paquete){
 					if(bloque->pos == posicion){
 						if(bloque->used){
 
-							log_info(logger,"se libera la posicion: %d\n", bloque->pos);
+							log_info(logger,"Se libera la posicion: %d\n", bloque->pos);
 							header.type = GRABAR_BYTES;
 							header.length = size + sizeof(meta_bloque);
 
@@ -664,16 +704,17 @@ void liberarMemoria(int socket, char* paquete){
 							}
 							recibir_paquete(socketConexionMemoria, &paquete, &tipo);
 
-							if(!notEmpty){
-								pedido.offset = 0;
-								pedido.size = sizeof(meta_bloque);
+							if(tipo == OP_OK){
+								if(!notEmpty){
+									pedido.offset = 0;
+									pedido.size = sizeof(meta_bloque);
 
-								if(tipo == OP_OK){
 									package = malloc(header.length);
 									metadata.size = pagina_size - sizeof(meta_bloque);
 									memcpy(package, &pedido, size);
 									memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
 									sendSocket(socketConexionMemoria, &header, package);
+									recibir_paquete(socketConexionMemoria, &paquete, &tipo);
 
 									k=0;
 									while((bloque = list_get(list,k))){
@@ -684,29 +725,44 @@ void liberarMemoria(int socket, char* paquete){
 										else k++;
 									}
 
-									reserva->size -= sizeof(meta_bloque);
-									bloque = malloc(sizeof(meta_bloque));
-									bloque->used = false;
-									bloque->size = metadata.size;
-									bloque->pos = reserva->pag*pagina_size + sizeof(meta_bloque);
-									list_add(list, bloque);
-									free(package);
+									if(tipo == OP_OK){
+										reserva->size -= sizeof(meta_bloque);
+										bloque = malloc(sizeof(meta_bloque));
+										bloque->used = false;
+										bloque->size = metadata.size;
+										bloque->pos = reserva->pag*pagina_size + sizeof(meta_bloque);
+										list_add(list, bloque);
+										free(package);
+									}
+									else{
+										log_error(logger,"Segmentation fault");
+										enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
+										free(package);
+									}
 									return;
 								}
 							}
+							else{
+								log_error(logger,"Segmentation fault");
+								enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
+							}
 							return;
 						}
-						else
-						{
-							/*matar proceso*/
+						else{
+							log_error(logger,"No se puede liberar la memoria");
+							enviar_paquete_vacio(PUNTERO_VACIO,socket);
 						}
 						return;
 					}
 					ind++;
 				}
+				log_error(logger,"No se puede liberar la memoria");
+				enviar_paquete_vacio(PUNTERO_VACIO,socket);
 			}
 		}
 	}
+	log_error(logger,"No se puede liberar la memoria");
+	enviar_paquete_vacio(PUNTERO_VACIO,socket);
 }
 
 void desocupar_cpu(int socket_asociado) {

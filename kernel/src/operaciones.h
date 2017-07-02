@@ -27,6 +27,8 @@ void finalizacion_global_no_definida(void* paquete_from_cpu, int socket_cpu);
 void finalizacion_null_pointer(void* paquete_from_cpu, int socket_cpu);
 void finalizacion_archivo_inexistente(void* paquete_from_cpu, int socket_cpu);
 void finalizacion_reservaNoPermitida(void* paquete, int socket);
+void finalizacion_faltaEspacio(void* paquete, int socket);
+void finalizacion_punteroVacio(void* paquete, int socket);
 void reservarMemoria(int socket, char* paquete);
 void liberarMemoria(int socket, char* paquete);
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu);

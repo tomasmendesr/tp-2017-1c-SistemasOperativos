@@ -213,6 +213,14 @@ int32_t requestHandlerKernel(void){
 			finalizarPor(RESERVA_INSATISFECHA);
 			finPrograma = true;
 			return -1;
+		case SIN_ESPACIO:
+			finalizarPor(SIN_ESPACIO);
+			finPrograma = true;
+			return -1;
+		case PUNTERO_VACIO:
+			finalizarPor(PUNTERO_VACIO);
+			finPrograma = true;
+			return -1;
 		default:
 			log_warning(logger, "Mensaje Recibido Incorrecto");
 			if(paquete)free(paquete);
