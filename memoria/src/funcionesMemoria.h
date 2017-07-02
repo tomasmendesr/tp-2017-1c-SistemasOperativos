@@ -145,6 +145,7 @@ t_config_memoria* config;
 int socketEscuchaConexiones;
 int socketConexionKernel;
 int socketConexionCpu;
+bool hayCache;
 
 char* memoria; /*Este va a ser el bloque que simula la memoria principal.
 				Uso char* porque sizeof(char) = 1 y facilita la aritmetica,

@@ -119,23 +119,30 @@ void inicializarMemoria(){
 
 	//Creo el bloque de memoria principal
 	memoria = malloc(memSize);
-
-	//Creo la cache
-	cache = malloc(sizeof(t_entrada_cache) * config->entradas_Cache);
-
-	//Inicializo la cache
-	for(i=0;i<config->entradas_Cache;i++){
-		cache[i].pid = -1;
-		cache[i].pag = -1;
-		cache[i].content = malloc(frame_size);
-		cache[i].time_used = 0;
-		if(cache[i].content == NULL) noEspacioCache = true;
+	if(memoria == NULL){
+			log_error(logger, "No pude reservar memoria para mp");
+			exit(EXIT_FAILURE);
 	}
 
-	//Reviso los mallocs
-	if(memoria == NULL || cache == NULL || noEspacioCache){
-		log_error(logger, "No pude reservar memoria para cache y/o memoria");
-		exit(EXIT_FAILURE);
+	//Creo la cache
+	hayCache = config->entradas_Cache != 0;
+	if(hayCache){
+		cache = malloc(sizeof(t_entrada_cache) * config->entradas_Cache);
+
+		//Inicializo la cache
+		for(i=0;i<config->entradas_Cache;i++){
+			cache[i].pid = -1;
+			cache[i].pag = -1;
+			cache[i].content = malloc(frame_size);
+			cache[i].time_used = 0;
+			if(cache[i].content == NULL) noEspacioCache = true;
+		}
+
+		//Reviso los mallocs
+		if(cache == NULL || noEspacioCache){
+			log_error(logger, "No pude reservar memoria para cache");
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	//Setteo la memoria con \0
@@ -557,7 +564,6 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 	char* pos_leer;
 
 	while(cant_leida < size){
-
 		if( leerCache(pid,pag,&pos_leer) == -1 ){//No Esta en cache, debo leer de memoria
 
 			//Si no esta en cache, debo leer de memoria, 1 acceso mas
@@ -569,7 +575,7 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 
 			pos_leer = memoria + frame * frame_size;
 
-			actualizarEntradaCache(pid, pag, pos_leer);
+			if(hayCache) actualizarEntradaCache(pid, pag, pos_leer);
 		}/* Al salir de este if pos_leer apunta o bien al frame de donde tengo que leer,
 		  * o a donde esta cacheado el frame */
 
@@ -590,7 +596,7 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 
 int escribir(int pid, int pag, int offset, char* contenido, int size){
 
-	log_info(logger,"Escribir pid: %d pag:%d offset: %d size: %d contenido: %s\n",pid,pag,offset,size);
+	log_info(logger,"Escribir pid: %d pag:%d offset: %d size: %d contenido: %s\n",pid,pag,offset,size, contenido);
 
 	int frame;
 	int cant_escrita = 0;
@@ -608,7 +614,7 @@ int escribir(int pid, int pag, int offset, char* contenido, int size){
 		cant_a_escribir = min(size - cant_escrita, frame_size - offset);
 		memcpy(memoria + frame * frame_size + offset, contenido + cant_escrita, cant_a_escribir);
 
-		actualizarEntradaCache(pid, pag, memoria + frame * frame_size);
+		if(hayCache) actualizarEntradaCache(pid, pag, memoria + frame * frame_size);
 
 		cant_escrita += cant_a_escribir;
 		offset = 0;
@@ -692,7 +698,7 @@ int reemplazoGlobal(){
 }
 
 int leerCache(int pid, int pag, char** contenido){
-
+	if(!hayCache) return -1;
 	pthread_mutex_lock(&cache_mutex);
 
 	increaseOpCount();
