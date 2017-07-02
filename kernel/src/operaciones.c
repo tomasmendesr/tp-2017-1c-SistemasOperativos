@@ -116,7 +116,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		moverCursor(socketCPU, (t_cursor*) package);
 		break;
 	/* CPU DEVUELVE EL PCB */
-	case FIN_PROCESO: //HACE ESTO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	case FIN_PROCESO:
 		finalizacion_proceso(package, socketCPU);
 		break;
 	case FIN_EJECUCION:
@@ -130,28 +130,16 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		finalizacion_stackoverflow(package, socketCPU);
 		break;
 	case ERROR_MEMORIA:
-		finalizacion_error_memoria(package, socketCPU);
-		break;
 	case SEMAFORO_NO_EXISTE:
-		finalizacion_semaforo_no_existe(package, socketCPU);
-		break;
 	case GLOBAL_NO_DEFINIDA:
-		finalizacion_global_no_definida(package, socketCPU);
-		break;
 	case NULL_POINTER:
-		finalizacion_null_pointer(package, socketCPU);
-		break;
 	case ARCHIVO_INEXISTENTE:
-		finalizacion_archivo_inexistente(package, socketCPU);
-		break;
+	case ERROR_ARCHIVO:
 	case RESERVA_INSATISFECHA:
-		finalizacion_reservaNoPermitida(package, socketCPU);
+		finalizacion_error(package, socketCPU, mensaje);
 		break;
 	case SIN_ESPACIO:
 		finalizacion_faltaEspacio(package, socketCPU);
-		break;
-	case PUNTERO_VACIO:
-		finalizacion_punteroVacio(package, socketCPU);
 		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido.");
@@ -274,57 +262,18 @@ void finalizacion_segment_fault(void* paquete_from_cpu, int socket_cpu){
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
-void finalizacion_error_memoria(void* paquete_from_cpu, int socket_cpu){
+
+void finalizacion_error(void* paquete_from_cpu, int socket_cpu, int exitCode){
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso %d por error en memoria", pcbRecibido->pid);
-	pcbRecibido->exitCode = ERROR_MEMORIA;
+	log_error(logger, "Finaliza el proceso #%d por error", pcbRecibido->pid);
+	pcbRecibido->exitCode = exitCode;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
-void finalizacion_semaforo_no_existe(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso #%d por querer acceder a un semaforo no inicializado", pcbRecibido->pid);
-	pcbRecibido->exitCode = SEMAFORO_NO_EXISTE;
-	terminarProceso(pcbRecibido, socket_cpu);
-}
-
-void finalizacion_global_no_definida(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso #%d por intentar acceder a una variable global no definida", pcbRecibido->pid);
-	pcbRecibido->exitCode = GLOBAL_NO_DEFINIDA;
-	terminarProceso(pcbRecibido, socket_cpu);
-}
-
-void finalizacion_null_pointer(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso #%d por null pointer", pcbRecibido->pid);
-	pcbRecibido->exitCode = NULL_POINTER;
-	terminarProceso(pcbRecibido, socket_cpu);
-}
-
-void finalizacion_archivo_inexistente(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso #%d intentar acceder a un archivo inexistente", pcbRecibido->pid);
-	pcbRecibido->exitCode = ARCHIVO_INEXISTENTE;
-	terminarProceso(pcbRecibido, socket_cpu);
-}
-
-void finalizacion_reservaNoPermitida(void* paquete, int socket){
-	t_pcb* pcb = deserializar_pcb(paquete);
-	log_error(logger, "Finaliza proceso #%d por tamano de reserva mayor al permitido", pcb->pid);
-	pcb->exitCode = RESERVA_INSATISFECHA;
-	terminarProceso(pcb, socket);
-}
 void finalizacion_faltaEspacio(void* paquete, int socket){
 	t_pcb* pcb = deserializar_pcb(paquete);
 	log_error(logger, "Finaliza proceso #%d por falta de espacio en Memoria", pcb->pid);
-	pcb->exitCode = SIN_ESPACIO;
-	terminarProceso(pcb, socket);
-}
-void finalizacion_punteroVacio(void* paquete, int socket){
-	t_pcb* pcb = deserializar_pcb(paquete);
-	log_error(logger, "Finaliza proceso #%d por intentar liberar memoria no reservada", pcb->pid);
-	pcb->exitCode = PUNTERO_VACIO;
+	pcb->exitCode = FALLA_RESERVAR_RECURSOS;
 	terminarProceso(pcb, socket);
 }
 
@@ -767,19 +716,19 @@ void liberarMemoria(int socket, char* paquete){
 						}
 						else{
 							log_error(logger,"No se puede liberar la memoria");
-							enviar_paquete_vacio(PUNTERO_VACIO,socket);
+							enviar_paquete_vacio(NULL_POINTER,socket);
 						}
 						return;
 					}
 					ind++;
 				}
 				log_error(logger,"No se puede liberar la memoria");
-				enviar_paquete_vacio(PUNTERO_VACIO,socket);
+				enviar_paquete_vacio(NULL_POINTER,socket);
 			}
 		}
 	}
 	log_error(logger,"No se puede liberar la memoria");
-	enviar_paquete_vacio(PUNTERO_VACIO,socket);
+	enviar_paquete_vacio(NULL_POINTER,socket);
 }
 
 void desocupar_cpu(int socket_asociado) {
@@ -827,7 +776,6 @@ void abrirArchivo(int socketCpu, void* package){
 	if(banderas->lectura) string_append(&permisos, "L");
 
 	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
-	printf("fd %d: \n", fd);
 
 	//mando mensaje a fs
 	header_t header;

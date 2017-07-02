@@ -208,6 +208,10 @@ int32_t requestHandlerKernel(void){
 			finalizarPor(NULL_POINTER);
 			finPrograma = true;
 			return -1;
+		case ERROR_ARCHIVO:
+			finalizarPor(ARCHIVO_INEXISTENTE);
+			finPrograma = true;
+			return -1;
 		case ARCHIVO_INEXISTENTE:
 			finalizarPor(ARCHIVO_INEXISTENTE);
 			finPrograma = true;
@@ -218,10 +222,6 @@ int32_t requestHandlerKernel(void){
 			return -1;
 		case SIN_ESPACIO:
 			finalizarPor(SIN_ESPACIO);
-			finPrograma = true;
-			return -1;
-		case PUNTERO_VACIO:
-			finalizarPor(PUNTERO_VACIO);
 			finPrograma = true;
 			return -1;
 		default:
