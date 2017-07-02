@@ -47,7 +47,7 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 			config_get_string_value(configConsola, "PROGRAM_PATH"));
 
 	config_destroy(configConsola);
-
+	printf("Configuracion levantada exitosamente\n");
 	return config;
 }
 
@@ -185,8 +185,8 @@ void iniciarPrograma(char* comando, char* param) {
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		log_info(logger, "Conexion con Kernel establecida");
+		printf("Conexion con Kernel exitosa\n");
 		log_debug(logger, "Se procede a mandar el archivo: '%s'", param);
-
 	} else {
 		log_error(logger, "El Kernel no devolvio handshake");
 	}
@@ -233,6 +233,7 @@ void threadPrograma(dataHilo* data){
 		return;
 	}
 	log_info(logger,"Archivo enviado correctamente");
+	printf("Archivo '%s' enviado exitosamente\n", data->pathAnsisop);
 
 	if(recibir_paquete(socketProceso, &paquete, &operacion) <= 0){
 		log_error(logger, "El kernel se desconecto");
@@ -282,6 +283,7 @@ void threadPrograma(dataHilo* data){
 }
 
 void notificarProcesoRechazado(void* paquete, char* pathAnsisop){
+	printf("Programa '%s' rechazado\n", pathAnsisop);
 	log_error(logger, "Programa '%s' rechazado", pathAnsisop);
 	int pid = *(int*) paquete;
 	int exitCode = *(int*) (paquete + sizeof(int));
@@ -294,7 +296,6 @@ void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exit
 	}
 
 	t_proceso* proc = list_find(procesos, buscarPorSocket);
-	log_info(logger, "Termino la ejecucion del programa #%d", proc->pid);
 
 	terminarProceso(proc, exitCode);
 
@@ -365,6 +366,7 @@ void finalizarPrograma(char* comando, char* param){
 
 	if(!esNumero(param)){
 		log_warning(logger, "Pid invalido");
+		printf("PID invalido\n");
 		return;
 	}
 
@@ -378,6 +380,7 @@ void finalizarPrograma(char* comando, char* param){
 
 	if(proceso == NULL){
 		log_warning(logger, "El proceso #%d no se encuentra", pid);
+		printf("El proceso #%d no se encuentra\n", pid);
 		return;
 	}
 
@@ -392,6 +395,8 @@ void finalizarPrograma(char* comando, char* param){
 void desconectarConsola(char* comando, char* param) {
 	log_debug(logger, "Finalizando conexion threads...");
 	log_debug(logger, "Abortando programas...");
+	printf("Finalizando conexion threads...\n");
+	printf("Abortando programas...\n");
 	int i;
 	for(i = 0; i<list_size(procesos); i++){
 		t_proceso* proc = list_get(procesos, i);
@@ -418,7 +423,7 @@ void limpiarMensajes(char* comando, char* param) {
 }
 
 int crearLog() {
-	logger = log_create("../logConsola","consola", 1, LOG_LEVEL_TRACE);
+	logger = log_create("../logConsola","consola", 0, LOG_LEVEL_TRACE);
 	if (logger) {
 		return 1;
 	} else {

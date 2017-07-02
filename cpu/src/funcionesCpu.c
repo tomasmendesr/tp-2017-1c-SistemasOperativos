@@ -22,7 +22,7 @@ AnSISOP_kernel kernel_functions = { .AnSISOP_abrir =abrir, .AnSISOP_borrar = bor
 };
 
 int crearLog(void){
-	logger = log_create("../logCpu","cpu", 1, LOG_LEVEL_TRACE);
+	logger = log_create("../logCpu","cpu", 0, LOG_LEVEL_TRACE);
 	if(logger)
 		return 1;
 	else
@@ -66,6 +66,7 @@ t_config_cpu* levantarConfiguracionCPU(char* archivo) {
         conf->ip_Kernel = malloc(strlen(config_get_string_value(configCPU, "IP_KERNEL"))+1);
         strcpy(conf->ip_Kernel, config_get_string_value(configCPU, "IP_KERNEL"));
         config_destroy(configCPU);
+        printf("Configuracion levantada exitosamente\n");
         return conf;
 }
 
@@ -107,6 +108,7 @@ int conexionConKernel(void){
 		log_error(logger,"Error al recibir el quantum sleep");
 		return -1;
 	}
+	printf("Conexion con Kernel exitosa\n");
 	return EXIT_SUCCESS;
 }
 
@@ -136,6 +138,7 @@ int conexionConMemoria(void){
 		log_error(logger, "Error al recibir tamanio de pagina");
 		return -1;
 	}
+	printf("Conexion con Memoria exitosa\n");
 	return EXIT_SUCCESS;
 }
 
@@ -287,6 +290,7 @@ void recibirPCB(void* paquete){
 	pcb = deserializar_pcb(paquete);
 	setPCB(pcb);
 	log_info(logger, "PCB #%d recibido", pcb->pid);
+	printf("Ejecutar proceso #%d\n", pcb->pid);
 }
 
 int16_t solicitarBytes(t_pedido_bytes* pedido){
@@ -362,10 +366,12 @@ void comenzarEjecucionDePrograma(void* paquete){
 		char* instruccion = obtenerInstruccion(paqueteGlobal, sizeInstruccion);
 		free(paqueteGlobal);
 		log_info(logger, "Instruccion recibida: %s", instruccion);
+		printf("Instruccion recibida: '%s'\n", instruccion);
 		analizadorLinea(instruccion, &functions, &kernel_functions);
 		free(instruccion);
 		if (verificarTerminarEjecucion() == -1) return;
 		revisarFinalizarCPU();
+		printf("Instruccion ejecutada con exito\n");
 		i++;
 		pcb->programCounter++;
 		usleep(quantumSleep * 1000);
