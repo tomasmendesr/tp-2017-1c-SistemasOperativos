@@ -631,6 +631,16 @@ void reservarMemoria(int socket, char* paquete){
 	}
 }
 
+int buscarEntrada(uint32_t pid){
+	t_entrada_datos* item;
+	int k;
+	for(k=0; k<bloques->elements_count; k++){
+		item = list_get(bloques,k);
+		if(item->pid == pid) return k;
+	}
+	return -1;
+}
+
 void liberarMemoria(int socket, char* paquete){
 	t_pedido_bytes pedido;
 	header_t header;
@@ -646,11 +656,10 @@ void liberarMemoria(int socket, char* paquete){
 	t_bloque* bloque;
 	t_entrada_datos* entrada;
 	uint16_t pos=0;
-	uint16_t ind=0;
+	uint16_t resultado,ind=0;
 	memcpy(&pid, paquete, tamano);
 	memcpy(&posicion, paquete+tamano, tamano);
 
-//	info_estadistica_t* info = buscarInformacion(pid);
 	pedido.pid = pid;
 	pedido.pag = posicion/pagina_size;
 	free(paquete);
@@ -659,10 +668,9 @@ void liberarMemoria(int socket, char* paquete){
 
 		if(reserva->pid == pid && reserva->pag == pedido.pag){
 			if(reserva->size <= pagina_size - sizeof(meta_bloque) && reserva->size > 0){
-				bool buscarEntrada(t_entrada_datos* entrada){
-					return entrada->pid == pid;
-				}
-				entrada = list_find(bloques,buscarEntrada);
+
+				resultado=buscarEntrada(pid);
+				entrada = list_get(bloques,resultado);
 				list = entrada->list;
 
 				while((bloque = list_get(list, ind))){
@@ -726,12 +734,21 @@ void liberarMemoria(int socket, char* paquete){
 									}
 
 									if(tipo == OP_OK){
+										header.type = LIBERAR_PAGINA;
+										header.length = sizeof(uint32_t)*2;
+
+										t_pedido_iniciar pedido;
+										pedido.pid = pid;
+										pedido.cant_pag = reserva->pag;
 										reserva->size -= sizeof(meta_bloque);
-										bloque = malloc(sizeof(meta_bloque));
-										bloque->used = false;
-										bloque->size = metadata.size;
-										bloque->pos = reserva->pag*pagina_size + sizeof(meta_bloque);
-										list_add(list, bloque);
+										free(list_remove(mem_dinamica,pos-1));
+
+										if(!list->elements_count){
+											free(list);
+											free(list_remove(bloques,resultado));
+										}
+										sendSocket(socketConexionMemoria, &header, &pedido);
+										recibir_paquete(socketConexionMemoria, &paquete, &tipo);
 										free(package);
 									}
 									else{
@@ -812,11 +829,23 @@ void abrirArchivo(int socketCpu, void* package){
 	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
 	printf("fd %d: \n", fd);
 
+	//mando mensaje a fs
 	header_t header;
-	header.length = sizeof(int);
-	header.type = ABRIR_ARCHIVO_OK;
+	header.length = string_length(direccion)+1;
+	header.type = CREAR_ARCHIVO;
 
-	sendSocket(socketCpu, &header, &fd);
+	sendSocket(socketConexionFS, &header, direccion);
+
+	int tipo, respuesta;
+	void* paquete;
+	recibir_paquete(socketConexionFS, &paquete, &tipo);
+
+	if(tipo == ABRIR_ARCHIVO_OK)
+		respuesta = ABRIR_ARCHIVO_OK;
+	else
+		respuesta = ERROR_ARCHIVO;
+
+	enviar_paquete_vacio(respuesta, socketCpu);
 }
 
 void borrarArchivo(int socketCpu, void* package){

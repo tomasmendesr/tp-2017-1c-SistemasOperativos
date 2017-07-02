@@ -119,6 +119,7 @@ void crearArchivo(void* package){
 		log_info(logger, "Se creo el archivo %s\n", pathArchivo);
 	}
 	free(pathArchivo);
+	enviar_paquete_vacio(ABRIR_ARCHIVO_OK, socketConexionKernel);
 }
 
 void borrarArchivo(void* package){
