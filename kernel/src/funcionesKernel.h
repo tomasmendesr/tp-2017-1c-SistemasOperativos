@@ -108,23 +108,33 @@ typedef struct{
 typedef struct{
 	bool used;
 	size_t size;
-}__attribute__((__packed__))metadata_bloque;
+}__attribute__((__packed__))meta_bloque;
 
 typedef struct{
 	uint32_t pid;
+	uint32_t pagBase;
 	uint32_t cant;
 }__attribute__((__packed__))pedido_mem;
 
+typedef struct{
+	bool used;
+	size_t size;
+	uint32_t pos;
+}__attribute__((__packed__))t_bloque;
+
+typedef struct{
+	uint32_t pid;
+	t_list* list;
+}t_entrada_datos;
+
 //para comunicacion con fs
-typedef struct
-{
+typedef struct{
 	char* path;
 	int offset;
 	int size;
 } pedido_obtener_datos;
 
-typedef struct
-{
+typedef struct{
 	char* path;
 	int offset;
 	int size;
@@ -282,7 +292,6 @@ int socketEscuchaConsolas;
 int max_fd;
 int valor[3];
 t_list* mem_dinamica;
-t_dictionary* bloques;
-t_list* datos;
+t_list* bloques;
 
 #endif /* FUNCIONESKERNEL_H_ */

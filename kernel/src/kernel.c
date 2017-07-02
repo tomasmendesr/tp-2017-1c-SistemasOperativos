@@ -133,6 +133,8 @@ void inicializaciones(void){
 	planificacionActivada = true;
 	pthread_cond_init(&lockCondicionPlanificacion, NULL);
 	pthread_mutex_init(&lockPlanificacion, NULL);
+	mem_dinamica = list_create();
+	bloques = list_create();
 	processFileTable = list_create();
 	globalFileTable = list_create();
 	max_archivo_fd = 3; // 0 1 2 estan reservados

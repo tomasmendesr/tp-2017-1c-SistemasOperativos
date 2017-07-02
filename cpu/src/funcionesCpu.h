@@ -31,8 +31,8 @@ typedef struct{
 }t_config_cpu;
 
 typedef struct{
-	size_t pos;
 	int32_t pid;
+	size_t pos;
 }t_liberar;
 
 t_pcb* pcb;
