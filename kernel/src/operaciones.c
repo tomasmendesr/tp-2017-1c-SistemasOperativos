@@ -144,6 +144,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case ARCHIVO_INEXISTENTE:
 		finalizacion_archivo_inexistente(package, socketCPU);
 		break;
+	case RESERVA_INSATISFECHA:
+		finalizacion_reservaNoPermitida(package, socketCPU);
+		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido.");
 	}
@@ -266,38 +269,45 @@ void finalizacion_segment_fault(void* paquete_from_cpu, int socket_cpu){
 }
 
 void finalizacion_error_memoria(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso %d por error en memoria", pcbRecibido->pid);
 	pcbRecibido->exitCode = ERROR_MEMORIA;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
 void finalizacion_semaforo_no_existe(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d por querer acceder a un semaforo no inicializado", pcbRecibido->pid);
 	pcbRecibido->exitCode = SEMAFORO_NO_EXISTE;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
 void finalizacion_global_no_definida(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso #%d por intentar acceder a un una variable global no definida", pcbRecibido->pid);
+	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
+	log_error(logger, "Finaliza el proceso #%d por intentar acceder a una variable global no definida", pcbRecibido->pid);
 	pcbRecibido->exitCode = GLOBAL_NO_DEFINIDA;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
 void finalizacion_null_pointer(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d por null pointer", pcbRecibido->pid);
 	pcbRecibido->exitCode = NULL_POINTER;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
 void finalizacion_archivo_inexistente(void* paquete_from_cpu, int socket_cpu){
-	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
+	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d intentar acceder a un archivo inexistente", pcbRecibido->pid);
 	pcbRecibido->exitCode = ARCHIVO_INEXISTENTE;
 	terminarProceso(pcbRecibido, socket_cpu);
+}
+
+void finalizacion_reservaNoPermitida(void* paquete, int socket){
+	t_pcb* pcb = deserializar_pcb(paquete);
+	log_error(logger, "Finaliza proceso #%d por tamano de reserva mayor al permitido", pcb->pid);
+	pcb->exitCode = RESERVA_INSATISFECHA;
+	terminarProceso(pcb, socket);
 }
 
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
@@ -422,10 +432,13 @@ void reservarMemoria(int socket, char* paquete){
 	int ind = 0;
 	int sizeBloque;
 	t_entrada_datos* entrada;
-
-	memcpy(&pedido_memoria, paquete, tamano);
 	void* package;
+	memcpy(&pedido_memoria, paquete, tamano);
 
+	if(pedido_memoria.cant > pagina_size - sizeof(meta_bloque)*2){
+		enviar_paquete_vacio(RESERVA_INSATISFECHA,socket);
+		return;
+	}
 	bool buscarEntrada(t_entrada_datos* entrada){
 		return entrada->pid == pedido_memoria.pid;
 	}
@@ -438,7 +451,7 @@ void reservarMemoria(int socket, char* paquete){
 			bool buscar(t_bloque* bloque){
 				return bloque->pos == posicion;
 			}
-			bloque=list_find(entrada->list,buscar);
+			bloque = list_find(entrada->list,buscar);
 			header = malloc(sizeof(header_t));
 			reserva->size -= pedido_memoria.cant+sizeof(meta_bloque);
 			header->type = GRABAR_BYTES;

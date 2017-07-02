@@ -209,6 +209,10 @@ int32_t requestHandlerKernel(void){
 			finalizarPor(ARCHIVO_INEXISTENTE);
 			finPrograma = true;
 			return -1;
+		case RESERVA_INSATISFECHA:
+			finalizarPor(RESERVA_INSATISFECHA);
+			finPrograma = true;
+			return -1;
 		default:
 			log_warning(logger, "Mensaje Recibido Incorrecto");
 			if(paquete)free(paquete);

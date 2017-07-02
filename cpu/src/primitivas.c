@@ -667,9 +667,10 @@ t_puntero reservar(t_valor_variable espacio){
 	}
 	var = requestHandlerKernel();
 	if(var == -1){
-		log_error(logger, "error al reservar memoria");
+		log_error(logger, "No se pudo realizar la reserva. Se finaliza el proceso");
 		free(header);
 		free(paquete);
+		return var;
 	}
 	valor = *(t_valor_variable*)paqueteGlobal;
 	free(paqueteGlobal);
