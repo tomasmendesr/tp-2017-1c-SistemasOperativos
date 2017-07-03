@@ -754,7 +754,6 @@ cpu_t *obtener_cpu_por_socket_asociado(int32_t soc_asociado){
 }
 
 void abrirArchivo(int32_t socketCpu, void* package){
-
 	uint32_t sizeDireccion,pid;
 	memcpy(&pid,package,sizeof(uint32_t));
 	memcpy(&sizeDireccion,package + sizeof(uint32_t),sizeof(uint32_t));

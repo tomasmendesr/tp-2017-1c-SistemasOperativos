@@ -747,7 +747,6 @@ void crearEntradaArchivoProceso(int32_t proceso){
 }
 
 int32_t agregarArchivo_aProceso(int32_t proceso, char* file, char* permisos){
-
 	bool buscar(entrada_tabla_archivo_proceso* entrada){
 		return entrada->proceso == proceso;
 	}
@@ -757,13 +756,6 @@ int32_t agregarArchivo_aProceso(int32_t proceso, char* file, char* permisos){
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscar);
 	entrada_tabla_globlal_archivo* entradaGlobal = list_find(globalFileTable, buscarArchivo);
 
-	t_archivo* archivo = malloc(sizeof(t_archivo));
-	archivo->flags = permisos;
-	archivo->fd = getArchivoFdMax(); //aca tengo que pasarselo a la cpu
-	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
-	archivo->cursor = 0;
-	list_add(entrada->archivos, archivo);
-
 	if(entradaGlobal == NULL){ // no existe
 		uint32_t sizeEntrada = strlen(file) + 1 + sizeof(int32_t) * 2;
 		entradaGlobal = malloc(sizeEntrada);
@@ -771,10 +763,16 @@ int32_t agregarArchivo_aProceso(int32_t proceso, char* file, char* permisos){
 		entradaGlobal->vecesAbierto = 1;
 		entradaGlobal->ubicacion = list_size(globalFileTable);
 		list_add(globalFileTable, entradaGlobal);
-
 	}else{ //existe en la tabla global
 		entradaGlobal->vecesAbierto++;
 	}
+	t_archivo* archivo = malloc(sizeof(t_archivo));
+	archivo->flags = permisos;
+	archivo->fd = getArchivoFdMax(); //aca tengo que pasarselo a la cpu
+	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
+	archivo->cursor = 0;
+	list_add(entrada->archivos, archivo);
+
 	return archivo->fd;
 }
 
@@ -783,7 +781,6 @@ void eliminarFd(int32_t fd, int32_t proceso){
 	bool buscarPorProceso(entrada_tabla_archivo_proceso* entrada){
 		return entrada->proceso == proceso ? true : false;
 	}
-
 	bool eliminar(t_archivo* archivo){
 		return archivo->fd == fd ? true : false;
 	}
