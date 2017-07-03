@@ -583,25 +583,22 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
  * @return	void
  */
 void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valor_variable tamanio){
-	log_debug(logger, "ANSISOP_leer");
-	void* paquete;
-	t_lectura lectura;
+	log_debug(logger, "ANSISOP_leer -> fd: %d - informacion: %d - tamanio: %d", descriptor_archivo, informacion, tamanio);
 	header_t header;
-	lectura.pid = pcb->pid;
-	lectura.descriptor = descriptor_archivo;
-	lectura.informacion = informacion;
-	lectura.size = tamanio;
+	t_lectura* lectura = malloc(sizeof(t_lectura));
+	lectura->pid = pcb->pid;
+	lectura->descriptor = descriptor_archivo;
+	lectura->informacion = informacion;
+	lectura->size = tamanio;
 	header.type = LEER_ARCHIVO;
 	header.length = sizeof(t_lectura);
-	paquete = malloc(header.length);
-	memcpy(paquete, &lectura, header.length);
 
-	if(sendSocket(socketConexionKernel, &header, paquete) <= 0){
-		if(paquete)free(paquete);
+	if(sendSocket(socketConexionKernel, &header, lectura) <= 0){
+		free(lectura);
 		finalizarCPU();
 	}
+	free(lectura);
 	requestHandlerKernel();
-	if(paquete)free(paquete);
 }
 
 /*

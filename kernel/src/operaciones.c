@@ -110,7 +110,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		escribir(package, socketCPU);
 		break;
 	case LEER_ARCHIVO:
-		leerArchivo(socketCPU, package);
+		leerArchivo(socketCPU, (t_lectura*) package);
 		break;
 	case MOVER_CURSOR:
 		moverCursor(socketCPU, (t_cursor*) package);
@@ -129,13 +129,12 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case STACKOVERFLOW:
 		finalizacion_stackoverflow(package, socketCPU);
 		break;
-	case FALLA_RESERVAR_RECURSOS:
 	case ERROR_MEMORIA:
 	case SEMAFORO_NO_EXISTE:
 	case GLOBAL_NO_DEFINIDA:
 	case NULL_POINTER:
 	case ARCHIVO_INEXISTENTE:
-	case RESERVA_INSATISFECHA:
+	case FALLA_RESERVAR_RECURSOS:
 		finalizacion_error(package, socketCPU, mensaje);
 		break;
 	default:
@@ -393,7 +392,7 @@ void reservarMemoria(int socket, char* paquete){
 	memcpy(&pedido_memoria, paquete, tamano);
 
 	if(pedido_memoria.cant > pagina_size - sizeof(meta_bloque)*2){
-		enviar_paquete_vacio(RESERVA_INSATISFECHA,socket);
+		enviar_paquete_vacio(FALLA_RESERVAR_RECURSOS,socket);
 		return;
 	}
 	bool buscarEntrada(t_entrada_datos* entrada){
@@ -766,7 +765,6 @@ void abrirArchivo(int socketCpu, void* package){
 	if(banderas->lectura) string_append(&permisos, "L");
 
 	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
-
 	//mando mensaje a fs
 	header_t header;
 	header.length = string_length(direccion)+1;
@@ -774,16 +772,18 @@ void abrirArchivo(int socketCpu, void* package){
 
 	sendSocket(socketConexionFS, &header, direccion);
 
-	int tipo, respuesta;
+	int tipo;
 	void* paquete;
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
 
-	if(tipo == ABRIR_ARCHIVO_OK)
-		respuesta = ABRIR_ARCHIVO_OK;
+	if(tipo == ABRIR_ARCHIVO_OK){
+		header_t header;
+		header.type = ABRIR_ARCHIVO_OK;
+		header.length = sizeof(int);
+		sendSocket(socketCpu, &header, &fd);
+	}
 	else
-		respuesta = ARCHIVO_INEXISTENTE;
-
-	enviar_paquete_vacio(respuesta, socketCpu);
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
 }
 
 void borrarArchivo(int socketCpu, void* package){
@@ -885,27 +885,30 @@ void escribir(void* paquete, int socketCpu){
 	}
 }
 
-void leerArchivo(int socketCpu, void* package){
-	int offset = 0;
-	uint32_t fd = *(uint32_t*)package; offset += sizeof(uint32_t);
-	int pid = *(int*) (package + offset); offset += sizeof(int);
-	int size = *(int*) (package + offset);
-
-	t_archivo* archivo = buscarArchivo(pid, fd);
+void leerArchivo(int socketCpu, t_lectura* lectura){
+	t_archivo* archivo = buscarArchivo(lectura->pid, lectura->descriptor);
+	if(archivo == NULL){
+		log_error(logger, "No se encontro el archivo");
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+		return;
+	}
 	int offsetPedidoLectura = archivo->cursor;
+	char* path = buscarPathDeArchivo(lectura->descriptor);
+	uint32_t sizePath = strlen(path) + 1;
+	uint32_t sizeTotal = sizeof(uint32_t) * 3 + sizePath;
+	void* buffer = malloc(sizeTotal);
 
-	char* path = buscarPathDeArchivo(fd);
-	void* buffer = malloc(2*sizeof(int)+strlen(path));
-
-	offset = 0;
-	memcpy(&offsetPedidoLectura, buffer, sizeof(int)); offset += sizeof(int);
-	memcpy(&size, buffer+offset, sizeof(int)); offset += sizeof(int);
-	int sizePath = strlen(path);
-	memcpy(&sizePath, buffer+offset, sizeof(int)); offset += sizeof(int);
-	memcpy(path, buffer+offset, strlen(path));
+	uint32_t offset = 0;
+	memcpy(buffer, &offsetPedidoLectura, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(buffer+offset, &(lectura->size), sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(buffer+offset, &sizePath, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(buffer+offset, path, sizePath);
 
 	header_t header;
-	header.length = 2*sizeof(int)+strlen(path);
+	header.length = sizeTotal;
 	header.type = OBTENER_DATOS;
 
 	sendSocket(socketConexionFS, &header, buffer);
@@ -914,11 +917,12 @@ void leerArchivo(int socketCpu, void* package){
 	int tipo;
 
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
-	if(tipo == LEER_ARCHIVO_OK){
-		header.length = size;
-		header.type = LEER_ARCHIVO_OK;
+	if(tipo == LECTURA_OK){
+		header.length = lectura->size;
+		header.type = LECTURA_OK;
 		sendSocket(socketCpu, &header, paquete);
 	}else{
+		log_error(logger, "File system no pudo leer el archivo");
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
 	}
 

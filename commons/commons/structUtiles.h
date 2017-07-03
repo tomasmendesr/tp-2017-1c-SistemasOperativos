@@ -96,10 +96,10 @@ typedef struct{
 }__attribute__((__packed__))t_descriptor;
 
 typedef struct{
-	uint16_t pid;
+	uint32_t pid;
 	int32_t descriptor;
 	uint32_t informacion;
-	size_t size;
+	uint32_t size;
 }__attribute__((__packed__))t_lectura;
 
 typedef struct{

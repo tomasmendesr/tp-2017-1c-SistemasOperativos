@@ -22,7 +22,7 @@ AnSISOP_kernel kernel_functions = { .AnSISOP_abrir =abrir, .AnSISOP_borrar = bor
 };
 
 int crearLog(void){
-	logger = log_create("../logCpu","cpu", 0, LOG_LEVEL_TRACE);
+	logger = log_create("../logCpu","cpu", 1, LOG_LEVEL_TRACE);
 	if(logger)
 		return 1;
 	else
@@ -199,7 +199,6 @@ int32_t requestHandlerKernel(void){
 		case GLOBAL_NO_DEFINIDA:
 		case NULL_POINTER:
 		case ARCHIVO_INEXISTENTE:
-		case RESERVA_INSATISFECHA:
 		case FALLA_RESERVAR_RECURSOS:
 			finalizarPor(header.type);
 			finPrograma = true;
