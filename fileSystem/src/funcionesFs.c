@@ -237,7 +237,6 @@ void obtenerDatos(void* package){
 	t_config* c = config_create(path);
 	char** bloques = config_get_array_value(c, "BLOQUES");
 
-	printf("pase");
 	int offsetBloque, bytesLeidos = 0, restoBloque;
 
 	offsetBloque = (pedido->offset % conf->tamanio_bloque);
@@ -255,7 +254,6 @@ void obtenerDatos(void* package){
 		log_info(logger, "accedo al bloque %d", bloque);
 
 		leerArchivo(bloque, buffer+bytesLeidos, restoBloque, offsetBloque);
-
 		bytesLeidos += restoBloque;
 
 		j++;
@@ -264,7 +262,6 @@ void obtenerDatos(void* package){
 
 		offsetBloque = 0;
 	}
-
 
 	header_t header;
 	header.length = pedido->size;
