@@ -354,7 +354,7 @@ int reservarFrames(int pid, int cantPag){
 
 	pthread_mutex_lock(&tablaPag_mutex);
 
-	int maxPag = 0;
+	int maxPag = -1;
 	int i;
 
 	esperar();//Accedo a tabla de paginas->memoria
@@ -364,6 +364,8 @@ int reservarFrames(int pid, int cantPag){
 		if(tabla_pag[i].pid == pid && tabla_pag[i].pag > maxPag)
 			maxPag = tabla_pag[i].pag;
 	}
+
+	maxPag++;
 
 	//Asigno las paginas que me piden
 	int asignadas = 0;
