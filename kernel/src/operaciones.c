@@ -1,10 +1,10 @@
 #include "operaciones.h"
 
-void trabajarMensajeConsola(int socketConsola){
+void trabajarMensajeConsola(int32_t socketConsola){
 
-	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	int32_t tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
-	int check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
+	int32_t check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
 
 	FD_SET(socketConsola, &setConsolas);
 
@@ -21,7 +21,7 @@ void trabajarMensajeConsola(int socketConsola){
 
 }
 
-void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
+void procesarMensajeConsola(int32_t consola_fd, int32_t mensaje, char* package){
 	proceso_en_espera_t* nuevoProceso;
 
 	switch(mensaje){
@@ -49,11 +49,11 @@ void procesarMensajeConsola(int consola_fd, int mensaje, char* package){
 	}
 }
 
-void trabajarMensajeCPU(int socketCPU){
+void trabajarMensajeCPU(int32_t socketCPU){
 
-	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	int32_t tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
-	int check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
+	int32_t check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
 
 	//Chequeo de errores
 	if(check <= 0){
@@ -70,7 +70,7 @@ void trabajarMensajeCPU(int socketCPU){
 	FD_SET(socketCPU, &setCPUs);
 }
 
-void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
+void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 	switch(mensaje){
 	case HANDSHAKE_CPU:
 		log_info(logger,"Conexion con nueva CPU establecida");
@@ -146,14 +146,14 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	}
 }
 
-void leerVarCompartida(int socketCPU, char* variable){
+void leerVarCompartida(int32_t socketCPU, char* variable){
 	if(dictionary_has_key(config->variablesGlobales, variable)){
 		if(dictionary_get(config->variablesGlobales, variable) == NULL){
 			log_error(logger, "El valor de %s es NULL", variable);
 			 enviar_paquete_vacio(NULL_POINTER, socketCPU);
 		}
 		else{
-			int valor = leerVariableGlobal(config->variablesGlobales, variable);
+			int32_t valor = leerVariableGlobal(config->variablesGlobales, variable);
 			header_t* header = malloc(sizeof(header_t));
 			header->type = VALOR_VAR_COMPARTIDA;
 			header->length = sizeof(valor);
@@ -166,9 +166,9 @@ void leerVarCompartida(int socketCPU, char* variable){
 	}
 }
 
-void asignarVarCompartida(int socketCPU, void* buffer){
+void asignarVarCompartida(int32_t socketCPU, void* buffer){
 	char* variable;
-	int valor, sizeVariable;
+	int32_t valor, sizeVariable;
 	memcpy(&sizeVariable, buffer, 4);
 	variable = malloc(sizeof(sizeVariable));
 	memcpy(variable, buffer+4, sizeVariable);
@@ -185,7 +185,7 @@ void asignarVarCompartida(int socketCPU, void* buffer){
 	}
 }
 
-void realizarSignal(int socketCPU, char* key){
+void realizarSignal(int32_t socketCPU, char* key){
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	if(dictionary_has_key(config->semaforos, key)){
 		if(dictionary_get(config->semaforos, key) == NULL){
@@ -194,7 +194,7 @@ void realizarSignal(int socketCPU, char* key){
 			 return;
 		}
 		else{
-			int valor = semaforoSignal(config->semaforos, key);
+			int32_t valor = semaforoSignal(config->semaforos, key);
 			if(valor <= 0){
 				desbloquearProceso(key);
 				log_info(logger, "Desbloqueo un proceso");
@@ -208,8 +208,8 @@ void realizarSignal(int socketCPU, char* key){
 	}
 }
 
-void realizarWait(int socketCPU, char* key){
-	int resultado;
+void realizarWait(int32_t socketCPU, char* key){
+	int32_t resultado;
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 
 	if(dictionary_has_key(config->semaforos,key)){
@@ -219,7 +219,7 @@ void realizarWait(int socketCPU, char* key){
 			 return;
 		}
 		else{
-			int valor = semaforoWait(config->semaforos, key);
+			int32_t valor = semaforoWait(config->semaforos, key);
 			if(valor < 0) resultado = WAIT_DETENER_EJECUCION;
 			else resultado = WAIT_SEGUIR_EJECUCION;
 
@@ -227,7 +227,7 @@ void realizarWait(int socketCPU, char* key){
 
 			if(resultado == WAIT_DETENER_EJECUCION){ //recibo el pcb
 
-				int tipo_mensaje;
+				int32_t tipo_mensaje;
 				void* paquete;
 				recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
 				if(tipo_mensaje == PROC_BLOCKED){
@@ -248,14 +248,14 @@ void realizarWait(int socketCPU, char* key){
 	}
 }
 
-void finalizarPrograma(int consola_fd, int pid){
+void finalizarPrograma(int32_t consola_fd, int32_t pid){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->matarSiguienteRafaga = true;
 	info->exitCode = FINALIZAR_DESDE_CONSOLA;
 	log_info(logger, "Se termina la ejecucion del proceso %d por comando STOP", pid);
 }
 
-void finalizacion_segment_fault(void* paquete_from_cpu, int socket_cpu){
+void finalizacion_segment_fault(void* paquete_from_cpu, int32_t socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso %d por segment fautt", pcbRecibido->pid);
 	pcbRecibido->exitCode = SUPERA_LIMITE_ASIGNACION_PAGINAS;
@@ -263,21 +263,21 @@ void finalizacion_segment_fault(void* paquete_from_cpu, int socket_cpu){
 }
 
 
-void finalizacion_error(void* paquete_from_cpu, int socket_cpu, int exitCode){
+void finalizacion_error(void* paquete_from_cpu, int32_t socket_cpu, int32_t exitCode){
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d por error", pcbRecibido->pid);
 	pcbRecibido->exitCode = exitCode;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
-void finalizacion_faltaEspacio(void* paquete, int socket){
+void finalizacion_faltaEspacio(void* paquete, int32_t socket){
 	t_pcb* pcb = deserializar_pcb(paquete);
 	log_error(logger, "Finaliza proceso #%d por falta de espacio en Memoria", pcb->pid);
 	pcb->exitCode = FALLA_RESERVAR_RECURSOS;
 	terminarProceso(pcb, socket);
 }
 
-void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
+void terminarProceso(t_pcb* pcbRecibido, int32_t socket_cpu){
 	//modifico informacion estadistica
 	estadisticaAumentarRafaga(pcbRecibido->pid);
 	log_info(logger, "Proceso %d agregado a la cola de FINISHED", pcbRecibido->pid);
@@ -309,14 +309,14 @@ void terminarProceso(t_pcb* pcbRecibido, int socket_cpu){
 	planificarLargoPlazo();
 }
 
-void finalizacion_stackoverflow(void* paquete_from_cpu, int socket_cpu){
+void finalizacion_stackoverflow(void* paquete_from_cpu, int32_t socket_cpu){
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso %d por stack overflow", pcbRecibido->pid);
 	pcbRecibido->exitCode = SUPERO_TAMANIO_PAGINA;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
-void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
+void finalizacion_quantum(void* paquete_from_cpu, int32_t socket_cpu) {
 	t_pcb* pcb_recibido =  deserializar_pcb(paquete_from_cpu);
 	log_debug(logger, "Fin de quantum proceso %d", pcb_recibido->pid);
 
@@ -348,7 +348,7 @@ void finalizacion_quantum(void* paquete_from_cpu, int socket_cpu) {
 	desocupar_cpu(socket_cpu);
 }
 
-void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado) {
+void finalizacion_proceso(void* paquete_from_cpu, int32_t socket_cpu_asociado) {
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_debug(logger, "Finalizar proceso %d por fin de ejecucion", pcbRecibido->pid);
 
@@ -358,8 +358,8 @@ void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado) {
 
 t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
 
-	uint ind=0;
-	uint offset=0;
+	uint32_t ind=0;
+	uint32_t offset=0;
 	t_list* datos;
 	t_entrada_datos* entrada;
 	t_bloque* bloque;
@@ -384,20 +384,20 @@ t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
 	return 0;
 }
 
-void reservarMemoria(int socket, char* paquete){
+void reservarMemoria(int32_t socket, char* paquete){
 	pedido_mem pedido_memoria;
 	t_puntero posicion;
 	header_t* header;
-	int resultado;
-	int pid, pag, cant;
+	int32_t resultado;
+	int32_t pid, pag, cant;
 	size_t tamano = sizeof(uint32_t)*3;
 	meta_bloque metadata;
 	t_bloque* bloque;
 	reserva_memoria* reserva;
 	t_pedido_iniciar* pedido;
 	t_pedido_bytes bytes;
-	int ind = 0;
-	int sizeBloque;
+	int32_t ind = 0;
+	int32_t sizeBloque;
 	t_entrada_datos* entrada;
 	void* package;
 	memcpy(&pedido_memoria, paquete, tamano);
@@ -580,9 +580,9 @@ void reservarMemoria(int socket, char* paquete){
 	}
 }
 
-int buscarEntrada(uint32_t pid){
+int32_t buscarEntrada(uint32_t pid){
 	t_entrada_datos* item;
-	int k;
+	int32_t k;
 	for(k=0; k<bloques->elements_count; k++){
 		item = list_get(bloques,k);
 		if(item->pid == pid) return k;
@@ -590,16 +590,16 @@ int buscarEntrada(uint32_t pid){
 	return -1;
 }
 
-void liberarMemoria(int socket, char* paquete){
+void liberarMemoria(int32_t socket, char* paquete){
 	t_pedido_bytes pedido;
 	header_t header;
 	void* package;
-	int tipo;
-	int pid, posicion;
+	int32_t tipo;
+	int32_t pid, posicion;
 	size_t size;
 	meta_bloque metadata;
 	size = sizeof(t_pedido_bytes);
-	int tamano = sizeof(uint32_t);
+	int32_t tamano = sizeof(uint32_t);
 	reserva_memoria* reserva;
 	t_list* list;
 	t_bloque* bloque;
@@ -731,7 +731,7 @@ void liberarMemoria(int socket, char* paquete){
 	enviar_paquete_vacio(NULL_POINTER,socket);
 }
 
-void desocupar_cpu(int socket_asociado) {
+void desocupar_cpu(int32_t socket_asociado) {
 
 	sem_wait(&mutex_lista_CPUs);
 	cpu_t *cpu = obtener_cpu_por_socket_asociado(socket_asociado);
@@ -747,7 +747,7 @@ void desocupar_cpu(int socket_asociado) {
  * @NAME: obtener_cpu_por_socket_asociado
  * @DESC: Devuelve un puntero al cpu asociado a soc_asociado, si no lo encuentra devuelve NULL.
  */
-cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
+cpu_t *obtener_cpu_por_socket_asociado(int32_t soc_asociado){
 
 	cpu_t *cpu_asociado = NULL;
 
@@ -764,9 +764,11 @@ cpu_t *obtener_cpu_por_socket_asociado(int soc_asociado){
 	return cpu_asociado;
 }
 
-void abrirArchivo(int socketCpu, void* package){
-	uint32_t pid = *(uint32_t*) package;
-	uint32_t sizeDireccion = *(uint32_t*) (package + sizeof(uint32_t));
+void abrirArchivo(int32_t socketCpu, void* package){
+
+	uint32_t sizeDireccion,pid;
+	memcpy(&pid,package,sizeof(uint32_t));
+	memcpy(&sizeDireccion,package + sizeof(uint32_t),sizeof(uint32_t));
 	char* direccion = package + (sizeof(uint32_t) * 2);
 	t_banderas* banderas = package + sizeof(uint32_t) * 2  + sizeDireccion;
 
@@ -775,7 +777,7 @@ void abrirArchivo(int socketCpu, void* package){
 	if(banderas->escritura) string_append(&permisos, "E");
 	if(banderas->lectura) string_append(&permisos, "L");
 
-	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
+	int32_t fd = agregarArchivo_aProceso(pid, direccion, permisos);
 
 	//mando mensaje a fs
 	header_t header;
@@ -784,7 +786,7 @@ void abrirArchivo(int socketCpu, void* package){
 
 	sendSocket(socketConexionFS, &header, direccion);
 
-	int tipo, respuesta;
+	int32_t tipo, respuesta;
 	void* paquete;
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
 
@@ -796,9 +798,9 @@ void abrirArchivo(int socketCpu, void* package){
 	enviar_paquete_vacio(respuesta, socketCpu);
 }
 
-void borrarArchivo(int socketCpu, void* package){
-	uint32_t fd = *(uint32_t*)package;
-	int pid = *(int*) (package + sizeof(uint32_t));
+void borrarArchivo(int32_t socketCpu, void* package){
+	uint32_t fd = *(uint32_t*) package;
+	int32_t pid = *(int32_t*) (package + sizeof(uint32_t));
 
 	char* path = buscarPathDeArchivo(fd);
 
@@ -808,11 +810,11 @@ void borrarArchivo(int socketCpu, void* package){
 
 	sendSocket(socketConexionFS, &header, path);
 
-	int tipo;
+	int32_t tipo;
 	void* paquete;
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
 
-	int respuesta;
+	int32_t respuesta;
 
 	if(tipo == BORRAR_ARCHIVO_OK)
 		respuesta = BORRAR_ARCHIVO_OK;
@@ -823,26 +825,26 @@ void borrarArchivo(int socketCpu, void* package){
 
 }
 
-void cerrarArchivo(int socketCpu, void* package){
-	uint32_t fd = *(uint32_t*)package;
-	int pid = *(int*) (package + sizeof(uint32_t));
+void cerrarArchivo(int32_t socketCpu, void* package){
+	uint32_t fd = *(uint32_t*) package;
+	int32_t pid = *(int32_t*) (package + sizeof(uint32_t));
 
 	eliminarFd(fd, pid);
 
 	enviar_paquete_vacio(CERRAR_ARCHIVO_OK, socketCpu);
 }
 
-void escribir(void* paquete, int socketCpu){
+void escribir(void* paquete, int32_t socketCpu){
 	uint32_t fd = *(uint32_t*) paquete;
-	int pid = *(int*) (paquete + sizeof(uint32_t));
-	int sizeEscritura = *(int*) (paquete + sizeof(uint32_t) + sizeof(int));
+	int32_t pid = *(int32_t*) (paquete + sizeof(uint32_t));
+	int32_t sizeEscritura = *(int32_t*) (paquete + sizeof(uint32_t) + sizeof(int));
 	char* escritura = paquete + sizeof(int) * 2  + sizeof(uint32_t);
 
 	info_estadistica_t * info = buscarInformacion(pid);
 	header_t header;
 
 	if(fd == 1){
-		int sizePedido = sizeof(int) + strlen(escritura) + 1;
+		int32_t sizePedido = sizeof(int) + strlen(escritura) + 1;
 
 		header.type=IMPRIMIR_POR_PANTALLA;
 		header.length= sizePedido;
@@ -860,10 +862,10 @@ void escribir(void* paquete, int socketCpu){
 			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
 			return;
 		}
-		int offsetEscritura = archivo->cursor;
+		int32_t offsetEscritura = archivo->cursor;
 		char* path = buscarPathDeArchivo(fd);
 		void * buffer = malloc(2*sizeof(int)+strlen(path)+strlen(escritura));
-		int offset = 0, sizePath;//, sizeEscritura;
+		int32_t offset = 0, sizePath;//, sizeEscritura;
 
 
 		memcpy(&offsetEscritura, buffer, sizeof(int)); offset += sizeof(int);
@@ -883,7 +885,7 @@ void escribir(void* paquete, int socketCpu){
 		free(buffer);
 
 		void* paquete;
-		int tipo;
+		int32_t tipo;
 
 		recibir_paquete(socketConexionFS, &paquete, &tipo);
 		if(tipo == ESCRITURA_OK){
@@ -895,14 +897,14 @@ void escribir(void* paquete, int socketCpu){
 	}
 }
 
-void leerArchivo(int socketCpu, void* package){
-	int offset = 0;
+void leerArchivo(int32_t socketCpu, void* package){
+	int32_t offset = 0;
 	uint32_t fd = *(uint32_t*)package; offset += sizeof(uint32_t);
-	int pid = *(int*) (package + offset); offset += sizeof(int);
-	int size = *(int*) (package + offset);
+	int32_t pid = *(int*) (package + offset); offset += sizeof(int);
+	int32_t size = *(int*) (package + offset);
 
 	t_archivo* archivo = buscarArchivo(pid, fd);
-	int offsetPedidoLectura = archivo->cursor;
+	int32_t offsetPedidoLectura = archivo->cursor;
 
 	char* path = buscarPathDeArchivo(fd);
 	void* buffer = malloc(2*sizeof(int)+strlen(path));
@@ -910,7 +912,7 @@ void leerArchivo(int socketCpu, void* package){
 	offset = 0;
 	memcpy(&offsetPedidoLectura, buffer, sizeof(int)); offset += sizeof(int);
 	memcpy(&size, buffer+offset, sizeof(int)); offset += sizeof(int);
-	int sizePath = strlen(path);
+	int32_t sizePath = strlen(path);
 	memcpy(&sizePath, buffer+offset, sizeof(int)); offset += sizeof(int);
 	memcpy(path, buffer+offset, strlen(path));
 
@@ -921,7 +923,7 @@ void leerArchivo(int socketCpu, void* package){
 	sendSocket(socketConexionFS, &header, buffer);
 
 	void* paquete;
-	int tipo;
+	int32_t tipo;
 
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
 	if(tipo == LEER_ARCHIVO_OK){
@@ -934,7 +936,7 @@ void leerArchivo(int socketCpu, void* package){
 
 }
 
-void moverCursor(int socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
+void moverCursor(int32_t socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
 	t_archivo* archivo = buscarArchivo(cursor->pid, cursor->descriptor);
 	if(archivo == NULL){
 		log_error(logger, "No se encontro el archivo para escribir");
@@ -946,7 +948,7 @@ void moverCursor(int socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
 	enviar_paquete_vacio(MOVER_CURSOR_OK, socketCPU);
 }
 
-void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber varios procesos
+void verificarProcesosConsolaCaida(int32_t socketConsola){ // TODO pueden haber varios procesos
 	info_estadistica_t* info = buscarInformacionPorSocketConsola(socketConsola);
 	if(info->estado != FINISH){
 		info->matarSiguienteRafaga = true;
@@ -955,7 +957,7 @@ void verificarProcesosConsolaCaida(int socketConsola){ // TODO pueden haber vari
 	}
 }
 
-info_estadistica_t* buscarInformacionPorSocketConsola(int socketConsola){
+info_estadistica_t* buscarInformacionPorSocketConsola(int32_t socketConsola){
 
 	bool buscar(info_estadistica_t* info){
 		return info->socketConsola == socketConsola ? true : false;//&& (info->estado != FINISH) ? true : false;

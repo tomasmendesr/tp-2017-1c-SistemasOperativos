@@ -452,7 +452,10 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	free(header);
 	free(paquete);
 	//espero respuesta
-	requestHandlerKernel();
+	int var = requestHandlerKernel();
+	if(var == -1){
+		return -1;
+	}
 
 	//recibo el descriptor del archivo abierto
 	t_descriptor_archivo fd = *(t_descriptor_archivo*)paqueteGlobal;

@@ -9,7 +9,7 @@ void inicializarColas(){
 	max_pid = 0;
 }
 
-void crearConfig(int argc, char* argv[]){
+void crearConfig(int32_t argc, char* argv[]){
 	if(argc>1){
 			if(verificarExistenciaDeArchivo(argv[1])){
 				config=levantarConfiguracionKernel(argv[1]);
@@ -82,7 +82,7 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         return conf;
 }
 
-void enviarTamanioStack(int fd){
+void enviarTamanioStack(int32_t fd){
 	header_t* header=malloc(sizeof(header_t));
 	header->type=TAMANIO_STACK_PARA_CPU;
 	header->length=sizeof(config->stack_Size);
@@ -90,7 +90,7 @@ void enviarTamanioStack(int fd){
 	free(header);
 }
 
-void enviarQuantumSleep(int fd){
+void enviarQuantumSleep(int32_t fd){
 	header_t* header=malloc(sizeof(header_t));
 	header->type = QUANTUM_SLEEP;
 	header->length=sizeof( config->quantum_Sleep);
@@ -98,7 +98,7 @@ void enviarQuantumSleep(int fd){
 	free(header);
 }
 
-proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
+proceso_en_espera_t* crearProcesoEnEspera(int32_t consola_fd, char* source){
 
 	proceso_en_espera_t* proc = malloc(sizeof(proceso_en_espera_t));
 	proc->socketConsola = consola_fd;
@@ -111,12 +111,12 @@ proceso_en_espera_t* crearProcesoEnEspera(int consola_fd, char* source){
 	return proc;
 }
 
-int asignarPid(void){
+int32_t asignarPid(void){
 	max_pid++;
 	return max_pid;
 }
 
-int conexionConFileSystem(void){
+int32_t conexionConFileSystem(void){
 
 	socketConexionFS = createClient(config->ip_FS, config->puerto_FS);
 
@@ -131,7 +131,7 @@ int conexionConFileSystem(void){
 	return 1;
 }
 
-int conexionConMemoria(void){
+int32_t conexionConMemoria(void){
 
 	socketConexionMemoria = createClient(config->ip_Memoria, config->puerto_Memoria);
 
@@ -141,7 +141,7 @@ int conexionConMemoria(void){
 
 	enviar_paquete_vacio(HANDSHAKE_KERNEL,socketConexionMemoria);
 
-	int respuesta;
+	int32_t respuesta;
 	char* paquete;
 
 	recibir_paquete(socketConexionMemoria, &paquete, &respuesta);
@@ -184,7 +184,7 @@ t_dictionary* crearDiccionarioConValue(char** array, char** valores){
 t_dictionary* crearDiccionario(char** array){
 
         t_dictionary* dic = dictionary_create();
-        int j = 0;
+        int32_t j = 0;
         while(array[j] != NULL){
 			dictionary_put(dic, array[j], 0);
 			j++;
@@ -237,33 +237,33 @@ void modificarValorDiccionario(t_dictionary* dic, char* key, void* data){
 	dictionary_put(dic, key, data);
 }
 
-int leerVariableGlobal(t_dictionary* dic, char* key){
+int32_t leerVariableGlobal(t_dictionary* dic, char* key){
 	int* valor = dictionary_get(dic, key);
 	if(valor == NULL) return NULL;
 	else return (int) *valor;
 }
 
-void escribirVariableGlobal(t_dictionary* dic, char* key, int nuevoValor){
+void escribirVariableGlobal(t_dictionary* dic, char* key, int32_t nuevoValor){
 	log_debug(logger, "Se asigna el valor %d a la variable %s", nuevoValor, key);
 	modificarValorDiccionario(dic, key, &nuevoValor);
 }
 
-int semaforoSignal(t_dictionary* dic, char* key){
+int32_t semaforoSignal(t_dictionary* dic, char* key){
 	int32_t* previo = dictionary_get(dic, key);
 	return ++*previo;
 }
 
-int semaforoWait(t_dictionary* dic, char* key){
+int32_t semaforoWait(t_dictionary* dic, char* key){
 	int32_t* previo = dictionary_get(dic, key);
 	return --*previo;
 }
 
 void listProcesses(char* comando, char* param){
 
-	int estado;
+	int32_t estado;
 
 	void listarProcesos(info_estadistica_t* info){
-		int cant = 0;
+		int32_t cant = 0;
 		if(info->estado == estado){
 			printf("Proceso pid: %d\n", info->pid);
 			cant++;
@@ -318,7 +318,7 @@ void processInfo(char* comando, char* param){
 		return;
 	}
 
-	int pid = atoi(param);
+	int32_t pid = atoi(param);
 
 	bool buscar(info_estadistica_t* info){
 		return info->pid == pid ? true : false;
@@ -375,7 +375,7 @@ void killProcess(char* comando, char* param){
         	printf("ingrese un valor valido\n");
         	return;
         }
-        int pid = atoi(param);
+        int32_t pid = atoi(param);
         info_estadistica_t* info = buscarInformacion(pid);
         if(info == NULL){
         	printf("Ese proceso no se encuentra en el sistema\n");
@@ -414,7 +414,7 @@ void showHelp(char* comando, char* param){
  	puts("help            - muestra comandos y descripciones");
 }
 
-void agregarNuevaCPU(t_list* lista, int socketCPU){
+void agregarNuevaCPU(t_list* lista, int32_t socketCPU){
 	cpu_t* nuevaCPU = malloc(sizeof(cpu_t));
 	nuevaCPU->socket = socketCPU;
 	nuevaCPU->pcb = NULL;
@@ -429,7 +429,7 @@ void liberarCPU(cpu_t* cpu){
 	free(cpu);
 }
 
-void eliminarCPU(t_list* lista, int socketCPU){
+void eliminarCPU(t_list* lista, int32_t socketCPU){
 
 	bool condicion(cpu_t* cpu){
 		return cpu->socket == socketCPU ? true : false;
@@ -438,7 +438,7 @@ void eliminarCPU(t_list* lista, int socketCPU){
 	list_remove_and_destroy_by_condition(lista, condicion, liberarCPU);
 }
 
-void actualizarReferenciaPCB(int id, t_pcb* pcb){
+void actualizarReferenciaPCB(int32_t id, t_pcb* pcb){
 
 	bool condicion(cpu_t* cpu){
 		return cpu->socket == id ? true : false;
@@ -491,14 +491,14 @@ void planificarCortoPlazo(void){
 	}
 }
 
-void enviarPcbCPU(t_pcb* pcb, int socketCPU){
+void enviarPcbCPU(t_pcb* pcb, int32_t socketCPU){
 	t_buffer_tamanio* buffer = serializar_pcb(pcb);
 	header_t header;
 	header.type = EXEC_PCB;
 	header.length = buffer->tamanioBuffer;
 	sendSocket(socketCPU, &header, buffer->buffer);
 
-	int quantum = 0;
+	int32_t quantum = 0;
 	header.type=EXEC_QUANTUM;
 	if(!strcmp(config->algoritmo, "RR")){
 		quantum = config->quantum;
@@ -510,8 +510,8 @@ void enviarPcbCPU(t_pcb* pcb, int socketCPU){
 void planificarLargoPlazo(void){
 	if(cantProcesosSistema < config->grado_MultiProg && queue_size(colaNew) != 0){
 		bool finCola;
-		int cantProcChequeados = 0;
-		int cantidadDeProcesosEnNew = queue_size(colaNew);
+		int32_t cantProcChequeados = 0;
+		int32_t cantidadDeProcesosEnNew = queue_size(colaNew);
 		while(!finCola && (cantProcesosSistema < config->grado_MultiProg) ){
 
 			cantProcChequeados++;
@@ -526,10 +526,10 @@ void planificarLargoPlazo(void){
 
 			//creo el pedido para la memoria
 			t_pedido_iniciar pedido;
-			int pid = proc->pid;
+			int32_t pid = proc->pid;
 			t_pcb* pcb = crearPCB(proc->codigo,pid,proc->socketConsola);
 
-			int cant_pag_cod = strlen(proc->codigo) / pagina_size;
+			int32_t cant_pag_cod = strlen(proc->codigo) / pagina_size;
 			if(strlen(proc->codigo) % pagina_size > 0)
 				cant_pag_cod++;
 
@@ -543,7 +543,7 @@ void planificarLargoPlazo(void){
 			sendSocket(socketConexionMemoria, &header, &pedido);
 
 			void* paquete;
-			int resultado;
+			int32_t resultado;
 
 			//evaluo respuesta
 			recibir_paquete(socketConexionMemoria, &paquete, &resultado);
@@ -551,7 +551,7 @@ void planificarLargoPlazo(void){
 			if(resultado == SIN_ESPACIO){
 				//aviso a consola que se rechazo
 				log_error(logger, "Proceso %d rechazado porque no hay espacio en memoria", pid);
-				int exitCode = FALLA_RESERVAR_RECURSOS;
+				int32_t exitCode = FALLA_RESERVAR_RECURSOS;
 				header_t header;
 				header.type = PROCESO_RECHAZADO;
 				header.length = sizeof(int) * 2;
@@ -590,15 +590,15 @@ void planificarLargoPlazo(void){
 	}
 }
 
-void alertarConsolaProcesoAceptado(int* pid, int socketConsola){
+void alertarConsolaProcesoAceptado(int* pid, int32_t socketConsola){
 	header_t header;
 	header.type = PID_PROGRAMA;
 	header.length = sizeof(int);
 	sendSocket(socketConsola, &header, pid);
 }
 
-void envioCodigoMemoria(char* codigo, int pid, int cant_pag){
-	int cod_size = strlen(codigo) + 1;
+void envioCodigoMemoria(char* codigo, int32_t pid, int32_t cant_pag){
+	int32_t cod_size = strlen(codigo) + 1;
 
 	header_t header;
 	header.type = GRABAR_BYTES;
@@ -608,7 +608,7 @@ void envioCodigoMemoria(char* codigo, int pid, int cant_pag){
 	((t_pedido_bytes*)buf)->pid = pid;
 	((t_pedido_bytes*)buf)->offset = 0;
 
-	int i, size;
+	int32_t i, size;
 	for(i=0;i<cant_pag;i++){
 
 		//Cuanto voy a enviar
@@ -627,7 +627,7 @@ void envioCodigoMemoria(char* codigo, int pid, int cant_pag){
 	free(buf);
 }
 
-void crearInfoEstadistica(int pid, uint32_t socketConsola){
+void crearInfoEstadistica(int32_t pid, uint32_t socketConsola){
 	info_estadistica_t* info = malloc(sizeof(info_estadistica_t));
 	info->pid = pid;
 	info->cantLiberar = 0;
@@ -644,7 +644,7 @@ void crearInfoEstadistica(int pid, uint32_t socketConsola){
 	list_add(listadoEstadistico, info);
 }
 
-info_estadistica_t* buscarInformacion(int pid){
+info_estadistica_t* buscarInformacion(int32_t pid){
 
 	bool buscar(info_estadistica_t* info){
 		return info->pid == pid ? true : false;
@@ -653,43 +653,43 @@ info_estadistica_t* buscarInformacion(int pid){
 	return list_find(listadoEstadistico, buscar);
 }
 
-void estadisticaAumentarRafaga(int pid){
+void estadisticaAumentarRafaga(int32_t pid){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->cantRafagas++;
 }
-void estadisticaAumentarSyscall(int pid){
+void estadisticaAumentarSyscall(int32_t pid){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->cantSyscalls++;
 }
-void estadisticaAumentarOpPriviligiada(int pid){
+void estadisticaAumentarOpPriviligiada(int32_t pid){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->cantOpPrivi++;
 }
-void estadisticaAumentarAlocar(int pid){
+void estadisticaAumentarAlocar(int32_t pid){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->cantAlocar++;
 }
-void estadisticaAumentarLiberar(int pid){
+void estadisticaAumentarLiberar(int32_t pid){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->cantLiberar++;
 }
-void estadisticaAlocarBytes(int pid, int cant){
+void estadisticaAlocarBytes(int32_t pid, int32_t cant){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->cantBytesAlocar+=cant;
 }
-void estadisticaLiberarBytes(int pid, int cant){
+void estadisticaLiberarBytes(int32_t pid, int32_t cant){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->cantBytesLiberar+=cant;
 }
-void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado){
+void estadisticaCambiarEstado(int32_t pid, uint8_t nuevoEstado){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->estado = nuevoEstado;
 }
-void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid)){
+void aumentarEstadisticaPorSocketAsociado(int32_t socket, void(*estadistica)(int32_t pid)){
 	cpu_t* cpu = obtener_cpu_por_socket_asociado(socket);
 	estadistica(cpu->pcb->pid);
 }
-void eliminarEstadistica(int pid){
+void eliminarEstadistica(int32_t pid){
 
 	bool buscar(info_estadistica_t* info){
 		return info->pid == pid ? true : false;
@@ -700,7 +700,7 @@ void eliminarEstadistica(int pid){
 
 
 void crearColasBloqueados(char** semaforos){
-	int j = 0;
+	int32_t j = 0;
 
 	bloqueos = dictionary_create();
 
@@ -733,12 +733,12 @@ void bloquearProceso(char* semaforo, t_pcb* pcb){
 	estadisticaCambiarEstado(pcb->pid, BLOQ);
 }
 
-int getArchivoFdMax(void){
+int32_t getArchivoFdMax(void){
 	max_archivo_fd++;
 	return max_archivo_fd;
 }
 
-void crearEntradaArchivoProceso(int proceso){
+void crearEntradaArchivoProceso(int32_t proceso){
 	entrada_tabla_archivo_proceso* entrada = malloc(sizeof(entrada_tabla_archivo_proceso));
 	entrada->proceso = proceso;
 	entrada->archivos = list_create();
@@ -746,43 +746,39 @@ void crearEntradaArchivoProceso(int proceso){
 	list_add(processFileTable, entrada);
 }
 
-int agregarArchivo_aProceso(int proceso, char* file, char* permisos){
+int32_t agregarArchivo_aProceso(int32_t proceso, char* file, char* permisos){
 
 	bool buscar(entrada_tabla_archivo_proceso* entrada){
-		return entrada->proceso == proceso ? true : false;
+		return entrada->proceso == proceso;
 	}
-
 	bool buscarArchivo(entrada_tabla_globlal_archivo* entrada){
-		return !strcmp(entrada->archivo, file) ? true : false;
+		return !strcmp(entrada->archivo, file);
 	}
-
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscar);
-
 	entrada_tabla_globlal_archivo* entradaGlobal = list_find(globalFileTable, buscarArchivo);
 
-	if(entradaGlobal == NULL){ // no existe
-		uint32_t sizeEntrada = strlen(file) + 1 + sizeof(int) * 2;
-		entradaGlobal = malloc(sizeEntrada);
-		entradaGlobal->archivo = file;
-		entradaGlobal->vecesAbierto = 1;
-		entradaGlobal->ubicacion = list_size(globalFileTable);
-
-		list_add(globalFileTable, entradaGlobal);
-	}else{ //existe en la tabla global
-		entradaGlobal->vecesAbierto++;
-	}
-
-	t_archivo* archivo = malloc(sizeof(archivo));
+	t_archivo* archivo = malloc(sizeof(t_archivo));
 	archivo->flags = permisos;
 	archivo->fd = getArchivoFdMax(); //aca tengo que pasarselo a la cpu
 	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
 	archivo->cursor = 0;
 	list_add(entrada->archivos, archivo);
 
+	if(entradaGlobal == NULL){ // no existe
+		uint32_t sizeEntrada = strlen(file) + 1 + sizeof(int32_t) * 2;
+		entradaGlobal = malloc(sizeEntrada);
+		entradaGlobal->archivo = file;
+		entradaGlobal->vecesAbierto = 1;
+		entradaGlobal->ubicacion = list_size(globalFileTable);
+		list_add(globalFileTable, entradaGlobal);
+
+	}else{ //existe en la tabla global
+		entradaGlobal->vecesAbierto++;
+	}
 	return archivo->fd;
 }
 
-void eliminarFd(int fd, int proceso){
+void eliminarFd(int32_t fd, int32_t proceso){
 
 	bool buscarPorProceso(entrada_tabla_archivo_proceso* entrada){
 		return entrada->proceso == proceso ? true : false;
@@ -816,7 +812,7 @@ void imprimirTablaGlobal(void){
 
 }
 
-char* buscarPathDeArchivo(int globalFD){
+char* buscarPathDeArchivo(int32_t globalFD){
 
 	bool buscarPorUbicacion(entrada_tabla_globlal_archivo* entrada){
 		return entrada->ubicacion = globalFD ? true : false;
@@ -826,7 +822,7 @@ char* buscarPathDeArchivo(int globalFD){
 	return entrada->archivo;
 }
 
-t_archivo* buscarArchivo(int pid, int fd){
+t_archivo* buscarArchivo(int32_t pid, int32_t fd){
 
 	bool buscarPorPid(entrada_tabla_archivo_proceso* entrada){
 		return entrada->proceso == pid ? true : false;
@@ -845,8 +841,8 @@ t_archivo* buscarArchivo(int pid, int fd){
 
 }
 
-void verificarProcesosEnCpuCaida(int socketCPU){
-		int i;
+void verificarProcesosEnCpuCaida(int32_t socketCPU){
+		int32_t i;
 		for(i = 0; i<list_size(listaCPUs); i++){
 			cpu_t* cpu = list_get(listaCPUs, i);
 			if(cpu->socket == socketCPU){
