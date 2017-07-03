@@ -128,7 +128,7 @@ void borrarArchivo(void* package){
 
 	if(!verificarExistenciaDeArchivo(path_archivo)){
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
-		log_debug(logger, "se intento borrar un archivo inexistente");
+		log_error(logger, "Se intento borrar un archivo inexistente");
 	}else{
 
 		t_config* data = config_create(path_archivo);
@@ -143,7 +143,7 @@ void borrarArchivo(void* package){
 
 		//borro el archivo
 		unlink(path_archivo);
-		log_debug(logger, "archivo borrado con exito");
+		log_debug(logger, "Archivo borrado con exito");
 		enviar_paquete_vacio(BORRAR_ARCHIVO_OK, socketConexionKernel);
 
 		config_destroy(data);

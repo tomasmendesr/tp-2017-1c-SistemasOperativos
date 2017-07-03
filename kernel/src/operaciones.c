@@ -788,15 +788,13 @@ void abrirArchivo(int32_t socketCpu, void* package){
 }
 
 void borrarArchivo(int32_t socketCpu, void* package){
-	uint32_t fd = *(uint32_t*) package;
-	int32_t pid = *(int32_t*) (package + sizeof(uint32_t));
-
+	int pid = *(int*) package;
+	int fd = *(int*) (package + sizeof(int));
 	char* path = buscarPathDeArchivo(fd);
-
 	header_t header;
 	header.type = BORRAR_ARCHIVO;
-	header.type = strlen(path);
-
+	uint32_t size = strlen(path) + 1;
+	header.type = size;
 	sendSocket(socketConexionFS, &header, path);
 
 	int32_t tipo;
@@ -804,11 +802,8 @@ void borrarArchivo(int32_t socketCpu, void* package){
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
 
 	int32_t respuesta;
-
-	if(tipo == BORRAR_ARCHIVO_OK)
-		respuesta = BORRAR_ARCHIVO_OK;
-	else
-		respuesta = ARCHIVO_INEXISTENTE;
+	if(tipo == BORRAR_ARCHIVO_OK) respuesta = BORRAR_ARCHIVO_OK;
+	else respuesta = ARCHIVO_INEXISTENTE;
 
 	enviar_paquete_vacio(respuesta, socketCpu);
 

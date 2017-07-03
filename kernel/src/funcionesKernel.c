@@ -309,12 +309,12 @@ void listProcesses(char* comando, char* param){
 
 void processInfo(char* comando, char* param){
 	if(param == NULL || strlen(param) == 0 ){
-		log_warning(logger, "Se necesida el pid del proceso.");
+		printf("Se necesida el pid del proceso.\n");
 		return;
 	}
 
 	if(!esNumero(param)){
-		log_warning(logger, "Ingrese un valor numerico valido para el proceso");
+		printf("Ingrese un valor numerico valido para el proceso\n");
 		return;
 	}
 
@@ -372,7 +372,7 @@ void gradoMultiprogramacion(char* comando, char* param){
 }
 void killProcess(char* comando, char* param){
         if(!esNumero(param)){
-        	printf("ingrese un valor valido\n");
+        	printf("Ingrese un valor valido\n");
         	return;
         }
         int32_t pid = atoi(param);
