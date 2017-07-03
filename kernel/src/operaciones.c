@@ -9,7 +9,7 @@ void trabajarMensajeConsola(int32_t socketConsola){
 	FD_SET(socketConsola, &setConsolas);
 
 	if(check <= 0){
-		log_warning(logger, "Se cerro el socket %d\n", socketConsola);
+		log_warning(logger, "Se cerro el socket %d (Consola)", socketConsola);
 		verificarProcesosConsolaCaida(socketConsola);
 		close(socketConsola);
 		if(paquete)free(paquete);
@@ -27,7 +27,7 @@ void procesarMensajeConsola(int32_t consola_fd, int32_t mensaje, char* package){
 	switch(mensaje){
 	case HANDSHAKE_PROGRAMA:
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,consola_fd);
-		log_info(logger,"handshake con consola");
+		log_info(logger,"Handshake con consola");
 		printf("\n");
 		break;
 	case ENVIO_CODIGO:
@@ -129,17 +129,14 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 	case STACKOVERFLOW:
 		finalizacion_stackoverflow(package, socketCPU);
 		break;
+	case FALLA_RESERVAR_RECURSOS:
 	case ERROR_MEMORIA:
 	case SEMAFORO_NO_EXISTE:
 	case GLOBAL_NO_DEFINIDA:
 	case NULL_POINTER:
 	case ARCHIVO_INEXISTENTE:
-	case ERROR_ARCHIVO:
 	case RESERVA_INSATISFECHA:
 		finalizacion_error(package, socketCPU, mensaje);
-		break;
-	case SIN_ESPACIO:
-		finalizacion_faltaEspacio(package, socketCPU);
 		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido.");
@@ -262,19 +259,11 @@ void finalizacion_segment_fault(void* paquete_from_cpu, int32_t socket_cpu){
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
-
 void finalizacion_error(void* paquete_from_cpu, int32_t socket_cpu, int32_t exitCode){
 	t_pcb* pcbRecibido = deserializar_pcb(paquete_from_cpu);
 	log_error(logger, "Finaliza el proceso #%d por error", pcbRecibido->pid);
 	pcbRecibido->exitCode = exitCode;
 	terminarProceso(pcbRecibido, socket_cpu);
-}
-
-void finalizacion_faltaEspacio(void* paquete, int32_t socket){
-	t_pcb* pcb = deserializar_pcb(paquete);
-	log_error(logger, "Finaliza proceso #%d por falta de espacio en Memoria", pcb->pid);
-	pcb->exitCode = FALLA_RESERVAR_RECURSOS;
-	terminarProceso(pcb, socket);
 }
 
 void terminarProceso(t_pcb* pcbRecibido, int32_t socket_cpu){
@@ -576,7 +565,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 	}
 	else{
 		log_error(logger,"Memoria se quedo sin espacio");
-		enviar_paquete_vacio(SIN_ESPACIO,socket);
+		enviar_paquete_vacio(FALLA_RESERVAR_RECURSOS,socket);
 	}
 }
 
@@ -793,7 +782,7 @@ void abrirArchivo(int32_t socketCpu, void* package){
 	if(tipo == ABRIR_ARCHIVO_OK)
 		respuesta = ABRIR_ARCHIVO_OK;
 	else
-		respuesta = ERROR_ARCHIVO;
+		respuesta = ARCHIVO_INEXISTENTE;
 
 	enviar_paquete_vacio(respuesta, socketCpu);
 }

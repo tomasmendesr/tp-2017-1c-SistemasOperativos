@@ -564,7 +564,7 @@ void planificarLargoPlazo(void){
 				info->estado = FINISH;
 				info->exitCode = exitCode;
 				queue_push(colaFinished, pcb);
-				log_info(logger, "Proceso #%d agrego a la cola de FINISHED", pid);
+				log_info(logger, "Proceso #%d agregado a la cola de FINISHED", pid);
 				freePCB(pcb);
 			}
 			else if(resultado == OP_OK){
