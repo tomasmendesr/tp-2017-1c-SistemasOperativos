@@ -471,17 +471,11 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
  */
 void borrar(t_descriptor_archivo direccion){
 	log_debug(logger, "ANSISOP_borrar -> direccion: %d", direccion);
-	//armo lo que voy a mandar
 	header_t* header = malloc(sizeof(header_t));
 	header->type = BORRAR_ARCHIVO;
-	uint32_t sizeTotal = sizeof(int) * 2;
-	header->length = sizeTotal;
-	char* paquete = malloc(sizeTotal);
-	uint32_t offset = 0;
-	memcpy(paquete, &(pcb->pid), sizeof(int));
-	offset += sizeof(int);
-	memcpy(paquete+offset, &direccion, sizeof(int));
-	sendSocket(socketConexionKernel,header,paquete);
+	header->length = sizeof(int);
+	sendSocket(socketConexionKernel,header,&direccion);
+	free(header);
 	requestHandlerKernel();
 }
 
@@ -522,7 +516,7 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
  * @return	void
  */
 void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio){
-	log_debug(logger, "ANSISOP_escribir");
+	log_debug(logger, "ANSISOP_escribir -> fd: %d", descriptor_archivo);
 	header_t header;
 	header.type = ESCRIBIR;
 
@@ -545,7 +539,6 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 		log_error(logger, "Conexion con kernel perdida...");
 		finalizarCPU();
 	}
-	log_info(logger, "Informacion enviada al kernel -> fd:%d - info:%s", descriptor_archivo, informacion);
 	free(buffer);
 	requestHandlerKernel();
 }

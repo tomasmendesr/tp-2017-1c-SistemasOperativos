@@ -164,6 +164,7 @@ void iniciarPrograma(char* comando, char* param) {
 
 	if(!verificarExistenciaDeArchivo(absolute_path)){
 		log_warning(logger, "No se encontro el archivo ingresado");
+		printf("No se encontro el archivo ingresado\n");
 		return;
 	}
 
@@ -185,7 +186,7 @@ void iniciarPrograma(char* comando, char* param) {
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		log_info(logger, "Conexion con Kernel establecida");
-		printf("Conexion con Kernel exitosa\n");
+		printf("Conexion exitosa con Kernel\n");
 		log_debug(logger, "Se procede a mandar el archivo: '%s'", param);
 	} else {
 		log_error(logger, "El Kernel no devolvio handshake");

@@ -788,8 +788,7 @@ void abrirArchivo(int32_t socketCpu, void* package){
 }
 
 void borrarArchivo(int32_t socketCpu, void* package){
-	int pid = *(int*) package;
-	int fd = *(int*) (package + sizeof(int));
+	int fd = *(int*) package;
 	char* path = buscarPathDeArchivo(fd);
 	header_t header;
 	header.type = BORRAR_ARCHIVO;
