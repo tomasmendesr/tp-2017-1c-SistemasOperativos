@@ -520,7 +520,7 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 	header_t header;
 	header.type = ESCRIBIR;
 
-	size_t size = sizeof(int) * 2+ sizeof(uint32_t) + tamanio + 1;
+	size_t size = sizeof(pcb->pid) + sizeof(uint32_t) * 2 + tamanio + 1;
 	void* buffer = malloc(size);
 	header.length = size;
 
@@ -670,7 +670,7 @@ void liberarMemoria(t_puntero posicion){
 		log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
 		finalizarCPU();
 	}
-	if(requestHandlerKernel() == -1) log_error(logger, "error al liberar");
+	if(requestHandlerKernel() == -1) log_error(logger, "Error al liberar");
 	else {
 		log_info(logger, "Memoria liberada");
 		cantDeReservas--;

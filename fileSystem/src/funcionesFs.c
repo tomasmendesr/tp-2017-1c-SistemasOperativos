@@ -152,8 +152,16 @@ void borrarArchivo(void* package){
 }
 
 void guardarDatos(void* package){
-	pedido_guardar_datos* pedido = deserializar_pedido_guardar_datos(package);
-
+	int cursor = *(int*) package;
+	int sizeEscritura = *(int*) (package + sizeof(int));
+	int sizePath = *(int*) (package + sizeof(int) * 2);
+	char* pathAux = package + sizeof(int) * 3;
+	char* escritura = package + sizeof(int) * 3 + sizePath;
+	pedido_guardar_datos* pedido = malloc(sizeof(int) * 3 + sizeEscritura + sizePath); //=deserializar_pedido_guardar_datos(package);
+	pedido->offset = cursor;
+	pedido->buffer = escritura;
+	pedido->path = pathAux;
+	pedido->size = sizeEscritura;
 	char* path = generarPathArchivo(pedido->path);
 
 	if(!verificarExistenciaDeArchivo(path)){
@@ -181,7 +189,7 @@ void guardarDatos(void* package){
 		if(restoBloque > conf->tamanio_bloque)
 			restoBloque = conf->tamanio_bloque;
 
-		log_info(logger, "accedo al bloque %d", bloque);
+		log_info(logger, "Accedo al bloque %d", bloque);
 
 		escribirEnArchivo(bloque, pedido->buffer+bytesEscritos, restoBloque, offsetBloque);
 
@@ -203,8 +211,8 @@ void guardarDatos(void* package){
 
 	aumentarTamanioArchivo(pedido, path);
 
-	free(pedido->path);
-	free(pedido->buffer);
+	//free(pedido->path);
+	//free(pedido->buffer);
 	free(pedido);
 	free(path);
 
@@ -427,8 +435,7 @@ char* generarPathArchivo(char* path){
 	string_append(&pathArchivo, conf->punto_montaje);
 	string_append(&pathArchivo, "Archivos");
 
-	if(!string_starts_with(path, "/"))
-		string_append(&pathArchivo, "/");
+	if(!string_starts_with(path, "/")) string_append(&pathArchivo, "/");
 
 	string_append(&pathArchivo, path);
 

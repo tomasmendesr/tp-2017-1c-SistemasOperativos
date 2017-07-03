@@ -817,10 +817,9 @@ void cerrarArchivo(int32_t socketCpu, void* package){
 
 void escribir(void* paquete, int32_t socketCpu){
 	uint32_t fd = *(uint32_t*) paquete;
-	int32_t pid = *(int32_t*) (paquete + sizeof(uint32_t));
-	int32_t sizeEscritura = *(int32_t*) (paquete + sizeof(uint32_t) + sizeof(int));
-	char* escritura = paquete + sizeof(int) * 2  + sizeof(uint32_t);
-
+	int pid = *(int*) (paquete + sizeof(uint32_t));
+	uint32_t sizeEscritura = *(uint32_t*) (paquete + sizeof(uint32_t) + sizeof(int));
+	void* escritura = paquete + sizeof(int)  + sizeof(uint32_t) * 2;
 	info_estadistica_t * info = buscarInformacion(pid);
 	header_t header;
 
@@ -845,21 +844,24 @@ void escribir(void* paquete, int32_t socketCpu){
 		}
 		int32_t offsetEscritura = archivo->cursor;
 		char* path = buscarPathDeArchivo(fd);
-		void * buffer = malloc(2*sizeof(int)+strlen(path)+strlen(escritura));
-		int32_t offset = 0, sizePath;//, sizeEscritura;
+		uint32_t sizeTotal = 3 * sizeof(int) + strlen(path) + 1 + sizeEscritura;
+		void * buffer = malloc(sizeTotal);
+		int32_t offset = 0;
+		int sizePath = strlen(path) + 1;
 
 
-		memcpy(&offsetEscritura, buffer, sizeof(int)); offset += sizeof(int);
-		memcpy(&sizeEscritura, buffer+offset, sizeof(int)); offset += sizeof(int);
-		sizePath = strlen(path);
-		memcpy(&sizePath, buffer+offset, sizeof(int)); offset += sizeof(int);
-		memcpy(path, buffer+offset, strlen(path)); offset += strlen(path);
-		//sizeEscritura = strlen(sizeEscritura);
-		memcpy(&sizeEscritura, buffer+offset, sizeof(int)); offset += sizeof(int);
-		memcpy(escritura, buffer+offset, strlen(path));
+		memcpy(buffer, &offsetEscritura, sizeof(int));
+		offset += sizeof(int);
+		memcpy(buffer+offset, &sizeEscritura, sizeof(int));
+		offset += sizeof(int);
+		memcpy(buffer+offset, &sizePath, sizeof(int));
+		offset += sizeof(int);
+		memcpy(buffer+offset, path, sizePath);
+		offset += sizePath;
+		memcpy(buffer+offset, escritura, sizeEscritura);
 
-		header.length = 2*sizeof(int)+strlen(path)+strlen(escritura);
-		header.type = OBTENER_DATOS;
+		header.length = sizeTotal;
+		header.type = GUARDAR_DATOS;
 
 		sendSocket(socketConexionFS, &header, buffer);
 
