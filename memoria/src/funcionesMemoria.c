@@ -598,8 +598,6 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 
 int escribir(int pid, int pag, int offset, char* contenido, int size){
 
-	log_info(logger,"Escribir pid: %d pag:%d offset: %d size: %d contenido: %s\n",pid,pag,offset,size, contenido);
-
 	int frame;
 	int cant_escrita = 0;
 	int cant_a_escribir;

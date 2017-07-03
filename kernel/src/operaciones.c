@@ -815,11 +815,9 @@ void borrarArchivo(int32_t socketCpu, void* package){
 }
 
 void cerrarArchivo(int32_t socketCpu, void* package){
-	uint32_t fd = *(uint32_t*) package;
-	int32_t pid = *(int32_t*) (package + sizeof(uint32_t));
-
+	int pid = *(int*) package;
+	int fd = *(int*) (package + sizeof(int));
 	eliminarFd(fd, pid);
-
 	enviar_paquete_vacio(CERRAR_ARCHIVO_OK, socketCpu);
 }
 

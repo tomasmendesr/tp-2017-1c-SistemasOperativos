@@ -777,26 +777,32 @@ int32_t agregarArchivo_aProceso(int32_t proceso, char* file, char* permisos){
 	return archivo->fd;
 }
 
-void eliminarFd(int32_t fd, int32_t proceso){
-
+void eliminarFd(int fd, int proceso){
 	bool buscarPorProceso(entrada_tabla_archivo_proceso* entrada){
 		return entrada->proceso == proceso ? true : false;
 	}
-	bool eliminar(t_archivo* archivo){
-		return archivo->fd == fd ? true : false;
-	}
-
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
-	list_remove_by_condition(entrada->archivos, eliminar);
-	entrada_tabla_globlal_archivo* entradaGlobal = list_get(globalFileTable, entradaGlobal->ubicacion);
-	entradaGlobal->vecesAbierto--;
-
-	if(entradaGlobal->vecesAbierto == 0){
-		list_remove_and_destroy_element(globalFileTable,entradaGlobal->ubicacion, free);
-		free(entradaGlobal);
+	int i, globalFD;
+	for(i=0; i< list_size(entrada->archivos);i++){
+		t_archivo* archivo = list_get(entrada->archivos, i);
+		if(archivo->fd == fd){
+			globalFD = archivo->globalFD;
+			list_remove(entrada->archivos, i);
+			free(archivo);
+		}
 	}
 	free(entrada);
 
+	for(i = 0; i<list_size(globalFileTable);i++){ // TODO - no esta encontrando la entrada aca.
+		entrada_tabla_globlal_archivo* entradaGlobal = list_get(globalFileTable,i);
+		if(entradaGlobal->ubicacion == globalFD){
+			entradaGlobal->vecesAbierto--;
+			if(entradaGlobal->vecesAbierto == 0){
+				list_remove_and_destroy_element(globalFileTable,entradaGlobal->ubicacion, free);
+				free(entradaGlobal);
+			}
+		}
+	}
 }
 
 void imprimirTablaGlobal(void){

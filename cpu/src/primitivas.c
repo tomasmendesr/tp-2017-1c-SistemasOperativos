@@ -510,24 +510,17 @@ void borrar(t_descriptor_archivo direccion){
  * @return	void
  */
 void cerrar(t_descriptor_archivo descriptor_archivo){
-	log_debug(logger, "ANSISOP_cerrar");
-	//armo lo que voy a mandar
+	log_debug(logger, "ANSISOP_cerrar -> fd: %d", descriptor_archivo);
 	header_t* header = malloc(sizeof(header_t));
-	char* paquete;
-	size_t size = sizeof(uint32_t);
+	uint32_t sizeTotal = sizeof(int) * 2;
+	char* paquete = malloc(sizeTotal);
 	header->type = CERRAR_ARCHIVO;
-	size_t len = sizeof(descriptor_archivo) + sizeof(uint32_t);
-	header->length = len;
-
-	//armo el paquete con el pid del proceso y el descriptor del archivo
-	paquete = malloc(len);
-	memcpy(paquete, (void*)&pcb->pid, size);
-	memcpy(paquete+size, (void*)&descriptor_archivo, size);
-
-	//se lo mando a kernel
-	sendSocket(socketConexionKernel,header,(void*)&paquete);
-
-	//respuesta
+	header->length = sizeTotal;
+	uint32_t offset = 0;
+	memcpy(paquete, &(pcb->pid), sizeof(int));
+	offset += sizeof(int);
+	memcpy(paquete+offset,&descriptor_archivo, sizeof(int));
+	sendSocket(socketConexionKernel,header,(void*)paquete);
 	requestHandlerKernel();
 }
 
