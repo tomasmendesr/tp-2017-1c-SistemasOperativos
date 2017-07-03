@@ -138,7 +138,7 @@ int conexionConMemoria(void){
 		log_error(logger, "Error al recibir tamanio de pagina");
 		return -1;
 	}
-	printf("Conexion con Memoria exitosa\n");
+	printf("Conexion exitosa con Memoria\n");
 	return EXIT_SUCCESS;
 }
 
@@ -162,10 +162,8 @@ int32_t requestHandlerKernel(void){
 			quantumSleep = *(uint32_t*) paquete;
 			break;
 //		RESPUESTAS PRIMITIVAS KERNEL:
-		case SIGNAL_OK:
-			break;
 		case WAIT_SEGUIR_EJECUCION:
-			log_debug(logger,"Proceso no queda bloqueado");
+			log_debug(logger,"Proceso NO queda bloqueado");
 			break;
 		case WAIT_DETENER_EJECUCION:
 			log_debug(logger,"Proceso queda bloqueado");
@@ -188,6 +186,7 @@ int32_t requestHandlerKernel(void){
 			paqueteGlobal=malloc(header.length); // guardo el fd
 			memcpy(paqueteGlobal,paquete,header.length);
 			break;
+		case SIGNAL_OK:
 		case ESCRITURA_OK:
 		case LECTURA_OK:
 		case BORRAR_ARCHIVO_OK:
@@ -197,35 +196,17 @@ int32_t requestHandlerKernel(void){
 			break;
 		// errores
 		case SEMAFORO_NO_EXISTE:
-			finalizarPor(SEMAFORO_NO_EXISTE);
-			finPrograma = true;
-			break;
 		case GLOBAL_NO_DEFINIDA:
-			finalizarPor(GLOBAL_NO_DEFINIDA);
-			finPrograma = true;
-			return -1;
 		case NULL_POINTER:
-			finalizarPor(NULL_POINTER);
-			finPrograma = true;
-			return -1;
-		case ERROR_ARCHIVO:
-			finalizarPor(ARCHIVO_INEXISTENTE);
-			finPrograma = true;
-			return -1;
 		case ARCHIVO_INEXISTENTE:
-			finalizarPor(ARCHIVO_INEXISTENTE);
-			finPrograma = true;
-			return -1;
 		case RESERVA_INSATISFECHA:
-			finalizarPor(RESERVA_INSATISFECHA);
+		case FALLA_RESERVAR_RECURSOS:
+			finalizarPor(header.type);
 			finPrograma = true;
-			return -1;
-		case SIN_ESPACIO:
-			finalizarPor(SIN_ESPACIO);
-			finPrograma = true;
+			if(paquete) free(paquete);
 			return -1;
 		default:
-			log_warning(logger, "Mensaje Recibido Incorrecto");
+			log_warning(logger, "Mensaje recibido incorrecto");
 			if(paquete)free(paquete);
 			return -1;
 		}
@@ -329,6 +310,7 @@ int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
 
 void revisarSigusR1(int signo){
 	if(signo == SIGUSR1){
+		printf("Signal SIGUSR1\n");
 		log_info(logger, "Se recibe SIGUSR1");
 		cerrarCPU = true;
 		enviar_paquete_vacio(DESCONEXION_CPU, socketConexionKernel);
@@ -340,7 +322,7 @@ void revisarFinalizarCPU(void){
 	if(cerrarCPU){
 		finalizarConexion(socketConexionKernel);
 		finalizarConexion(socketConexionMemoria);
-		log_info(logger, "CPU cerrada. Adios!");
+		log_info(logger, "CPU desconectada.");
 		log_destroy(logger);
 		freeConf(config);
 		return;
