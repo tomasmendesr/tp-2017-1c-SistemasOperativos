@@ -485,9 +485,7 @@ void planificarCortoPlazo(void){
 
 		cpu->pcb = pcb;
 		enviarPcbCPU(pcb, cpu->socket);
-		//TODO: Agregar proceso a la lista de ejecuccion.
 		estadisticaCambiarEstado(pcb->pid, EXEC);
-
 	}
 }
 
