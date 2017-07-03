@@ -258,6 +258,8 @@ sem_t mutex_cola_exec;
 sem_t sem_multi;
 sem_t semCPUs_disponibles;
 sem_t mutex_lista_CPUs;
+sem_t mutex_dinamico;
+sem_t mutex_datos;
 
 //Listas
 t_list* listaCPUs;

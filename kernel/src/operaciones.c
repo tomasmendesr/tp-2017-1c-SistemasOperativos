@@ -347,7 +347,6 @@ void finalizacion_proceso(void* paquete_from_cpu, int32_t socket_cpu_asociado) {
 }
 
 t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
-
 	uint32_t ind=0;
 	uint32_t offset=0;
 	t_list* datos;
@@ -357,14 +356,15 @@ t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
 	bool buscar(t_entrada_datos* entrada){
 		return entrada->pid == pid;
 	}
+	sem_wait(&mutex_datos);
 	entrada = list_find(bloques,buscar);
-	datos = entrada->list;
+	sem_post(&mutex_datos);
 
+	datos = entrada->list;
 	while(offset<pagina_size){
 		do{
-			bloque=list_get(datos, ind);
+			bloque=list_get(datos, ind++);
 			offset+=sizeof(meta_bloque)+bloque->size;
-			ind++;
 		}
 		while(bloque->used);
 		if(bloque->size-sizeof(meta_bloque) >= cant){
@@ -399,62 +399,75 @@ void reservarMemoria(int32_t socket, char* paquete){
 	bool buscarEntrada(t_entrada_datos* entrada){
 		return entrada->pid == pedido_memoria.pid;
 	}
-	entrada=list_find(bloques,buscarEntrada);
+	sem_wait(&mutex_datos);
+	entrada = list_find(bloques,buscarEntrada);
+	sem_post(&mutex_datos);
+	sem_wait(&mutex_dinamico);
+	reserva = list_get(mem_dinamica, ind++);
+	sem_post(&mutex_dinamico);
 
-	while((reserva = list_get(mem_dinamica, ind++))){
-		posicion = verificarEspacio(cant=pedido_memoria.cant,pid=reserva->pid,pag=reserva->pag);
+	if(entrada){
+		while(reserva){
+		if(reserva->pid == pedido_memoria.pid){
+			posicion = verificarEspacio(cant=pedido_memoria.cant,pid=reserva->pid,pag=reserva->pag);
 
-		if(posicion != 0){
-			bool buscar(t_bloque* bloque){
-				return bloque->pos == posicion;
-			}
-			bloque = list_find(entrada->list,buscar);
-			header = malloc(sizeof(header_t));
-			reserva->size -= pedido_memoria.cant+sizeof(meta_bloque);
-			header->type = GRABAR_BYTES;
-			header->length = sizeof(meta_bloque)+sizeof(t_pedido_bytes);
+			if(posicion != 0){
+				bool buscar(t_bloque* bloque){
+					return bloque->pos == posicion;
+				}
+				bloque = list_find(entrada->list,buscar);
+				header = malloc(sizeof(header_t));
+				header->type = GRABAR_BYTES;
+				header->length = sizeof(meta_bloque)+sizeof(t_pedido_bytes);
+				reserva->size -= pedido_memoria.cant+sizeof(meta_bloque);
 
-			package = malloc(header->length);
-			bytes.pid = reserva->pid;
-			bytes.pag = reserva->pag;
-			bytes.size = sizeof(meta_bloque);
-			bytes.offset = (posicion-sizeof(meta_bloque))%pagina_size;
-
-			metadata.used = true;
-			metadata.size = pedido_memoria.cant;
-			memcpy(package, &bytes, sizeof(t_pedido_bytes));
-			memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
-			sizeBloque = bloque->size;
-			bloque->used = metadata.used;
-			bloque->size = metadata.size;
-
-			sendSocket(socketConexionMemoria, header, package);
-			recibir_paquete(socketConexionMemoria, &paquete, &resultado);
-			if(resultado == OP_OK){
-				bloque = malloc(sizeof(t_bloque));
-				metadata.used = false;
-				metadata.size = sizeBloque - pedido_memoria.cant - sizeof(meta_bloque);
+				package = malloc(header->length);
 				bytes.pid = reserva->pid;
 				bytes.pag = reserva->pag;
 				bytes.size = sizeof(meta_bloque);
-				bytes.offset = (posicion+pedido_memoria.cant)%pagina_size;
-				bloque->used = metadata.used;
-				bloque->size = metadata.size;
-				bloque->pos = posicion + pedido_memoria.cant + sizeof(meta_bloque);
+				bytes.offset = (posicion-sizeof(meta_bloque))%pagina_size;
 
-				list_add(entrada->list,bloque);
+				metadata.used = true;
+				metadata.size = pedido_memoria.cant;
 				memcpy(package, &bytes, sizeof(t_pedido_bytes));
 				memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
+				sizeBloque = bloque->size;
+				bloque->used = metadata.used;
+				bloque->size = metadata.size;
+
 				sendSocket(socketConexionMemoria, header, package);
 				recibir_paquete(socketConexionMemoria, &paquete, &resultado);
-				header->type = RESERVAR_MEMORIA_OK;
-				header->length = sizeof(t_puntero);
-
 				if(resultado == OP_OK){
-					log_debug(logger,"Reserva exitosa con posicion %d",posicion);
-					sendSocket(socket, header, &posicion);
-					free(header);
-					return;
+					bloque = malloc(sizeof(t_bloque));
+					metadata.used = false;
+					metadata.size = sizeBloque - pedido_memoria.cant - sizeof(meta_bloque);
+					bytes.pid = reserva->pid;
+					bytes.pag = reserva->pag;
+					bytes.size = sizeof(meta_bloque);
+					bytes.offset = (posicion+pedido_memoria.cant)%pagina_size;
+					bloque->used = metadata.used;
+					bloque->size = metadata.size;
+					bloque->pos = posicion + pedido_memoria.cant + sizeof(meta_bloque);
+
+					list_add(entrada->list,bloque);
+					memcpy(package, &bytes, sizeof(t_pedido_bytes));
+					memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
+					sendSocket(socketConexionMemoria, header, package);
+					recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+					header->type = RESERVAR_MEMORIA_OK;
+					header->length = sizeof(t_puntero);
+
+					if(resultado == OP_OK){
+						log_debug(logger,"Reserva exitosa con posicion %d",posicion);
+						sendSocket(socket, header, &posicion);
+						free(header);
+						return;
+					}
+					else{
+						log_error(logger,"Segmentation fault");
+						enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
+						return;
+					}
 				}
 				else{
 					log_error(logger,"Segmentation fault");
@@ -462,17 +475,20 @@ void reservarMemoria(int32_t socket, char* paquete){
 					return;
 				}
 			}
-			else{
-				log_error(logger,"Segmentation fault");
-				enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
-				return;
-			}
+		}
+		sem_wait(&mutex_dinamico);
+		reserva = list_get(mem_dinamica, ind++);
+		sem_post(&mutex_dinamico);
 		}
 	}
 	if(paquete)free(paquete);
-	t_list* datos;
-	if(entrada != NULL) datos = entrada->list;
-	else datos = list_create();
+	bool valor = false;
+	if(entrada == NULL){
+		entrada = malloc(sizeof(t_entrada_datos));
+		entrada->pid = pedido_memoria.pid;
+		entrada->list = list_create();
+		valor = true;
+	}
 
 	pedido = malloc(sizeof(t_pedido_iniciar));
 	pedido->pid = pedido_memoria.pid;
@@ -488,7 +504,6 @@ void reservarMemoria(int32_t socket, char* paquete){
 	recibir_paquete(socketConexionMemoria, &paquete, &resultado);
 
 	if(resultado == OP_OK){
-
 		header_t header;
 		metadata.used = true;
 		metadata.size = pedido_memoria.cant;
@@ -496,14 +511,16 @@ void reservarMemoria(int32_t socket, char* paquete){
 		reserva->pag = pedido_memoria.pagBase+info->cantPaginasHeap+config->stack_Size;
 		reserva->size = pagina_size - sizeof(meta_bloque);
 		reserva->pid = pedido_memoria.pid;
+
+		sem_wait(&mutex_dinamico);
 		list_add(mem_dinamica, reserva);
+		sem_post(&mutex_dinamico);
 
 		bytes.pid = pedido_memoria.pid;
 		bytes.size = sizeof(metadata);
 		bytes.offset = 0;
 		bytes.pag = reserva->pag;
 		posicion = bytes.pag * pagina_size + sizeof(meta_bloque);
-
 		bloque = malloc(sizeof(t_bloque));
 		bloque->used = metadata.used;
 		bloque->size = metadata.size;
@@ -513,7 +530,6 @@ void reservarMemoria(int32_t socket, char* paquete){
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarAlocar);
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
 		info->cantPaginasHeap++;
-
 		reserva->size -= pedido_memoria.cant;
 		header.type = GRABAR_BYTES;
 		header.length = sizeof(meta_bloque)+sizeof(t_pedido_bytes);
@@ -522,12 +538,11 @@ void reservarMemoria(int32_t socket, char* paquete){
 		memcpy(package, &bytes, sizeof(t_pedido_bytes));
 		memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
 		sendSocket(socketConexionMemoria, &header, package);
-		list_add(datos, bloque);
+		list_add(entrada->list, bloque);
 		recibir_paquete(socketConexionMemoria, &paquete, &resultado);
 
 		if(resultado == OP_OK){
 			reserva->size -= sizeof(meta_bloque);
-
 			metadata.used = false;
 			metadata.size = pagina_size - sizeof(meta_bloque)*2 - pedido_memoria.cant;
 			bytes.offset = sizeof(meta_bloque)+pedido_memoria.cant;
@@ -536,7 +551,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 			bloque->size = metadata.size;
 			bloque->pos = posicion + bytes.offset;
 
-			list_add(datos, bloque);
+			list_add(entrada->list, bloque);
 			memcpy(package, &bytes, sizeof(t_pedido_bytes));
 			memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
 			sendSocket(socketConexionMemoria, &header, package);
@@ -545,10 +560,11 @@ void reservarMemoria(int32_t socket, char* paquete){
 			header.length = sizeof(uint32_t);
 
 			if(resultado == OP_OK){
-				t_entrada_datos* entrada = malloc(sizeof(t_entrada_datos));
-				entrada->pid = pedido_memoria.pid;
-				entrada->list = datos;
-				list_add(bloques, entrada);
+				if(valor){
+					sem_wait(&mutex_datos);
+					list_add(bloques, entrada);
+					sem_post(&mutex_datos);
+				}
 				log_debug(logger, "Reserva exitosa con posicion %d",posicion);
 				sendSocket(socket, &header, &posicion);
 			}
@@ -601,120 +617,125 @@ void liberarMemoria(int32_t socket, char* paquete){
 	pedido.pid = pid;
 	pedido.pag = posicion/pagina_size;
 	free(paquete);
+	sem_wait(&mutex_dinamico);
+	reserva = list_get(mem_dinamica, pos++);
+	sem_post(&mutex_dinamico);
 
-	while((reserva = list_get(mem_dinamica, pos++))){
+	while(reserva){
+	if(reserva->pid == pid && reserva->pag == pedido.pag){
+		if(reserva->size <= pagina_size - sizeof(meta_bloque) && reserva->size > 0){
+			sem_wait(&mutex_datos);
+			resultado=buscarEntrada(pid);
+			entrada = list_get(bloques,resultado);
+			sem_post(&mutex_datos);
+			list = entrada->list;
 
-		if(reserva->pid == pid && reserva->pag == pedido.pag){
-			if(reserva->size <= pagina_size - sizeof(meta_bloque) && reserva->size > 0){
+			while((bloque = list_get(list, ind))){
+				if(bloque->pos == posicion){
+					if(bloque->used){
+						log_info(logger,"Se libera la posicion: %d", bloque->pos);
+						header.type = GRABAR_BYTES;
+						header.length = size + sizeof(meta_bloque);
 
-				resultado=buscarEntrada(pid);
-				entrada = list_get(bloques,resultado);
-				list = entrada->list;
+						metadata.used = bloque->used = false;
+						metadata.size = bloque->size;
+						reserva->size += metadata.size;
+						package = malloc(header.length);
 
-				while((bloque = list_get(list, ind))){
+						pedido.size = metadata.size;
+						pedido.offset = posicion % pagina_size - sizeof(meta_bloque);
+						memcpy(package, &pedido, size);
+						memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
 
-					if(bloque->pos == posicion){
-						if(bloque->used){
-
-							log_info(logger,"Se libera la posicion: %d\n", bloque->pos);
-							header.type = GRABAR_BYTES;
-							header.length = size + sizeof(meta_bloque);
-
-							metadata.used = bloque->used = false;
-							metadata.size = bloque->size;
-							reserva->size += metadata.size;
-							package = malloc(header.length);
-
-							pedido.size = metadata.size;
-							pedido.offset = posicion % pagina_size - sizeof(meta_bloque);
-							memcpy(package, &pedido, size);
-							memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
-
-							if(sendSocket(socketConexionMemoria, &header, package) <= 0){
-								log_debug(logger, "problemas de conexion");
-								free(package);
-							}
+						if(sendSocket(socketConexionMemoria, &header, package) <= 0){
+							log_debug(logger, "problemas de conexion");
 							free(package);
+						}
+						free(package);
 
-							enviar_paquete_vacio(LIBERAR_MEMORIA_OK, socket);
-							aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
-							aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarLiberar);
+						enviar_paquete_vacio(LIBERAR_MEMORIA_OK, socket);
+						aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
+						aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarLiberar);
 
-							bool notEmpty = false;
-							uint16_t k = 0;
-							while(k < list->elements_count && !notEmpty){
-								bloque = list_get(list, k++);
-								if(bloque->used && reserva->pag == bloque->pos/pagina_size){
-									notEmpty = true;
-								}
+						bool notEmpty = false;
+						uint16_t k = 0;
+						while(k < list->elements_count && !notEmpty){
+							bloque = list_get(list, k++);
+							if(bloque->used && reserva->pag == bloque->pos/pagina_size){
+								notEmpty = true;
 							}
-							recibir_paquete(socketConexionMemoria, &paquete, &tipo);
+						}
+						recibir_paquete(socketConexionMemoria, &paquete, &tipo);
 
-							if(tipo == OP_OK){
-								if(!notEmpty){
-									pedido.offset = 0;
-									pedido.size = sizeof(meta_bloque);
+						if(tipo == OP_OK){
+							if(!notEmpty){
+								pedido.offset = 0;
+								pedido.size = sizeof(meta_bloque);
 
-									package = malloc(header.length);
-									metadata.size = pagina_size - sizeof(meta_bloque);
-									memcpy(package, &pedido, size);
-									memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
-									sendSocket(socketConexionMemoria, &header, package);
+								package = malloc(header.length);
+								metadata.size = pagina_size - sizeof(meta_bloque);
+								memcpy(package, &pedido, size);
+								memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
+								sendSocket(socketConexionMemoria, &header, package);
+								recibir_paquete(socketConexionMemoria, &paquete, &tipo);
+
+								k=0;
+								while((bloque = list_get(list,k))){
+									if(bloque->pos/pagina_size == reserva->pag){
+										free(list_remove(list, k));
+										reserva->size += sizeof(meta_bloque);
+									}
+									else k++;
+								}
+
+								if(tipo == OP_OK){
+									header.type = LIBERAR_PAGINA;
+									header.length = sizeof(uint32_t)*2;
+
+									t_pedido_iniciar pedido;
+									pedido.pid = pid;
+									pedido.cant_pag = reserva->pag;
+									reserva->size -= sizeof(meta_bloque);
+
+									sem_wait(&mutex_dinamico);
+									free(list_remove(mem_dinamica,pos-1));
+									sem_post(&mutex_dinamico);
+
+									printf("pag %d\n",reserva->pag);
+
+									sendSocket(socketConexionMemoria, &header, &pedido);
 									recibir_paquete(socketConexionMemoria, &paquete, &tipo);
-
-									k=0;
-									while((bloque = list_get(list,k))){
-										if(bloque->pos/pagina_size == reserva->pag){
-											free(list_remove(list, k));
-											reserva->size += sizeof(meta_bloque);
-										}
-										else k++;
-									}
-
-									if(tipo == OP_OK){
-										header.type = LIBERAR_PAGINA;
-										header.length = sizeof(uint32_t)*2;
-
-										t_pedido_iniciar pedido;
-										pedido.pid = pid;
-										pedido.cant_pag = reserva->pag;
-										reserva->size -= sizeof(meta_bloque);
-										free(list_remove(mem_dinamica,pos-1));
-
-										if(!list->elements_count){
-											free(list);
-											free(list_remove(bloques,resultado));
-										}
-										sendSocket(socketConexionMemoria, &header, &pedido);
-										recibir_paquete(socketConexionMemoria, &paquete, &tipo);
-										free(package);
-									}
-									else{
-										log_error(logger,"Segmentation fault");
-										enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
-										free(package);
-									}
-									return;
+									free(package);
 								}
+								else{
+									log_error(logger,"Segmentation fault");
+									enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
+									free(package);
+								}
+								return;
 							}
-							else{
-								log_error(logger,"Segmentation fault");
-								enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
-							}
-							return;
 						}
 						else{
-							log_error(logger,"No se puede liberar la memoria");
-							enviar_paquete_vacio(NULL_POINTER,socket);
+							log_error(logger,"Segmentation fault");
+							enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
 						}
 						return;
 					}
-					ind++;
+					else{
+						log_error(logger,"No se puede liberar la memoria");
+						enviar_paquete_vacio(NULL_POINTER,socket);
+					}
+					return;
 				}
-				log_error(logger,"No se puede liberar la memoria");
-				enviar_paquete_vacio(NULL_POINTER,socket);
+				ind++;
 			}
+			log_error(logger,"No se puede liberar la memoria");
+			enviar_paquete_vacio(NULL_POINTER,socket);
 		}
+	}
+	sem_wait(&mutex_dinamico);
+	reserva = list_get(mem_dinamica, pos++);
+	sem_post(&mutex_dinamico);
 	}
 	log_error(logger,"No se puede liberar la memoria");
 	enviar_paquete_vacio(NULL_POINTER,socket);
@@ -955,12 +976,16 @@ info_estadistica_t* buscarInformacionPorSocketConsola(int32_t socketConsola){
 }
 
 void quitarDeMemoriaDinamica(int pid){
-	int i;
-	for(i = 0; i<list_size(mem_dinamica); i++){
-		reserva_memoria* reserva = list_get(mem_dinamica, i);
-			if(reserva->pid == pid){
-				list_remove(mem_dinamica, i);
-				free(reserva);
+	int i = 0;
+	reserva_memoria* reserva;
+	while(i<mem_dinamica->elements_count){
+		sem_wait(&mutex_dinamico);
+		reserva = list_get(mem_dinamica, i);
+		if(reserva->pid == pid){
+			list_remove(mem_dinamica, i);
+			free(reserva);
 		}
+		else i++;
+		sem_post(&mutex_dinamico);
 	}
 }
