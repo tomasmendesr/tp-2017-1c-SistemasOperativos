@@ -287,7 +287,7 @@ void terminarProceso(t_pcb* pcbRecibido, int32_t socket_cpu){
 		sendSocket(info->socketConsola,header,&(pcbRecibido->exitCode));
 	}
 
-	liberarMemoriaProcesoTerminado(pcbRecibido->pid); // TODO. Hay que hacer bien esto.
+	quitarDeMemoriaDinamica(pcbRecibido->pid);
 
 	header->type = FINALIZAR_PROGRAMA;
 	header->length = sizeof(pcbRecibido->pid);
@@ -954,110 +954,13 @@ info_estadistica_t* buscarInformacionPorSocketConsola(int32_t socketConsola){
 	return list_find(listadoEstadistico, buscar);
 }
 
-void liberarMemoriaProcesoTerminado(int pid){
-	t_pedido_bytes pedido;
-		header_t header;
-		void* package;
-		int32_t tipo;
-		size_t size;
-		size = sizeof(t_pedido_bytes);
-		t_list* list;
+void quitarDeMemoriaDinamica(int pid){
 	int i;
 	for(i = 0; i<list_size(mem_dinamica); i++){
 		reserva_memoria* reserva = list_get(mem_dinamica, i);
 			if(reserva->pid == pid){
 				list_remove(mem_dinamica, i);
-				if(reserva->size <= pagina_size - sizeof(meta_bloque) && reserva->size > 0){
-					int resultado=buscarEntrada(pid);
-					t_entrada_datos* entrada = list_get(bloques,resultado);
-					list = entrada->list;
-					int k;
-					for(k=0; k<list_size(list); k++){
-						t_bloque* bloque = list_get(list, k);
-						list_remove(list, k);
-							if(bloque->used){
-								log_info(logger,"Se libera la posicion: %d\n", bloque->pos);
-								header.type = GRABAR_BYTES;
-								header.length = size + sizeof(meta_bloque);
-								meta_bloque metadata;
-								metadata.used = bloque->used = false;
-								metadata.size = bloque->size;
-								reserva->size += metadata.size;
-								package = malloc(header.length);
-
-								pedido.size = metadata.size;
-								pedido.offset = bloque->pos % pagina_size - sizeof(meta_bloque);
-								memcpy(package, &pedido, size);
-								memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
-
-								if(sendSocket(socketConexionMemoria, &header, package) <= 0){
-									log_debug(logger, "Problemas de conexion");
-									free(package);
-								}
-								free(package);
-
-								bool notEmpty = false;
-								uint16_t k = 0;
-								while(k < list->elements_count && !notEmpty){
-									bloque = list_get(list, k++);
-									if(bloque->used && reserva->pag == bloque->pos/pagina_size){
-										notEmpty = true;
-									}
-								}
-								void* paquete;
-								recibir_paquete(socketConexionMemoria, &paquete, &tipo);
-
-								if(tipo == OP_OK){
-									if(!notEmpty){
-										pedido.offset = 0;
-										pedido.size = sizeof(meta_bloque);
-
-										package = malloc(header.length);
-										metadata.size = pagina_size - sizeof(meta_bloque);
-										memcpy(package, &pedido, size);
-										memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
-										sendSocket(socketConexionMemoria, &header, package);
-										recibir_paquete(socketConexionMemoria, &paquete, &tipo);
-
-										int j=0;
-										while((bloque = list_get(list,j))){
-											if(bloque->pos/pagina_size == reserva->pag){
-												free(list_remove(list, j));
-												reserva->size += sizeof(meta_bloque);
-											}
-											else j++;
-										}
-
-										if(tipo == OP_OK){
-											header.type = LIBERAR_PAGINA;
-											header.length = sizeof(uint32_t)*2;
-
-											t_pedido_iniciar pedido;
-											pedido.pid = pid;
-											pedido.cant_pag = reserva->pag;
-											reserva->size -= sizeof(meta_bloque);
-
-											if(!list->elements_count){
-												free(list);
-											}
-											sendSocket(socketConexionMemoria, &header, &pedido);
-											recibir_paquete(socketConexionMemoria, &paquete, &tipo);
-											free(package);
-											if(tipo == OP_OK) log_info(logger, "Memoria dinamica liberada");
-											else log_error(logger, "Error al liberar memoria dinamica");
-										}
-										else{
-											log_error(logger,"Segmentation fault");
-											free(package);
-										}
-									}
-								}
-								else log_error(logger,"Segmentation fault");
-							}
-						}
-					if(entrada) free(entrada);
-				}
-				if(reserva) free(reserva);
-			}
+				free(reserva);
 		}
+	}
 }
