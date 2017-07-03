@@ -812,11 +812,23 @@ void abrirArchivo(int socketCpu, void* package){
 	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
 	printf("fd %d: \n", fd);
 
+	//mando mensaje a fs
 	header_t header;
-	header.length = sizeof(int);
-	header.type = ABRIR_ARCHIVO_OK;
+	header.length = string_length(direccion)+1;
+	header.type = CREAR_ARCHIVO;
 
-	sendSocket(socketCpu, &header, &fd);
+	sendSocket(socketConexionFS, &header, direccion);
+
+	int tipo, respuesta;
+	void* paquete;
+	recibir_paquete(socketConexionFS, &paquete, &tipo);
+
+	if(tipo == ABRIR_ARCHIVO_OK)
+		respuesta = ABRIR_ARCHIVO_OK;
+	else
+		respuesta = ERROR_ARCHIVO;
+
+	enviar_paquete_vacio(respuesta, socketCpu);
 }
 
 void borrarArchivo(int socketCpu, void* package){
