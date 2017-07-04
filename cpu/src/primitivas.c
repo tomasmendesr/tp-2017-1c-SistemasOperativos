@@ -665,8 +665,9 @@ void liberarMemoria(t_puntero posicion){
 	header.type= LIBERAR_MEMORIA;
 	header.length = sizeof(t_liberar);
 	t_liberar pedido;
+	pedido.pag = posicion / tamanioPagina;
+	pedido.offset = posicion % tamanioPagina;
 	pedido.pid = pcb->pid;
-	pedido.pos = posicion;
 	if(sendSocket(socketConexionKernel, &header, &pedido) <= 0 ){
 		log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
 		finalizarCPU();
