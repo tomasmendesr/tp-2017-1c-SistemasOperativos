@@ -415,7 +415,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 				}
 				bloque = list_find(entrada->list,buscar);
 				header = malloc(sizeof(header_t));
-				header->type = ASIGNAR_PAGINAS;
+				header->type = GRABAR_BYTES;
 				header->length = sizeof(meta_bloque)+sizeof(t_pedido_bytes);
 				reserva->size -= pedido_memoria.cant+sizeof(meta_bloque);
 
@@ -529,7 +529,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
 		info->cantPaginasHeap++;
 		reserva->size -= pedido_memoria.cant;
-		header.type = ASIGNAR_PAGINAS;
+		header.type = GRABAR_BYTES;
 		header.length = sizeof(meta_bloque)+sizeof(t_pedido_bytes);
 
 		package = malloc(header.length);
