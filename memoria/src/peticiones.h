@@ -13,22 +13,22 @@ typedef struct{
 	uint32_t pag;
 	uint32_t offset;
 	uint32_t size;
-}t_pedido_memoria;
+}__attribute__((__packed__))t_pedido_memoria;
 
 typedef struct{
 	uint32_t pid;
 	uint32_t cant_pag;
-}t_pedido_iniciar;
+}__attribute__((__packed__))t_pedido_iniciar;
 
 typedef struct{
 	uint32_t pid;
 	uint32_t cant_pag;
-}t_pedido_asignar;
+}__attribute__((__packed__))t_pedido_asignar;
 
 typedef struct{
 	uint32_t pid;
 	uint32_t nroPag;
-}t_pedido_liberar;
+}__attribute__((__packed__))t_pedido_liberar;
 
 typedef uint32_t t_pedido_finalizar;
 
