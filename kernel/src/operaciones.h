@@ -22,8 +22,7 @@ void finalizarPrograma(int consola_fd, int pid);
 void finalizacion_segment_fault(void* package,int socketCPU);
 void finalizacion_stackoverflow(void* package,int socketCPU);
 void finalizacion_error(void* paquete_from_cpu, int socket_cpu, int exitCode);
-void reservarMemoria(int socket, char* paquete);
-void liberarMemoria(int socket, char* paquete);
+
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu);
 void escribir(void* imprimir, int socketCpu);
 void verificarProcesosConsolaCaida(int socketConsola);
@@ -32,5 +31,11 @@ void cerrarArchivo(int socketCpu, void* package);
 void leerArchivo(int socketCpu, t_lectura* lectura);
 void abrirArchivo(int socketCpu, void* package);
 void moverCursor(int socketCpu, t_cursor* cursor);
+
+//Funciones Heap
+//Pedido en si
+void pedidoReserva(int socket, t_pedido_reserva* pedido);
+int reservarMemoria();
+void liberarMemoria(int socket, char* paquete);
 
 #endif /* OPERACIONES_H_ */
