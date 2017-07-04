@@ -96,7 +96,7 @@ t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
         	config->retardoActivado = true;
         else config->retardoActivado = false;
 
-        if( config_get_int_value(configMemoria,"IMPRIMIR_RETARDO") == 0)
+        if( config_get_int_value(configMemoria,"IMPRIMIR_RETARDO") == 1)
         	config->imprimirRetardo = true;
         else config->imprimirRetardo = false;
 
@@ -576,7 +576,7 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 
 			pos_leer = memoria + frame * frame_size;
 
-			if(hayCache) actualizarEntradaCache(pid, pag, pos_leer);
+			actualizarEntradaCache(pid, pag, pos_leer);
 		}/* Al salir de este if pos_leer apunta o bien al frame de donde tengo que leer,
 		  * o a donde esta cacheado el frame */
 
@@ -613,7 +613,7 @@ int escribir(int pid, int pag, int offset, char* contenido, int size){
 		cant_a_escribir = min(size - cant_escrita, frame_size - offset);
 		memcpy(memoria + frame * frame_size + offset, contenido + cant_escrita, cant_a_escribir);
 
-		if(hayCache) actualizarEntradaCache(pid, pag, memoria + frame * frame_size);
+		actualizarEntradaCache(pid, pag, memoria + frame * frame_size);
 
 		cant_escrita += cant_a_escribir;
 		offset = 0;
@@ -719,6 +719,9 @@ int leerCache(int pid, int pag, char** contenido){
 
 void actualizarEntradaCache(int pid, int pag, char* frame){
 
+	if(!hayCache)
+		return;
+
 	log_info(logger,"Actualizar entrada cache. pid: %d pag: %d", pid,pag);
 
 	pthread_mutex_lock(&cache_mutex);
@@ -813,6 +816,8 @@ void dump(char* comando, char* param){
 			}else
 			dumpMemory( atoi(param + 7) );
 		}else dumpMemory(-1);
+	}else{
+		printf("\nParametro invalido.\nPara dump los parametros validos son: \n+sin param\n+cache\n+tabla\n+memory\n+memory-\"nro_proceso\"\n");
 	}
 
 }
@@ -967,6 +972,7 @@ char* getTimeStamp(){
 }
 
 void esperar(){
+
 	if( config->retardoActivado ){
 		usleep(config->retardo_Memoria);
 
