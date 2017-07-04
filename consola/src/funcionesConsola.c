@@ -314,15 +314,23 @@ void cargarFechaFin(t_proceso* proc){
 }
 
 void imprimirInformacion(t_proceso* proceso, int32_t exitCode){
-	printf("-----FIN PROGRAMA-----\n");
-	printf("Pid #%d\n", proceso->pid);
-	printf("Inicio: %d-%d-%d %d%d:%d\n", proceso->fechaInicio->tm_year + 1900, proceso->fechaInicio->tm_mon + 1, proceso->fechaInicio->tm_mday, proceso->fechaInicio->tm_hour, proceso->fechaInicio->tm_min, proceso->fechaInicio->tm_sec);
-	printf("Fin:  %d-%d-%d %d:%d:%d\n", proceso->fechaFin->tm_year + 1900, proceso->fechaFin->tm_mon + 1, proceso->fechaFin->tm_mday, proceso->fechaFin->tm_hour, proceso->fechaFin->tm_min, proceso->fechaFin->tm_sec);
-	printf("Cantidad de impresiones por pantalla: %d\n", proceso->impresiones);
 	uint32_t msInicio = proceso->start.tv_nsec / 1000000 + proceso->start.tv_sec * 1000;
 	uint32_t msFin = proceso->end.tv_nsec / 1000000 + proceso->end.tv_sec * 1000;
 	int segDuracion = proceso->end.tv_sec - proceso->start.tv_sec;
 	int msDuracion = msFin - msInicio - (segDuracion * 1000);
+	printf("-----FIN PROGRAMA-----\n");
+	printf("Pid #%d\n", proceso->pid);
+	printf("Inicio: %d/%d/%d %d:%d:%d\n",  proceso->fechaInicio->tm_mday, proceso->fechaInicio->tm_mon + 1, proceso->fechaInicio->tm_year + 1900, proceso->fechaInicio->tm_hour, proceso->fechaInicio->tm_min, proceso->fechaInicio->tm_sec);
+	int varAuxSegundos = proceso->fechaInicio->tm_sec + segDuracion;
+	if(varAuxSegundos + segDuracion > 60){
+		int minutos = (varAuxSegundos + segDuracion) / 60;
+		proceso->fechaFin->tm_min += minutos;
+		proceso->fechaFin->tm_sec = (varAuxSegundos + segDuracion) % 60;
+	}else{
+		proceso->fechaFin->tm_sec = varAuxSegundos;
+	}
+	printf("Fin:  %d/%d/%d %d:%d:%d\n", proceso->fechaFin->tm_mday, proceso->fechaFin->tm_mon + 1,proceso->fechaFin->tm_year + 1900, proceso->fechaFin->tm_hour, proceso->fechaFin->tm_min, proceso->fechaFin->tm_sec);
+	printf("Cantidad de impresiones por pantalla: %d\n", proceso->impresiones);
 	if(msDuracion < 0) msDuracion += 1000;
 	printf("Duracion: %d seg - %d ms\n", segDuracion, msDuracion);
 	char* exitCodeString = obtenerExitCode(exitCode);
