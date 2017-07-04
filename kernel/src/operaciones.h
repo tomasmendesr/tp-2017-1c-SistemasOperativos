@@ -42,6 +42,7 @@ int verificarEspacio(void* pagina, int cant_necesaria);
 
 int solicitarPagina(int pid, int pag, void* resultado);
 int escribirPagina(int pid, int pag, void* pagina);
+int crearNuevaPaginaHeap(t_pcb* pcb);
 
 void liberarMemoria(int socket, char* paquete);
 
