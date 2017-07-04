@@ -61,6 +61,11 @@ typedef struct indiceCodigo{
 }__attribute__((__packed__)) t_indice_codigo;
 
 typedef struct{
+	uint32_t pag;
+	uint32_t bytes_libres;
+}t_pagina_heap;
+
+typedef struct{
 	uint32_t pid;  //Identificador único del Programa en el sistema
 	uint32_t programCounter; //Número de la próxima instrucción a ejecutar
 	uint32_t cantPaginasCodigo;
@@ -72,6 +77,8 @@ typedef struct{
 	uint32_t stackPointer; // el ultimo offset
 	uint32_t tamanioEtiquetas;
 	uint32_t codigo; // cant de instrucciones ----- podria sacarse, ya qye es indiceCodigo->elements_count
+	uint32_t cant_pag_heap;
+	t_pagina_heap* pag_heap;
 }__attribute__((__packed__)) t_pcb;
 
 //Auxiliares

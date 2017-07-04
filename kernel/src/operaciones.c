@@ -92,7 +92,7 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 		asignarVarCompartida(socketCPU, package);
 		break;
 	case RESERVAR_MEMORIA:
-		reservarMemoria(socketCPU, package);
+		pedidoReserva(socketCPU, (t_pedido_reserva*)package);
 		break;
 	case LIBERAR_MEMORIA:
 		liberarMemoria(socketCPU, package);
@@ -373,8 +373,22 @@ t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
 	return 0;
 }
 
-void reservarMemoria(int32_t socket, char* paquete){
-	pedido_mem pedido_memoria;
+void pedidoReserva(int32_t socket, t_pedido_reserva* pedido){
+	
+	
+
+	cpu_t cpu = obtener_cpu_por_socket_asociado(socket);
+	t_pcb* pcb = cpu.pcb;
+
+	if( reservarMemoria(pedido, pcb) == -1){
+		//Enviar respuesta falla a cpu
+
+	}else{
+		//Enviar respuesta ok a cpu
+	}
+
+
+/*	pedido_mem pedido_memoria;
 	t_puntero posicion;
 	header_t* header;
 	int32_t resultado;
@@ -581,7 +595,57 @@ void reservarMemoria(int32_t socket, char* paquete){
 	else{
 		log_error(logger,"Memoria se quedo sin espacio");
 		enviar_paquete_vacio(FALLA_RESERVAR_RECURSOS,socket);
+	}*/
+}
+
+int reservarMemoria(t_pedido_reserva* pedido, t_pcb* pcb){
+
+	void* pagina;
+	int i; //Recorro todas las paginas de heap que tengo
+	for(i=0;i<pcb->cant_pag_heap;i++){
+
+		//Si hay espacio en esa pagina la pido y verifico que realmente haya
+		if(pcb->pag_heap[i].bytes_libres > pedido->cant_bytes){
+
+			if( solicitarPagina(pedido->pid,pcb->pag_heap[i].pag,pagina) == -1 )
+				return -1;
+
+		}
+
 	}
+
+	//Pedir pagina
+}
+
+//Pide una pagina a memoria y la guarda en resultado
+int solicitarPagina(int pid, int pag, void* resultado){
+
+	const int fd = socketConexionMemoria;
+	header_t header;
+	t_pedido_bytes pedido;
+	
+	header.type = SOLICITUD_BYTES;
+	header.length = sizeof(t_pedido_bytes);
+	
+	pedido.pid = pid;
+	pedido.pag = pag;
+	pedido.offset = 0;
+	pedido.size = pagina_size;
+
+	if( sendSocket(fd,&header,&pedido) <= 0 ){
+		log_error(logger,"Heap: Problemas al leer una pagina de memoria.");
+		return -1;
+	}
+
+	int tipo;
+	recibir_paquete(fd, &resultado, &tipo);
+
+	if(tipo!=RESPUESTA_BYTES){
+		log_error(logger,"Heap: Problemas al leer una pagina de memoria.");
+		return -1;
+	}
+	
+	return 0;
 }
 
 int32_t buscarEntrada(uint32_t pid){
