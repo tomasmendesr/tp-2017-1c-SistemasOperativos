@@ -136,6 +136,11 @@ typedef struct{
 	uint32_t size;
 }t_metaHeap;
 
+typedef struct{
+	int pid;
+	int data;
+}t_data;
+
 void freePCB(t_pcb* pcb);
 t_entrada_stack* crearPosicionStack(void);
 void insertarNuevoStack(t_pcb* pcb);
