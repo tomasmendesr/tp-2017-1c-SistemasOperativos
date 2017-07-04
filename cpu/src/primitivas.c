@@ -6,8 +6,6 @@
  */
 #include "primitivas.h"
 
-int cantDeReservas = 0;
-
 bool esArgumento(t_nombre_variable identificador_variable){
 	if(isdigit(identificador_variable)){
 		return true;
@@ -648,7 +646,6 @@ t_puntero reservar(t_valor_variable espacio){
 	free(paqueteGlobal);
 	free(header);
 	free(paquete);
-	cantDeReservas++;
 	return valor;*/
 }
 
@@ -675,10 +672,7 @@ void liberarMemoria(t_puntero posicion){
 		finalizarCPU();
 	}
 	if(requestHandlerKernel() == -1) log_error(logger, "Error al liberar");
-	else {
-		log_info(logger, "Memoria liberada");
-		cantDeReservas--;
-	}
+	else log_info(logger, "Memoria liberada");
 }
 
 /*
@@ -693,11 +687,10 @@ void liberarMemoria(t_puntero posicion){
  */
 void signalAnsisop(t_nombre_semaforo identificador_semaforo){
 	log_debug(logger, "signal a semaforo '%s'", identificador_semaforo);
-	header_t* header=malloc(sizeof(header_t));
-	header->type=SEM_SIGNAL;
-	header->length=strlen(identificador_semaforo)+1;
-	sendSocket(socketConexionKernel,header,identificador_semaforo);
-	free(header);
+	header_t header;
+	header.type=SEM_SIGNAL;
+	header.length=strlen(identificador_semaforo)+1;
+	sendSocket(socketConexionKernel,&header,identificador_semaforo);
 	requestHandlerKernel(); // PARA QUE ME DEVUELVA SIGNAL OK
 }
 
@@ -712,10 +705,9 @@ void signalAnsisop(t_nombre_semaforo identificador_semaforo){
  */
 void wait(t_nombre_semaforo identificador_semaforo){
 	log_debug(logger, "wait a semaforo '%s'", identificador_semaforo);
-	header_t* header=malloc(sizeof(header_t));
-	header->type=SEM_WAIT;
-	header->length=strlen(identificador_semaforo)+1;
-	sendSocket(socketConexionKernel,header,identificador_semaforo);
-	free(header);
+	header_t header;
+	header.type=SEM_WAIT;
+	header.length=strlen(identificador_semaforo)+1;
+	sendSocket(socketConexionKernel,&header,identificador_semaforo);
 	requestHandlerKernel();
 }
