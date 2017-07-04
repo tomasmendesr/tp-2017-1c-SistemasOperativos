@@ -119,6 +119,11 @@ typedef struct {
 	char* info;
 }__attribute__((__packed__)) t_imprimir;
 
+typedef struct{
+	uint32_t pid;
+	uint32_t cant_bytes;
+}t_pedido_reserva;
+
 void freePCB(t_pcb* pcb);
 t_entrada_stack* crearPosicionStack(void);
 void insertarNuevoStack(t_pcb* pcb);

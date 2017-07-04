@@ -615,7 +615,33 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
  */
 t_puntero reservar(t_valor_variable espacio){
 	log_debug(logger, "ANSISOP_reservar -> espacio: %d", espacio);
-	header_t* header = malloc(sizeof(header_t));
+
+	header_t header;
+	t_pedido_reserva reserva;
+
+	header.type = RESERVAR_MEMORIA;
+	header.length = sizeof(t_pedido_reserva);
+
+	reserva.pid = &pcb->pid;
+	reserva.cant_bytes = espacio;
+
+	if(sendSocket(socketConexionKernel,header,reserva) <= 0){
+		log_error(logger, "problemas de conexion");
+		finalizarCPU();
+	}
+
+	if( requestHandlerKernel() == -1){
+		log_error(logger, "No se pudo realizar la reserva. Se finaliza el proceso");
+		return -1;
+	}
+
+	//TODO:REVISAR ESTO
+	uint32_t valor = *(t_valor_variable*)paqueteGlobal;
+	free(paqueteGlobal);
+
+	return valor;
+
+/*	header_t* header = malloc(sizeof(header_t));
 	char* paquete;
 	size_t size = sizeof(t_valor_variable);
 	t_valor_variable valor;
@@ -644,7 +670,7 @@ t_puntero reservar(t_valor_variable espacio){
 	free(header);
 	free(paquete);
 	cantDeReservas++;
-	return valor;
+	return valor;*/
 }
 
 /*
