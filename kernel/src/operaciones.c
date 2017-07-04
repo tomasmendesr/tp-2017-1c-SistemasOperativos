@@ -770,6 +770,14 @@ int escribirPagina(int pid, int pag, void* pagina){
 		return -1;
 	}
 
+	int rta;
+	recibir_paquete(fd,&&rta,&rta);
+
+	if(rta != OP_OK ){
+		log_error(logger,"Heap: Memoria no pudo escribir la pagina.");
+		return -1;
+	}
+
 	free(buf);
 	return 0;
 }
