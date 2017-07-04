@@ -96,7 +96,7 @@ t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
         	config->retardoActivado = true;
         else config->retardoActivado = false;
 
-        if( config_get_int_value(configMemoria,"IMPRIMIR_RETARDO") == 0)
+        if( config_get_int_value(configMemoria,"IMPRIMIR_RETARDO") == 1)
         	config->imprimirRetardo = true;
         else config->imprimirRetardo = false;
 
@@ -967,6 +967,7 @@ char* getTimeStamp(){
 }
 
 void esperar(){
+
 	if( config->retardoActivado ){
 		usleep(config->retardo_Memoria);
 
