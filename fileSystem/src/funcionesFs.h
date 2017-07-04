@@ -25,6 +25,7 @@
 #define BITMAP_ARCHIVO "/Bitmap.bin"
 #define ARCHIVOS_PATH "Archivos"
 #define BLOQUES_PATH "Bloques"
+#define SIN_BLOQUES_LIBRES -1
 
 //TADS
 typedef struct{

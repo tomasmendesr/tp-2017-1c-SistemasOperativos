@@ -65,7 +65,7 @@ void procesarMensajesKernel(){
 			close(socketConexionKernel);
 			exit(1);
 		}
-
+		printf("tipo mensaje recivido: %d\n", tipo_mensaje);
 		switch (tipo_mensaje) {
 			case CREAR_ARCHIVO:
 				crearArchivo(paquete);
@@ -101,6 +101,13 @@ void crearArchivo(void* package){
 	if(!verificarExistenciaDeArchivo(pathArchivo)){
 
 		int bloqueLibre = buscarBloqueLibre();
+
+		if(bloqueLibre == SIN_BLOQUES_LIBRES){
+			//aviso a kernel que no hay bloques libres
+			enviar_paquete_vacio(SIN_ESPACIO_FS, socketConexionKernel);
+
+			return;
+		}
 
 		escribirValorBitarray(1, bloqueLibre); //pongo el bloque como ocupado
 
@@ -201,6 +208,10 @@ void guardarDatos(void* package){
 			if(numBloque+1 == cantBloques){
 				log_info(logger, "reservo nuevo bloque");
 				bloque = reservarNuevoBloque(path);
+				if(bloque == SIN_ESPACIO_FS){
+					enviar_paquete_vacio(SIN_ESPACIO_FS, socketConexionKernel);
+					return;
+				}
 			}else{
 				j++;
 				bloque = atoi(bloques[numBloque + j]);
@@ -314,11 +325,16 @@ void mkdirRecursivo(char* path){
 
 int buscarBloqueLibre(){
 
-	int i;
+	int i, bloqueLibre;
 
 	for(i=0; bitarray_test_bit(bitarray, i) && i<conf->cantidad_bloques; i++){
 
 	}
+
+	bloqueLibre = i + 1;
+
+	if(bloqueLibre > conf->cantidad_bloques)
+		return SIN_BLOQUES_LIBRES;
 
 	return i+1;
 }
@@ -354,6 +370,10 @@ int obtenerNumBloque(char* path, int offset){
 int reservarNuevoBloque(char* pathArchivo){
 
 	int bloqueLibre = buscarBloqueLibre();
+
+	if(bloqueLibre == SIN_ESPACIO_FS)
+		return SIN_ESPACIO_FS;
+
 	escribirValorBitarray(1, bloqueLibre);
 
 	t_config* c = config_create(pathArchivo);

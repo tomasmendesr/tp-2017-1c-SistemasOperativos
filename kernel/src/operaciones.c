@@ -808,7 +808,7 @@ void abrirArchivo(int32_t socketCpu, void* package){
 		sendSocket(socketCpu, &header, &fd);
 	}
 	else
-		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+		enviar_paquete_vacio(tipo, socketCpu);
 }
 
 void borrarArchivo(int32_t socketCpu, void* package){
@@ -908,7 +908,7 @@ void escribir(void* paquete, int32_t socketCpu){
 		if(tipo == ESCRITURA_OK){
 			enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
 		}else{
-			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+			enviar_paquete_vacio(tipo, socketCpu);
 		}
 
 	}
