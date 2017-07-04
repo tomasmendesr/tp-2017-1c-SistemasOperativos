@@ -260,6 +260,7 @@ sem_t semCPUs_disponibles;
 sem_t mutex_lista_CPUs;
 sem_t mutex_dinamico;
 sem_t mutex_datos;
+sem_t mutex_fs;
 
 //Listas
 t_list* listaCPUs;

@@ -791,11 +791,15 @@ void abrirArchivo(int32_t socketCpu, void* package){
 	header.length = string_length(direccion)+1;
 	header.type = CREAR_ARCHIVO;
 
+	sem_wait(&mutex_fs);
+
 	sendSocket(socketConexionFS, &header, direccion);
 
 	int tipo;
 	void* paquete;
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
+
+	sem_post(&mutex_fs);
 
 	if(tipo == ABRIR_ARCHIVO_OK){
 		header_t header;
@@ -814,11 +818,16 @@ void borrarArchivo(int32_t socketCpu, void* package){
 	header.type = BORRAR_ARCHIVO;
 	uint32_t size = strlen(path) + 1;
 	header.type = size;
+
+	sem_wait(&mutex_fs);
+
 	sendSocket(socketConexionFS, &header, path);
 
 	int32_t tipo;
 	void* paquete;
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
+
+	sem_post(&mutex_fs);
 
 	int32_t respuesta;
 	if(tipo == BORRAR_ARCHIVO_OK) respuesta = BORRAR_ARCHIVO_OK;
@@ -883,6 +892,8 @@ void escribir(void* paquete, int32_t socketCpu){
 		header.length = sizeTotal;
 		header.type = GUARDAR_DATOS;
 
+		sem_wait(&mutex_fs);
+
 		sendSocket(socketConexionFS, &header, buffer);
 
 		free(buffer);
@@ -891,6 +902,9 @@ void escribir(void* paquete, int32_t socketCpu){
 		int32_t tipo;
 
 		recibir_paquete(socketConexionFS, &paquete, &tipo);
+
+		sem_post(&mutex_fs);
+
 		if(tipo == ESCRITURA_OK){
 			enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
 		}else{
@@ -926,12 +940,17 @@ void leerArchivo(int socketCpu, t_lectura* lectura){
 	header.length = sizeTotal;
 	header.type = OBTENER_DATOS;
 
+	sem_wait(&mutex_fs);
+
 	sendSocket(socketConexionFS, &header, buffer);
 
 	void* paquete;
 	int32_t tipo;
 
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
+
+	sem_post(&mutex_fs);
+
 	if(tipo == LECTURA_OK){
 		header.length = lectura->size;
 		header.type = LECTURA_OK;
