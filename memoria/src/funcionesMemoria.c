@@ -969,7 +969,7 @@ void help(char* comando, char* param){
 	printf("+size memory -> Tamaño de la memoria\n+size \"pid\" -> Tamaño del proceso\n");
 	printf("+dump -> Dump de todas las estructuras\n+dump cache -> Dump de la cache\n");
 	printf("+dump memory -> Dump de las paginas de todos los procesos y su contenido\n");
-	printf("+dump memory-pid -> Dump de las paginas de un proceso\n+dump table -> Dump de la tabla de paginas\n");
+	printf("+dump memory-pid -> Dump de las paginas de un proceso\n+dump tabla -> Dump de la tabla de paginas\n");
 }
 
 char* getTimeStamp(){
