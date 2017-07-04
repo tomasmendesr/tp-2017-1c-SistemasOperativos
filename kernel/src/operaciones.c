@@ -661,8 +661,60 @@ int reservarMemoria(t_pedido_reserva* pedido, t_pcb* pcb){
 	/* Ninguna de las paginas ya reservadas sirve para cumplir con mi peticion
 	 * Tengo que reservar una nueva */
 
+	if( crearNuevaPaginaHeap(pcb) == -1 ){
+		return -1;
+	}else return 0;
 
+}
 
+int crearNuevaPaginaHeap(t_pcb *pcb){
+
+	const int fd = socketConexionMemoria;
+	header_t header;
+	t_reserva pedido;
+
+	header.type = ASIGNAR_PAGINAS;
+	header.length = sizeof(t_reserva);
+
+	pedido.pid = pcb->pid;
+	pedido.pedido = 1;
+
+	if( sendSocket(fd,&header,&pedido) <= 0 ){
+		log_error(logger,"Error al crear nueva pagina heap.");
+		return -1;
+	}
+
+	int msj;
+	char* paquete;
+	if( recibir_paquete(fd,&paquete,&msj) <= 0){
+		log_error(logger,"Error al crear nueva pagina heap.");
+		return -1;
+	}
+
+	if(msj == OP_OK){
+		//Pudo reservar la pagina, actualizo mis estructuras y escribo la metadata
+		pcb->pag_heap = realloc(pcb->pag_heap, sizeof(t_pagina_heap) * (pcb->cant_pag_heap + 1));
+
+		if(pcb->pag_heap == NULL){
+			log_error(logger, "Realloc error.");
+			return -1;
+		}
+
+		if(pcb->cant_pag_heap == 0){
+			//Caso particular si no hay paginas de heap
+			pcb->pag_heap[0].pag = pcb->cantPaginasCodigo + config->stack_Size;
+		}else{
+			//Le asigno la pagina siguiente a la ultima
+			pcb->pag_heap[pcb->cant_pag_heap] = pcb->pag_heap[pcb->cant_pag_heap - 1].pag + 1;
+		}
+
+		pcb->pag_heap[pcb->cant_pag_heap].bytes_libres = pagina_size - sizeof(t_metaHeap);
+	}else{
+		log_error(logger,"Memoria no pudo asignar nuevas paginas.");
+		return -1;
+	}
+
+	return 0;
 }
 
 //Pide una pagina a memoria y la guarda en resultado
