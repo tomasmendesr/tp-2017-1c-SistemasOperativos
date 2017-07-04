@@ -445,27 +445,18 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	offset+=sizeDireccion;
 	memcpy(paquete+offset, &flags, sizeof(t_banderas));
 
-	//se lo mando a kernel
 	sendSocket(socketConexionKernel,header,(void*)paquete);
 	log_info(logger, "Flags enviadas: lectura:%d - escritura:%d - creacion: %d", flags.lectura, flags.escritura, flags.creacion);
-	// libero memoria
 	free(header);
 	free(paquete);
-	//espero respuesta
-	int var = requestHandlerKernel();
-	if(var == -1){
+	if(requestHandlerKernel() == -1){
+		log_error(logger, "Error al abrir el archivo");
 		return -1;
 	}
-
 	//recibo el descriptor del archivo abierto
 	t_descriptor_archivo fd = *(t_descriptor_archivo*)paqueteGlobal;
-
-	//libero la variable global para que pueda ser usada de nuevo
 	free(paqueteGlobal);
-
-	//devuelvo el descriptor
-	if(fd == -1) log_error(logger, "Error al abrir el archivo");
-	else log_info(logger, "File descriptor recibido: %d", fd);
+	log_info(logger, "File descriptor recibido: %d", fd);
 	return fd;
 }
 
@@ -479,24 +470,12 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
  * @return	void
  */
 void borrar(t_descriptor_archivo direccion){
-	log_debug(logger, "ANSISOP_borrar");
-	//armo lo que voy a mandar
+	log_debug(logger, "ANSISOP_borrar -> direccion: %d", direccion);
 	header_t* header = malloc(sizeof(header_t));
-	char* paquete;
-	size_t size = sizeof(uint32_t);
 	header->type = BORRAR_ARCHIVO;
-	size_t len = sizeof(direccion) + sizeof(uint32_t);
-	header->length = len;
-
-	//armo el paquete con el pid del proceso y el descriptor del archivo
-	paquete = malloc(len);
-	memcpy(paquete, (void*)&pcb->pid, size);
-	memcpy(paquete+size, (void*)&direccion, size);
-
-	//se lo mando a kernel (falta hacer verificacion de envio)
-	sendSocket(socketConexionKernel,header,(void*)&paquete);
-
-	//respuesta
+	header->length = sizeof(int);
+	sendSocket(socketConexionKernel,header,&direccion);
+	free(header);
 	requestHandlerKernel();
 }
 
@@ -520,7 +499,7 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
 	memcpy(paquete, &(pcb->pid), sizeof(int));
 	offset += sizeof(int);
 	memcpy(paquete+offset,&descriptor_archivo, sizeof(int));
-	sendSocket(socketConexionKernel,header,(void*)paquete);
+	sendSocket(socketConexionKernel,header,paquete);
 	requestHandlerKernel();
 }
 
@@ -537,11 +516,11 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
  * @return	void
  */
 void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio){
-	log_debug(logger, "ANSISOP_escribir");
+	log_debug(logger, "ANSISOP_escribir -> fd: %d", descriptor_archivo);
 	header_t header;
 	header.type = ESCRIBIR;
 
-	size_t size = sizeof(int) * 2+ sizeof(uint32_t) + tamanio + 1;
+	size_t size = sizeof(pcb->pid) + sizeof(uint32_t) * 2 + tamanio + 1;
 	void* buffer = malloc(size);
 	header.length = size;
 
@@ -560,7 +539,6 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 		log_error(logger, "Conexion con kernel perdida...");
 		finalizarCPU();
 	}
-	log_info(logger, "Informacion enviada al kernel -> fd:%d - info:%s", descriptor_archivo, informacion);
 	free(buffer);
 	requestHandlerKernel();
 }
@@ -622,10 +600,7 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
 		free(cursor);
 		finalizarCPU();
 	}
-	var = requestHandlerKernel();
-	if(var == -1){
-		log_error(logger, "No se pudo mover el cursor");
-	}
+	if(requestHandlerKernel() == -1) log_error(logger, "No se pudo mover el cursor");
 	free(cursor);
 }
 
@@ -695,7 +670,7 @@ void liberarMemoria(t_puntero posicion){
 		log_error(logger,"Error al soliciar liberar memoria. Desconexion...");
 		finalizarCPU();
 	}
-	if(requestHandlerKernel() == -1) log_error(logger, "error al liberar");
+	if(requestHandlerKernel() == -1) log_error(logger, "Error al liberar");
 	else {
 		log_info(logger, "Memoria liberada");
 		cantDeReservas--;

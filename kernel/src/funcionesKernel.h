@@ -234,6 +234,7 @@ void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid
 void eliminarEstadistica(int pid);
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado);
 void verificarProcesosEnCpuCaida(int socketCPU);
+void quitarDeMemoriaDinamica(int pid);
 
 //Variables Globales
 t_config_kernel* config;
@@ -257,6 +258,8 @@ sem_t mutex_cola_exec;
 sem_t sem_multi;
 sem_t semCPUs_disponibles;
 sem_t mutex_lista_CPUs;
+sem_t mutex_dinamico;
+sem_t mutex_datos;
 
 //Listas
 t_list* listaCPUs;

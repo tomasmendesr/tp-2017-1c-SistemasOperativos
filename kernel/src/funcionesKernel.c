@@ -309,12 +309,12 @@ void listProcesses(char* comando, char* param){
 
 void processInfo(char* comando, char* param){
 	if(param == NULL || strlen(param) == 0 ){
-		log_warning(logger, "Se necesida el pid del proceso.");
+		printf("Se necesida el pid del proceso.\n");
 		return;
 	}
 
 	if(!esNumero(param)){
-		log_warning(logger, "Ingrese un valor numerico valido para el proceso");
+		printf("Ingrese un valor numerico valido para el proceso\n");
 		return;
 	}
 
@@ -372,7 +372,7 @@ void gradoMultiprogramacion(char* comando, char* param){
 }
 void killProcess(char* comando, char* param){
         if(!esNumero(param)){
-        	printf("ingrese un valor valido\n");
+        	printf("Ingrese un valor valido\n");
         	return;
         }
         int32_t pid = atoi(param);
@@ -485,9 +485,7 @@ void planificarCortoPlazo(void){
 
 		cpu->pcb = pcb;
 		enviarPcbCPU(pcb, cpu->socket);
-		//TODO: Agregar proceso a la lista de ejecuccion.
 		estadisticaCambiarEstado(pcb->pid, EXEC);
-
 	}
 }
 
@@ -761,7 +759,8 @@ int32_t agregarArchivo_aProceso(int32_t proceso, char* file, char* permisos){
 		entradaGlobal = malloc(sizeEntrada);
 		entradaGlobal->archivo = file;
 		entradaGlobal->vecesAbierto = 1;
-		entradaGlobal->ubicacion = list_size(globalFileTable);
+		int ubicacion = list_size(globalFileTable);
+		entradaGlobal->ubicacion = ubicacion;
 		list_add(globalFileTable, entradaGlobal);
 	}else{ //existe en la tabla global
 		entradaGlobal->vecesAbierto++;
@@ -769,7 +768,7 @@ int32_t agregarArchivo_aProceso(int32_t proceso, char* file, char* permisos){
 
 	t_archivo* archivo = malloc(sizeof(t_archivo));
 	archivo->flags = permisos;
-	archivo->fd = getArchivoFdMax(); //aca tengo que pasarselo a la cpu
+	archivo->fd = getArchivoFdMax();
 	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
 	archivo->cursor = 0;
 	list_add(entrada->archivos, archivo);
@@ -782,23 +781,25 @@ void eliminarFd(int fd, int proceso){
 		return entrada->proceso == proceso ? true : false;
 	}
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
-	int i, globalFD;
+	int i;
+	char* path = buscarPathDeArchivo(fd);
+
 	for(i=0; i< list_size(entrada->archivos);i++){
 		t_archivo* archivo = list_get(entrada->archivos, i);
 		if(archivo->fd == fd){
-			globalFD = archivo->globalFD;
 			list_remove(entrada->archivos, i);
 			free(archivo);
 		}
 	}
+
 	free(entrada);
 
 	for(i = 0; i<list_size(globalFileTable);i++){ // TODO - no esta encontrando la entrada aca.
 		entrada_tabla_globlal_archivo* entradaGlobal = list_get(globalFileTable,i);
-		if(entradaGlobal->ubicacion == globalFD){
+		if(strcmp(entradaGlobal->archivo, path) == 0){
 			entradaGlobal->vecesAbierto--;
 			if(entradaGlobal->vecesAbierto == 0){
-				list_remove_and_destroy_element(globalFileTable,entradaGlobal->ubicacion, free);
+				list_remove(globalFileTable,i);
 				free(entradaGlobal);
 			}
 		}

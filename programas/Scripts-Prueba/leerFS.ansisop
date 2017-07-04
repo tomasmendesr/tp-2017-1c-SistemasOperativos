@@ -1,13 +1,11 @@
 begin
   variables a, f
   alocar a 100
-  abrir f LE /archivo.bin
+  abrir f L /archivo.bin
   wait mutexArch
-    #a*=88
-    escribir f a 10
-  signal mutexArch
+    leer f a 100
+    prints s a
   wait b
-	!pasadas = 0
     !pasadas=!pasadas + 1
     prints n !pasadas
   signal b

@@ -164,6 +164,7 @@ void iniciarPrograma(char* comando, char* param) {
 
 	if(!verificarExistenciaDeArchivo(absolute_path)){
 		log_warning(logger, "No se encontro el archivo ingresado");
+		printf("No se encontro el archivo ingresado\n");
 		return;
 	}
 
@@ -185,7 +186,7 @@ void iniciarPrograma(char* comando, char* param) {
 
 	if (operacion == HANDSHAKE_KERNEL) {
 		log_info(logger, "Conexion con Kernel establecida");
-		printf("Conexion con Kernel exitosa\n");
+		printf("Conexion exitosa con Kernel\n");
 		log_debug(logger, "Se procede a mandar el archivo: '%s'", param);
 	} else {
 		log_error(logger, "El Kernel no devolvio handshake");
@@ -422,7 +423,7 @@ void limpiarMensajes(char* comando, char* param) {
 }
 
 int crearLog() {
-	logger = log_create("../logConsola","consola", 0, LOG_LEVEL_TRACE);
+	logger = log_create("../logConsola","consola", 1, LOG_LEVEL_TRACE);
 	if (logger) {
 		return 1;
 	} else {
@@ -445,8 +446,12 @@ void imprimirPorPantalla(void* buffer){
 }
 
 char* crearPath(char* program_name){
-
 	char* absolute_path = string_new();
+	if(string_starts_with(program_name,"/")){
+		string_append(&absolute_path,program_name);
+		if(!string_ends_with(program_name, ".ansisop")) string_append(&absolute_path,".ansisop");
+		return absolute_path;
+	}
 
 	string_append(&absolute_path,config->program_path);
 

@@ -7,7 +7,7 @@ begin
     prints n a
   signal mutexArch
   wait b
-   !pasadas = 0
+	!pasadas = 0
     !pasadas=!pasadas + 1
     prints n !pasadas
   signal b
