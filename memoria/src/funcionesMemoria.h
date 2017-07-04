@@ -136,6 +136,7 @@ void dumpTable();
 void dumpMemory(int pid);
 void flush(char* comando, char* param);
 void size(char* comando, char* param);
+void help(char* comando, char* param);
 
 char* getTimeStamp();
 

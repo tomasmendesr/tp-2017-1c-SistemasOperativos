@@ -316,6 +316,9 @@ int finalizarPrograma(t_pedido_finalizar* pid){
 }
 
 int asignarPaginas(int fd, t_pedido_asignar* pedido){
+
+	log_info("Pedido reservar frames. Pid: %d cant_frames: %d",pedido->pid,pedido->cant_pag);
+
 	if( reservarFrames(pedido->pid,pedido->cant_pag) == -1){
 		//No se puede, aviso a kernel que no hay lugar
 		enviarRespuesta(fd, SIN_ESPACIO);
@@ -750,7 +753,7 @@ void actualizarEntradaCache(int pid, int pag, char* frame){
 //funciones interfaz
 void levantarInterfaz(){
 	//creo los comandos y el parametro
-	comando* comandos = malloc(sizeof(comando)*4);
+	comando* comandos = malloc(sizeof(comando)*5);
 
 	strcpy(comandos[0].comando, "retardo");
 	comandos[0].funcion = retardo;
@@ -760,10 +763,12 @@ void levantarInterfaz(){
 	comandos[2].funcion = flush;
 	strcpy(comandos[3].comando, "size");
 	comandos[3].funcion = size;
+	strcpy(comandos[4].comando, "help");
+	comandos[4].funcion = help;
 
 	interface_thread_param* params = malloc(sizeof(interface_thread_param));
 	params->comandos = comandos;
-	params->cantComandos = 4;
+	params->cantComandos = 5;
 
 	//Lanzo el thread
 	pthread_t threadInterfaz;
@@ -921,16 +926,16 @@ void dumpMemory(int pid){
 }
 void flush(char* comando, char* param){
 
-        int i;
-        for(i=0;i<cache_entradas;i++){
-        	cache[i].pag = -1;
-        	cache[i].pid = -1;
-        	cache[i].time_used = 0;
-        }
+	int i;
+    for(i=0;i<cache_entradas;i++){
+      	cache[i].pag = -1;
+       	cache[i].pid = -1;
+       	cache[i].time_used = 0;
+    }
 
-        printf("Flush exitoso.\n");
+    printf("Flush exitoso.\n");
 
-        return;
+    return;
 }
 void size(char* comando, char* param){
 
@@ -956,6 +961,15 @@ void size(char* comando, char* param){
 
 	printf("Cantidad de marcos ocupados por el proceso n° %d: %d (%d bytes)", pid, cant, cant * cant_frames);
 	return;
+}
+
+void help(char* comando, char* param){
+
+	printf("\n\nComandos Soportados:\n+retardo \"milis\" -> Cambia el retardo\n+flush -> Limpia la cache\n");
+	printf("+size memory -> Tamaño de la memoria\n+size \"pid\" -> Tamaño del proceso\n");
+	printf("+dump -> Dump de todas las estructuras\n+dump cache -> Dump de la cache\n");
+	printf("+dump memory -> Dump de las paginas de todos los procesos y su contenido\n");
+	printf("+dump memory-pid -> Dump de las paginas de un proceso\n+dump table -> Dump de la tabla de paginas\n");
 }
 
 char* getTimeStamp(){
