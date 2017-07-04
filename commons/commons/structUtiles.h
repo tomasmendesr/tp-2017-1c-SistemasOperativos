@@ -147,6 +147,11 @@ typedef struct{
 	int data;
 }t_data;
 
+typedef struct{
+	uint32_t pid;
+	uint32_t nroPag;
+}t_pedido_liberar;
+
 void freePCB(t_pcb* pcb);
 t_entrada_stack* crearPosicionStack(void);
 void insertarNuevoStack(t_pcb* pcb);

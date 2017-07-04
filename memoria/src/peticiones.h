@@ -25,11 +25,6 @@ typedef struct{
 	uint32_t cant_pag;
 }t_pedido_asignar;
 
-typedef struct{
-	uint32_t pid;
-	uint32_t nroPag;
-}t_pedido_liberar;
-
 typedef uint32_t t_pedido_finalizar;
 
 #endif /* PETICIONES_H_ */

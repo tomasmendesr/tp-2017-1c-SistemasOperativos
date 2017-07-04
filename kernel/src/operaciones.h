@@ -22,6 +22,7 @@ void finalizarPrograma(int consola_fd, int pid);
 void finalizacion_segment_fault(void* package,int socketCPU);
 void finalizacion_stackoverflow(void* package,int socketCPU);
 void finalizacion_error(void* paquete_from_cpu, int socket_cpu, int exitCode);
+void compactar(void* pagina);
 
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu);
 void escribir(void* imprimir, int socketCpu);
