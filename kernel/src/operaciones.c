@@ -133,6 +133,7 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 	case ARCHIVO_INEXISTENTE:
 	case FALLA_RESERVAR_RECURSOS:
 	case SEGMENTATION_FAULT:
+	case SIN_ESPACIO_FS:
 		finalizacion_error(package, socketCPU, mensaje);
 		break;
 	default:

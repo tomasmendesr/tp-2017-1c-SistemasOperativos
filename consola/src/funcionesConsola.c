@@ -359,6 +359,7 @@ char* obtenerExitCode(int32_t exitCode){
 	case NULL_POINTER: return "NULL_POINTER";
 	case DESCONEXION_CPU: return "DESCONEXION_CPU";
 	case SEGMENTATION_FAULT: return "SEGMENTATION_FAULT";
+	case SIN_ESPACIO_FS: return "SIN_ESPACIO_FS";
 	default: return "ERROR DESCONOCIDO";
 	}
 }
