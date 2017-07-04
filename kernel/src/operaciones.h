@@ -35,7 +35,14 @@ void moverCursor(int socketCpu, t_cursor* cursor);
 //Funciones Heap
 //Pedido en si
 void pedidoReserva(int socket, t_pedido_reserva* pedido);
-int reservarMemoria();
+//La reserva de la memoria
+int reservarMemoria(t_pedido_reserva* pedido, t_pcb* pcb);
+//Checkea si hay espacio en la pagina
+int verificarEspacio(void* pagina, int cant_necesaria);
+
+int solicitarPagina(int pid, int pag, void* resultado);
+int escribirPagina(int pid, int pag, void* pagina);
+
 void liberarMemoria(int socket, char* paquete);
 
 #endif /* OPERACIONES_H_ */

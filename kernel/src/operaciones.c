@@ -345,8 +345,40 @@ void finalizacion_proceso(void* paquete_from_cpu, int32_t socket_cpu_asociado) {
 	terminarProceso(pcbRecibido, socket_cpu_asociado);
 }
 
-t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
-	uint32_t ind=0;
+#define metadata(a) ((t_metaHeap*)a)
+int verificarEspacio(void* pagina, int cant_bytes){
+
+	int cantRecorrida = 0;
+	void* paginaDesp;
+	while(cantRecorrida < pagina_size){
+
+		paginaDesp = pagina + cantRecorrida;
+
+		int block_size = metadata(pagina + cantRecorrida)->size;
+		if(metadata(paginaDesp)->free){
+			//Si esta libre el bloque, intento usarlo
+
+			if( (block_size - sizeof(t_metaHeap)) >= cant_bytes ){
+				//Hay lugar en la pagina, cambio la metadata y escribo el campo atras
+				metadata(paginaDesp)->free = false;
+				metadata(paginaDesp + cantRecorrida)->size = cant_bytes;
+
+				metadata(paginaDesp + cant_bytes)->free = true;
+				metadata(paginaDesp + cant_bytes)->size = pagina_size - (cantRecorrida + cant_bytes + sizeof(t_metaHeap));
+
+				return 0;
+			}
+
+		}
+
+		//No retorne, el bloque no sirve y avanzo
+		cantRecorrida += block_size + sizeof(t_metaHeap);
+
+	}
+
+	return -1;
+
+/*	uint32_t ind=0;
 	uint32_t offset=0;
 	t_list* datos;
 	t_entrada_datos* entrada;
@@ -370,12 +402,11 @@ t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
 			return pagina_size*pag + offset-bloque->size;
 		}
 	}
-	return 0;
+	return 0;*/
 }
+#undef metadata(a)
 
 void pedidoReserva(int32_t socket, t_pedido_reserva* pedido){
-	
-	
 
 	cpu_t cpu = obtener_cpu_por_socket_asociado(socket);
 	t_pcb* pcb = cpu.pcb;
@@ -600,6 +631,8 @@ void pedidoReserva(int32_t socket, t_pedido_reserva* pedido){
 
 int reservarMemoria(t_pedido_reserva* pedido, t_pcb* pcb){
 
+	//TODO: LIBERAR LA PAGINA PEDIDA--------------------------------------------------------------------------------
+
 	void* pagina;
 	int i; //Recorro todas las paginas de heap que tengo
 	for(i=0;i<pcb->cant_pag_heap;i++){
@@ -610,11 +643,26 @@ int reservarMemoria(t_pedido_reserva* pedido, t_pcb* pcb){
 			if( solicitarPagina(pedido->pid,pcb->pag_heap[i].pag,pagina) == -1 )
 				return -1;
 
-		}
+			if( verificarEspacio(pagina, pedido->cant_bytes) == -1 ){
+				log_debug(logger, "La pagina numero %d no tiene espacio para reservar", pcb->pag_heap[i].pag);
+			}else
+			{//pude reservar, mando a escribir la pagina
+				if( escribirPagina(pedido->pid,pcb->pag_heap[i].pag,pagina) == -1 )
+					return -1;
+				else{
+					pcb->pag_heap[i].bytes_libres -= pedido->cant_bytes;
+					return 0;
+				}
+
+			}
+		}//Termino de revisar la pagina
 
 	}
+	/* Ninguna de las paginas ya reservadas sirve para cumplir con mi peticion
+	 * Tengo que reservar una nueva */
 
-	//Pedir pagina
+
+
 }
 
 //Pide una pagina a memoria y la guarda en resultado
@@ -645,6 +693,32 @@ int solicitarPagina(int pid, int pag, void* resultado){
 		return -1;
 	}
 	
+	return 0;
+}
+
+int escribirPagina(int pid, int pag, void* pagina){
+
+	const int fd = socketConexionMemoria;
+	header_t header;
+
+	header.type = GRABAR_BYTES;
+	header.length = sizeof(t_pedido_bytes) + pagina_size;
+
+	char* buf = malloc(sizeof(t_pedido_bytes) + pagina_size);
+
+	((t_pedido_bytes*)buf)->pid = pid;
+	((t_pedido_bytes*)buf)->pag = pag;
+	((t_pedido_bytes*)buf)->offset = 0;
+	((t_pedido_bytes*)buf)->size = pagina_size;
+
+	memcpy(buf + sizeof(t_pedido_bytes), pagina, pagina_size);
+
+	if( sendSocket(fd,&header,buf) <= 0 ){
+		log_error(logger,"Heap: Problema al escribir la pagina.");
+		return -1;
+	}
+
+	free(buf);
 	return 0;
 }
 

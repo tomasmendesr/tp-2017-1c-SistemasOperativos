@@ -131,6 +131,11 @@ typedef struct{
 	uint32_t cant_bytes;
 }t_pedido_reserva;
 
+typedef struct{
+	bool free;
+	uint32_t size;
+}t_metaHeap;
+
 void freePCB(t_pcb* pcb);
 t_entrada_stack* crearPosicionStack(void);
 void insertarNuevoStack(t_pcb* pcb);
