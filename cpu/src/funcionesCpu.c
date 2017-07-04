@@ -252,10 +252,12 @@ int32_t requestHandlerMemoria(void){
 	case SEGMENTATION_FAULT:
 		log_error(logger,"Segmentation Fault");
 		finalizarPor(SEGMENTATION_FAULT);
+		finPrograma = true;
 		return -1;
 	case STACKOVERFLOW:
 		log_error(logger, "Stack Overflow");
 		finalizarPor(STACKOVERFLOW);
+		finPrograma = true;
 		return -1;
 	default:
 		log_error(logger, "Mensaje Recibido Incorrecto");

@@ -123,9 +123,6 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 		finalizacion_quantum(package,socketCPU);
 		break;
 	/* ERRORES */
-	case SEGMENTATION_FAULT:
-		finalizacion_segment_fault(package, socketCPU);
-		break;
 	case STACKOVERFLOW:
 		finalizacion_stackoverflow(package, socketCPU);
 		break;
@@ -135,6 +132,7 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 	case NULL_POINTER:
 	case ARCHIVO_INEXISTENTE:
 	case FALLA_RESERVAR_RECURSOS:
+	case SEGMENTATION_FAULT:
 		finalizacion_error(package, socketCPU, mensaje);
 		break;
 	default:
@@ -248,13 +246,13 @@ void finalizarPrograma(int32_t consola_fd, int32_t pid){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->matarSiguienteRafaga = true;
 	info->exitCode = FINALIZAR_DESDE_CONSOLA;
-	log_info(logger, "Se termina la ejecucion del proceso %d por comando STOP", pid);
+	log_info(logger, "Se termina la ejecucion del proceso #%d por comando STOP (Consola)", pid);
 }
 
 void finalizacion_segment_fault(void* paquete_from_cpu, int32_t socket_cpu){
 	t_pcb* pcbRecibido =  deserializar_pcb(paquete_from_cpu);
-	log_error(logger, "Finaliza el proceso %d por segment fautt", pcbRecibido->pid);
-	pcbRecibido->exitCode = SUPERA_LIMITE_ASIGNACION_PAGINAS;
+	log_error(logger, "Finaliza el proceso #%d por segmentation fault", pcbRecibido->pid);
+	pcbRecibido->exitCode = ERROR_MEMORIA;
 	terminarProceso(pcbRecibido, socket_cpu);
 }
 
@@ -417,7 +415,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 				}
 				bloque = list_find(entrada->list,buscar);
 				header = malloc(sizeof(header_t));
-				header->type = GRABAR_BYTES;
+				header->type = ASIGNAR_PAGINAS;
 				header->length = sizeof(meta_bloque)+sizeof(t_pedido_bytes);
 				reserva->size -= pedido_memoria.cant+sizeof(meta_bloque);
 
@@ -531,7 +529,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
 		info->cantPaginasHeap++;
 		reserva->size -= pedido_memoria.cant;
-		header.type = GRABAR_BYTES;
+		header.type = ASIGNAR_PAGINAS;
 		header.length = sizeof(meta_bloque)+sizeof(t_pedido_bytes);
 
 		package = malloc(header.length);

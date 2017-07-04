@@ -358,6 +358,7 @@ char* obtenerExitCode(int32_t exitCode){
 	case ERROR_SIN_DEFINICION: return "ERROR_SIN_DEFINICION";
 	case NULL_POINTER: return "NULL_POINTER";
 	case DESCONEXION_CPU: return "DESCONEXION_CPU";
+	case SEGMENTATION_FAULT: return "SEGMENTATION_FAULT";
 	default: return "ERROR DESCONOCIDO";
 	}
 }

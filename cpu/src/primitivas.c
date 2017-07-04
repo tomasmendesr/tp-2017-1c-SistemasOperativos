@@ -104,7 +104,6 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 		log_info(logger, "Variable asignada");
 		free(pedidoEscritura);
 	}
-	return;
 }
 
 /*

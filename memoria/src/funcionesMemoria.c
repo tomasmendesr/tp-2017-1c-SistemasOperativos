@@ -316,7 +316,6 @@ int finalizarPrograma(t_pedido_finalizar* pid){
 }
 
 int asignarPaginas(int fd, t_pedido_asignar* pedido){
-
 	if( reservarFrames(pedido->pid,pedido->cant_pag) == -1){
 		//No se puede, aviso a kernel que no hay lugar
 		enviarRespuesta(fd, SIN_ESPACIO);
@@ -387,7 +386,7 @@ int reservarFrames(int pid, int cantPag){
 		}
 
 		if(asigne == false){
-			printf("\nERRRRRORRORORORORORR; QUILOMBOOOO\n");
+			log_error(logger,"Error al reservar frames");
 		}
 
 	}
@@ -597,7 +596,7 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 }
 
 int escribir(int pid, int pag, int offset, char* contenido, int size){
-
+	log_info(logger, "Escribir pid->%d - pag->%d - offset->%d - size->%d", pid, pag, offset, size);
 	int frame;
 	int cant_escrita = 0;
 	int cant_a_escribir;

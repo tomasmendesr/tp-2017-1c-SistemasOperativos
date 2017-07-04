@@ -19,3 +19,8 @@ function g
 	a <- f
 	return a
 end
+
+start stackoverflow
+start escribirFS
+start leerFS
+start facil

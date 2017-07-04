@@ -103,7 +103,6 @@ enum protocolo_a_memoria{
 enum protocolo_memoria_a_cualquiera{
 	ENVIAR_TAMANIO_PAGINA = 79,
 	RESPUESTA_BYTES = 80,
-	SEGMENTATION_FAULT = 81,
 	MEMORY_OVERLOAD = 82,
 	SEGMENTO_CREADO = 83,
 	OVERFLOW = 84,
@@ -165,7 +164,7 @@ enum exit_code{
 	NULL_POINTER = -12,
 	DESCONEXION_CPU = -13,
 	ERROR_SIN_DEFINICION = -20,
-	PUNTERO_VACIO = -15
+	SEGMENTATION_FAULT = -14
 };
 
 //
