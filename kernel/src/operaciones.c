@@ -101,7 +101,7 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 		abrirArchivo(socketCPU, package);
 		break;
 	case CERRAR_ARCHIVO:
-		cerrarArchivo(socketCPU, package);
+		cerrarArchivo(socketCPU, (t_data*) package);
 		break;
 	case BORRAR_ARCHIVO:
 		borrarArchivo(socketCPU, package);
@@ -838,10 +838,8 @@ void borrarArchivo(int32_t socketCpu, void* package){
 
 }
 
-void cerrarArchivo(int32_t socketCpu, void* package){
-	int pid = *(int*) package;
-	int fd = *(int*) (package + sizeof(int));
-	eliminarFd(fd, pid);
+void cerrarArchivo(int32_t socketCpu, t_data* data){
+	eliminarFd(data->pid, data->data);
 	enviar_paquete_vacio(CERRAR_ARCHIVO_OK, socketCpu);
 }
 
