@@ -126,6 +126,12 @@ typedef struct {
 	char* info;
 }__attribute__((__packed__)) t_imprimir;
 
+typedef struct {
+	int pid;
+	int pag;
+	int offset;
+}__attribute__((__packed__)) t_liberar;
+
 typedef struct{
 	uint32_t pid;
 	uint32_t cant_bytes;

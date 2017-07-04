@@ -95,7 +95,7 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 		pedidoReserva(socketCPU, (t_pedido_reserva*)package);
 		break;
 	case LIBERAR_MEMORIA:
-		liberarMemoria(socketCPU, package);
+		pedidoLiberar(socketCPU, (t_liberar*) package);
 		break;
 	case ABRIR_ARCHIVO:
 		abrirArchivo(socketCPU, package);
@@ -408,8 +408,8 @@ int verificarEspacio(void* pagina, int cant_bytes){
 
 void pedidoReserva(int32_t socket, t_pedido_reserva* pedido){
 
-	cpu_t cpu = obtener_cpu_por_socket_asociado(socket);
-	t_pcb* pcb = cpu.pcb;
+	cpu_t* cpu = obtener_cpu_por_socket_asociado(socket);
+	t_pcb* pcb = cpu->pcb;
 
 	if( reservarMemoria(pedido, pcb) == -1){
 		//Enviar respuesta falla a cpu
@@ -721,6 +721,74 @@ int escribirPagina(int pid, int pag, void* pagina){
 	free(buf);
 	return 0;
 }
+
+#define metadata(a) ((t_metaHeap*)a)
+void pedidoLiberar(int socketCpu, t_liberar* pedido){
+	void* pagina;
+	cpu_t* cpu = obtener_cpu_por_socket_asociado(socketCpu);
+	t_pcb* pcb = cpu->pcb;
+	free(cpu);
+
+	if(solicitarPagina(pedido->pid,pedido->pag,pagina) == -1 ){
+		enviar_paquete_vacio(ERROR_MEMORIA, socketCpu);
+		return;
+	}
+
+	void* metadataPos;
+	metadataPos = pagina + pedido->offset - sizeof(t_metaHeap);
+
+	if(metadata(metadataPos)->free){
+		enviar_paquete_vacio(NULL_POINTER, socketCpu);
+	}else{
+		metadata(metadataPos)->free = true;
+		compactar(pagina);
+
+		int i;
+		for(i=0; i < pcb->cant_pag_heap; i++){
+			if(pcb->pag_heap[i].pag == pedido->pag){
+
+				pcb->pag_heap[i].bytes_libres += metadata(metadataPos)->size;
+				if(pcb->pag_heap[i].bytes_libres == pagina_size - sizeof(t_metaHeap) * 2){
+					// liberar pagina
+
+				}
+			}
+		}
+
+		if(escribirPagina(pedido->pid,pedido->pag,pagina) == -1 ) enviar_paquete_vacio(ERROR_MEMORIA, socketCpu);
+	}
+}
+#undef metadata(a)
+
+void compactar(void* pagina){
+	int cantRecorrida = 0;
+	void* paginaDesp;
+	while(cantRecorrida < pagina_size){
+		paginaDesp = pagina + cantRecorrida;
+
+		int block_size = metadata(pagina + cantRecorrida)->size;
+		if(metadata(paginaDesp)->free){
+			//Si esta libre el bloque, intento usarlo
+
+			if( (block_size - sizeof(t_metaHeap)) >= cant_bytes ){
+				//Hay lugar en la pagina, cambio la metadata y escribo el campo atras
+				metadata(paginaDesp)->free = false;
+				metadata(paginaDesp + cantRecorrida)->size = cant_bytes;
+
+				metadata(paginaDesp + cant_bytes)->free = true;
+				metadata(paginaDesp + cant_bytes)->size = pagina_size - (cantRecorrida + cant_bytes + sizeof(t_metaHeap));
+
+				return 0;
+			}
+
+		}
+
+		//No retorne, el bloque no sirve y avanzo
+		cantRecorrida += block_size + sizeof(t_metaHeap);
+
+	}
+}
+
 
 int32_t buscarEntrada(uint32_t pid){
 	t_entrada_datos* item;
@@ -1099,7 +1167,7 @@ void leerArchivo(int socketCpu, t_lectura* lectura){
 
 }
 
-void moverCursor(int32_t socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
+void moverCursor(int32_t socketCPU, t_cursor* cursor){
 	t_archivo* archivo = buscarArchivo(cursor->pid, cursor->descriptor);
 	if(archivo == NULL){
 		log_error(logger, "No se encontro el archivo para escribir");

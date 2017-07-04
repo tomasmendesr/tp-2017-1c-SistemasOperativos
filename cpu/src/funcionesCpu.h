@@ -30,11 +30,6 @@ typedef struct{
 	char* ip_Kernel;
 }t_config_cpu;
 
-typedef struct{
-	int32_t pid;
-	size_t pos;
-}t_liberar;
-
 t_pcb* pcb;
 int socketConexionKernel;
 int socketConexionMemoria;
