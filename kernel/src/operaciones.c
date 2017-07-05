@@ -143,18 +143,12 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 
 void leerVarCompartida(int32_t socketCPU, char* variable){
 	if(dictionary_has_key(config->variablesGlobales, variable)){
-		if(dictionary_get(config->variablesGlobales, variable) == NULL){
-			log_error(logger, "El valor de %s es NULL", variable);
-			 enviar_paquete_vacio(NULL_POINTER, socketCPU);
-		}
-		else{
 			int32_t valor = leerVariableGlobal(config->variablesGlobales, variable);
 			header_t* header = malloc(sizeof(header_t));
 			header->type = VALOR_VAR_COMPARTIDA;
 			header->length = sizeof(valor);
 			sendSocket(socketCPU, header, &valor);
 			free(header);
-		}
 	}else{
 		log_error(logger, "Error al leer var compartida %s. No se encontro", variable);
 		enviar_paquete_vacio(GLOBAL_NO_DEFINIDA, socketCPU);
@@ -900,7 +894,7 @@ void borrarArchivo(int32_t socketCpu, void* package){
 	header_t header;
 	header.type = BORRAR_ARCHIVO;
 	uint32_t size = strlen(path) + 1;
-	header.type = size;
+	header.length = size;
 
 	sem_wait(&mutex_fs);
 
