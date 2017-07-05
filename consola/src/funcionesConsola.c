@@ -47,6 +47,8 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 
 	config_destroy(configConsola);
 	printf("Configuracion levantada exitosamente\n");
+	printf("Ruta por defecto: '%s'\n", config->program_path);
+	printf("No es necesario escribir el '.ansisop'\n");
 	return config;
 }
 
