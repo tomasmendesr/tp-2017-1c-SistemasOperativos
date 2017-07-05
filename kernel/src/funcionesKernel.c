@@ -840,8 +840,8 @@ t_archivo* buscarArchivo(int32_t pid, int32_t fd){
 
 }
 
-void verificarProcesosEnCpuCaida(int32_t socketCPU){
-		int32_t i;
+void verificarProcesosEnCpuCaida(int socketCPU){
+		int i;
 		for(i = 0; i<list_size(listaCPUs); i++){
 			cpu_t* cpu = list_get(listaCPUs, i);
 			if(cpu->socket == socketCPU){

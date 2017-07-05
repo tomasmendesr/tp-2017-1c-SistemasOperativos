@@ -51,9 +51,9 @@ void procesarMensajeConsola(int32_t consola_fd, int32_t mensaje, char* package){
 
 void trabajarMensajeCPU(int32_t socketCPU){
 
-	int32_t tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
-	int32_t check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
+	int check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
 
 	//Chequeo de errores
 	if(check <= 0){
@@ -63,6 +63,7 @@ void trabajarMensajeCPU(int32_t socketCPU){
 		if(paquete)free(paquete);
 		FD_CLR(socketCPU, &master);
 		FD_CLR(socketCPU, &setCPUs);
+		return;
 	}else{
 		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
 	}
