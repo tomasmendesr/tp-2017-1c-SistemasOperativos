@@ -61,3 +61,633 @@
 [INFO] 19:42:13:139 kernel/(5274:5292): Conexion con nueva CPU establecida
 [INFO] 19:43:20:331 kernel/(5274:5339): Se cerro el socket 8
 [INFO] 19:43:26:210 kernel/(5274:5340): Se cerro el socket 8
+[INFO] 18:36:43:297 kernel/(3290:3290): Configuracion levantada correctamente
+[INFO] 18:36:43:318 kernel/(3290:3290): Conexion con memoria establecida
+[INFO] 18:36:43:318 kernel/(3290:3290): Tamanio de pagina recibido: 256
+[INFO] 18:36:43:318 kernel/(3290:3290): Conexion con File System establecida
+[INFO] 18:39:54:8 kernel/(3290:3352): Handshake con consola
+[INFO] 18:39:54:12 kernel/(3290:3354): Recibo codigo
+[INFO] 18:39:54:12 kernel/(3290:3354): Proceso agregado a la cola New
+[INFO] 18:39:54:12 kernel/(3290:3354): Envio pedido de paginas a memoria. pid:1, cantPags:3
+[INFO] 18:39:54:12 kernel/(3290:3354): Paginas reservadas para el proceso 1
+[INFO] 18:40:26:425 kernel/(3290:3382): Conexion con nueva CPU establecida
+[WARNING] 18:40:26:552 kernel/(3290:3385): Se cerro el socket 9 (cpu)
+[INFO] 18:40:26:552 kernel/(3290:3385): CPU 9 quitado de la lista
+[INFO] 18:40:26:552 kernel/(3290:3385): Se termina la ejecucion del proceso #1 por desconexion de la CPU
+[INFO] 18:40:26:552 kernel/(3290:3385): Proceso 1 agregado a la cola de FINISHED
+[WARNING] 18:40:26:553 kernel/(3290:3386): Se cerro el socket 9 (cpu)
+[WARNING] 19:04:06:782 kernel/(3290:3355): Se cerro el socket 8 (Consola)
+[INFO] 19:06:02:842 kernel/(3866:3866): Configuracion levantada correctamente
+[INFO] 19:06:02:842 kernel/(3866:3866): Conexion con memoria establecida
+[INFO] 19:06:02:842 kernel/(3866:3866): Tamanio de pagina recibido: 256
+[INFO] 19:06:02:842 kernel/(3866:3866): Conexion con File System establecida
+[INFO] 19:06:16:636 kernel/(3866:3873): Handshake con consola
+[INFO] 19:06:16:640 kernel/(3866:3875): Recibo codigo
+[INFO] 19:06:16:640 kernel/(3866:3875): Proceso agregado a la cola New
+[INFO] 19:06:16:640 kernel/(3866:3875): Envio pedido de paginas a memoria. pid:1, cantPags:3
+[INFO] 19:06:16:640 kernel/(3866:3875): Paginas reservadas para el proceso 1
+[INFO] 19:06:23:872 kernel/(3866:3878): Conexion con nueva CPU establecida
+[DEBUG] 19:06:25:892 kernel/(3866:3880): Finalizar proceso 1 por fin de ejecucion
+[INFO] 19:06:25:893 kernel/(3866:3880): Proceso 1 agregado a la cola de FINISHED
+[INFO] 19:06:25:893 kernel/(3866:3880): Se desocupa cpu 9
+
+[INFO] 19:23:28:984 kernel/(3866:4168): Handshake con consola
+[INFO] 19:23:28:988 kernel/(3866:4170): Recibo codigo
+[INFO] 19:23:28:988 kernel/(3866:4170): Proceso agregado a la cola New
+[INFO] 19:23:28:988 kernel/(3866:4170): Envio pedido de paginas a memoria. pid:2, cantPags:3
+[INFO] 19:23:28:988 kernel/(3866:4170): Paginas reservadas para el proceso 2
+[ERROR] 19:27:47:868 kernel/(3866:4303): Finaliza el proceso 2 por stack overflow
+[INFO] 19:27:47:869 kernel/(3866:4303): Proceso 2 agregado a la cola de FINISHED
+[INFO] 19:27:47:878 kernel/(3866:4303): Se desocupa cpu 9
+
+[INFO] 19:37:27:988 kernel/(3866:4435): Handshake con consola
+[INFO] 19:37:27:992 kernel/(3866:4437): Recibo codigo
+[INFO] 19:37:27:992 kernel/(3866:4437): Proceso agregado a la cola New
+[INFO] 19:37:27:992 kernel/(3866:4437): Envio pedido de paginas a memoria. pid:3, cantPags:3
+[INFO] 19:37:27:992 kernel/(3866:4437): Paginas reservadas para el proceso 3
+[ERROR] 19:37:28:495 kernel/(3866:4304): Error al leer var compartida colas. No se encontro
+[ERROR] 19:37:28:500 kernel/(3866:4439): Finaliza el proceso #3 por error
+[INFO] 19:37:28:501 kernel/(3866:4439): Proceso 3 agregado a la cola de FINISHED
+[INFO] 19:37:28:501 kernel/(3866:4439): Se desocupa cpu 9
+
+[WARNING] 19:37:28:656 kernel/(3866:4441): Se cerro el socket 9 (cpu)
+[INFO] 19:37:28:656 kernel/(3866:4441): CPU 9 quitado de la lista
+[WARNING] 19:37:28:657 kernel/(3866:4442): Se cerro el socket 9 (cpu)
+[INFO] 19:39:54:643 kernel/(3866:4447): Handshake con consola
+[WARNING] 19:39:54:643 kernel/(3866:4446): Se recibio el codigo de operacion invalido.
+[INFO] 19:40:08:880 kernel/(3866:4451): Conexion con nueva CPU establecida
+[INFO] 19:40:24:197 kernel/(3866:4455): Handshake con consola
+[INFO] 19:40:24:200 kernel/(3866:4457): Recibo codigo
+[INFO] 19:40:24:200 kernel/(3866:4457): Proceso agregado a la cola New
+[INFO] 19:40:24:200 kernel/(3866:4457): Envio pedido de paginas a memoria. pid:4, cantPags:3
+[INFO] 19:40:24:200 kernel/(3866:4457): Paginas reservadas para el proceso 4
+[ERROR] 19:40:24:703 kernel/(3866:4453): Error al leer var compartida colas. No se encontro
+[ERROR] 19:40:24:712 kernel/(3866:4459): Finaliza el proceso #4 por error
+[INFO] 19:40:24:722 kernel/(3866:4459): Proceso 4 agregado a la cola de FINISHED
+[INFO] 19:40:24:722 kernel/(3866:4459): Se desocupa cpu 12
+
+[INFO] 19:45:21:752 kernel/(3866:4469): Handshake con consola
+[INFO] 19:45:21:756 kernel/(3866:4471): Recibo codigo
+[INFO] 19:45:21:756 kernel/(3866:4471): Proceso agregado a la cola New
+[INFO] 19:45:21:756 kernel/(3866:4471): Envio pedido de paginas a memoria. pid:5, cantPags:3
+[INFO] 19:45:21:756 kernel/(3866:4471): Paginas reservadas para el proceso 5
+[ERROR] 19:45:21:797 kernel/(3866:4460): No se encontro el semaforo c. Se finaliza la ejecucion
+[ERROR] 19:45:21:800 kernel/(3866:4472): Finaliza el proceso #5 por error
+[INFO] 19:45:21:800 kernel/(3866:4472): Proceso 5 agregado a la cola de FINISHED
+[INFO] 19:45:21:800 kernel/(3866:4472): Se desocupa cpu 12
+
+[INFO] 19:45:53:380 kernel/(3866:4478): Handshake con consola
+[INFO] 19:45:53:391 kernel/(3866:4480): Recibo codigo
+[INFO] 19:45:53:391 kernel/(3866:4480): Proceso agregado a la cola New
+[INFO] 19:45:53:391 kernel/(3866:4480): Envio pedido de paginas a memoria. pid:6, cantPags:3
+[INFO] 19:45:53:391 kernel/(3866:4480): Paginas reservadas para el proceso 6
+[ERROR] 19:45:53:429 kernel/(3866:4473): No se encontro el semaforo c. Se finaliza la ejecucion
+[ERROR] 19:45:53:436 kernel/(3866:4482): Finaliza el proceso #6 por error
+[INFO] 19:45:53:436 kernel/(3866:4482): Proceso 6 agregado a la cola de FINISHED
+[INFO] 19:45:53:436 kernel/(3866:4482): Se desocupa cpu 12
+
+[INFO] 19:48:08:708 kernel/(3866:4489): Handshake con consola
+[INFO] 19:48:08:712 kernel/(3866:4491): Recibo codigo
+[INFO] 19:48:08:712 kernel/(3866:4491): Proceso agregado a la cola New
+[INFO] 19:48:08:712 kernel/(3866:4491): Envio pedido de paginas a memoria. pid:7, cantPags:3
+[INFO] 19:48:08:713 kernel/(3866:4491): Paginas reservadas para el proceso 7
+[ERROR] 19:48:08:752 kernel/(3866:4483): No se encontro el semaforo c. Se finaliza la ejecucion
+[ERROR] 19:48:08:760 kernel/(3866:4493): Finaliza el proceso #7 por error
+[INFO] 19:48:08:760 kernel/(3866:4493): Proceso 7 agregado a la cola de FINISHED
+[INFO] 19:48:08:760 kernel/(3866:4493): Se desocupa cpu 12
+
+[WARNING] 19:48:48:829 kernel/(3866:4494): Se cerro el socket 12 (cpu)
+[INFO] 19:48:48:829 kernel/(3866:4494): CPU 12 quitado de la lista
+[WARNING] 19:48:48:830 kernel/(3866:4501): Se cerro el socket 12 (cpu)
+[WARNING] 19:48:52:426 kernel/(3866:3876): Se cerro el socket 8 (Consola)
+[WARNING] 19:48:52:426 kernel/(3866:4171): Se cerro el socket 10 (Consola)
+[WARNING] 19:48:52:426 kernel/(3866:4438): Se cerro el socket 11 (Consola)
+[WARNING] 19:48:52:427 kernel/(3866:4449): Se cerro el socket 9 (Consola)
+[INFO] 19:49:10:237 kernel/(4504:4504): Configuracion levantada correctamente
+[ERROR] 19:49:10:237 kernel/(4504:4504): No se pudo establecer la conexion con la memoria.
+[INFO] 19:49:27:283 kernel/(4508:4508): Configuracion levantada correctamente
+[ERROR] 19:49:27:284 kernel/(4508:4508): No se pudo establecer la conexion con la memoria.
+[INFO] 19:49:56:583 kernel/(4513:4513): Configuracion levantada correctamente
+[INFO] 19:49:56:587 kernel/(4513:4513): Conexion con memoria establecida
+[INFO] 19:49:56:587 kernel/(4513:4513): Tamanio de pagina recibido: 256
+[INFO] 19:49:56:587 kernel/(4513:4513): Conexion con File System establecida
+[INFO] 19:50:08:640 kernel/(4513:4519): Conexion con nueva CPU establecida
+[INFO] 19:50:53:525 kernel/(4513:4525): Handshake con consola
+[INFO] 19:50:53:528 kernel/(4513:4527): Recibo codigo
+[INFO] 19:50:53:528 kernel/(4513:4527): Proceso agregado a la cola New
+[INFO] 19:50:53:528 kernel/(4513:4527): Envio pedido de paginas a memoria. pid:1, cantPags:11
+[INFO] 19:50:53:529 kernel/(4513:4527): Paginas reservadas para el proceso 1
+[INFO] 19:50:53:530 kernel/(4513:4521): Se desocupa cpu 8
+
+[INFO] 19:50:53:530 kernel/(4513:4521): Bloqueo proceso 1
+[INFO] 19:51:00:632 kernel/(4513:4529): Handshake con consola
+[INFO] 19:51:00:636 kernel/(4513:4531): Recibo codigo
+[INFO] 19:51:00:636 kernel/(4513:4531): Proceso agregado a la cola New
+[INFO] 19:51:00:636 kernel/(4513:4531): Envio pedido de paginas a memoria. pid:2, cantPags:11
+[INFO] 19:51:00:636 kernel/(4513:4531): Paginas reservadas para el proceso 2
+[ERROR] 19:51:01:188 kernel/(4513:4534): El valor de colas es NULL
+[ERROR] 19:51:01:192 kernel/(4513:4535): Finaliza el proceso #2 por error
+[INFO] 19:51:01:193 kernel/(4513:4535): Proceso 2 agregado a la cola de FINISHED
+[INFO] 19:51:01:193 kernel/(4513:4535): Se desocupa cpu 8
+
+[INFO] 19:51:36:788 kernel/(4513:4538): Handshake con consola
+[INFO] 19:51:36:792 kernel/(4513:4540): Recibo codigo
+[INFO] 19:51:36:792 kernel/(4513:4540): Proceso agregado a la cola New
+[INFO] 19:51:36:792 kernel/(4513:4540): Envio pedido de paginas a memoria. pid:3, cantPags:11
+[INFO] 19:51:36:793 kernel/(4513:4540): Paginas reservadas para el proceso 3
+[INFO] 19:51:36:832 kernel/(4513:4536): Se desocupa cpu 8
+
+[INFO] 19:51:36:832 kernel/(4513:4536): Bloqueo proceso 3
+[INFO] 19:51:48:436 kernel/(4513:4542): Handshake con consola
+[INFO] 19:51:48:440 kernel/(4513:4544): Recibo codigo
+[INFO] 19:51:48:440 kernel/(4513:4544): Proceso agregado a la cola New
+[INFO] 19:51:48:440 kernel/(4513:4544): Envio pedido de paginas a memoria. pid:4, cantPags:11
+[INFO] 19:51:48:441 kernel/(4513:4544): Paginas reservadas para el proceso 4
+[INFO] 19:51:48:489 kernel/(4513:4546): Se desocupa cpu 8
+
+[INFO] 19:51:48:489 kernel/(4513:4546): Bloqueo proceso 4
+[INFO] 19:52:21:837 kernel/(4513:4548): Handshake con consola
+[INFO] 19:52:21:840 kernel/(4513:4550): Recibo codigo
+[INFO] 19:52:21:840 kernel/(4513:4550): Proceso agregado a la cola New
+[WARNING] 19:52:44:723 kernel/(4513:4528): Se cerro el socket 9 (Consola)
+[INFO] 19:52:44:723 kernel/(4513:4528): Se termina la ejecucion del proceso 1 por desconexion de la consola
+[WARNING] 19:52:44:723 kernel/(4513:4532): Se cerro el socket 10 (Consola)
+[WARNING] 19:52:44:723 kernel/(4513:4541): Se cerro el socket 11 (Consola)
+[INFO] 19:52:44:723 kernel/(4513:4541): Se termina la ejecucion del proceso 3 por desconexion de la consola
+[WARNING] 19:52:44:723 kernel/(4513:4545): Se cerro el socket 12 (Consola)
+[INFO] 19:52:44:723 kernel/(4513:4545): Se termina la ejecucion del proceso 4 por desconexion de la consola
+[WARNING] 19:52:44:728 kernel/(4513:4551): Se cerro el socket 13 (Consola)
+[INFO] 19:52:44:729 kernel/(4513:4551): Se termina la ejecucion del proceso 5 por desconexion de la consola
+[INFO] 19:53:18:353 kernel/(4513:4556): Handshake con consola
+[INFO] 19:53:18:356 kernel/(4513:4558): Recibo codigo
+[INFO] 19:53:18:356 kernel/(4513:4558): Proceso agregado a la cola New
+[INFO] 19:53:27:217 kernel/(4513:4571): Handshake con consola
+[INFO] 19:53:27:220 kernel/(4513:4573): Recibo codigo
+[INFO] 19:53:27:220 kernel/(4513:4573): Proceso agregado a la cola New
+[INFO] 19:54:33:524 kernel/(4513:4577): Handshake con consola
+[INFO] 19:54:33:528 kernel/(4513:4579): Recibo codigo
+[INFO] 19:54:33:528 kernel/(4513:4579): Proceso agregado a la cola New
+[INFO] 19:54:48:309 kernel/(4513:4604): Conexion con nueva CPU establecida
+[WARNING] 19:55:36:181 kernel/(4513:4606): Se cerro el socket 12 (cpu)
+[INFO] 19:55:36:182 kernel/(4513:4606): CPU 12 quitado de la lista
+[WARNING] 19:55:36:182 kernel/(4513:4608): Se cerro el socket 12 (cpu)
+[WARNING] 19:55:39:840 kernel/(4513:4559): Se cerro el socket 9 (Consola)
+[WARNING] 19:55:39:840 kernel/(4513:4574): Se cerro el socket 10 (Consola)
+[WARNING] 19:55:39:840 kernel/(4513:4580): Se cerro el socket 11 (Consola)
+[INFO] 19:55:39:841 kernel/(4513:4559): Se termina la ejecucion del proceso 1 por desconexion de la consola
+[INFO] 19:55:39:841 kernel/(4513:4580): Se termina la ejecucion del proceso 3 por desconexion de la consola
+[INFO] 20:00:50:360 kernel/(4513:4514): Envio pedido de paginas a memoria. pid:5, cantPags:11
+[INFO] 20:00:50:360 kernel/(4513:4514): Paginas reservadas para el proceso 5
+[INFO] 20:00:50:360 kernel/(4513:4514): Envio pedido de paginas a memoria. pid:6, cantPags:11
+[INFO] 20:00:50:360 kernel/(4513:4514): Paginas reservadas para el proceso 6
+[INFO] 20:00:50:400 kernel/(4513:4547): Se desocupa cpu 8
+
+[INFO] 20:00:50:400 kernel/(4513:4547): Bloqueo proceso 5
+[INFO] 20:00:58:324 kernel/(4513:4621): Conexion con nueva CPU establecida
+[INFO] 20:01:26:550 kernel/(4513:4514): Envio pedido de paginas a memoria. pid:7, cantPags:11
+[INFO] 20:01:26:550 kernel/(4513:4514): Paginas reservadas para el proceso 7
+[INFO] 20:01:58:932 kernel/(4513:4631): Conexion con nueva CPU establecida
+[INFO] 20:02:52:29 kernel/(4513:4635): Handshake con consola
+[INFO] 20:02:52:32 kernel/(4513:4637): Recibo codigo
+[INFO] 20:02:52:32 kernel/(4513:4637): Proceso agregado a la cola New
+[WARNING] 20:07:14:891 kernel/(4513:4643): Se cerro el socket 8 (cpu)
+[INFO] 20:07:14:891 kernel/(4513:4643): CPU 8 quitado de la lista
+[INFO] 20:08:21:217 kernel/(4655:4655): Configuracion levantada correctamente
+[ERROR] 20:08:21:218 kernel/(4655:4655): No se pudo establecer la conexion con la memoria.
+[INFO] 20:08:42:315 kernel/(4661:4661): Configuracion levantada correctamente
+[INFO] 20:08:42:316 kernel/(4661:4661): Conexion con memoria establecida
+[INFO] 20:08:42:316 kernel/(4661:4661): Tamanio de pagina recibido: 256
+[INFO] 20:08:42:316 kernel/(4661:4661): Conexion con File System establecida
+[INFO] 20:08:49:684 kernel/(4661:4669): Conexion con nueva CPU establecida
+[INFO] 20:08:55:176 kernel/(4661:4674): Conexion con nueva CPU establecida
+[INFO] 20:09:01:848 kernel/(4661:4677): Handshake con consola
+[INFO] 20:09:01:852 kernel/(4661:4679): Recibo codigo
+[INFO] 20:09:01:852 kernel/(4661:4679): Proceso agregado a la cola New
+[INFO] 20:09:01:852 kernel/(4661:4679): Envio pedido de paginas a memoria. pid:1, cantPags:11
+[INFO] 20:09:01:853 kernel/(4661:4679): Paginas reservadas para el proceso 1
+[INFO] 20:09:01:860 kernel/(4661:4671): Se desocupa cpu 8
+
+[INFO] 20:09:01:861 kernel/(4661:4671): Bloqueo proceso 1
+[INFO] 20:09:11:864 kernel/(4661:4682): Handshake con consola
+[INFO] 20:09:11:868 kernel/(4661:4684): Recibo codigo
+[INFO] 20:09:11:868 kernel/(4661:4684): Proceso agregado a la cola New
+[INFO] 20:09:11:868 kernel/(4661:4684): Envio pedido de paginas a memoria. pid:2, cantPags:11
+[INFO] 20:09:11:868 kernel/(4661:4684): Paginas reservadas para el proceso 2
+[ERROR] 20:09:12:424 kernel/(4661:4686): Error al leer var compartida colas. No se encontro
+[ERROR] 20:09:12:428 kernel/(4661:4687): Finaliza el proceso #2 por error
+[INFO] 20:09:12:429 kernel/(4661:4687): Proceso 2 agregado a la cola de FINISHED
+[INFO] 20:09:12:429 kernel/(4661:4687): Se desocupa cpu 8
+
+[INFO] 20:09:54:476 kernel/(4661:4691): Handshake con consola
+[INFO] 20:09:54:480 kernel/(4661:4693): Recibo codigo
+[INFO] 20:09:54:480 kernel/(4661:4693): Proceso agregado a la cola New
+[INFO] 20:09:54:480 kernel/(4661:4693): Envio pedido de paginas a memoria. pid:3, cantPags:11
+[INFO] 20:09:54:480 kernel/(4661:4693): Paginas reservadas para el proceso 3
+[INFO] 20:09:54:528 kernel/(4661:4695): Se desocupa cpu 8
+
+[INFO] 20:09:54:528 kernel/(4661:4695): Bloqueo proceso 3
+[WARNING] 20:10:21:835 kernel/(4661:4680): Se cerro el socket 10 (Consola)
+[INFO] 20:10:21:835 kernel/(4661:4680): Se termina la ejecucion del proceso 1 por desconexion de la consola
+[WARNING] 20:10:21:836 kernel/(4661:4685): Se cerro el socket 11 (Consola)
+[WARNING] 20:10:21:836 kernel/(4661:4694): Se cerro el socket 12 (Consola)
+[INFO] 20:11:31:671 kernel/(4710:4710): Configuracion levantada correctamente
+[INFO] 20:11:31:671 kernel/(4710:4710): Conexion con memoria establecida
+[INFO] 20:11:31:671 kernel/(4710:4710): Tamanio de pagina recibido: 256
+[INFO] 20:11:31:671 kernel/(4710:4710): Conexion con File System establecida
+[INFO] 20:11:36:748 kernel/(4710:4716): Conexion con nueva CPU establecida
+[INFO] 20:11:39:804 kernel/(4710:4720): Conexion con nueva CPU establecida
+[INFO] 20:11:53:937 kernel/(4710:4725): Handshake con consola
+[INFO] 20:11:53:940 kernel/(4710:4727): Recibo codigo
+[INFO] 20:11:53:940 kernel/(4710:4727): Proceso agregado a la cola New
+[INFO] 20:11:53:940 kernel/(4710:4727): Envio pedido de paginas a memoria. pid:1, cantPags:11
+[INFO] 20:11:53:941 kernel/(4710:4727): Paginas reservadas para el proceso 1
+[INFO] 20:11:53:956 kernel/(4710:4729): Se desocupa cpu 8
+
+[INFO] 20:11:53:956 kernel/(4710:4729): Bloqueo proceso 1
+[INFO] 20:12:01:261 kernel/(4710:4731): Handshake con consola
+[INFO] 20:12:01:264 kernel/(4710:4733): Recibo codigo
+[INFO] 20:12:01:264 kernel/(4710:4733): Proceso agregado a la cola New
+[INFO] 20:12:01:264 kernel/(4710:4733): Envio pedido de paginas a memoria. pid:2, cantPags:11
+[INFO] 20:12:01:264 kernel/(4710:4733): Paginas reservadas para el proceso 2
+[ERROR] 20:12:01:812 kernel/(4710:4735): El valor de colas es NULL
+[ERROR] 20:12:01:820 kernel/(4710:4736): Finaliza el proceso #2 por error
+[INFO] 20:12:01:821 kernel/(4710:4736): Proceso 2 agregado a la cola de FINISHED
+[INFO] 20:12:01:821 kernel/(4710:4736): Se desocupa cpu 8
+
+[INFO] 20:13:19:216 kernel/(4710:4743): Handshake con consola
+[INFO] 20:13:19:220 kernel/(4710:4745): Recibo codigo
+[INFO] 20:13:19:220 kernel/(4710:4745): Proceso agregado a la cola New
+[INFO] 20:13:19:220 kernel/(4710:4745): Envio pedido de paginas a memoria. pid:3, cantPags:11
+[INFO] 20:13:19:220 kernel/(4710:4745): Paginas reservadas para el proceso 3
+[INFO] 20:13:19:260 kernel/(4710:4737): Se desocupa cpu 8
+
+[INFO] 20:13:19:260 kernel/(4710:4737): Bloqueo proceso 3
+[INFO] 20:13:37:772 kernel/(4710:4747): Handshake con consola
+[INFO] 20:13:37:776 kernel/(4710:4749): Recibo codigo
+[INFO] 20:13:37:776 kernel/(4710:4749): Proceso agregado a la cola New
+[INFO] 20:13:37:776 kernel/(4710:4749): Envio pedido de paginas a memoria. pid:4, cantPags:11
+[INFO] 20:13:37:776 kernel/(4710:4749): Paginas reservadas para el proceso 4
+[DEBUG] 20:13:39:828 kernel/(4710:4752): Fin de quantum proceso 4
+[DEBUG] 20:13:39:830 kernel/(4710:4722): Finalizar proceso 4 por fin de ejecucion
+[INFO] 20:13:39:831 kernel/(4710:4722): Proceso 4 agregado a la cola de FINISHED
+[INFO] 20:13:39:831 kernel/(4710:4722): Se desocupa cpu 9
+
+[INFO] 20:13:39:833 kernel/(4710:4752): Se desocupa cpu 8
+
+[WARNING] 20:14:12:665 kernel/(4710:4728): Se cerro el socket 10 (Consola)
+[INFO] 20:18:41:856 kernel/(4772:4772): Configuracion levantada correctamente
+[INFO] 20:18:41:856 kernel/(4772:4772): Conexion con memoria establecida
+[INFO] 20:18:41:856 kernel/(4772:4772): Tamanio de pagina recibido: 256
+[INFO] 20:18:41:856 kernel/(4772:4772): Conexion con File System establecida
+[INFO] 20:18:44:940 kernel/(4772:4778): Conexion con nueva CPU establecida
+[INFO] 20:18:56:65 kernel/(4772:4784): Handshake con consola
+[INFO] 20:18:56:68 kernel/(4772:4786): Recibo codigo
+[INFO] 20:18:56:68 kernel/(4772:4786): Proceso agregado a la cola New
+[INFO] 20:18:56:68 kernel/(4772:4786): Envio pedido de paginas a memoria. pid:1, cantPags:11
+[INFO] 20:18:56:69 kernel/(4772:4786): Paginas reservadas para el proceso 1
+[INFO] 20:18:56:72 kernel/(4772:4780): Se desocupa cpu 8
+
+[INFO] 20:18:56:72 kernel/(4772:4780): Bloqueo proceso 1
+[INFO] 20:19:30:632 kernel/(4772:4795): Handshake con consola
+[INFO] 20:19:30:636 kernel/(4772:4797): Recibo codigo
+[INFO] 20:19:30:636 kernel/(4772:4797): Proceso agregado a la cola New
+[INFO] 20:19:30:636 kernel/(4772:4797): Envio pedido de paginas a memoria. pid:2, cantPags:11
+[INFO] 20:19:30:636 kernel/(4772:4797): Paginas reservadas para el proceso 2
+[ERROR] 20:19:31:182 kernel/(4772:4799): El valor de colas es NULL
+[ERROR] 20:19:31:188 kernel/(4772:4800): Finaliza el proceso #2 por error
+[INFO] 20:19:31:188 kernel/(4772:4800): Proceso 2 agregado a la cola de FINISHED
+[INFO] 20:19:31:189 kernel/(4772:4800): Se desocupa cpu 8
+
+[WARNING] 20:19:41:574 kernel/(4772:4798): Se cerro el socket 10 (Consola)
+[INFO] 20:24:51:627 kernel/(4930:4930): Configuracion levantada correctamente
+[INFO] 20:24:51:627 kernel/(4930:4930): Conexion con memoria establecida
+[INFO] 20:24:51:627 kernel/(4930:4930): Tamanio de pagina recibido: 256
+[INFO] 20:24:51:627 kernel/(4930:4930): Conexion con File System establecida
+[INFO] 20:24:55:936 kernel/(4930:4936): Conexion con nueva CPU establecida
+[INFO] 20:25:03:756 kernel/(4930:4941): Handshake con consola
+[INFO] 20:25:03:760 kernel/(4930:4943): Recibo codigo
+[INFO] 20:25:03:760 kernel/(4930:4943): Proceso agregado a la cola New
+[INFO] 20:25:03:760 kernel/(4930:4943): Envio pedido de paginas a memoria. pid:1, cantPags:11
+[INFO] 20:25:03:760 kernel/(4930:4943): Paginas reservadas para el proceso 1
+[INFO] 20:25:03:769 kernel/(4930:4938): Se desocupa cpu 8
+
+[INFO] 20:25:03:769 kernel/(4930:4938): Bloqueo proceso 1
+[INFO] 20:25:13:889 kernel/(4930:4948): Handshake con consola
+[INFO] 20:25:13:896 kernel/(4930:4950): Recibo codigo
+[INFO] 20:25:13:897 kernel/(4930:4950): Proceso agregado a la cola New
+[INFO] 20:25:13:897 kernel/(4930:4950): Envio pedido de paginas a memoria. pid:2, cantPags:11
+[INFO] 20:25:13:897 kernel/(4930:4950): Paginas reservadas para el proceso 2
+[ERROR] 20:25:14:444 kernel/(4930:4952): Error al leer var compartida colas. No se encontro
+[ERROR] 20:25:14:448 kernel/(4930:4953): Finaliza el proceso #2 por error
+[INFO] 20:25:14:448 kernel/(4930:4953): Proceso 2 agregado a la cola de FINISHED
+[INFO] 20:25:14:448 kernel/(4930:4953): Se desocupa cpu 8
+
+[WARNING] 20:28:42:720 kernel/(4930:4951): Se cerro el socket 10 (Consola)
+[INFO] 21:12:34:211 kernel/(6398:6398): Configuracion levantada correctamente
+[INFO] 21:12:34:211 kernel/(6398:6398): Conexion con memoria establecida
+[INFO] 21:12:34:211 kernel/(6398:6398): Tamanio de pagina recibido: 256
+[INFO] 21:12:34:211 kernel/(6398:6398): Conexion con File System establecida
+[INFO] 21:12:38:46 kernel/(6398:6404): Conexion con nueva CPU establecida
+[INFO] 21:12:49:89 kernel/(6398:6409): Handshake con consola
+[INFO] 21:12:49:92 kernel/(6398:6411): Recibo codigo
+[INFO] 21:12:49:92 kernel/(6398:6411): Proceso agregado a la cola New
+[INFO] 21:12:49:92 kernel/(6398:6411): Envio pedido de paginas a memoria. pid:1, cantPags:11
+[INFO] 21:12:49:93 kernel/(6398:6411): Paginas reservadas para el proceso 1
+[INFO] 21:12:49:96 kernel/(6398:6406): Se desocupa cpu 8
+
+[INFO] 21:12:49:96 kernel/(6398:6406): Bloqueo proceso 1
+[INFO] 21:12:54:440 kernel/(6398:6414): Handshake con consola
+[INFO] 21:12:54:444 kernel/(6398:6416): Recibo codigo
+[INFO] 21:12:54:444 kernel/(6398:6416): Proceso agregado a la cola New
+[INFO] 21:12:54:444 kernel/(6398:6416): Envio pedido de paginas a memoria. pid:2, cantPags:11
+[INFO] 21:12:54:444 kernel/(6398:6416): Paginas reservadas para el proceso 2
+[DEBUG] 21:12:54:996 kernel/(6398:6419): Se asigna el valor 1 a la variable colas
+[INFO] 21:12:55:500 kernel/(6398:6420): Desbloqueo un proceso
+[DEBUG] 21:12:56:508 kernel/(6398:6421): Fin de quantum proceso 2
+[INFO] 21:12:56:508 kernel/(6398:6421): Se desocupa cpu 8
+
+[INFO] 21:12:58:28 kernel/(6398:6424): Se desocupa cpu 8
+
+[INFO] 21:12:58:29 kernel/(6398:6424): Bloqueo proceso 1
+[DEBUG] 21:12:59:44 kernel/(6398:6427): Se asigna el valor 2 a la variable colas
+[INFO] 21:12:59:553 kernel/(6398:6428): Desbloqueo un proceso
+[DEBUG] 21:13:00:560 kernel/(6398:6429): Fin de quantum proceso 2
+[INFO] 21:13:00:560 kernel/(6398:6429): Se desocupa cpu 8
+
+[INFO] 21:13:02:77 kernel/(6398:6432): Se desocupa cpu 8
+
+[INFO] 21:13:02:77 kernel/(6398:6432): Bloqueo proceso 1
+[DEBUG] 21:13:03:94 kernel/(6398:6435): Se asigna el valor 3 a la variable colas
+[INFO] 21:13:03:608 kernel/(6398:6436): Desbloqueo un proceso
+[INFO] 21:13:04:225 kernel/(6398:6438): Handshake con consola
+[INFO] 21:13:04:228 kernel/(6398:6440): Recibo codigo
+[INFO] 21:13:04:228 kernel/(6398:6440): Proceso agregado a la cola New
+[INFO] 21:13:04:228 kernel/(6398:6440): Envio pedido de paginas a memoria. pid:3, cantPags:11
+[INFO] 21:13:04:228 kernel/(6398:6440): Paginas reservadas para el proceso 3
+[DEBUG] 21:13:04:610 kernel/(6398:6437): Fin de quantum proceso 2
+[INFO] 21:13:04:610 kernel/(6398:6437): Se desocupa cpu 8
+
+[INFO] 21:13:06:137 kernel/(6398:6444): Se desocupa cpu 8
+
+[INFO] 21:13:06:137 kernel/(6398:6444): Bloqueo proceso 1
+[DEBUG] 21:13:07:144 kernel/(6398:6447): Se asigna el valor 4 a la variable colas
+[INFO] 21:13:07:648 kernel/(6398:6448): Desbloqueo un proceso
+[DEBUG] 21:13:08:656 kernel/(6398:6449): Fin de quantum proceso 3
+[INFO] 21:13:08:657 kernel/(6398:6449): Se desocupa cpu 8
+
+[INFO] 21:13:08:664 kernel/(6398:6450): Se desocupa cpu 8
+
+[INFO] 21:13:08:664 kernel/(6398:6450): Bloqueo proceso 2
+[INFO] 21:13:09:679 kernel/(6398:6452): Desbloqueo un proceso
+[INFO] 21:13:10:685 kernel/(6398:6453): Se desocupa cpu 8
+
+[INFO] 21:13:10:685 kernel/(6398:6453): Bloqueo proceso 1
+[INFO] 21:13:11:192 kernel/(6398:6454): Se desocupa cpu 8
+
+[INFO] 21:13:11:193 kernel/(6398:6454): Bloqueo proceso 3
+[DEBUG] 21:13:11:704 kernel/(6398:6456): Se asigna el valor 5 a la variable colas
+[INFO] 21:13:12:212 kernel/(6398:6457): Desbloqueo un proceso
+[INFO] 21:13:13:220 kernel/(6398:6458): Se desocupa cpu 8
+
+[INFO] 21:13:13:221 kernel/(6398:6458): Bloqueo proceso 2
+[INFO] 21:13:14:236 kernel/(6398:6460): Desbloqueo un proceso
+[INFO] 21:13:15:245 kernel/(6398:6461): Se desocupa cpu 8
+
+[INFO] 21:13:15:245 kernel/(6398:6461): Bloqueo proceso 1
+[DEBUG] 21:13:15:756 kernel/(6398:6463): Se asigna el valor 6 a la variable colas
+[INFO] 21:13:16:264 kernel/(6398:6464): Desbloqueo un proceso
+[INFO] 21:13:17:272 kernel/(6398:6465): Se desocupa cpu 8
+
+[INFO] 21:13:17:273 kernel/(6398:6465): Bloqueo proceso 3
+[INFO] 21:13:18:286 kernel/(6398:6467): Desbloqueo un proceso
+[INFO] 21:13:19:292 kernel/(6398:6468): Se desocupa cpu 8
+
+[INFO] 21:13:19:293 kernel/(6398:6468): Bloqueo proceso 1
+[DEBUG] 21:13:19:804 kernel/(6398:6470): Se asigna el valor 7 a la variable colas
+[INFO] 21:13:20:312 kernel/(6398:6471): Desbloqueo un proceso
+[INFO] 21:13:21:321 kernel/(6398:6472): Se desocupa cpu 8
+
+[INFO] 21:13:21:322 kernel/(6398:6472): Bloqueo proceso 2
+[INFO] 21:13:22:336 kernel/(6398:6474): Desbloqueo un proceso
+[INFO] 21:13:23:344 kernel/(6398:6475): Se desocupa cpu 8
+
+[INFO] 21:13:23:345 kernel/(6398:6475): Bloqueo proceso 1
+[DEBUG] 21:13:23:856 kernel/(6398:6477): Se asigna el valor 8 a la variable colas
+[INFO] 21:13:24:364 kernel/(6398:6478): Desbloqueo un proceso
+[INFO] 21:13:25:375 kernel/(6398:6479): Se desocupa cpu 8
+
+[INFO] 21:13:25:375 kernel/(6398:6479): Bloqueo proceso 3
+[INFO] 21:13:26:388 kernel/(6398:6481): Desbloqueo un proceso
+[INFO] 21:13:27:397 kernel/(6398:6482): Se desocupa cpu 8
+
+[INFO] 21:13:27:398 kernel/(6398:6482): Bloqueo proceso 1
+[DEBUG] 21:13:27:908 kernel/(6398:6484): Se asigna el valor 9 a la variable colas
+[INFO] 21:13:28:412 kernel/(6398:6485): Desbloqueo un proceso
+[INFO] 21:13:29:424 kernel/(6398:6486): Se desocupa cpu 8
+
+[INFO] 21:13:29:425 kernel/(6398:6486): Bloqueo proceso 2
+[INFO] 21:13:30:440 kernel/(6398:6488): Desbloqueo un proceso
+[INFO] 21:13:31:449 kernel/(6398:6489): Se desocupa cpu 8
+
+[INFO] 21:13:31:450 kernel/(6398:6489): Bloqueo proceso 1
+[DEBUG] 21:13:31:960 kernel/(6398:6491): Se asigna el valor 10 a la variable colas
+[INFO] 21:13:32:468 kernel/(6398:6492): Desbloqueo un proceso
+[INFO] 21:13:33:473 kernel/(6398:6493): Se desocupa cpu 8
+
+[INFO] 21:13:33:473 kernel/(6398:6493): Bloqueo proceso 3
+[INFO] 21:13:34:488 kernel/(6398:6495): Desbloqueo un proceso
+[INFO] 21:13:35:497 kernel/(6398:6496): Se desocupa cpu 8
+
+[INFO] 21:13:35:497 kernel/(6398:6496): Bloqueo proceso 1
+[DEBUG] 21:13:36:8 kernel/(6398:6498): Se asigna el valor 11 a la variable colas
+[INFO] 21:13:36:517 kernel/(6398:6499): Desbloqueo un proceso
+[INFO] 21:13:37:525 kernel/(6398:6500): Se desocupa cpu 8
+
+[INFO] 21:13:37:526 kernel/(6398:6500): Bloqueo proceso 2
+[INFO] 21:13:38:541 kernel/(6398:6502): Desbloqueo un proceso
+[INFO] 21:13:39:548 kernel/(6398:6503): Se desocupa cpu 8
+
+[INFO] 21:13:39:548 kernel/(6398:6503): Bloqueo proceso 1
+[DEBUG] 21:13:40:60 kernel/(6398:6505): Se asigna el valor 12 a la variable colas
+[INFO] 21:13:40:570 kernel/(6398:6506): Desbloqueo un proceso
+[INFO] 21:13:41:577 kernel/(6398:6507): Se desocupa cpu 8
+
+[INFO] 21:13:41:577 kernel/(6398:6507): Bloqueo proceso 3
+[INFO] 21:13:42:594 kernel/(6398:6509): Desbloqueo un proceso
+[WARNING] 21:13:43:595 kernel/(6398:6412): Se cerro el socket 9 (Consola)
+[INFO] 21:13:43:595 kernel/(6398:6412): Se termina la ejecucion del proceso 1 por desconexion de la consola
+[WARNING] 21:13:43:595 kernel/(6398:6417): Se cerro el socket 10 (Consola)
+[INFO] 21:13:43:595 kernel/(6398:6417): Se termina la ejecucion del proceso 2 por desconexion de la consola
+[WARNING] 21:13:43:595 kernel/(6398:6441): Se cerro el socket 11 (Consola)
+[INFO] 21:13:43:595 kernel/(6398:6441): Se termina la ejecucion del proceso 3 por desconexion de la consola
+[INFO] 21:13:43:605 kernel/(6398:6510): Se desocupa cpu 8
+
+[INFO] 21:13:43:611 kernel/(6398:6510): Bloqueo proceso 1
+[DEBUG] 21:13:44:124 kernel/(6398:6512): Se asigna el valor 13 a la variable colas
+[INFO] 21:13:44:628 kernel/(6398:6513): Desbloqueo un proceso
+[INFO] 21:13:45:632 kernel/(6398:6514): Se desocupa cpu 8
+
+[INFO] 21:13:45:632 kernel/(6398:6514): Bloqueo proceso 2
+[INFO] 21:13:46:644 kernel/(6398:6516): Desbloqueo un proceso
+[WARNING] 21:13:47:136 kernel/(6398:6517): Se cerro el socket 8 (cpu)
+[INFO] 21:13:47:136 kernel/(6398:6517): CPU 8 quitado de la lista
+[INFO] 21:13:47:136 kernel/(6398:6517): Se termina la ejecucion del proceso #1 por desconexion de la CPU
+[INFO] 21:13:47:136 kernel/(6398:6517): Proceso 1 agregado a la cola de FINISHED
+[WARNING] 21:13:47:136 kernel/(6398:6518): Se cerro el socket 8 (cpu)
+[INFO] 21:32:18:595 kernel/(6770:6770): Configuracion levantada correctamente
+[INFO] 21:32:18:595 kernel/(6770:6770): Conexion con memoria establecida
+[INFO] 21:32:18:595 kernel/(6770:6770): Tamanio de pagina recibido: 256
+[INFO] 21:32:18:595 kernel/(6770:6770): Conexion con File System establecida
+[INFO] 21:32:21:836 kernel/(6770:6776): Conexion con nueva CPU establecida
+[INFO] 21:32:35:900 kernel/(6770:6783): Handshake con consola
+[INFO] 21:32:35:904 kernel/(6770:6785): Recibo codigo
+[INFO] 21:32:35:904 kernel/(6770:6785): Proceso agregado a la cola New
+[INFO] 21:32:35:904 kernel/(6770:6785): Envio pedido de paginas a memoria. pid:1, cantPags:11
+[INFO] 21:32:35:905 kernel/(6770:6785): Paginas reservadas para el proceso 1
+[INFO] 21:32:35:906 kernel/(6770:6778): Se desocupa cpu 8
+
+[INFO] 21:32:35:911 kernel/(6770:6778): Bloqueo proceso 1
+[INFO] 21:32:42:401 kernel/(6770:6788): Handshake con consola
+[INFO] 21:32:42:404 kernel/(6770:6790): Recibo codigo
+[INFO] 21:32:42:404 kernel/(6770:6790): Proceso agregado a la cola New
+[INFO] 21:32:42:404 kernel/(6770:6790): Envio pedido de paginas a memoria. pid:2, cantPags:11
+[INFO] 21:32:42:405 kernel/(6770:6790): Paginas reservadas para el proceso 2
+[DEBUG] 21:32:42:960 kernel/(6770:6793): Se asigna el valor 1 a la variable colas
+[INFO] 21:32:43:464 kernel/(6770:6794): Desbloqueo un proceso
+[DEBUG] 21:32:44:465 kernel/(6770:6795): Fin de quantum proceso 2
+[INFO] 21:32:44:465 kernel/(6770:6795): Se desocupa cpu 8
+
+[INFO] 21:32:46:4 kernel/(6770:6798): Se desocupa cpu 8
+
+[INFO] 21:32:46:5 kernel/(6770:6798): Bloqueo proceso 1
+[DEBUG] 21:32:47:37 kernel/(6770:6801): Se asigna el valor 2 a la variable colas
+[INFO] 21:32:47:540 kernel/(6770:6802): Desbloqueo un proceso
+[INFO] 21:32:47:796 kernel/(6770:6804): Handshake con consola
+[INFO] 21:32:47:800 kernel/(6770:6806): Recibo codigo
+[INFO] 21:32:47:800 kernel/(6770:6806): Proceso agregado a la cola New
+[INFO] 21:32:47:800 kernel/(6770:6806): Envio pedido de paginas a memoria. pid:3, cantPags:11
+[INFO] 21:32:47:800 kernel/(6770:6806): Paginas reservadas para el proceso 3
+[DEBUG] 21:32:48:541 kernel/(6770:6803): Fin de quantum proceso 2
+[INFO] 21:32:48:541 kernel/(6770:6803): Se desocupa cpu 8
+
+[INFO] 21:32:50:62 kernel/(6770:6810): Se desocupa cpu 8
+
+[INFO] 21:32:50:62 kernel/(6770:6810): Bloqueo proceso 1
+[DEBUG] 21:32:51:75 kernel/(6770:6813): Se asigna el valor 3 a la variable colas
+[INFO] 21:32:51:580 kernel/(6770:6814): Desbloqueo un proceso
+[DEBUG] 21:32:52:586 kernel/(6770:6815): Fin de quantum proceso 3
+[INFO] 21:32:52:588 kernel/(6770:6815): Se desocupa cpu 8
+
+[INFO] 21:32:52:620 kernel/(6770:6816): Se desocupa cpu 8
+
+[INFO] 21:32:52:621 kernel/(6770:6816): Bloqueo proceso 2
+[INFO] 21:32:53:632 kernel/(6770:6818): Desbloqueo un proceso
+[INFO] 21:32:54:641 kernel/(6770:6819): Se desocupa cpu 8
+
+[INFO] 21:32:54:641 kernel/(6770:6819): Bloqueo proceso 1
+[INFO] 21:32:55:148 kernel/(6770:6820): Se desocupa cpu 8
+
+[INFO] 21:32:55:149 kernel/(6770:6820): Bloqueo proceso 3
+[DEBUG] 21:32:55:660 kernel/(6770:6822): Se asigna el valor 4 a la variable colas
+[INFO] 21:32:56:168 kernel/(6770:6823): Desbloqueo un proceso
+[INFO] 21:32:57:177 kernel/(6770:6824): Se desocupa cpu 8
+
+[INFO] 21:32:57:178 kernel/(6770:6824): Bloqueo proceso 2
+[INFO] 21:32:58:192 kernel/(6770:6826): Desbloqueo un proceso
+[INFO] 21:32:59:204 kernel/(6770:6827): Se desocupa cpu 8
+
+[INFO] 21:32:59:206 kernel/(6770:6827): Bloqueo proceso 1
+[DEBUG] 21:32:59:712 kernel/(6770:6829): Se asigna el valor 5 a la variable colas
+[INFO] 21:33:00:220 kernel/(6770:6830): Desbloqueo un proceso
+[INFO] 21:33:01:228 kernel/(6770:6831): Se desocupa cpu 8
+
+[INFO] 21:33:01:228 kernel/(6770:6831): Bloqueo proceso 3
+[INFO] 21:33:02:244 kernel/(6770:6833): Desbloqueo un proceso
+[INFO] 21:33:03:253 kernel/(6770:6834): Se desocupa cpu 8
+
+[INFO] 21:33:03:253 kernel/(6770:6834): Bloqueo proceso 1
+[DEBUG] 21:33:03:764 kernel/(6770:6836): Se asigna el valor 6 a la variable colas
+[INFO] 21:33:04:268 kernel/(6770:6837): Desbloqueo un proceso
+[INFO] 21:33:05:277 kernel/(6770:6838): Se desocupa cpu 8
+
+[INFO] 21:33:05:277 kernel/(6770:6838): Bloqueo proceso 2
+[INFO] 21:33:06:292 kernel/(6770:6840): Desbloqueo un proceso
+[INFO] 21:33:07:301 kernel/(6770:6841): Se desocupa cpu 8
+
+[INFO] 21:33:07:302 kernel/(6770:6841): Bloqueo proceso 1
+[DEBUG] 21:33:07:813 kernel/(6770:6843): Se asigna el valor 7 a la variable colas
+[INFO] 21:33:08:322 kernel/(6770:6844): Desbloqueo un proceso
+[INFO] 21:33:09:328 kernel/(6770:6845): Se desocupa cpu 8
+
+[INFO] 21:33:09:329 kernel/(6770:6845): Bloqueo proceso 3
+[INFO] 21:33:10:344 kernel/(6770:6847): Desbloqueo un proceso
+[INFO] 21:33:11:351 kernel/(6770:6848): Se desocupa cpu 8
+
+[INFO] 21:33:11:351 kernel/(6770:6848): Bloqueo proceso 1
+[DEBUG] 21:33:11:860 kernel/(6770:6850): Se asigna el valor 8 a la variable colas
+[INFO] 21:33:12:368 kernel/(6770:6851): Desbloqueo un proceso
+[INFO] 21:33:13:376 kernel/(6770:6852): Se desocupa cpu 8
+
+[INFO] 21:33:13:376 kernel/(6770:6852): Bloqueo proceso 2
+[INFO] 21:33:14:392 kernel/(6770:6854): Desbloqueo un proceso
+[INFO] 21:33:15:400 kernel/(6770:6855): Se desocupa cpu 8
+
+[INFO] 21:33:15:401 kernel/(6770:6855): Bloqueo proceso 1
+[DEBUG] 21:33:15:912 kernel/(6770:6857): Se asigna el valor 9 a la variable colas
+[INFO] 21:33:16:420 kernel/(6770:6858): Desbloqueo un proceso
+[INFO] 21:33:17:429 kernel/(6770:6859): Se desocupa cpu 8
+
+[INFO] 21:33:17:429 kernel/(6770:6859): Bloqueo proceso 3
+[INFO] 21:33:18:444 kernel/(6770:6861): Desbloqueo un proceso
+[INFO] 21:33:19:453 kernel/(6770:6862): Se desocupa cpu 8
+
+[INFO] 21:33:19:453 kernel/(6770:6862): Bloqueo proceso 1
+[DEBUG] 21:33:19:964 kernel/(6770:6864): Se asigna el valor 10 a la variable colas
+[INFO] 21:33:20:480 kernel/(6770:6865): Desbloqueo un proceso
+[INFO] 21:33:21:254 kernel/(6770:6807): Se termina la ejecucion del proceso #3 por comando STOP (Consola)
+[INFO] 21:33:21:489 kernel/(6770:6866): Se desocupa cpu 8
+
+[INFO] 21:33:21:489 kernel/(6770:6866): Bloqueo proceso 2
+[INFO] 21:33:22:504 kernel/(6770:6868): Desbloqueo un proceso
+[INFO] 21:33:23:510 kernel/(6770:6869): Se desocupa cpu 8
+
+[INFO] 21:33:23:511 kernel/(6770:6869): Bloqueo proceso 1
+[DEBUG] 21:33:24:28 kernel/(6770:6871): Se asigna el valor 11 a la variable colas
+[INFO] 21:33:24:536 kernel/(6770:6872): Desbloqueo un proceso
+[INFO] 21:33:25:545 kernel/(6770:6873): Se desocupa cpu 8
+
+[INFO] 21:33:25:545 kernel/(6770:6873): Bloqueo proceso 3
+[INFO] 21:33:26:558 kernel/(6770:6875): Desbloqueo un proceso
+[INFO] 21:33:26:664 kernel/(6770:6791): Se termina la ejecucion del proceso #2 por comando STOP (Consola)
+[INFO] 21:33:27:564 kernel/(6770:6876): Se desocupa cpu 8
+
+[INFO] 21:33:27:565 kernel/(6770:6876): Bloqueo proceso 1
+[DEBUG] 21:33:28:76 kernel/(6770:6878): Se asigna el valor 12 a la variable colas
+[INFO] 21:33:28:588 kernel/(6770:6879): Desbloqueo un proceso
+[INFO] 21:33:29:605 kernel/(6770:6880): Se desocupa cpu 8
+
+[INFO] 21:33:29:605 kernel/(6770:6880): Bloqueo proceso 2
+[INFO] 21:33:30:612 kernel/(6770:6882): Desbloqueo un proceso
+[WARNING] 21:33:30:960 kernel/(6770:6884): Se cerro el socket 10 (Consola)
+[INFO] 21:33:30:960 kernel/(6770:6884): Se termina la ejecucion del proceso 2 por desconexion de la consola
+[INFO] 21:33:31:615 kernel/(6770:6883): Se desocupa cpu 8
+
+[INFO] 21:33:31:615 kernel/(6770:6883): Bloqueo proceso 1
+[DEBUG] 21:33:32:128 kernel/(6770:6886): Se asigna el valor 13 a la variable colas
+[INFO] 21:33:32:646 kernel/(6770:6887): Desbloqueo un proceso
+[INFO] 21:33:33:652 kernel/(6770:6888): Se desocupa cpu 8
+
+[INFO] 21:33:33:653 kernel/(6770:6888): Bloqueo proceso 3
+[INFO] 21:33:34:668 kernel/(6770:6890): Desbloqueo un proceso
+[WARNING] 21:33:34:704 kernel/(6770:6786): Se cerro el socket 9 (Consola)
+[INFO] 21:33:34:704 kernel/(6770:6786): Se termina la ejecucion del proceso 1 por desconexion de la consola
+[WARNING] 21:33:34:708 kernel/(6770:6892): Se cerro el socket 11 (Consola)
+[INFO] 21:33:34:708 kernel/(6770:6892): Se termina la ejecucion del proceso 3 por desconexion de la consola
+[INFO] 21:33:35:670 kernel/(6770:6891): Se desocupa cpu 8
+
+[INFO] 21:33:35:670 kernel/(6770:6891): Bloqueo proceso 1
+[DEBUG] 21:33:36:180 kernel/(6770:6894): Se asigna el valor 14 a la variable colas
+[INFO] 21:33:36:693 kernel/(6770:6895): Desbloqueo un proceso
+[INFO] 21:33:37:708 kernel/(6770:6896): Se desocupa cpu 8
+
+[INFO] 21:33:37:709 kernel/(6770:6896): Bloqueo proceso 2
