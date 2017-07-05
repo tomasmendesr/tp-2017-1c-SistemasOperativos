@@ -809,7 +809,7 @@ void borrarArchivo(int32_t socketCpu, void* package){
 	header_t header;
 	header.type = BORRAR_ARCHIVO;
 	uint32_t size = strlen(path) + 1;
-	header.type = size;
+	header.length = size;
 
 	sem_wait(&mutex_fs);
 
