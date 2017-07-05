@@ -26,7 +26,6 @@ void reservarMemoria(int socket, char* paquete);
 void liberarMemoria(int socket, char* paquete);
 void terminarProceso(t_pcb* pcbRecibido, int socket_cpu);
 void escribir(void* imprimir, int socketCpu);
-void verificarProcesosConsolaCaida(int socketConsola);
 void borrarArchivo(int socketCpu, void* package);
 void cerrarArchivo(int socketCpu, void* package);
 void leerArchivo(int socketCpu, t_lectura* lectura);

@@ -840,17 +840,14 @@ t_archivo* buscarArchivo(int32_t pid, int32_t fd){
 
 }
 
-void verificarProcesosEnCpuCaida(int socketCPU){
+
+int verificarProcesosEnCpuCaida(int socketCPU){
 		int i;
 		for(i = 0; i<list_size(listaCPUs); i++){
 			cpu_t* cpu = list_get(listaCPUs, i);
 			if(cpu->socket == socketCPU){
 				list_remove(listaCPUs, i);
-				if(cpu->disponible) {
-					printf("esta re sidponible\n");
-					sem_wait(&semCPUs_disponibles);
-					printf("desconte el contador\n");
-				}
+				if(cpu->disponible) sem_wait(&semCPUs_disponibles);
 				log_info(logger, "CPU %d quitado de la lista", cpu->socket);
 				// si esta disponible es porque no tiene nada corriendo
 				if(!(cpu->disponible) && cpu->pcb != NULL){
@@ -859,6 +856,18 @@ void verificarProcesosEnCpuCaida(int socketCPU){
 					terminarProceso(cpu->pcb, socketCPU);
 				}
 				free(cpu);
+				return 0;
 			}
 		}
+		return -1;
+}
+
+void verificarProcesosConsolaCaida(uint32_t socketConsola){
+	info_estadistica_t* info = buscarInformacionPorSocketConsola(socketConsola);
+	int i = 0;
+	if(info->estado != FINISH){
+		info->matarSiguienteRafaga = true;
+		info->exitCode = DESCONEXION_CONSOLA;
+		log_info(logger, "Se termina la ejecucion del proceso %d por desconexion de la consola", info->pid);
+	}
 }

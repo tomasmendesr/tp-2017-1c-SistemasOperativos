@@ -28,7 +28,6 @@ void procesarMensajeConsola(int32_t consola_fd, int32_t mensaje, char* package){
 	case HANDSHAKE_PROGRAMA:
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,consola_fd);
 		log_info(logger,"Handshake con consola");
-		printf("\n");
 		break;
 	case ENVIO_CODIGO:
 		log_info(logger, "Recibo codigo");
@@ -57,18 +56,20 @@ void trabajarMensajeCPU(int32_t socketCPU){
 
 	//Chequeo de errores
 	if(check <= 0){
-		log_warning(logger,"Se cerro el socket %d (cpu)", socketCPU);
-		verificarProcesosEnCpuCaida(socketCPU);
-		close(socketCPU);
+		if(verificarProcesosEnCpuCaida(socketCPU) == 0){
+			log_warning(logger,"Se cerro el socket %d (cpu)", socketCPU);
+			close(socketCPU);
+			FD_CLR(socketCPU, &master);
+			FD_CLR(socketCPU, &setCPUs);
+		}
 		if(paquete)free(paquete);
 		FD_CLR(socketCPU, &master);
 		FD_CLR(socketCPU, &setCPUs);
-		return;
 	}else{
 		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
+		FD_SET(socketCPU, &setCPUs);
 	}
 
-	FD_SET(socketCPU, &setCPUs);
 }
 
 void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
@@ -1052,14 +1053,6 @@ void moverCursor(int32_t socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
 	enviar_paquete_vacio(MOVER_CURSOR_OK, socketCPU);
 }
 
-void verificarProcesosConsolaCaida(int32_t socketConsola){
-	info_estadistica_t* info = buscarInformacionPorSocketConsola(socketConsola);
-	if(info->estado != FINISH){
-		info->matarSiguienteRafaga = true;
-		info->exitCode = DESCONEXION_CONSOLA;
-		log_info(logger, "Se termina la ejecucion del proceso %d por desconexion de la consola", info->pid);
-	}
-}
 
 info_estadistica_t* buscarInformacionPorSocketConsola(int32_t socketConsola){
 
