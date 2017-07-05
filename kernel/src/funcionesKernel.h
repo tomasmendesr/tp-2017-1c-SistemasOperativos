@@ -233,7 +233,7 @@ void estadisticaCambiarEstado(int pid, uint8_t nuevoEstado);
 void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid));
 void eliminarEstadistica(int pid);
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado);
-int verificarProcesosEnCpuCaida(int socketCPU);
+void verificarProcesosEnCpuCaida(int socketCPU);
 void verificarProcesosConsolaCaida(uint32_t socketConsola);
 void quitarDeMemoriaDinamica(int pid);
 

@@ -478,6 +478,7 @@ void planificarCortoPlazo(void){
 		sem_post(&mutex_cola_ready);
 
 		cpu->pcb = pcb;
+		cpu->disponible = false;
 		enviarPcbCPU(pcb, cpu->socket);
 		estadisticaCambiarEstado(pcb->pid, EXEC);
 	}
@@ -840,14 +841,16 @@ t_archivo* buscarArchivo(int32_t pid, int32_t fd){
 
 }
 
-int verificarProcesosEnCpuCaida(int socketCPU){
+void verificarProcesosEnCpuCaida(int socketCPU){
 		int i;
 		for(i = 0; i<list_size(listaCPUs); i++){
+			sem_wait(&mutex_lista_CPUs);
 			cpu_t* cpu = list_get(listaCPUs, i);
+			sem_post(&mutex_lista_CPUs);
 			if(cpu->socket == socketCPU){
 				list_remove(listaCPUs, i);
-				if(cpu->disponible) sem_wait(&semCPUs_disponibles);
 				log_info(logger, "CPU %d quitado de la lista", cpu->socket);
+				if(cpu->disponible) sem_wait(&semCPUs_disponibles);
 				// si esta disponible es porque no tiene nada corriendo
 				if(!(cpu->disponible) && cpu->pcb != NULL){
 					log_info(logger, "Se termina la ejecucion del proceso #%d por desconexion de la CPU", cpu->pcb->pid);
@@ -855,10 +858,8 @@ int verificarProcesosEnCpuCaida(int socketCPU){
 					terminarProceso(cpu->pcb, socketCPU);
 				}
 				free(cpu);
-				return 0;
 			}
 		}
-		return -1;
 }
 
 void verificarProcesosConsolaCaida(uint32_t socketConsola){
