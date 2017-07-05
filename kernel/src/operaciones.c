@@ -373,6 +373,28 @@ t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
 	return 0;
 }
 
+int buscarSiguiente(t_bloque* block, t_list* list, uint32_t pagina){
+	int t;
+	t_bloque* bloque;
+	for(t=0; t<list->elements_count; t++){
+		bloque=list_get(list, t);
+		if(bloque->pos / pagina_size == pagina &&
+				bloque->pos == block->pos + block->size + sizeof(meta_bloque))return t;
+	}
+	return -1;
+}
+
+int buscarAnterior(t_bloque* block, t_list* list, uint32_t pagina){
+	int t;
+	t_bloque* bloque;
+	for(t=0; t<list->elements_count; t++){
+		bloque=list_get(list, t);
+		if(bloque->pos / pagina_size == pagina &&
+				block->pos == bloque->pos + bloque->size + sizeof(meta_bloque))return t;
+	}
+	return -1;
+}
+
 void reservarMemoria(int32_t socket, char* paquete){
 	pedido_mem pedido_memoria;
 	t_puntero posicion;
@@ -650,7 +672,6 @@ void liberarMemoria(int32_t socket, char* paquete){
 						}
 						free(package);
 
-						enviar_paquete_vacio(LIBERAR_MEMORIA_OK, socket);
 						aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
 						aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarLiberar);
 
@@ -708,7 +729,71 @@ void liberarMemoria(int32_t socket, char* paquete){
 									return;
 								}
 							}
+
+							bloque = list_get(list, ind);
+							int resultadoBusqueda = buscarSiguiente(bloque,list,reserva->pag);
+
+							if(resultadoBusqueda != -1 && resultadoBusqueda < list->elements_count){
+								bloque = list_get(list, resultadoBusqueda);
+								pedido.offset = posicion % pagina_size - sizeof(meta_bloque);
+								pedido.size = sizeof(meta_bloque);
+
+								if(!bloque->used){
+									int tamBloque = bloque->size;
+									bloque->used = false;
+									bloque->size = tamBloque + metadata.size + sizeof(meta_bloque);
+									bloque->pos = posicion;
+
+									metadata.size = bloque->size;
+									package = malloc(header.length);
+									memcpy(package, &pedido, sizeof(t_pedido_bytes));
+									memcpy(package+size, &metadata, sizeof(meta_bloque));
+									free(list_remove(list, ind));
+
+									sendSocket(socketConexionMemoria, &header, package);
+									recibir_paquete(socketConexionMemoria, &paquete, &tipo);
+
+									if(tipo != OP_OK) {
+										log_error(logger,"Segmentation fault\n");
+										enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
+										return;
+									}
+									reserva->size += sizeof(meta_bloque);
+								}
+							}
+
+							bloque = list_get(list,ind);
+							resultadoBusqueda = buscarAnterior(bloque,list,reserva->pag);
+
+							if(resultadoBusqueda != -1 && resultadoBusqueda >= 0){
+								bloque = list_get(list, resultadoBusqueda);
+								pedido.offset = bloque->pos % pagina_size - sizeof(meta_bloque);
+								pedido.size = sizeof(meta_bloque);
+
+								if(!bloque->used){
+									bloque->used = false;
+									bloque->size = bloque->size + metadata.size + sizeof(meta_bloque);
+
+									metadata.size = bloque->size;
+									free(list_remove(list, ind));
+									package = malloc(header.length);
+
+									memcpy(package, &pedido, sizeof(t_pedido_bytes));
+									memcpy(package+size, &metadata, sizeof(meta_bloque));
+
+									sendSocket(socketConexionMemoria, &header, package);
+									recibir_paquete(socketConexionMemoria, &paquete, &tipo);
+
+									if(tipo != OP_OK){
+										log_error(logger, "Segmentation fault");
+										enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
+										return;
+									}
+									reserva->size += sizeof(meta_bloque);
+								}
+							}
 							log_info(logger,"Proceso #%d libera con exito posicion: %d", pid, posicion);
+							enviar_paquete_vacio(LIBERAR_MEMORIA_OK, socket);
 							return;
 						}
 						else{
