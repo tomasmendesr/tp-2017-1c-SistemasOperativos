@@ -414,7 +414,7 @@ void showHelp(char* comando, char* param){
  	puts("help            - muestra comandos y descripciones");
 }
 
-void agregarNuevaCPU(t_list* lista, int32_t socketCPU){
+void agregarNuevaCPU(t_list* lista, int socketCPU){
 	cpu_t* nuevaCPU = malloc(sizeof(cpu_t));
 	nuevaCPU->socket = socketCPU;
 	nuevaCPU->pcb = NULL;
@@ -840,7 +840,6 @@ t_archivo* buscarArchivo(int32_t pid, int32_t fd){
 
 }
 
-
 int verificarProcesosEnCpuCaida(int socketCPU){
 		int i;
 		for(i = 0; i<list_size(listaCPUs); i++){
@@ -864,7 +863,6 @@ int verificarProcesosEnCpuCaida(int socketCPU){
 
 void verificarProcesosConsolaCaida(uint32_t socketConsola){
 	info_estadistica_t* info = buscarInformacionPorSocketConsola(socketConsola);
-	int i = 0;
 	if(info->estado != FINISH){
 		info->matarSiguienteRafaga = true;
 		info->exitCode = DESCONEXION_CONSOLA;
