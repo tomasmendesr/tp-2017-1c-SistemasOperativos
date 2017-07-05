@@ -2,11 +2,10 @@
 
 void trabajarMensajeConsola(int32_t socketConsola){
 
-	int32_t tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
-	int32_t check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
+	int check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
 
-	FD_SET(socketConsola, &setConsolas);
 
 	if(check <= 0){
 		log_warning(logger, "Se cerro el socket %d (Consola)", socketConsola);
@@ -16,6 +15,7 @@ void trabajarMensajeConsola(int32_t socketConsola){
 		FD_CLR(socketConsola, &master);
 		FD_CLR(socketConsola, &setConsolas);
 	}else{
+		FD_SET(socketConsola, &setConsolas);
 		procesarMensajeConsola(socketConsola, tipo_mensaje, paquete);
 	}
 
@@ -48,11 +48,11 @@ void procesarMensajeConsola(int32_t consola_fd, int32_t mensaje, char* package){
 	}
 }
 
-void trabajarMensajeCPU(int32_t socketCPU){
+void trabajarMensajeCPU(int socketCPU){
 
-	int32_t tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
-	int32_t check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
+	int check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
 
 	//Chequeo de errores
 	if(check <= 0){
@@ -65,12 +65,12 @@ void trabajarMensajeCPU(int32_t socketCPU){
 		if(paquete)free(paquete);
 	}else{
 		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
+		FD_SET(socketCPU, &setCPUs);
 	}
 
-	FD_SET(socketCPU, &setCPUs);
 }
 
-void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
+void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	switch(mensaje){
 	case HANDSHAKE_CPU:
 		log_info(logger,"Conexion con nueva CPU establecida");
