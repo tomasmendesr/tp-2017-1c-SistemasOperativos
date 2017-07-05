@@ -459,8 +459,6 @@ cpu_t* obtenerCpuLibre(void){
 void planificarCortoPlazo(void){
 
 	while(1){
-		//Espera que halla CPUs Disponibles
-		sem_wait(&semCPUs_disponibles);
 		//Espera procesos para ejecutar
 		sem_wait(&sem_cola_ready);
 
@@ -471,13 +469,9 @@ void planificarCortoPlazo(void){
 		}
 		pthread_mutex_unlock(&lockPlanificacion);
 
+		//Espera que halla CPUs Disponibless
+		sem_wait(&semCPUs_disponibles);
 		cpu_t* cpu = obtenerCpuLibre();
-
-		if(cpu != NULL){
-			cpu->disponible = false;
-		}else{
-			return;
-		}
 
 		sem_wait(&mutex_cola_ready);
 		t_pcb* pcb = queue_pop(colaReady);
@@ -852,6 +846,11 @@ void verificarProcesosEnCpuCaida(int32_t socketCPU){
 			cpu_t* cpu = list_get(listaCPUs, i);
 			if(cpu->socket == socketCPU){
 				list_remove(listaCPUs, i);
+				if(cpu->disponible) {
+					printf("esta re sidponible\n");
+					sem_wait(&semCPUs_disponibles);
+					printf("desconte el contador\n");
+				}
 				log_info(logger, "CPU %d quitado de la lista", cpu->socket);
 				// si esta disponible es porque no tiene nada corriendo
 				if(!(cpu->disponible) && cpu->pcb != NULL){

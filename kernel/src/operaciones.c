@@ -44,7 +44,7 @@ void procesarMensajeConsola(int32_t consola_fd, int32_t mensaje, char* package){
 	case FINALIZAR_PROGRAMA:
 		finalizarPrograma(consola_fd,*(int*)package);
 		break;
-	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
+	default: log_warning(logger,"Se recibio un codigo de operacion invalido de consola. %d", mensaje);
 	break;
 	}
 }
@@ -137,7 +137,7 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 		finalizacion_error(package, socketCPU, mensaje);
 		break;
 	default:
-		log_warning(logger,"Se recibio el codigo de operacion invalido.");
+		log_warning(logger,"Se recibio el codigo de operacion invalido de CPU. %d", mensaje );
 	}
 }
 
