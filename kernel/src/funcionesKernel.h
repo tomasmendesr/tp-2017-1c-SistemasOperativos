@@ -106,8 +106,8 @@ typedef struct{
 }__attribute__((__packed__))reserva_memoria;
 
 typedef struct{
-	bool used;
-	size_t size;
+	uint32_t used;
+	uint32_t size;
 }__attribute__((__packed__))meta_bloque;
 
 typedef struct{
@@ -117,8 +117,8 @@ typedef struct{
 }__attribute__((__packed__))pedido_mem;
 
 typedef struct{
-	bool used;
-	size_t size;
+	uint32_t used;
+	uint32_t size;
 	uint32_t pos;
 }__attribute__((__packed__))t_bloque;
 

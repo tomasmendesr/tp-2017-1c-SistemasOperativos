@@ -37,16 +37,16 @@ void setPCB(t_pcb * pcbDeCPU){
  * @return	Puntero a la variable recien asignada
  */
 t_puntero definirVariable(t_nombre_variable identificador_variable){
+	t_entrada_stack* lineaStack;
+	uint32_t pag,offset,posAbsoluta;
 	if(pcb->stackPointer + TAMANIO_VARIABLE > tamanioStack * tamanioPagina){
 		log_error(logger, "StackOverflow. Se finaliza el proceso");
 		huboStackOver = true;
 		return -1;
 	}
+	pag = pcb->stackPointer / tamanioPagina + pcb->cantPaginasCodigo;
+	offset = pcb->stackPointer % tamanioPagina;
 
-	uint32_t pag = pcb->stackPointer / tamanioPagina;
-	uint32_t offset = pcb->stackPointer % tamanioPagina;
-
-	t_entrada_stack* lineaStack;
 	if(list_size(pcb->indiceStack) == 0){
 		lineaStack = crearPosicionStack();
 		list_add(pcb->indiceStack, lineaStack);
@@ -62,7 +62,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		nuevaVar->size = TAMANIO_VARIABLE;
 		list_add(lineaStack->variables, nuevaVar);
 	}
-	else{ // Es un argumento.
+	else{ // Es un argumento
 		log_debug(logger, "ANSISOP_definirVariable (argumento) %c", identificador_variable);
 		t_argumento* nuevoArg = malloc(sizeof(t_argumento));
 		nuevoArg->pagina = pag;
@@ -70,11 +70,11 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 		nuevoArg->size = TAMANIO_VARIABLE;
 		list_add(lineaStack->argumentos, nuevoArg);
 	}
-
 	pcb->stackPointer += TAMANIO_VARIABLE;
-	uint32_t posAbsoluta = pcb->stackPointer - TAMANIO_VARIABLE;
+	posAbsoluta = pag * tamanioPagina + offset;
 	log_info(logger, "Posicion relativa de %c: %d %d %d", identificador_variable, pag, offset, TAMANIO_VARIABLE);
 	log_info(logger, "Posicion absoluta de %c: %i", identificador_variable, posAbsoluta);
+
 	return posAbsoluta;
 }
 
@@ -92,7 +92,7 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
 	if(direccion_variable != -1){
 		log_debug(logger, "ANSISOP_asignar -> posicion var: %d - valor: %d", direccion_variable, valor);
 		t_pedido_bytes* pedidoEscritura = malloc(sizeof(t_pedido_bytes));
-		pedidoEscritura->pag = direccion_variable / tamanioPagina + pcb->cantPaginasCodigo;
+		pedidoEscritura->pag = direccion_variable / tamanioPagina;
 		pedidoEscritura->offset = direccion_variable % tamanioPagina;
 		pedidoEscritura->size = TAMANIO_VARIABLE;
 		pedidoEscritura->pid = pcb->pid;
@@ -167,7 +167,7 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	log_debug(logger, "ANSISOP_dereferenciar posicion: %d", direccion_variable);
 	//calculo la posicion de la variable en el stack mediante el desplazamiento
 	t_pedido_bytes* solicitar = malloc(sizeof(t_pedido_bytes));
-	solicitar->pag = (direccion_variable / tamanioPagina) + pcb->cantPaginasCodigo;
+	solicitar->pag = direccion_variable / tamanioPagina;
 	solicitar->offset = direccion_variable % tamanioPagina;
 	solicitar->size = TAMANIO_VARIABLE;
 	solicitar->pid = pcb->pid;

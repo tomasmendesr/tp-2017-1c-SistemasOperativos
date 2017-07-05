@@ -451,7 +451,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 					header->length = sizeof(t_puntero);
 
 					if(resultado == OP_OK){
-						log_debug(logger,"Reserva exitosa con posicion %d",posicion);
+						log_debug(logger,"Proceso #%d reserva con exito posicion %d",pid,posicion);
 						sendSocket(socket, header, &posicion);
 						free(header);
 						return;
@@ -504,7 +504,6 @@ void reservarMemoria(int32_t socket, char* paquete){
 		reserva->pag = pedido_memoria.pagBase+info->cantPaginasHeap+config->stack_Size;
 		reserva->size = pagina_size - sizeof(meta_bloque);
 		reserva->pid = pedido_memoria.pid;
-
 		sem_wait(&mutex_dinamico);
 		list_add(mem_dinamica, reserva);
 		sem_post(&mutex_dinamico);
@@ -558,7 +557,8 @@ void reservarMemoria(int32_t socket, char* paquete){
 					list_add(bloques, entrada);
 					sem_post(&mutex_datos);
 				}
-				log_debug(logger, "Reserva exitosa con posicion %d",posicion);
+				log_debug(logger, "Proceso #%d reserva con exito posicion %d",
+						pedido_memoria.pid,posicion);
 				sendSocket(socket, &header, &posicion);
 			}
 			else{
@@ -626,16 +626,14 @@ void liberarMemoria(int32_t socket, char* paquete){
 			while((bloque = list_get(list, ind))){
 				if(bloque->pos == posicion){
 					if(bloque->used){
-						log_info(logger,"Se libera la posicion: %d", bloque->pos);
 						header.type = GRABAR_BYTES;
 						header.length = size + sizeof(meta_bloque);
-
 						metadata.used = bloque->used = false;
 						metadata.size = bloque->size;
 						reserva->size += metadata.size;
 						package = malloc(header.length);
 
-						pedido.size = metadata.size;
+						pedido.size = sizeof(meta_bloque);
 						pedido.offset = posicion % pagina_size - sizeof(meta_bloque);
 						memcpy(package, &pedido, size);
 						memcpy(package+sizeof(t_pedido_bytes), &metadata, sizeof(meta_bloque));
@@ -693,9 +691,6 @@ void liberarMemoria(int32_t socket, char* paquete){
 									sem_wait(&mutex_dinamico);
 									free(list_remove(mem_dinamica,pos-1));
 									sem_post(&mutex_dinamico);
-
-									printf("pag %d\n",reserva->pag);
-
 									sendSocket(socketConexionMemoria, &header, &pedido);
 									recibir_paquete(socketConexionMemoria, &paquete, &tipo);
 									free(package);
@@ -704,9 +699,11 @@ void liberarMemoria(int32_t socket, char* paquete){
 									log_error(logger,"Segmentation fault");
 									enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
 									free(package);
+									return;
 								}
-								return;
 							}
+							log_info(logger,"Proceso #%d libera con exito posicion: %d", pid, posicion);
+							return;
 						}
 						else{
 							log_error(logger,"Segmentation fault");
