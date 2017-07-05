@@ -56,13 +56,11 @@ void trabajarMensajeCPU(int socketCPU){
 
 	//Chequeo de errores
 	if(check <= 0){
-		if(verificarProcesosEnCpuCaida(socketCPU) == 0){
-			log_warning(logger,"Se cerro el socket %d (cpu)", socketCPU);
-			close(socketCPU);
-			FD_CLR(socketCPU, &master);
-			FD_CLR(socketCPU, &setCPUs);
-		}
+		if(verificarProcesosEnCpuCaida(socketCPU) == 0)	log_warning(logger,"Se cerro el socket %d (cpu)", socketCPU);
+		close(socketCPU);
 		if(paquete)free(paquete);
+		FD_CLR(socketCPU, &master);
+		FD_CLR(socketCPU, &setCPUs);
 	}else{
 		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
 		FD_SET(socketCPU, &setCPUs);
