@@ -181,6 +181,26 @@ void guardarDatos(void* package){
 	char** bloques = config_get_array_value(c, "BLOQUES");
 	int cantBloques = cantidadBloques(bloques);
 
+	config_destroy(c);
+
+	//me fijo si la cant de bloques satisface al offset
+	int bloquesRequeridos = (pedido->offset / conf->tamanio_bloque) + 1;
+	if(bloquesRequeridos > cantBloques){
+		int i, res;
+		for(i=bloquesRequeridos-cantBloques; i>0; i--){
+			res = reservarNuevoBloque(path);
+			if(res==SIN_BLOQUES_LIBRES){
+				enviar_paquete_vacio(SIN_ESPACIO_FS, socketConexionKernel);
+				return;
+			}
+		}
+
+	}
+
+	c = config_create(path);
+	bloques = config_get_array_value(c, "BLOQUES");
+	cantBloques = cantidadBloques(bloques);
+
 	int offsetBloque;
 	int restoBloque, bloque;
 
@@ -208,7 +228,7 @@ void guardarDatos(void* package){
 			if(numBloque+1 == cantBloques){
 				log_info(logger, "reservo nuevo bloque");
 				bloque = reservarNuevoBloque(path);
-				if(bloque == SIN_ESPACIO_FS){
+				if(bloque == SIN_BLOQUES_LIBRES){
 					enviar_paquete_vacio(SIN_ESPACIO_FS, socketConexionKernel);
 					return;
 				}
@@ -371,8 +391,8 @@ int reservarNuevoBloque(char* pathArchivo){
 
 	int bloqueLibre = buscarBloqueLibre();
 
-	if(bloqueLibre == SIN_ESPACIO_FS)
-		return SIN_ESPACIO_FS;
+	if(bloqueLibre == SIN_BLOQUES_LIBRES)
+		return SIN_BLOQUES_LIBRES;
 
 	escribirValorBitarray(1, bloqueLibre);
 
