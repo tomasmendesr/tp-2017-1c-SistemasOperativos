@@ -798,7 +798,7 @@ void dump(char* comando, char* param){
 		return;
 	}
 
-	if( !strcmp(param,"tabla") ){
+	if( !strcmp(param,"table") ){
 		//Dump de tabla de paginas
 		dumpTable();
 		return;
@@ -942,7 +942,7 @@ void size(char* comando, char* param){
 	if( !strcmp(param,"memory") ){
 		int free = framesLibres();
 
-		printf("Size memory: Cant frames: %d (%d bytes), framesOcupados: %d (%d bytes), framesLibres: %d (%d bytes).\n",
+		printf("Size memory:\nCant frames: %d (%d bytes), framesOcupados: %d (%d bytes), framesLibres: %d (%d bytes).\n",
 				cant_frames,cant_frames * frame_size,
 				cant_frames - free, (cant_frames - free) * frame_size,
 				free, free * frame_size);
@@ -950,8 +950,11 @@ void size(char* comando, char* param){
 	}
 
 	int pid = atoi(param);
-	if(pid==0)
+	if(pid<=0)
 		pid = -1;
+
+	if( !strcmp(param,"table") )
+		pid = 0;
 
 	int i, cant = 0;
 	for(i=0;i<cant_frames;i++){
@@ -959,17 +962,24 @@ void size(char* comando, char* param){
 			cant++;
 	}
 
-	printf("Cantidad de marcos ocupados por el proceso n° %d: %d (%d bytes)", pid, cant, cant * cant_frames);
+	if(pid == -1){
+		printf("Cantidad de marcos libres: %d (%d bytes)\n", cant, cant * frame_size);
+	}else if(pid == 0){
+		printf("Cantidad de marcos de la tabla de paginas: %d (%d bytes)\n",cant,cant*frame_size);
+	}else{
+		printf("Cantidad de marcos ocupados por el proceso n° %d: %d (%d bytes)\n", pid, cant, cant * frame_size);
+	}
 	return;
 }
 
 void help(char* comando, char* param){
 
 	printf("\n\nComandos Soportados:\n+retardo \"milis\" -> Cambia el retardo\n+flush -> Limpia la cache\n");
+	printf("+size -> Cantidad de marcos libres\n+size table -> Cantidad de marcos tabla de paginas\n");
 	printf("+size memory -> Tamaño de la memoria\n+size \"pid\" -> Tamaño del proceso\n");
 	printf("+dump -> Dump de todas las estructuras\n+dump cache -> Dump de la cache\n");
 	printf("+dump memory -> Dump de las paginas de todos los procesos y su contenido\n");
-	printf("+dump memory-pid -> Dump de las paginas de un proceso\n+dump tabla -> Dump de la tabla de paginas\n");
+	printf("+dump memory-pid -> Dump de las paginas de un proceso\n+dump table -> Dump de la tabla de paginas\n");
 }
 
 char* getTimeStamp(){
