@@ -299,6 +299,8 @@ int16_t almacenarBytes(t_pedido_bytes* pedido, void* paquete){
 	buffer=malloc(header.length);
 	memcpy(buffer,pedido,size);
 	memcpy(buffer+size,paquete,pedido->size);
+	log_debug(logger, "Pedido escritura a Memoria -> Pid: %d - Pagina: %d - Offset: %d - Size: %d",
+			pedido->pid, pedido->pag, pedido->offset, pedido->size);
 	if(sendSocket(socketConexionMemoria,&header,(void*)buffer) <= 0 ){
 		log_error(logger,"Error al enviar pedido para almacenar bytes en memoria");
 		free(buffer);

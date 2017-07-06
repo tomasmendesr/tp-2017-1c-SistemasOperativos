@@ -395,12 +395,10 @@ void desconectarConsola(char* comando, char* param) {
 	log_debug(logger, "Abortando programas (que fueron aceptados)...");
 	printf("Finalizando conexion threads...\n");
 	printf("Abortando programas...\n");
-	int i;
-	for(i = 0; i<list_size(procesos); i++){
-		t_proceso* proc = list_get(procesos, i);
-		list_remove(procesos, i);
+	void finish(t_proceso* proc){
 		terminarProceso(proc, DESCONEXION_CONSOLA);
 	}
+	list_iterate(procesos, finish);
 	log_info(logger, "Consola desconectada.");
 	exit(0);
 }
