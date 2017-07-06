@@ -357,6 +357,7 @@ char* obtenerExitCode(int32_t exitCode){
 	case SEGMENTATION_FAULT: return "SEGMENTATION_FAULT";
 	case SIN_ESPACIO_FS: return "SIN_ESPACIO_FS";
 	case IMPOSIBLE_BORRAR_ARCHIVO: return "IMPOSIBLE_BORRAR_ARCHIVO";
+	case MEMORIA_CORRUPTA: return "MEMORIA_CORRUPTA";
 	default: return "ERROR DESCONOCIDO";
 	}
 }
