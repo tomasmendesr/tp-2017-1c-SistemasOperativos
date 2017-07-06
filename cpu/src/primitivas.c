@@ -113,7 +113,6 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor){
  * @return	Valor que se asigno
  */
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
-	if(finPrograma) return -1;
 	log_debug(logger, "ANSISOP_asignarValorCompartida var: %s, valor: %d", variable, valor);
 	uint32_t offset = 0;
 	int16_t var;
@@ -164,6 +163,10 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	solicitar.size = TAMANIO_VARIABLE;
 	solicitar.pid = pcb->pid;
 	if(solicitarBytes(&solicitar) != 0){
+		log_error(logger,"La variable no pudo dereferenciarse");
+		return -1;
+	}
+	if(!paqueteGlobal){
 		log_error(logger,"La variable no pudo dereferenciarse");
 		return -1;
 	}

@@ -3,6 +3,7 @@
 bool cerrarCPU = false;
 bool huboStackOver = false;
 bool finPrograma = false;
+bool finalizoPrograma = false;
 
 AnSISOP_funciones functions = { .AnSISOP_asignar = asignar,
 		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
@@ -252,7 +253,7 @@ int32_t requestHandlerMemoria(void){
 		log_info(logger,"Tamaño de pagina: %d",tamanioPagina);
 		break;
 	case SEGMENTATION_FAULT:
-		log_error(logger,"Segmentation Fault");
+		log_error(logger,"Segmentation Fault por aqui");
 		finalizarPor(SEGMENTATION_FAULT);
 		finPrograma = true;
 		return -1;
@@ -333,6 +334,7 @@ void revisarFinalizarCPU(void){
 }
 
 void comenzarEjecucionDePrograma(void* paquete){
+	finalizoPrograma = false;
 	quantum = *(uint32_t*)paquete;
 	if(quantum == 0){
 		log_debug(logger, "Ejecutar - Algoritmo FIFO");
@@ -418,6 +420,11 @@ int16_t solicitarProximaInstruccion(void) {
 }
 
 void finalizarPor(int type) {
+	if(finalizoPrograma) {
+		log_debug(logger, "Se esta intentando seguir ejecutando pero el proceso ya finalizó.");
+		log_debug(logger, "Abortando cpu...");
+		finalizarCPU();
+	}
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type = type;
@@ -430,6 +437,7 @@ void finalizarPor(int type) {
 	free(paquete);
 	freePCB(pcb);
 	quantum = -1;
+	finalizoPrograma = true;
 }
 
 void finalizarCPU(void){
