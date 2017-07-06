@@ -250,7 +250,6 @@ void finalizarPrograma(int32_t consola_fd, int32_t pid){
 	info_estadistica_t* info = buscarInformacion(pid);
 	info->matarSiguienteRafaga = true;
 	info->exitCode = FINALIZAR_DESDE_CONSOLA;
-	log_info(logger, "Se termina la ejecucion del proceso #%d por comando STOP (Consola)", pid);
 }
 
 void finalizacion_segment_fault(void* paquete_from_cpu, int32_t socket_cpu){
