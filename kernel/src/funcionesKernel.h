@@ -263,6 +263,8 @@ sem_t mutex_dinamico;
 sem_t mutex_datos;
 sem_t mutex_fs;
 
+pthread_mutex_t mutex_memoria_fd;
+
 //Listas
 t_list* listaCPUs;
 t_list* listadoEstadistico;
