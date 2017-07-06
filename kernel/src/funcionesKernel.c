@@ -13,6 +13,7 @@ void crearConfig(int32_t argc, char* argv[]){
 	if(argc>1){
 			if(verificarExistenciaDeArchivo(argv[1])){
 				config=levantarConfiguracionKernel(argv[1]);
+				printf("ME LO MANDARON POR PATHHHHH\n");
 				log_info(logger, "Configuracion levantada correctamente");
 			}else{
 				log_error(logger,"Ruta incorrecta");
@@ -481,6 +482,7 @@ void planificarCortoPlazo(void){
 		cpu->disponible = false;
 		enviarPcbCPU(pcb, cpu->socket);
 		estadisticaCambiarEstado(pcb->pid, EXEC);
+		printf("Proceso #%d agregado a cola de EJECUCION\n", pcb->pid);
 	}
 }
 
@@ -513,6 +515,7 @@ void planificarLargoPlazo(void){
 			sem_wait(&mutex_cola_new);
 			proceso_en_espera_t* proc = queue_pop(colaNew);
 			sem_post(&mutex_cola_new);
+			printf("Proceso #%d agregado a la cola de NEW\n", proc->pid);
 
 			//hago peticion a memoria, si se rechaza alerto a consola y el grado de multiProg sigue igual
 			//si acepta pongo en cola ready y creo pcb;
@@ -558,6 +561,7 @@ void planificarLargoPlazo(void){
 				info->exitCode = exitCode;
 				queue_push(colaFinished, pcb);
 				log_info(logger, "Proceso #%d agregado a la cola de FINISHED", pid);
+				printf("Proceso #%d agregado a la cola de FINISHED\n", pid);
 				freePCB(pcb);
 			}
 			else if(resultado == OP_OK){
@@ -572,6 +576,7 @@ void planificarLargoPlazo(void){
 				queue_push(colaReady, pcb);
 				sem_post(&mutex_cola_ready);
 				sem_post(&sem_cola_ready);
+				printf("Proceso #%d agregado a la cola de READY\n", pid);
 				estadisticaCambiarEstado(pid, READY);
 				cantProcesosSistema++;
 
@@ -765,8 +770,8 @@ void desbloquearProceso(char* semaforo){
 
 		queue_push(colaReady, pcb);
 		estadisticaCambiarEstado(pcb->pid, READY);
-
 		sem_post(&sem_cola_ready);
+		printf("Proceso #%d agregado a la cola de READY\n", pcb->pid);
 	}
 }
 
@@ -776,6 +781,7 @@ void bloquearProceso(char* semaforo, t_pcb* pcb){
 	else queue_push(cola, pcb);
 	estadisticaAumentarRafaga(pcb->pid);
 	estadisticaCambiarEstado(pcb->pid, BLOQ);
+	printf("Proceso #%d agregado a cola de BLOQUEADOS\n",pcb->pid);
 }
 
 int32_t getArchivoFdMax(void){

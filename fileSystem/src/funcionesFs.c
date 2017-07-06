@@ -342,26 +342,24 @@ void mkdirRecursivo(char* path){
 
 int buscarBloqueLibre(){
 
-	int i, bloqueLibre;
+	int bloqueLibre;
 
-	for(i=0; bitarray_test_bit(bitarray, i) && i<conf->cantidad_bloques; i++){
+	for(bloqueLibre=0; bitarray_test_bit(bitarray, bloqueLibre) && bloqueLibre<conf->cantidad_bloques; bloqueLibre++){
 
 	}
 
-	bloqueLibre = i + 1;
-
-	if(bloqueLibre > conf->cantidad_bloques)
+	if(bloqueLibre >= conf->cantidad_bloques)
 		return SIN_BLOQUES_LIBRES;
 
-	return i+1;
+	return bloqueLibre;
 }
 
 void escribirValorBitarray(bool valor, int pos){
 
 	if(valor)
-		bitarray_set_bit(bitarray, pos-1);
+		bitarray_set_bit(bitarray, pos);
 	else
-		bitarray_clean_bit(bitarray, pos-1);
+		bitarray_clean_bit(bitarray, pos);
 
 	FILE* bitmap = fopen(pathMetadataBitarray, "w");
 	fwrite(bitarray->bitarray, bitarray->size, 1, bitmap);
