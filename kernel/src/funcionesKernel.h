@@ -288,6 +288,7 @@ void imprimirTablaGlobal(void);
 char* buscarPathDeArchivo(int globalFD);
 t_archivo* buscarArchivo(int pid, int fd);
 bool existeArchivo(char* path);
+bool archivoPuedeSerBorrado(int globalFD);
 
 
 fd_set master;

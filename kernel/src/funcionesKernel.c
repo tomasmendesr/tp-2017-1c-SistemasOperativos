@@ -850,6 +850,17 @@ bool existeArchivo(char* path){
 	return list_any_satisfy(globalFileTable, buscarPorPath);
 }
 
+bool archivoPuedeSerBorrado(int globalFD){
+
+	bool buscarPorGlobalFD(entrada_tabla_globlal_archivo* entrada){
+		return entrada->ubicacion == globalFD ? true : false;
+	}
+
+	entrada_tabla_globlal_archivo* entrada =  list_find(globalFileTable, buscarPorGlobalFD);
+
+	return entrada->vecesAbierto == 1 ? true : false;
+}
+
 void verificarProcesosEnCpuCaida(int socketCPU){
 		int i;
 		for(i = 0; i<list_size(listaCPUs); i++){

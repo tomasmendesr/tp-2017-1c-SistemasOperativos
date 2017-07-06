@@ -900,12 +900,21 @@ void abrirArchivo(int32_t socketCpu, void* package){
 }
 
 void borrarArchivo(int32_t socketCpu, void* package){
-	int fd = *(int*) package;
-	char* path = buscarPathDeArchivo(fd);
+	int pid = *(int*) package;
+	int fd = *(int*) (package + sizeof(int));
+
+	t_archivo* archivo = buscarArchivo(pid, fd);
+	char* path = buscarPathDeArchivo(archivo->globalFD);
+
 	header_t header;
 	header.type = BORRAR_ARCHIVO;
 	uint32_t size = strlen(path) + 1;
 	header.length = size;
+
+	if(!archivoPuedeSerBorrado(archivo->globalFD)){
+		enviar_paquete_vacio(IMPOSIBLE_BORRAR_ARCHIVO, socketCpu);
+		return;
+	}
 
 	sem_wait(&mutex_fs);
 
