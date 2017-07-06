@@ -286,7 +286,7 @@ void terminarProceso(t_pcb* pcbRecibido, int32_t socket_cpu){
 	pthread_mutex_lock(&mutex_memoria_fd);
 	sendSocket(socketConexionMemoria,header,&pcbRecibido->pid);
 	recibir_paquete(socketConexionMemoria, &paquete,&resultado);
-	pthread_mutex_lock(&mutex_memoria_fd);
+	pthread_mutex_unlock(&mutex_memoria_fd);
 
 	cantProcesosSistema--;
 	freePCB(pcbRecibido);
