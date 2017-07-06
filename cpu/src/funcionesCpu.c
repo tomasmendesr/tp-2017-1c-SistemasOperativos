@@ -317,7 +317,7 @@ void revisarSigusR1(int signo){
 		printf("Signal SIGUSR1\n");
 		log_info(logger, "Se recibe SIGUSR1");
 		cerrarCPU = true;
-		enviar_paquete_vacio(DESCONEXION_CPU, socketConexionKernel);
+	//	enviar_paquete_vacio(DESCONEXION_CPU, socketConexionKernel); NO HACE FALTA PORQUE EL KERNEL DETECTA LA DESCONEXION
 		log_debug(logger, "Desconectando CPU...");
 	}
 }
