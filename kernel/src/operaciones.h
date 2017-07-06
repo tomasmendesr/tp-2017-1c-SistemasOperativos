@@ -31,5 +31,6 @@ void cerrarArchivo(int socketCpu, void* package);
 void leerArchivo(int socketCpu, t_lectura* lectura);
 void abrirArchivo(int socketCpu, void* package);
 void moverCursor(int socketCpu, t_cursor* cursor);
+void verificarAsignar(char* paquete, int socket);
 
 #endif /* OPERACIONES_H_ */

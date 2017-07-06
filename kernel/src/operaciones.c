@@ -292,6 +292,8 @@ void terminarProceso(t_pcb* pcbRecibido, int32_t socket_cpu){
 		sendSocket(info->socketConsola,&header,&(pcbRecibido->exitCode));
 	}
 
+	quitarDeMemoriaDinamica(pcbRecibido->pid);
+
 	header.type = FINALIZAR_PROGRAMA;
 	header.length = sizeof(pcbRecibido->pid);
 	pthread_mutex_lock(&mutex_memoria_fd);
