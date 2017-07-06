@@ -270,7 +270,7 @@ int32_t requestHandlerMemoria(void){
 		return -1;
 	case STACKOVERFLOW:
 		finErrorExitCode = header.type;
-		finPorError = SUPERA_LIMITE_ASIGNACION_PAGINAS;
+		finPorError = true;
 		if(paquete) free(paquete);
 		return -1;
 	default:
