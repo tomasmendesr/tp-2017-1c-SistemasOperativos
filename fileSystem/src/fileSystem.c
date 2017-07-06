@@ -119,7 +119,7 @@ void inicializarMetadata(){
 	int j;
 	FILE* bloque;
 
-	for (j = 1 ; j<=conf->cantidad_bloques ; j++){
+	for (j = 0 ; j<conf->cantidad_bloques ; j++){
 
 		char* pathBloque = string_new();
 		string_append(&pathBloque, pathBloques);
