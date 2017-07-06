@@ -867,7 +867,7 @@ void imprimirTablaGlobal(void){
 char* buscarPathDeArchivo(int32_t globalFD){
 
 	bool buscarPorUbicacion(entrada_tabla_globlal_archivo* entrada){
-		return entrada->ubicacion = globalFD ? true : false;
+		return entrada->ubicacion == globalFD ? true : false;
 	}
 
 	entrada_tabla_globlal_archivo* entrada = list_find(globalFileTable, buscarPorUbicacion);
