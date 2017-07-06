@@ -139,6 +139,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case SUPERO_TAMANIO_PAGINA:
 	case SUPERA_LIMITE_ASIGNACION_PAGINAS:
 	case IMPOSIBLE_BORRAR_ARCHIVO:
+	case MEMORIA_CORRUPTA:
 		finalizacion_error(package, socketCPU, mensaje);
 		break;
 	default:
