@@ -274,6 +274,7 @@ void terminarProceso(t_pcb* pcbRecibido, int32_t socket_cpu){
 	//modifico informacion estadistica
 	estadisticaAumentarRafaga(pcbRecibido->pid);
 	log_info(logger, "Proceso %d agregado a la cola de FINISHED", pcbRecibido->pid);
+	printf("Proceso #%d agregado a la cola de FINISHED\n",pcbRecibido->pid);
 	estadisticaCambiarEstado(pcbRecibido->pid, FINISH);
 
 	//pongo pcb en cola finish
@@ -364,7 +365,7 @@ void finalizacion_quantum(void* paquete_from_cpu, int32_t socket_cpu) {
 		sem_wait(&mutex_cola_ready);
 		queue_push(colaReady, pcb_recibido); // La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
 		sem_post(&mutex_cola_ready);
-
+		printf("Proceso #%d agregado a la cola de READY\n", pcb_recibido->pid);
 		estadisticaCambiarEstado(pcb_recibido->pid, READY);
 
 		//Aumento el semanforo de procesos en ready
