@@ -360,8 +360,8 @@ t_puntero verificarEspacio(uint32_t cant, uint32_t pid, uint32_t pag){
 			offset+=sizeof(meta_bloque)+bloque->size;
 		}
 		while(bloque->used);
-		if(bloque->size-sizeof(meta_bloque) >= cant){
-			return pagina_size*pag + offset-bloque->size;
+		if(bloque->size != 0 && bloque->size - sizeof(meta_bloque) >= cant){
+			return pagina_size * pag + offset - bloque->size;
 		}
 	}
 	return 0;
