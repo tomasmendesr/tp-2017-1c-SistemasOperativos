@@ -220,6 +220,13 @@ void realizarWait(int32_t socketCPU, char* key){
 				recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
 				if(tipo_mensaje == PROC_BLOCKED){
 					t_pcb* pcbRecibido = deserializar_pcb(paquete);
+					info_estadistica_t* info = buscarInformacion(pcbRecibido->pid);
+					if(info->matarSiguienteRafaga){
+						pcbRecibido->exitCode = info->exitCode;
+						terminarProceso(pcbRecibido, socketCPU);
+						free(paquete);
+						return;
+					}
 					bloquearProceso(key, pcbRecibido);
 					desocupar_cpu(socketCPU);
 					log_info(logger, "Bloqueo proceso %d", pcbRecibido->pid);
@@ -310,13 +317,7 @@ void finalizacion_quantum(void* paquete_from_cpu, int32_t socket_cpu) {
 	if(info->matarSiguienteRafaga){
 		pcb_recibido->exitCode = info->exitCode;
 		terminarProceso(pcb_recibido, socket_cpu);
-		return;
 	}else{
-		// Se debe actualizar el PCB. Para ello, directamente se lo elimina de EXEC y se ingresa en READY el pcb recibido (que resulta ser el pcb actualizado del proceso).
-		sem_wait(&mutex_cola_exec);
-		//TODO: Remover PCB()
-		sem_post(&mutex_cola_exec);
-
 		// Se encola el pcb del proceso en READY.
 		sem_wait(&mutex_cola_ready);
 		queue_push(colaReady, pcb_recibido); // La planificación del PCP es Round Robin, por lo tanto lo inserto por orden de llegada.
@@ -326,9 +327,8 @@ void finalizacion_quantum(void* paquete_from_cpu, int32_t socket_cpu) {
 
 		//Aumento el semanforo de procesos en ready
 		sem_post(&sem_cola_ready);
+		desocupar_cpu(socket_cpu);
 	}
-	// Se desocupa la CPU
-	desocupar_cpu(socket_cpu);
 }
 
 void finalizacion_proceso(void* paquete_from_cpu, int32_t socket_cpu_asociado) {

@@ -35,6 +35,7 @@ t_config_FS* levantarConfiguracion(char* archivo){
 
 	conf->punto_montaje = malloc(strlen(config_get_string_value(configFS, "PUNTO_MONTAJE"))+1);
 	strcpy(conf->punto_montaje, config_get_string_value(configFS, "PUNTO_MONTAJE"));
+	if(!string_ends_with(conf->punto_montaje, "/") ) string_append(&conf->punto_montaje,"/");
 
 	conf->tamanio_bloque = config_get_int_value(configFS, "TAMANIO_BLOQUE");
 
@@ -65,7 +66,6 @@ void procesarMensajesKernel(){
 			close(socketConexionKernel);
 			exit(1);
 		}
-		printf("tipo mensaje recivido: %d\n", tipo_mensaje);
 		switch (tipo_mensaje) {
 			case VALIDAR_ARCHIVO:
 				validarArchivo(paquete);
@@ -83,7 +83,7 @@ void procesarMensajesKernel(){
 				obtenerDatos(paquete);
 				break;
 			default:
-				log_warning(logger, "se recivio una operacion invalida");
+				log_warning(logger, "Se recibio una operacion invalida: %d", tipo_mensaje);
 				break;
 		}
 

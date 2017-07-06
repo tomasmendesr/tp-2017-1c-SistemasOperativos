@@ -247,6 +247,7 @@ void threadPrograma(dataHilo* data){
 	switch(operacion){
 	case PROCESO_RECHAZADO:
 		pidAsignado = *(int*) paquete;
+		printf("PID asignado: #%d\n", pidAsignado);
 		exitCode = *(int*) (paquete + sizeof(int));
 		free(paquete);
 		t_proceso* proc = crearProceso(socketProceso,thread,pidAsignado);
@@ -254,6 +255,7 @@ void threadPrograma(dataHilo* data){
 		return;
 	case PID_PROGRAMA:
 		pidAsignado = *(int*)paquete;
+		printf("PID asignado: #%d\n", pidAsignado);
 		free(paquete);
 		crearProceso(socketProceso,thread,pidAsignado);
 		log_info(logger, "Programa #%d aceptado por el kernel", pidAsignado);
