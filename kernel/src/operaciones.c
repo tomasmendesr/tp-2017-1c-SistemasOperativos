@@ -382,6 +382,20 @@ int buscarSiguiente(t_bloque* block, t_list* list, uint32_t pagina){
 	return -1;
 }
 
+void mostrarReserva(void* paquete){
+	uint32_t offset = 0;
+	meta_bloque metadata;
+	char* bloques = string_new();
+
+	while(offset<pagina_size){
+		memcpy(&metadata, paquete + offset, sizeof(meta_bloque));
+		string_append_with_format(&bloques,offset == 0?"%d %s":" | %d %s",
+				metadata.size,metadata.used?"U":"L");
+		offset += sizeof(meta_bloque) + metadata.size;
+	}
+	log_info(logger,"%s",bloques);
+}
+
 int buscarAnterior(t_bloque* block, t_list* list, uint32_t pagina){
 	int t;
 	t_bloque* bloque;
@@ -408,9 +422,7 @@ int buscarReserva(int32_t pid, int32_t pag){
 	reserva_memoria* reserva;
 
 	for(i=0; i<list_size(mem_dinamica); i++){
-		sem_wait(&mutex_dinamico);
 		reserva = list_get(mem_dinamica, i);
-		sem_post(&mutex_dinamico);
 		if(reserva->pid == pid && reserva->pag == pag)
 			return i;
 	}
@@ -515,6 +527,8 @@ void reservarMemoria(int32_t socket, char* paquete){
 			sendSocket(socket, header, &posicion);
 
 			log_debug(logger,"Proceso #%d reserva con exito posicion %d",pid,posicion);
+			mostrarReserva(package);
+			free(package);
 			free(header);
 			return;
 		}
@@ -522,6 +536,8 @@ void reservarMemoria(int32_t socket, char* paquete){
 		reserva = obtenerReserva(pid,cant);
 		sem_post(&mutex_dinamico);
 	}
+
+	package = malloc(pagina_size);
 
 	pedido = malloc(sizeof(t_pedido_iniciar));
 	pedido->pid = pedido_memoria.pid;
@@ -556,6 +572,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 
 	metadata.used = true;
 	metadata.size = pedido_memoria.cant;
+	memcpy(package, &metadata, sizeof(meta_bloque));
 	bytes.pid = pedido_memoria.pid;
 	bytes.pag = reserva->pag;
 	bytes.offset = 0;
@@ -568,8 +585,10 @@ void reservarMemoria(int32_t socket, char* paquete){
 		return;
 	}
 
+	int metaSize = metadata.size;
 	metadata.used = false;
 	metadata.size = pagina_size - sizeof(meta_bloque)*2 - pedido_memoria.cant;
+	memcpy(package + metaSize + sizeof(meta_bloque), &metadata, sizeof(meta_bloque));
 	bytes.pid = pedido_memoria.pid;
 	bytes.pag = reserva->pag;
 	bytes.offset = sizeof(meta_bloque)+pedido_memoria.cant;
@@ -594,6 +613,8 @@ void reservarMemoria(int32_t socket, char* paquete){
 
 	log_debug(logger, "Proceso #%d reserva con exito posicion %d",
 			pedido_memoria.pid,posicion);
+	mostrarReserva(package);
+	free(package);
 }
 
 void liberarMemoria(int32_t socket, char* paquete){
@@ -604,7 +625,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 	meta_bloque metadata;
 	int32_t tamano = sizeof(uint32_t);
 	reserva_memoria* reserva;
-	uint16_t pos=0;
+
 	int posReserva;
 	memcpy(&pid, paquete, tamano);
 	memcpy(&posicion, paquete+tamano, tamano);
@@ -721,6 +742,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 				enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
 				return;
 			}
+			mostrarReserva(paquete);
 		}
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarLiberar);
