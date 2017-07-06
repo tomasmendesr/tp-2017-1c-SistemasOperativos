@@ -183,24 +183,6 @@ void guardarDatos(void* package){
 
 	config_destroy(c);
 
-	//me fijo si la cant de bloques satisface al offset
-	int bloquesRequeridos = (pedido->offset / conf->tamanio_bloque) + 1;
-	if(bloquesRequeridos > cantBloques){
-		int i, res;
-		for(i=bloquesRequeridos-cantBloques; i>0; i--){
-			res = reservarNuevoBloque(path);
-			if(res==SIN_BLOQUES_LIBRES){
-				enviar_paquete_vacio(SIN_ESPACIO_FS, socketConexionKernel);
-				return;
-			}
-		}
-
-	}
-
-	c = config_create(path);
-	bloques = config_get_array_value(c, "BLOQUES");
-	cantBloques = cantidadBloques(bloques);
-
 	int offsetBloque;
 	int restoBloque, bloque;
 
