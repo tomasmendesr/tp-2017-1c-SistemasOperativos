@@ -287,6 +287,7 @@ void eliminarFd(int fd, int proceso);
 void imprimirTablaGlobal(void);
 char* buscarPathDeArchivo(int globalFD);
 t_archivo* buscarArchivo(int pid, int fd);
+bool existeArchivo(char* path);
 
 
 fd_set master;

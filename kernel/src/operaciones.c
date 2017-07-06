@@ -860,7 +860,19 @@ void abrirArchivo(int32_t socketCpu, void* package){
 	if(banderas->escritura) string_append(&permisos, "E");
 	if(banderas->lectura) string_append(&permisos, "L");
 
-	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
+	int fd;
+
+	if(!banderas->creacion){
+
+		if(!existeArchivo(direccion))
+			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+		else
+			fd = agregarArchivo_aProceso(pid, direccion, permisos);
+
+		return;
+	}
+
+	fd = agregarArchivo_aProceso(pid, direccion, permisos);
 
 	//mando mensaje a fs
 	header_t header;

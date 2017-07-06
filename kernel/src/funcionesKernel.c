@@ -841,6 +841,15 @@ t_archivo* buscarArchivo(int32_t pid, int32_t fd){
 
 }
 
+bool existeArchivo(char* path){
+
+	bool buscarPorPath(entrada_tabla_globlal_archivo* entrada){
+		return !strcmp(path, entrada->archivo);
+	}
+
+	return list_any_satisfy(globalFileTable, buscarPorPath);
+}
+
 void verificarProcesosEnCpuCaida(int socketCPU){
 		int i;
 		for(i = 0; i<list_size(listaCPUs); i++){
