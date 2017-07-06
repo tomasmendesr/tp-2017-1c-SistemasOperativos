@@ -88,15 +88,41 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
  * @param	valor	Valor a insertar
  * @return	void
  */
-void asignar(t_puntero direccion_variable, t_valor_variable valor){
-	if(direccion_variable != -1){
-		log_debug(logger, "ANSISOP_asignar -> posicion var: %d - valor: %d", direccion_variable, valor);
-		t_pedido_bytes pedidoEscritura;
-		pedidoEscritura.pag = direccion_variable / tamanioPagina;
-		pedidoEscritura.offset = direccion_variable % tamanioPagina;
-		pedidoEscritura.size = TAMANIO_VARIABLE;
-		pedidoEscritura.pid = pcb->pid;
-		if(almacenarBytes(&pedidoEscritura, &valor) != 0) log_error(logger, "La variable no pudo asignarse");
+void asignar(t_puntero direccion, t_valor_variable valor){
+	int resultado;
+	if(direccion == -1) return;
+	header_t header;
+	log_debug(logger, "ANSISOP_asignar -> posicion var: %d - valor: %d", direccion, valor);
+
+	t_pedido_bytes pedidoEscritura;
+	pedidoEscritura.pag = direccion / tamanioPagina;
+	pedidoEscritura.offset = direccion % tamanioPagina;
+	pedidoEscritura.size = TAMANIO_VARIABLE;
+	pedidoEscritura.pid = pcb->pid;
+
+	if(pedidoEscritura.pag >= pcb->cantPaginasCodigo + tamanioStack){
+		header.type = VERIFICAR_ASIGNAR;
+		header.length = sizeof(t_pedido_bytes);
+		if(sendSocket(socketConexionKernel,&header,&pedidoEscritura) <= 0){
+			log_error(logger, "Conexion con kernel perdida...");
+			finalizarCPU();
+		}
+		resultado = requestHandlerKernel();
+
+		if(resultado == -1){
+			log_error(logger, "La variable no pudo asignarse");
+			return;
+		}
+		else{
+			if(almacenarBytes(&pedidoEscritura, &valor) != 0)
+				log_error(logger, "La variable no pudo asignarse");
+			else log_info(logger, "Variable asignada");
+			return;
+		}
+	}
+	else{
+		if(almacenarBytes(&pedidoEscritura, &valor) != 0)
+			log_error(logger, "La variable no pudo asignarse");
 		else log_info(logger, "Variable asignada");
 	}
 }

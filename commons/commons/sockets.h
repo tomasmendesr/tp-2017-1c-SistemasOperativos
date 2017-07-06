@@ -61,7 +61,9 @@ enum protocolo_kernel_a_cpu{
 	LEER_ARCHIVO_OK = 24,
 	TAMANIO_STACK_PARA_CPU = 26,
 	TAMANIO_PAGINAS_NUCLEO = 27,
-	QUANTUM_SLEEP = 125
+	QUANTUM_SLEEP = 125,
+	MEMORIA_CORRUPTA = 132,
+	ASIGNACION_OK = 133
 };
 
 //Mensajes que el CPU le envia al kernel
@@ -83,7 +85,8 @@ enum protocolo_cpu_a_kernel{
 	STACKOVERFLOW = 47,
 	PROC_BLOCKED = 48,
 	ERROR_ARCHIVO = 49,
-	MOVER_CURSOR = 50
+	MOVER_CURSOR = 50,
+	VERIFICAR_ASIGNAR = 131
 };
 
 //Mensajes que se le envian a la memoria.

@@ -196,6 +196,7 @@ int32_t requestHandlerKernel(void){
 		case CERRAR_ARCHIVO_OK:
 		case MOVER_CURSOR_OK:
 		case LIBERAR_MEMORIA_OK:
+		case ASIGNACION_OK:
 			break;
 		// errores
 		case SEMAFORO_NO_EXISTE:
@@ -211,6 +212,7 @@ int32_t requestHandlerKernel(void){
 		case SUPERO_TAMANIO_PAGINA:
 		case SUPERA_LIMITE_ASIGNACION_PAGINAS:
 		case IMPOSIBLE_BORRAR_ARCHIVO:
+		case MEMORIA_CORRUPTA:
 			finErrorExitCode = header.type;
 			finPorError = true;
 			if(paquete) free(paquete);

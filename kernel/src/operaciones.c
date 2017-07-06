@@ -114,6 +114,9 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case MOVER_CURSOR:
 		moverCursor(socketCPU, (t_cursor*) package);
 		break;
+	case VERIFICAR_ASIGNAR:
+		verificarAsignar(package,socketCPU);
+		break;
 	/* CPU DEVUELVE EL PCB */
 	case FIN_PROCESO:
 		finalizacion_proceso(package, socketCPU);
@@ -290,8 +293,6 @@ void terminarProceso(t_pcb* pcbRecibido, int32_t socket_cpu){
 
 	header.type = FINALIZAR_PROGRAMA;
 	header.length = sizeof(pcbRecibido->pid);
-	void* paquete;
-	int resultado;
 	pthread_mutex_lock(&mutex_memoria_fd);
 	sendSocket(socketConexionMemoria,&header,&pcbRecibido->pid);
 	pthread_mutex_unlock(&mutex_memoria_fd);
@@ -306,6 +307,42 @@ void finalizacion_stackoverflow(void* paquete_from_cpu, int32_t socket_cpu){
 	log_error(logger, "Finaliza el proceso %d por stack overflow", pcbRecibido->pid);
 	pcbRecibido->exitCode = SUPERO_TAMANIO_PAGINA;
 	terminarProceso(pcbRecibido, socket_cpu);
+}
+
+void verificarAsignar(char* paquete, int socket){
+	t_pedido_bytes pedido;
+	int offset = 0;
+	int offsetAsig;
+	int sizeAsig;
+	int preOffset;
+	meta_bloque metadata;
+
+	memcpy(&pedido, paquete, sizeof(t_pedido_bytes));
+	free(paquete);
+
+	offsetAsig = pedido.offset;
+	sizeAsig = pedido.size;
+	pedido.offset = 0;
+	pedido.size = pagina_size;
+
+	solicitudBytes(socketConexionMemoria,&pedido,&paquete);
+
+	do{
+		preOffset = offset;
+		memcpy(&metadata, paquete + offset, sizeof(meta_bloque));
+		offset += sizeof(meta_bloque) + metadata.size;
+	}
+	while(offset < offsetAsig);
+
+	if(!metadata.size) offset -= sizeof(meta_bloque);
+
+	if(offsetAsig >= preOffset + sizeof(meta_bloque) &&
+			offsetAsig + sizeAsig <=  offset)
+		enviar_paquete_vacio(ASIGNACION_OK,socket);
+	else
+		enviar_paquete_vacio(MEMORIA_CORRUPTA,socket);
+
+	return;
 }
 
 void finalizacion_quantum(void* paquete_from_cpu, int32_t socket_cpu) {
