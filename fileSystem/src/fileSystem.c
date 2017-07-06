@@ -54,6 +54,23 @@ void inicializarMetadata(){
 	mkdir(pathBloques, 0777);
 	mkdir(pathArchivos, 0777);
 
+	//verifico si a hay un file system creado
+	char* p = string_new();
+	string_append(&p, pathMetadata);
+	string_append(&p, "/Metadata.bin");
+	if(verificarExistenciaDeArchivo(p)){
+		t_config* metadataFS = config_create(p);
+		int cantBloques = config_get_int_value(metadataFS, "CANTIDAD_BLOQUES");
+		int sizeBloque = config_get_int_value(metadataFS, "TAMANIO_BLOQUES");
+		if(cantBloques != conf->cantidad_bloques || sizeBloque != conf->tamanio_bloque){
+			log_error(logger, "Ya existe un FileSystem en ese punto de montaje con valores diferentes");;
+			exit(1);
+		}
+		config_destroy(metadataFS);
+	}
+	free(p);
+
+
 	pathMetadataArchivo = string_new();
 	string_append(&pathMetadataArchivo, pathMetadata);
 	string_append(&pathMetadataArchivo, METADATA_ARCHIVO);
