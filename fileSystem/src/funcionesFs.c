@@ -181,6 +181,8 @@ void guardarDatos(void* package){
 	char** bloques = config_get_array_value(c, "BLOQUES");
 	int cantBloques = cantidadBloques(bloques);
 
+	config_destroy(c);
+
 	int offsetBloque;
 	int restoBloque, bloque;
 
@@ -208,7 +210,7 @@ void guardarDatos(void* package){
 			if(numBloque+1 == cantBloques){
 				log_info(logger, "reservo nuevo bloque");
 				bloque = reservarNuevoBloque(path);
-				if(bloque == SIN_ESPACIO_FS){
+				if(bloque == SIN_BLOQUES_LIBRES){
 					enviar_paquete_vacio(SIN_ESPACIO_FS, socketConexionKernel);
 					return;
 				}
@@ -371,8 +373,8 @@ int reservarNuevoBloque(char* pathArchivo){
 
 	int bloqueLibre = buscarBloqueLibre();
 
-	if(bloqueLibre == SIN_ESPACIO_FS)
-		return SIN_ESPACIO_FS;
+	if(bloqueLibre == SIN_BLOQUES_LIBRES)
+		return SIN_BLOQUES_LIBRES;
 
 	escribirValorBitarray(1, bloqueLibre);
 

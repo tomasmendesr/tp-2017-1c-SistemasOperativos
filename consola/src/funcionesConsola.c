@@ -5,7 +5,6 @@ void crearConfig(int argc, char* argv[]) {
 			if(verificarExistenciaDeArchivo(argv[1])){
 				config=levantarConfiguracionConsola(argv[1]);
 				log_info(logger, "Configuracion levantada correctamente");
-			}else{
 				log_error(logger,"Ruta incorrecta");
 				exit(EXIT_FAILURE);
 			}
@@ -48,6 +47,8 @@ t_config_consola* levantarConfiguracionConsola(char * archivo) {
 
 	config_destroy(configConsola);
 	printf("Configuracion levantada exitosamente\n");
+	printf("Ruta por defecto: '%s'\n", config->program_path);
+	printf("No es necesario escribir el '.ansisop'\n");
 	return config;
 }
 
@@ -202,7 +203,7 @@ void iniciarPrograma(char* comando, char* param) {
 	pthread_detach(thread);
 }
 
-void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
+t_proceso* crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
 	t_proceso* proc = malloc(sizeof(t_proceso));
 	proc->socket = socketProceso;
 	proc->thread = threadPrograma;
@@ -218,6 +219,7 @@ void crearProceso(int socketProceso, pthread_t threadPrograma, int pid){
     proc->start = start;
 
 	list_add(procesos, proc);
+	return proc;
 }
 
 void threadPrograma(dataHilo* data){
@@ -225,7 +227,7 @@ void threadPrograma(dataHilo* data){
 	int operacion;
 	void* paquete;
 	bool procesoActivo = true;
-	int* pidAsignado;
+	int pidAsignado;
 	int socketProceso = data->socket;
 	pthread_t thread = pthread_self();
 
@@ -241,22 +243,25 @@ void threadPrograma(dataHilo* data){
 		close(socketProceso);
 		exit(EXIT_FAILURE);
 	}
-
+	int32_t exitCode;
 	switch(operacion){
 	case PROCESO_RECHAZADO:
-		notificarProcesoRechazado(paquete, data->pathAnsisop);
+		pidAsignado = *(int*) paquete;
+		exitCode = *(int*) (paquete + sizeof(int));
+		free(paquete);
+		t_proceso* proc = crearProceso(socketProceso,thread,pidAsignado);
+		terminarProceso(proc, exitCode);
 		return;
-		break;
 	case PID_PROGRAMA:
-		pidAsignado = (int*)paquete;
-		log_info(logger, "Programa #%d aceptado por el kernel", *pidAsignado);
+		pidAsignado = *(int*)paquete;
+		free(paquete);
+		crearProceso(socketProceso,thread,pidAsignado);
+		log_info(logger, "Programa #%d aceptado por el kernel", pidAsignado);
 		break;
 	default:
 		log_warning(logger, "Se recibio una operacion invalida");
-		break;
+		return;
 	}
-
-	crearProceso(socketProceso,thread,*pidAsignado);
 
 	while(procesoActivo){
 		/*ambos se quedan esperando una respuesta del otro*/
@@ -281,14 +286,6 @@ void threadPrograma(dataHilo* data){
 		if(paquete)free(paquete);
 
 	}
-}
-
-void notificarProcesoRechazado(void* paquete, char* pathAnsisop){
-	printf("Programa '%s' rechazado\n", pathAnsisop);
-	log_error(logger, "Programa '%s' rechazado", pathAnsisop);
-	int pid = *(int*) paquete;
-	int exitCode = *(int*) (paquete + sizeof(int));
-	imprimirInformacionProcesoRechazado(pid, exitCode);
 }
 
 void finalizarEjecucionProceso(bool* procesoActivo, dataHilo* data, int32_t exitCode){
@@ -335,17 +332,6 @@ void imprimirInformacion(t_proceso* proceso, int32_t exitCode){
 	printf("Duracion: %d seg - %d ms\n", segDuracion, msDuracion);
 	char* exitCodeString = obtenerExitCode(exitCode);
 	printf("Exit code: %s\n", exitCodeString);
-	printf("----------------------\n");
-}
-
-void imprimirInformacionProcesoRechazado(int pid, int32_t exitCode){
-	printf("-----FIN PROGRAMA-----\n");
-	printf("Pid #%d\n", pid);
-	printf("Inicio: -\n");
-	printf("Fin: -\n");
-	printf("Cantidad de impresiones por pantalla: -\n");
-	printf("Duracion: -\n");
-	printf("Exit code: %s\n", obtenerExitCode(exitCode));
 	printf("----------------------\n");
 }
 
@@ -404,7 +390,7 @@ void finalizarPrograma(char* comando, char* param){
 
 void desconectarConsola(char* comando, char* param) {
 	log_debug(logger, "Finalizando conexion threads...");
-	log_debug(logger, "Abortando programas...");
+	log_debug(logger, "Abortando programas (que fueron aceptados)...");
 	printf("Finalizando conexion threads...\n");
 	printf("Abortando programas...\n");
 	int i;

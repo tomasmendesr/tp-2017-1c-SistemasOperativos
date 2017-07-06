@@ -414,7 +414,7 @@ void showHelp(char* comando, char* param){
  	puts("help            - muestra comandos y descripciones");
 }
 
-void agregarNuevaCPU(t_list* lista, int32_t socketCPU){
+void agregarNuevaCPU(t_list* lista, int socketCPU){
 	cpu_t* nuevaCPU = malloc(sizeof(cpu_t));
 	nuevaCPU->socket = socketCPU;
 	nuevaCPU->pcb = NULL;
@@ -459,8 +459,6 @@ cpu_t* obtenerCpuLibre(void){
 void planificarCortoPlazo(void){
 
 	while(1){
-		//Espera que halla CPUs Disponibles
-		sem_wait(&semCPUs_disponibles);
 		//Espera procesos para ejecutar
 		sem_wait(&sem_cola_ready);
 
@@ -471,19 +469,16 @@ void planificarCortoPlazo(void){
 		}
 		pthread_mutex_unlock(&lockPlanificacion);
 
+		//Espera que halla CPUs Disponibless
+		sem_wait(&semCPUs_disponibles);
 		cpu_t* cpu = obtenerCpuLibre();
-
-		if(cpu != NULL){
-			cpu->disponible = false;
-		}else{
-			return;
-		}
 
 		sem_wait(&mutex_cola_ready);
 		t_pcb* pcb = queue_pop(colaReady);
 		sem_post(&mutex_cola_ready);
 
 		cpu->pcb = pcb;
+		cpu->disponible = false;
 		enviarPcbCPU(pcb, cpu->socket);
 		estadisticaCambiarEstado(pcb->pid, EXEC);
 	}
@@ -846,13 +841,36 @@ t_archivo* buscarArchivo(int32_t pid, int32_t fd){
 
 }
 
-void verificarProcesosEnCpuCaida(int32_t socketCPU){
-		int32_t i;
+bool existeArchivo(char* path){
+
+	bool buscarPorPath(entrada_tabla_globlal_archivo* entrada){
+		return !strcmp(path, entrada->archivo);
+	}
+
+	return list_any_satisfy(globalFileTable, buscarPorPath);
+}
+
+bool archivoPuedeSerBorrado(int globalFD){
+
+	bool buscarPorGlobalFD(entrada_tabla_globlal_archivo* entrada){
+		return entrada->ubicacion == globalFD ? true : false;
+	}
+
+	entrada_tabla_globlal_archivo* entrada =  list_find(globalFileTable, buscarPorGlobalFD);
+
+	return entrada->vecesAbierto == 1 ? true : false;
+}
+
+void verificarProcesosEnCpuCaida(int socketCPU){
+		int i;
 		for(i = 0; i<list_size(listaCPUs); i++){
+			sem_wait(&mutex_lista_CPUs);
 			cpu_t* cpu = list_get(listaCPUs, i);
+			sem_post(&mutex_lista_CPUs);
 			if(cpu->socket == socketCPU){
 				list_remove(listaCPUs, i);
 				log_info(logger, "CPU %d quitado de la lista", cpu->socket);
+				if(cpu->disponible) sem_wait(&semCPUs_disponibles);
 				// si esta disponible es porque no tiene nada corriendo
 				if(!(cpu->disponible) && cpu->pcb != NULL){
 					log_info(logger, "Se termina la ejecucion del proceso #%d por desconexion de la CPU", cpu->pcb->pid);
@@ -862,4 +880,13 @@ void verificarProcesosEnCpuCaida(int32_t socketCPU){
 				free(cpu);
 			}
 		}
+}
+
+void verificarProcesosConsolaCaida(uint32_t socketConsola){
+	info_estadistica_t* info = buscarInformacionPorSocketConsola(socketConsola);
+	if(info->estado != FINISH){
+		info->matarSiguienteRafaga = true;
+		info->exitCode = DESCONEXION_CONSOLA;
+		log_info(logger, "Se termina la ejecucion del proceso %d por desconexion de la consola", info->pid);
+	}
 }

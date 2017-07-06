@@ -61,7 +61,7 @@ int crearLog();
 int enviarArchivo(int kernel_fd, char* path);
 
 void inicializacion(void);
-void crearProceso(int socketProceso, pthread_t threadPrograma, int pid);
+t_proceso* crearProceso(int socketProceso, pthread_t threadPrograma, int pid);
 bool esNumero(char* string);
 void threadPrograma(dataHilo* data);
 void terminarProceso(t_proceso* proc, int32_t exitCode);

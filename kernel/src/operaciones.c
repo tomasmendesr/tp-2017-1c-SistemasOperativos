@@ -2,11 +2,10 @@
 
 void trabajarMensajeConsola(int32_t socketConsola){
 
-	int32_t tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
-	int32_t check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
+	int check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
 
-	FD_SET(socketConsola, &setConsolas);
 
 	if(check <= 0){
 		log_warning(logger, "Se cerro el socket %d (Consola)", socketConsola);
@@ -16,6 +15,7 @@ void trabajarMensajeConsola(int32_t socketConsola){
 		FD_CLR(socketConsola, &master);
 		FD_CLR(socketConsola, &setConsolas);
 	}else{
+		FD_SET(socketConsola, &setConsolas);
 		procesarMensajeConsola(socketConsola, tipo_mensaje, paquete);
 	}
 
@@ -28,7 +28,6 @@ void procesarMensajeConsola(int32_t consola_fd, int32_t mensaje, char* package){
 	case HANDSHAKE_PROGRAMA:
 		enviar_paquete_vacio(HANDSHAKE_KERNEL,consola_fd);
 		log_info(logger,"Handshake con consola");
-		printf("\n");
 		break;
 	case ENVIO_CODIGO:
 		log_info(logger, "Recibo codigo");
@@ -44,16 +43,16 @@ void procesarMensajeConsola(int32_t consola_fd, int32_t mensaje, char* package){
 	case FINALIZAR_PROGRAMA:
 		finalizarPrograma(consola_fd,*(int*)package);
 		break;
-	default: log_warning(logger,"Se recibio un codigo de operacion invalido.");
+	default: log_warning(logger,"Se recibio un codigo de operacion invalido de consola. %d", mensaje);
 	break;
 	}
 }
 
-void trabajarMensajeCPU(int32_t socketCPU){
+void trabajarMensajeCPU(int socketCPU){
 
-	int32_t tipo_mensaje; //Para que la funcion recibir_string lo reciba
+	int tipo_mensaje; //Para que la funcion recibir_string lo reciba
 	void* paquete;
-	int32_t check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
+	int check = recibir_paquete(socketCPU, &paquete, &tipo_mensaje);
 
 	//Chequeo de errores
 	if(check <= 0){
@@ -65,12 +64,12 @@ void trabajarMensajeCPU(int32_t socketCPU){
 		FD_CLR(socketCPU, &setCPUs);
 	}else{
 		procesarMensajeCPU(socketCPU, tipo_mensaje, paquete);
+		FD_SET(socketCPU, &setCPUs);
 	}
 
-	FD_SET(socketCPU, &setCPUs);
 }
 
-void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
+void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	switch(mensaje){
 	case HANDSHAKE_CPU:
 		log_info(logger,"Conexion con nueva CPU establecida");
@@ -137,7 +136,7 @@ void procesarMensajeCPU(int32_t socketCPU, int32_t mensaje, char* package){
 		finalizacion_error(package, socketCPU, mensaje);
 		break;
 	default:
-		log_warning(logger,"Se recibio el codigo de operacion invalido.");
+		log_warning(logger,"Se recibio el codigo de operacion invalido de CPU. %d", mensaje );
 	}
 }
 
@@ -861,7 +860,19 @@ void abrirArchivo(int32_t socketCpu, void* package){
 	if(banderas->escritura) string_append(&permisos, "E");
 	if(banderas->lectura) string_append(&permisos, "L");
 
-	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
+	int fd;
+
+	if(!banderas->creacion){
+
+		if(!existeArchivo(direccion))
+			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+		else
+			fd = agregarArchivo_aProceso(pid, direccion, permisos);
+
+		return;
+	}
+
+	fd = agregarArchivo_aProceso(pid, direccion, permisos);
 
 	//mando mensaje a fs
 	header_t header;
@@ -889,12 +900,21 @@ void abrirArchivo(int32_t socketCpu, void* package){
 }
 
 void borrarArchivo(int32_t socketCpu, void* package){
-	int fd = *(int*) package;
-	char* path = buscarPathDeArchivo(fd);
+	int pid = *(int*) package;
+	int fd = *(int*) (package + sizeof(int));
+
+	t_archivo* archivo = buscarArchivo(pid, fd);
+	char* path = buscarPathDeArchivo(archivo->globalFD);
+
 	header_t header;
 	header.type = BORRAR_ARCHIVO;
 	uint32_t size = strlen(path) + 1;
 	header.length = size;
+
+	if(!archivoPuedeSerBorrado(archivo->globalFD)){
+		enviar_paquete_vacio(IMPOSIBLE_BORRAR_ARCHIVO, socketCpu);
+		return;
+	}
 
 	sem_wait(&mutex_fs);
 
@@ -1051,14 +1071,6 @@ void moverCursor(int32_t socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
 	enviar_paquete_vacio(MOVER_CURSOR_OK, socketCPU);
 }
 
-void verificarProcesosConsolaCaida(int32_t socketConsola){
-	info_estadistica_t* info = buscarInformacionPorSocketConsola(socketConsola);
-	if(info->estado != FINISH){
-		info->matarSiguienteRafaga = true;
-		info->exitCode = DESCONEXION_CONSOLA;
-		log_info(logger, "Se termina la ejecucion del proceso %d por desconexion de la consola", info->pid);
-	}
-}
 
 info_estadistica_t* buscarInformacionPorSocketConsola(int32_t socketConsola){
 

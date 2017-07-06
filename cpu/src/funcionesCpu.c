@@ -200,6 +200,7 @@ int32_t requestHandlerKernel(void){
 		case NULL_POINTER:
 		case ARCHIVO_INEXISTENTE:
 		case SIN_ESPACIO_FS:
+		case IMPOSIBLE_BORRAR_ARCHIVO:
 		case FALLA_RESERVAR_RECURSOS:
 			finalizarPor(header.type);
 			finPrograma = true;

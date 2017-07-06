@@ -91,18 +91,13 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 void asignar(t_puntero direccion_variable, t_valor_variable valor){
 	if(direccion_variable != -1){
 		log_debug(logger, "ANSISOP_asignar -> posicion var: %d - valor: %d", direccion_variable, valor);
-		t_pedido_bytes* pedidoEscritura = malloc(sizeof(t_pedido_bytes));
-		pedidoEscritura->pag = direccion_variable / tamanioPagina;
-		pedidoEscritura->offset = direccion_variable % tamanioPagina;
-		pedidoEscritura->size = TAMANIO_VARIABLE;
-		pedidoEscritura->pid = pcb->pid;
-		if(almacenarBytes(pedidoEscritura, &valor) != 0){
-			log_error(logger, "La variable no pudo asignarse");
-			free(pedidoEscritura);
-			return;
-		}
-		log_info(logger, "Variable asignada");
-		free(pedidoEscritura);
+		t_pedido_bytes pedidoEscritura;
+		pedidoEscritura.pag = direccion_variable / tamanioPagina;
+		pedidoEscritura.offset = direccion_variable % tamanioPagina;
+		pedidoEscritura.size = TAMANIO_VARIABLE;
+		pedidoEscritura.pid = pcb->pid;
+		if(almacenarBytes(&pedidoEscritura, &valor) != 0) log_error(logger, "La variable no pudo asignarse");
+		else log_info(logger, "Variable asignada");
 	}
 }
 
@@ -125,18 +120,17 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	void* buffer; // Contiene el size del nombre, el nombre y el valor.
 	uint32_t sizeVariable = strlen(variable) + 1;
 	uint32_t sizeTotal = sizeof(sizeVariable) + sizeVariable + sizeof(valor);
-	header_t* header = malloc(sizeof(header_t));
-	header->type = ASIG_VAR_COMPARTIDA;
-	header->length = sizeTotal;
+	header_t header;
+	header.type = ASIG_VAR_COMPARTIDA;
+	header.length = sizeTotal;
 	buffer = malloc(sizeTotal);
 	memcpy(buffer, &sizeVariable, sizeof(sizeVariable));
 	offset+=sizeof(sizeVariable);
 	memcpy(buffer + offset, variable, strlen(variable)+1);
 	offset+=strlen(variable)+1;
 	memcpy(buffer+offset, &valor, sizeof(valor));
-	if(sendSocket(socketConexionKernel,header,buffer) <= 0){
+	if(sendSocket(socketConexionKernel,&header,buffer) <= 0){
 		log_error(logger,"Error al enviar");
-		free(header);
 		free(buffer);
 		return -1;
 	}
@@ -144,11 +138,9 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	var=requestHandlerKernel();
 	if(var == -1){
 		log_error(logger, "No se pudo asignar la variable %s", variable);
-		free(header);
 		if(buffer)free(buffer);
 		return -1;
 	}
-	free(header);
 	if(buffer)free(buffer);
 	return valor;
 }
@@ -166,17 +158,15 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	t_valor_variable valor;
 	log_debug(logger, "ANSISOP_dereferenciar posicion: %d", direccion_variable);
 	//calculo la posicion de la variable en el stack mediante el desplazamiento
-	t_pedido_bytes* solicitar = malloc(sizeof(t_pedido_bytes));
-	solicitar->pag = direccion_variable / tamanioPagina;
-	solicitar->offset = direccion_variable % tamanioPagina;
-	solicitar->size = TAMANIO_VARIABLE;
-	solicitar->pid = pcb->pid;
-	if(solicitarBytes(solicitar) != 0){
-		free(solicitar);
+	t_pedido_bytes solicitar;
+	solicitar.pag = direccion_variable / tamanioPagina;
+	solicitar.offset = direccion_variable % tamanioPagina;
+	solicitar.size = TAMANIO_VARIABLE;
+	solicitar.pid = pcb->pid;
+	if(solicitarBytes(&solicitar) != 0){
 		log_error(logger,"La variable no pudo dereferenciarse");
 		return -1;
 	}
-	free(solicitar);
 	valor = *(t_valor_variable*)paqueteGlobal;
 	log_info(logger, "Variable dereferenciada. Valor: %d", valor);
 	free(paqueteGlobal);
@@ -430,9 +420,9 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	uint32_t sizeDireccion = strlen(direccion) + 1;
 	uint32_t sizeTotal = sizeDireccion + sizeof(uint32_t) * 2 + sizeof(t_banderas); // un int es el pid y el otro el strlen de direccion
 
-	header_t* header = malloc(sizeof(header_t));
-	header->type = ABRIR_ARCHIVO;
-	header->length = sizeTotal;
+	header_t header;;
+	header.type = ABRIR_ARCHIVO;
+	header.length = sizeTotal;
 
 	//armo el paquete con la direccion del archivo, las banderas y el pid del proceso
 	char* paquete = malloc(sizeTotal);
@@ -444,9 +434,8 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 	offset+=sizeDireccion;
 	memcpy(paquete+offset, &flags, sizeof(t_banderas));
 
-	sendSocket(socketConexionKernel,header,(void*)paquete);
+	sendSocket(socketConexionKernel,&header,(void*)paquete);
 	log_info(logger, "Flags enviadas: lectura:%d - escritura:%d - creacion: %d", flags.lectura, flags.escritura, flags.creacion);
-	free(header);
 	free(paquete);
 	if(requestHandlerKernel() == -1){
 		log_error(logger, "Error al abrir el archivo");
@@ -470,11 +459,17 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
  */
 void borrar(t_descriptor_archivo direccion){
 	log_debug(logger, "ANSISOP_borrar -> direccion: %d", direccion);
-	header_t* header = malloc(sizeof(header_t));
-	header->type = BORRAR_ARCHIVO;
-	header->length = sizeof(int);
-	sendSocket(socketConexionKernel,header,&direccion);
-	free(header);
+	header_t header;
+	uint32_t sizeTotal = sizeof(int) * 2;
+	char* paquete = malloc(sizeTotal);
+	header.type =BORRAR_ARCHIVO;
+	header.length = sizeTotal;
+	uint32_t offset = 0;
+	memcpy(paquete, &(pcb->pid), sizeof(int));
+	offset += sizeof(int);
+	memcpy(paquete+offset,&direccion, sizeof(int));
+	sendSocket(socketConexionKernel,&header,paquete);
+	free(paquete);
 	requestHandlerKernel();
 }
 
@@ -489,16 +484,17 @@ void borrar(t_descriptor_archivo direccion){
  */
 void cerrar(t_descriptor_archivo descriptor_archivo){
 	log_debug(logger, "ANSISOP_cerrar -> fd: %d", descriptor_archivo);
-	header_t* header = malloc(sizeof(header_t));
+	header_t header;
 	uint32_t sizeTotal = sizeof(int) * 2;
 	char* paquete = malloc(sizeTotal);
-	header->type = CERRAR_ARCHIVO;
-	header->length = sizeTotal;
+	header.type = CERRAR_ARCHIVO;
+	header.length = sizeTotal;
 	uint32_t offset = 0;
 	memcpy(paquete, &(pcb->pid), sizeof(int));
 	offset += sizeof(int);
 	memcpy(paquete+offset,&descriptor_archivo, sizeof(int));
-	sendSocket(socketConexionKernel,header,paquete);
+	sendSocket(socketConexionKernel,&header,paquete);
+	free(paquete);
 	requestHandlerKernel();
 }
 
@@ -558,19 +554,17 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valor_variable tamanio){
 	log_debug(logger, "ANSISOP_leer -> fd: %d - informacion: %d - tamanio: %d", descriptor_archivo, informacion, tamanio);
 	header_t header;
-	t_lectura* lectura = malloc(sizeof(t_lectura));
-	lectura->pid = pcb->pid;
-	lectura->descriptor = descriptor_archivo;
-	lectura->informacion = informacion;
-	lectura->size = tamanio;
+	t_lectura lectura;
+	lectura.pid = pcb->pid;
+	lectura.descriptor = descriptor_archivo;
+	lectura.informacion = informacion;
+	lectura.size = tamanio;
 	header.type = LEER_ARCHIVO;
 	header.length = sizeof(t_lectura);
 
-	if(sendSocket(socketConexionKernel, &header, lectura) <= 0){
-		free(lectura);
+	if(sendSocket(socketConexionKernel, &header, &lectura) <= 0){
 		finalizarCPU();
 	}
-	free(lectura);
 	requestHandlerKernel();
 }
 
@@ -587,20 +581,16 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
 void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posicion){
 	log_debug(logger, "ANSISOP_moverCursor");
 	header_t header;
-	t_cursor* cursor;
-	int32_t var;
+	t_cursor cursor;
 	header.type = MOVER_CURSOR;
 	header.length = sizeof(t_cursor);
-	cursor = malloc(sizeof(t_cursor));
-	cursor->pid = pcb->pid;
-	cursor->posicion = posicion;
-	cursor->descriptor = descriptor_archivo;
-	if(sendSocket(socketConexionKernel, &header, cursor) <= 0){
-		free(cursor);
+	cursor.pid = pcb->pid;
+	cursor.posicion = posicion;
+	cursor.descriptor = descriptor_archivo;
+	if(sendSocket(socketConexionKernel, &header, &cursor) <= 0){
 		finalizarCPU();
 	}
 	if(requestHandlerKernel() == -1) log_error(logger, "No se pudo mover el cursor");
-	free(cursor);
 }
 
 /*
@@ -615,35 +605,32 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
  */
 t_puntero reservar(t_valor_variable espacio){
 	log_debug(logger, "ANSISOP_reservar -> espacio: %d", espacio);
-	header_t* header = malloc(sizeof(header_t));
+	header_t header;
 	char* paquete;
 	size_t size = sizeof(t_valor_variable);
 	t_valor_variable valor;
 	int32_t var;
 
-	header->type = RESERVAR_MEMORIA;
-	header->length = sizeof(t_valor_variable)*3;
-	paquete = malloc(header->length);
+	header.type = RESERVAR_MEMORIA;
+	header.length = sizeof(t_valor_variable)*3;
+	paquete = malloc(header.length);
 	memcpy(paquete, &pcb->pid, sizeof(t_valor_variable));
 	memcpy(paquete+size, &pcb->cantPaginasCodigo, sizeof(t_valor_variable));size += size;
 	memcpy(paquete+size, &espacio, sizeof(t_valor_variable));
 
-	if(sendSocket(socketConexionKernel,header,paquete) <= 0){
+	if(sendSocket(socketConexionKernel,&header,paquete) <= 0){
 		log_error(logger, "problemas de conexion");
 		finalizarCPU();
 	}
 	var = requestHandlerKernel();
 	if(var == -1){
 		log_error(logger, "No se pudo realizar la reserva. Se finaliza el proceso");
-		free(header);
 		free(paquete);
 		return var;
 	}
 	valor = *(t_valor_variable*)paqueteGlobal;
 	free(paqueteGlobal);
-	free(header);
 	free(paquete);
-	cantDeReservas++;
 	return valor;
 }
 
@@ -672,7 +659,6 @@ void liberarMemoria(t_puntero posicion){
 	if(requestHandlerKernel() == -1) log_error(logger, "Error al liberar");
 	else {
 		log_info(logger, "Memoria liberada");
-		cantDeReservas--;
 	}
 }
 
@@ -688,11 +674,10 @@ void liberarMemoria(t_puntero posicion){
  */
 void signalAnsisop(t_nombre_semaforo identificador_semaforo){
 	log_debug(logger, "signal a semaforo '%s'", identificador_semaforo);
-	header_t* header=malloc(sizeof(header_t));
-	header->type=SEM_SIGNAL;
-	header->length=strlen(identificador_semaforo)+1;
-	sendSocket(socketConexionKernel,header,identificador_semaforo);
-	free(header);
+	header_t header;
+	header.type=SEM_SIGNAL;
+	header.length=strlen(identificador_semaforo)+1;
+	sendSocket(socketConexionKernel,&header,identificador_semaforo);
 	requestHandlerKernel(); // PARA QUE ME DEVUELVA SIGNAL OK
 }
 
@@ -707,10 +692,9 @@ void signalAnsisop(t_nombre_semaforo identificador_semaforo){
  */
 void wait(t_nombre_semaforo identificador_semaforo){
 	log_debug(logger, "wait a semaforo '%s'", identificador_semaforo);
-	header_t* header=malloc(sizeof(header_t));
-	header->type=SEM_WAIT;
-	header->length=strlen(identificador_semaforo)+1;
-	sendSocket(socketConexionKernel,header,identificador_semaforo);
-	free(header);
+	header_t header;
+	header.type=SEM_WAIT;
+	header.length=strlen(identificador_semaforo)+1;
+	sendSocket(socketConexionKernel,&header,identificador_semaforo);
 	requestHandlerKernel();
 }

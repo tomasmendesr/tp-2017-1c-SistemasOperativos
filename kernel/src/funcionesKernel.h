@@ -234,6 +234,7 @@ void aumentarEstadisticaPorSocketAsociado(int socket, void(*estadistica)(int pid
 void eliminarEstadistica(int pid);
 void finalizacion_proceso(void* paquete_from_cpu, int socket_cpu_asociado);
 void verificarProcesosEnCpuCaida(int socketCPU);
+void verificarProcesosConsolaCaida(uint32_t socketConsola);
 void quitarDeMemoriaDinamica(int pid);
 
 //Variables Globales
@@ -245,7 +246,7 @@ int cantProcesosSistema;
 int pagina_size;
 t_log* logger;
 
-//TODO: Sacar Comentarios siguientes.
+//Sacar Comentarios siguientes.
 //Semaforo Limita la cantidad de procesos que pueden accesar a un sector critico.
 //mutex solo permite que uno a la vez entre.
 //Semaforos
@@ -286,6 +287,8 @@ void eliminarFd(int fd, int proceso);
 void imprimirTablaGlobal(void);
 char* buscarPathDeArchivo(int globalFD);
 t_archivo* buscarArchivo(int pid, int fd);
+bool existeArchivo(char* path);
+bool archivoPuedeSerBorrado(int globalFD);
 
 
 fd_set master;
