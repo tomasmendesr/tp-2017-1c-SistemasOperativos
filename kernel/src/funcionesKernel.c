@@ -533,13 +533,13 @@ void planificarLargoPlazo(void){
 			header_t header;
 			header.type = INICIAR_PROGRAMA;
 			header.length = sizeof(t_pedido_iniciar);
-			sendSocket(socketConexionMemoria, &header, &pedido);
 
 			void* paquete;
 			int32_t resultado;
-
-			//evaluo respuesta
+			pthread_mutex_lock(&mutex_memoria_fd);
+			sendSocket(socketConexionMemoria, &header, &pedido);
 			recibir_paquete(socketConexionMemoria, &paquete, &resultado);
+			pthread_mutex_unlock(&mutex_memoria_fd);
 
 			if(resultado == SIN_ESPACIO){
 				//aviso a consola que se rechazo
@@ -581,6 +581,50 @@ void planificarLargoPlazo(void){
 			}
 		}
 	}
+}
+
+int16_t solicitudBytes(int socket, t_pedido_bytes* pedido, char**buf){
+	header_t header;
+	void* paquete;
+	int resultado;
+	header.type=SOLICITUD_BYTES;
+	header.length=sizeof(t_pedido_bytes);
+
+	if(sendSocket(socket,&header,pedido) <= 0 ){
+		log_error(logger,"Error al enviar. Desconexion...");
+		return -1;
+	}
+
+	*buf = malloc(pedido->size);
+	recibir_paquete(socket, &paquete, &resultado);
+	memcpy(*buf, paquete, pedido->size);
+
+	return resultado;
+}
+
+int16_t grabarBytes(int socket, t_pedido_bytes* pedido, void*buf){
+	header_t header;
+	void* paquete;
+	int resultado;
+	header.type=GRABAR_BYTES;
+	header.length = sizeof(t_pedido_bytes) + pedido->size;
+
+	paquete = malloc(header.length);
+	memcpy(paquete, pedido, sizeof(t_pedido_bytes));
+	memcpy(paquete+sizeof(t_pedido_bytes), buf, pedido->size);
+
+
+	if(sendSocket(socket,&header,paquete) <= 0 ){
+		log_error(logger,"Error al enviar. Desconexion...");
+		free(paquete);
+		return -1;
+	}
+	free(paquete);
+
+	recibir_paquete(socket, &paquete, &resultado);
+
+
+	return resultado;
 }
 
 void alertarConsolaProcesoAceptado(int* pid, int32_t socketConsola){

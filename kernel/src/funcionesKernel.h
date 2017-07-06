@@ -103,6 +103,7 @@ typedef struct{
 	uint32_t pid;
 	uint32_t pag;
 	uint32_t size;
+	uint32_t cant;
 }__attribute__((__packed__))reserva_memoria;
 
 typedef struct{
@@ -302,5 +303,8 @@ int max_fd;
 int valor[3];
 t_list* mem_dinamica;
 t_list* bloques;
+
+int16_t grabarBytes(int socket, t_pedido_bytes* pedido, void*buf);
+int16_t solicitudBytes(int socket, t_pedido_bytes* pedido, char**buf);
 
 #endif /* FUNCIONESKERNEL_H_ */
