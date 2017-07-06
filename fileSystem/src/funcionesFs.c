@@ -348,7 +348,7 @@ int buscarBloqueLibre(){
 
 	}
 
-	if(bloqueLibre > conf->cantidad_bloques)
+	if(bloqueLibre >= conf->cantidad_bloques)
 		return SIN_BLOQUES_LIBRES;
 
 	return bloqueLibre;
