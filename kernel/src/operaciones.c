@@ -862,13 +862,27 @@ void abrirArchivo(int32_t socketCpu, void* package){
 
 	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
 	header_t header;
+	int tipo;
+	void* paquete;
 
 	if(!banderas->creacion){
 
-		header.type = ABRIR_ARCHIVO_OK;
-		header.length = sizeof(int);
-		sendSocket(socketCpu, &header, &fd);
-		return;
+		header.type = VALIDAR_ARCHIVO;
+		header.length = strlen(direccion) + 1;
+
+		sem_wait(&mutex_fs);
+		sendSocket(socketConexionFS, &header, direccion);
+		recibir_paquete(socketConexionFS, &paquete, &tipo);
+		sem_post(&mutex_fs);
+
+		if(tipo == ARCHIVO_EXISTE){
+			header.type = ABRIR_ARCHIVO_OK;
+			header.length = sizeof(int);
+			sendSocket(socketCpu, &header, &fd);
+			return;
+		}else{
+			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+		}
 	}
 
 
@@ -881,8 +895,6 @@ void abrirArchivo(int32_t socketCpu, void* package){
 
 	sendSocket(socketConexionFS, &header, direccion);
 
-	int tipo;
-	void* paquete;
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
 
 	sem_post(&mutex_fs);

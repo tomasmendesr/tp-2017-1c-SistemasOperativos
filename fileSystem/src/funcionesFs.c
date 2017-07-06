@@ -67,6 +67,9 @@ void procesarMensajesKernel(){
 		}
 		printf("tipo mensaje recivido: %d\n", tipo_mensaje);
 		switch (tipo_mensaje) {
+			case VALIDAR_ARCHIVO:
+				validarArchivo(paquete);
+				break;
 			case CREAR_ARCHIVO:
 				crearArchivo(paquete);
 				break;
@@ -88,8 +91,20 @@ void procesarMensajesKernel(){
 
 }
 
-bool validarArchivo(char* path){
-	return verificarExistenciaDeArchivo(path);
+void validarArchivo(char* path){
+
+	char* pathAbsoluto = generarPathArchivo(path);
+
+	bool existe = verificarExistenciaDeArchivo(pathAbsoluto);
+
+	free(pathAbsoluto);
+
+	if(existe)
+		enviar_paquete_vacio(ARCHIVO_EXISTE, socketConexionKernel);
+	else
+		enviar_paquete_vacio(ARCHIVO_NO_EXISTE, socketConexionKernel);
+
+	return;
 }
 
 void crearArchivo(void* package){

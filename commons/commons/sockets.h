@@ -134,7 +134,8 @@ enum protocolo_programa_a_kernel{
 enum protocolo_kernel_a_fs{
 	CREAR_ARCHIVO = 21,
 	OBTENER_DATOS = 23,
-	GUARDAR_DATOS = 24
+	GUARDAR_DATOS = 24,
+	VALIDAR_ARCHIVO = 71
 	//para borrar archivo uso el que esta en cpu
 };
 

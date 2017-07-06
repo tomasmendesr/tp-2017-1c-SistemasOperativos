@@ -75,7 +75,7 @@ int string_pos_char(char* string, char caracter);
 void aumentarTamanioArchivo(pedido_guardar_datos* pedido, char* path);
 
 //Operaciones
-bool validarArchivo(char* path);
+void validarArchivo(char* path);
 void crearArchivo(void* package);
 void borrarArchivo(void* package);
 void guardarDatos(void* package);

@@ -72,7 +72,7 @@ void inicializarMetadata(){
 	string_append(&pathMetadataBitarray, pathMetadata);
 	string_append(&pathMetadataBitarray, BITMAP_ARCHIVO);
 
-	if(validarArchivo(pathMetadataBitarray)){
+	if(verificarExistenciaDeArchivo(pathMetadataBitarray)){
 		FILE* bitmap = fopen(pathMetadataBitarray, "rb");
 
 		struct stat stats;
