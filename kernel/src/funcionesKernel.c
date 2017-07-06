@@ -601,6 +601,8 @@ void envioCodigoMemoria(char* codigo, int32_t pid, int32_t cant_pag){
 	((t_pedido_bytes*)buf)->pid = pid;
 	((t_pedido_bytes*)buf)->offset = 0;
 
+	char ptr[20];
+	int rta;
 	int32_t i, size;
 	for(i=0;i<cant_pag;i++){
 
@@ -614,7 +616,13 @@ void envioCodigoMemoria(char* codigo, int32_t pid, int32_t cant_pag){
 
 		memcpy(buf + sizeof(t_pedido_bytes),codigo + i*pagina_size, size);
 
+		pthread_mutex_lock(&mutex_memoria_fd);
 		sendSocket(socketConexionMemoria, &header, buf);
+		recibir_paquete(socketConexionMemoria,&ptr,&rta);
+		pthread_mutex_unlock(&mutex_memoria_fd);
+
+		if(rta != OP_OK)
+			log_warning(logger,"No pude escribir la pagina en memoria");
 	}
 
 	free(buf);

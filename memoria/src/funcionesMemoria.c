@@ -317,7 +317,7 @@ int finalizarPrograma(t_pedido_finalizar* pid){
 
 int asignarPaginas(int fd, t_pedido_asignar* pedido){
 
-	log_info("Pedido reservar frames. Pid: %d cant_frames: %d",pedido->pid,pedido->cant_pag);
+	log_info(logger,"Pedido reservar frames. Pid: %d cant_frames: %d",pedido->pid,pedido->cant_pag);
 
 	if( reservarFrames(pedido->pid,pedido->cant_pag) == -1){
 		//No se puede, aviso a kernel que no hay lugar
