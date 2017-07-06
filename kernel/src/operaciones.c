@@ -122,17 +122,20 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 		finalizacion_quantum(package,socketCPU);
 		break;
 	/* ERRORES */
-	case STACKOVERFLOW:
-		finalizacion_stackoverflow(package, socketCPU);
-		break;
-	case ERROR_MEMORIA:
 	case SEMAFORO_NO_EXISTE:
 	case GLOBAL_NO_DEFINIDA:
 	case NULL_POINTER:
 	case ARCHIVO_INEXISTENTE:
+	case SIN_ESPACIO_FS:
 	case FALLA_RESERVAR_RECURSOS:
 	case SEGMENTATION_FAULT:
-	case SIN_ESPACIO_FS:
+	case LEER_ARCHIVO_SIN_PERMISOS:
+	case ESCRIBIR_ARCHIVO_SIN_PERMISOS:
+	case ERROR_MEMORIA:
+	case FINALIZAR_DESDE_CONSOLA:
+	case SUPERO_TAMANIO_PAGINA:
+	case SUPERA_LIMITE_ASIGNACION_PAGINAS:
+	case IMPOSIBLE_BORRAR_ARCHIVO:
 		finalizacion_error(package, socketCPU, mensaje);
 		break;
 	default:
@@ -820,7 +823,7 @@ void abrirArchivo(int32_t socketCpu, void* package){
 			sendSocket(socketCpu, &header, &fd);
 			return;
 		}else{
-			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+			enviar_paquete_vacio(tipo, socketCpu);
 		}
 	}
 
@@ -874,11 +877,7 @@ void borrarArchivo(int32_t socketCpu, void* package){
 
 	sem_post(&mutex_fs);
 
-	int32_t respuesta;
-	if(tipo == BORRAR_ARCHIVO_OK) respuesta = BORRAR_ARCHIVO_OK;
-	else respuesta = ARCHIVO_INEXISTENTE;
-
-	enviar_paquete_vacio(respuesta, socketCpu);
+	enviar_paquete_vacio(tipo, socketCpu);
 
 }
 

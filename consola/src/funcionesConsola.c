@@ -356,6 +356,7 @@ char* obtenerExitCode(int32_t exitCode){
 	case DESCONEXION_CPU: return "DESCONEXION_CPU";
 	case SEGMENTATION_FAULT: return "SEGMENTATION_FAULT";
 	case SIN_ESPACIO_FS: return "SIN_ESPACIO_FS";
+	case IMPOSIBLE_BORRAR_ARCHIVO: return "IMPOSIBLE_BORRAR_ARCHIVO";
 	default: return "ERROR DESCONOCIDO";
 	}
 }
@@ -396,6 +397,10 @@ void desconectarConsola(char* comando, char* param) {
 	printf("Finalizando conexion threads...\n");
 	printf("Abortando programas...\n");
 	void finish(t_proceso* proc){
+		header_t header;
+		header.type=FINALIZAR_PROGRAMA;
+		header.length= sizeof(proc->pid);
+		sendSocket(proc->socket, &header, (void*) &proc->pid);
 		terminarProceso(proc, DESCONEXION_CONSOLA);
 	}
 	list_iterate(procesos, finish);

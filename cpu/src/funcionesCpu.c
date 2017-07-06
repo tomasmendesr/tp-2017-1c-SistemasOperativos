@@ -191,6 +191,7 @@ int32_t requestHandlerKernel(void){
 		case SIGNAL_OK:
 		case ESCRITURA_OK:
 		case LECTURA_OK:
+		case LEER_ARCHIVO_OK:
 		case BORRAR_ARCHIVO_OK:
 		case CERRAR_ARCHIVO_OK:
 		case MOVER_CURSOR_OK:
@@ -202,14 +203,20 @@ int32_t requestHandlerKernel(void){
 		case NULL_POINTER:
 		case ARCHIVO_INEXISTENTE:
 		case SIN_ESPACIO_FS:
-		case IMPOSIBLE_BORRAR_ARCHIVO:
 		case FALLA_RESERVAR_RECURSOS:
+		case LEER_ARCHIVO_SIN_PERMISOS:
+		case ESCRIBIR_ARCHIVO_SIN_PERMISOS:
+		case ERROR_MEMORIA:
+		case FINALIZAR_DESDE_CONSOLA:
+		case SUPERO_TAMANIO_PAGINA:
+		case SUPERA_LIMITE_ASIGNACION_PAGINAS:
+		case IMPOSIBLE_BORRAR_ARCHIVO:
 			finErrorExitCode = header.type;
 			finPorError = true;
 			if(paquete) free(paquete);
 			return -1;
 		default:
-			log_warning(logger, "Mensaje recibido incorrecto");
+			log_warning(logger, "Mensaje recibido incorrecto %d", header.type);
 			if(paquete)free(paquete);
 			return -1;
 		}
@@ -261,7 +268,7 @@ int32_t requestHandlerMemoria(void){
 		return -1;
 	case STACKOVERFLOW:
 		finErrorExitCode = header.type;
-		finPorError = true;
+		finPorError = SUPERA_LIMITE_ASIGNACION_PAGINAS;
 		if(paquete) free(paquete);
 		return -1;
 	default:
@@ -377,7 +384,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 
 int verificarTerminarEjecucion(){
 	if(huboStackOver) {
-		finalizarPor(STACKOVERFLOW);
+		finalizarPor(SUPERA_LIMITE_ASIGNACION_PAGINAS);
 		huboStackOver = false;
 		return -1;
 	}
