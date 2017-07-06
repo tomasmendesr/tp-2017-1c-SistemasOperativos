@@ -3,7 +3,8 @@
 bool cerrarCPU = false;
 bool huboStackOver = false;
 bool finPrograma = false;
-bool finalizoPrograma = false;
+bool finPorError = false;
+int finErrorExitCode = 0;
 
 AnSISOP_funciones functions = { .AnSISOP_asignar = asignar,
 		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
@@ -203,8 +204,8 @@ int32_t requestHandlerKernel(void){
 		case SIN_ESPACIO_FS:
 		case IMPOSIBLE_BORRAR_ARCHIVO:
 		case FALLA_RESERVAR_RECURSOS:
-			finalizarPor(header.type);
-			finPrograma = true;
+			finErrorExitCode = header.type;
+			finPorError = true;
 			if(paquete) free(paquete);
 			return -1;
 		default:
@@ -253,14 +254,15 @@ int32_t requestHandlerMemoria(void){
 		log_info(logger,"Tamaño de pagina: %d",tamanioPagina);
 		break;
 	case SEGMENTATION_FAULT:
-		log_error(logger,"Segmentation Fault por aqui");
-		finalizarPor(SEGMENTATION_FAULT);
-		finPrograma = true;
+		log_error(logger,"Segmentation Fault");
+		finErrorExitCode = header.type;
+		finPorError = true;
+		if(paquete) free(paquete);
 		return -1;
 	case STACKOVERFLOW:
-		log_error(logger, "Stack Overflow");
-		finalizarPor(STACKOVERFLOW);
-		finPrograma = true;
+		finErrorExitCode = header.type;
+		finPorError = true;
+		if(paquete) free(paquete);
 		return -1;
 	default:
 		log_error(logger, "Mensaje Recibido Incorrecto");
@@ -336,7 +338,6 @@ void revisarFinalizarCPU(void){
 }
 
 void comenzarEjecucionDePrograma(void* paquete){
-	finalizoPrograma = false;
 	quantum = *(uint32_t*)paquete;
 	if(quantum == 0){
 		log_debug(logger, "Ejecutar - Algoritmo FIFO");
@@ -360,7 +361,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 		free(instruccion);
 		if (verificarTerminarEjecucion() == -1) return;
 		revisarFinalizarCPU();
-		printf("Instruccion ejecutada con exito\n");
+		printf("Instruccion ejecutada\n");
 		i++;
 		pcb->programCounter++;
 		usleep(quantumSleep * 1000);
@@ -380,7 +381,13 @@ int verificarTerminarEjecucion(){
 		huboStackOver = false;
 		return -1;
 	}
+	else if(finPorError){
+		finalizarPor(finErrorExitCode);
+		finPorError = false;
+		return -1;
+	}
 	else if(finPrograma){
+		finalizarPor(FIN_PROCESO);
 		finPrograma = false;
 		return -1;
 	}
@@ -422,11 +429,6 @@ int16_t solicitarProximaInstruccion(void) {
 }
 
 void finalizarPor(int type) {
-	if(finalizoPrograma) {
-		log_debug(logger, "Se esta intentando seguir ejecutando pero el proceso ya finalizó.");
-		log_debug(logger, "Abortando cpu...");
-		finalizarCPU();
-	}
 	t_buffer_tamanio* paquete = serializar_pcb(pcb);
 	header_t header;
 	header.type = type;
@@ -439,7 +441,6 @@ void finalizarPor(int type) {
 	free(paquete);
 	freePCB(pcb);
 	quantum = -1;
-	finalizoPrograma = true;
 }
 
 void finalizarCPU(void){

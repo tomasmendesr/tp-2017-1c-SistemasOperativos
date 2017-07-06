@@ -210,7 +210,7 @@ void finalizar(void){
 	if(list_size(pcb->indiceStack) == 0){
 		finPrograma = true;
 		log_info(logger, "Finalizó la ejecucion del programa.");
-		finalizarPor(FIN_PROCESO);
+		//finalizarPor(FIN_PROCESO);
 	}else{
 		pcb->programCounter = contexto->direcretorno;
 	}
