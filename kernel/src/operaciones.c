@@ -272,25 +272,23 @@ void terminarProceso(t_pcb* pcbRecibido, int32_t socket_cpu){
 	//aviso a consola que termino el proceso
 	info_estadistica_t * info = buscarInformacion(pcbRecibido->pid);
 
-	header_t* header=malloc(sizeof(header_t));
+	header_t header;
 	if(!(pcbRecibido->exitCode == DESCONEXION_CONSOLA)){
-		header->type=FINALIZAR_EJECUCION;
-		header->length=sizeof(pcbRecibido->exitCode);
-		sendSocket(info->socketConsola,header,&(pcbRecibido->exitCode));
+		header.type=FINALIZAR_EJECUCION;
+		header.length=sizeof(pcbRecibido->exitCode);
+		sendSocket(info->socketConsola,&header,&(pcbRecibido->exitCode));
 	}
 
-	header->type = FINALIZAR_PROGRAMA;
-	header->length = sizeof(pcbRecibido->pid);
+	header.type = FINALIZAR_PROGRAMA;
+	header.length = sizeof(pcbRecibido->pid);
 	void* paquete;
 	int resultado;
 	pthread_mutex_lock(&mutex_memoria_fd);
-	sendSocket(socketConexionMemoria,header,&pcbRecibido->pid);
-	recibir_paquete(socketConexionMemoria, &paquete,&resultado);
+	sendSocket(socketConexionMemoria,&header,&pcbRecibido->pid);
 	pthread_mutex_unlock(&mutex_memoria_fd);
 
 	cantProcesosSistema--;
 	freePCB(pcbRecibido);
-	free(header);
 	planificarLargoPlazo();
 }
 

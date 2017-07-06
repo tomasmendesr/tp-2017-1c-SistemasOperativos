@@ -528,7 +528,6 @@ void planificarLargoPlazo(void){
 
 			pedido.pid = pid;
 			pedido.cant_pag = config->stack_Size + cant_pag_cod;
-			log_info(logger, "Envio pedido de paginas a memoria. pid:%d, cantPags:%d", pid, pedido.cant_pag);
 
 			header_t header;
 			header.type = INICIAR_PROGRAMA;
@@ -538,6 +537,7 @@ void planificarLargoPlazo(void){
 			int32_t resultado;
 			pthread_mutex_lock(&mutex_memoria_fd);
 			sendSocket(socketConexionMemoria, &header, &pedido);
+			log_info(logger, "Pedido de paginas a memoria. pid:%d, cantPags:%d", pid, pedido.cant_pag);
 			recibir_paquete(socketConexionMemoria, &paquete, &resultado);
 			pthread_mutex_unlock(&mutex_memoria_fd);
 
