@@ -331,17 +331,13 @@ void revisarSigusR1(int signo){
 		log_info(logger, "Se recibe SIGUSR1");
 		cerrarCPU = true;
 	//	enviar_paquete_vacio(DESCONEXION_CPU, socketConexionKernel); NO HACE FALTA PORQUE EL KERNEL DETECTA LA DESCONEXION
-		log_debug(logger, "Desconectando CPU...");
+//		log_debug(logger, "Desconectando CPU..."); //todavia no
 	}
 }
 
 void revisarFinalizarCPU(void){
 	if(cerrarCPU){
-		finalizarConexion(socketConexionKernel);
-		finalizarConexion(socketConexionMemoria);
-		log_info(logger, "CPU desconectada.");
-		log_destroy(logger);
-		freeConf(config);
+		finalizarCPU();
 		return;
 	}
 }
@@ -368,8 +364,12 @@ void comenzarEjecucionDePrograma(void* paquete){
 		printf("Instruccion recibida: '%s'\n", instruccion);
 		analizadorLinea(instruccion, &functions, &kernel_functions);
 		free(instruccion);
-		if (verificarTerminarEjecucion() == -1) return;
-		revisarFinalizarCPU();
+		if(verificarTerminarEjecucion() == -1){
+			//por error imprevisto
+			revisarFinalizarCPU();
+			return;
+		}
+
 		printf("Instruccion ejecutada\n");
 		i++;
 		pcb->programCounter++;
@@ -381,6 +381,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 	}else
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
 
+	//verifico al final de la ejecucion
 	revisarFinalizarCPU();
 }
 
