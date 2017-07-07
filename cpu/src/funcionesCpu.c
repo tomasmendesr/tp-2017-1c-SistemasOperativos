@@ -354,26 +354,23 @@ void comenzarEjecucionDePrograma(void* paquete){
 		analizadorLinea(instruccion, &functions, &kernel_functions);
 		free(instruccion);
 
-		if(cerrarCPU){
-			finalizarCPU();
-		}
-		if(verificarTerminarEjecucion() == -1) return;
+		if(cerrarCPU)finalizarCPU();
+		if(verificarTerminarEjecucion() == -1)return;
 
 		printf("Instruccion ejecutada\n");
 		usleep(quantumSleep * 1000);
 
-		if(procesoBloqueado) return;
-
+		if(procesoBloqueado)return;
 		i++;
 		pcb->programCounter++;
 	}
 
-	if(!procesoBloqueado){
-		finalizarPor(FIN_EJECUCION);
-		log_info(logger, "Finalizo ejecucion por fin de Quantum");
-	}else{
+	if(procesoBloqueado){
 		finalizarPor(PROC_BLOCKED);
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
+	}else if(i==quantum || !quantum){
+		finalizarPor(FIN_EJECUCION);
+		log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	}
 }
 
