@@ -928,21 +928,26 @@ void cerrarArchivo(int32_t socketCpu, void* package){
 
 void escribir(void* paquete, int32_t socketCpu){
 	uint32_t fd = *(uint32_t*) paquete;
-	int pid = *(int*) (paquete + sizeof(uint32_t));
-	uint32_t sizeEscritura = *(uint32_t*) (paquete + sizeof(uint32_t) + sizeof(int));
-	void* escritura = paquete + sizeof(int)  + sizeof(uint32_t) * 2;
+	uint32_t pid = *(uint32_t*) (paquete + sizeof(uint32_t));
+	int sizeEscritura = *(int*) (paquete + sizeof(uint32_t) * 2);
+	printf("sizeEscritura %d\n", sizeEscritura);
+	void* escritura = paquete + sizeof(int) + sizeof(uint32_t) * 2;
+	printf("escritura %s \n", escritura);
+
+
+
 	info_estadistica_t * info = buscarInformacion(pid);
 	header_t header;
 
 	if(fd == 1){
-		int32_t sizePedido = sizeof(int) + strlen(escritura) + 1;
+		int32_t sizePedido = sizeof(uint32_t) + sizeEscritura + 1;
 
 		header.type=IMPRIMIR_POR_PANTALLA;
 		header.length= sizePedido;
 
 		char* buffer = malloc(sizePedido);
-		memcpy(buffer, &pid, sizeof(int));
-		memcpy(buffer+sizeof(int), escritura, strlen(escritura) + 1);
+		memcpy(buffer, &pid, sizeof(uint32_t));
+		memcpy(buffer+sizeof(uint32_t), escritura, sizeEscritura + 1);
 
 		sendSocket(info->socketConsola, &header, buffer);
 		enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
@@ -953,29 +958,30 @@ void escribir(void* paquete, int32_t socketCpu){
 			enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
 			return;
 		}
-		int32_t offsetEscritura = archivo->cursor;
+		int offsetEscritura = archivo->cursor;
 		char* path = buscarPathDeArchivo(archivo->globalFD);
-		uint32_t sizeTotal = 3 * sizeof(int) + strlen(path) + 1 + sizeEscritura;
+		uint32_t sizePath = strlen(path) + 1;
+		uint32_t sizeTotal = 2 * sizeof(uint32_t) + sizeof(int) + sizePath + sizeEscritura + 1;
 		void * buffer = malloc(sizeTotal);
-		int32_t offset = 0;
-		int sizePath = strlen(path) + 1;
+		uint32_t offset = 0;
 
 
 		memcpy(buffer, &offsetEscritura, sizeof(int));
 		offset += sizeof(int);
-		memcpy(buffer+offset, &sizeEscritura, sizeof(int));
-		offset += sizeof(int);
-		memcpy(buffer+offset, &sizePath, sizeof(int));
-		offset += sizeof(int);
+		memcpy(buffer+offset, &sizeEscritura, sizeof(uint32_t));
+		offset += sizeof(uint32_t);
+		memcpy(buffer+offset, &sizePath, sizeof(uint32_t));
+		offset += sizeof(uint32_t);
 		memcpy(buffer+offset, path, sizePath);
 		offset += sizePath;
-		memcpy(buffer+offset, escritura, sizeEscritura);
+		printf("copio path\n");
+		memcpy(buffer+offset, escritura, sizeEscritura + 1);
+		printf("copio escritura\n");
 
 		header.length = sizeTotal;
 		header.type = GUARDAR_DATOS;
 
 		sem_wait(&mutex_fs);
-
 		sendSocket(socketConexionFS, &header, buffer);
 
 		free(buffer);
@@ -984,11 +990,13 @@ void escribir(void* paquete, int32_t socketCpu){
 		int32_t tipo;
 
 		recibir_paquete(socketConexionFS, &paquete, &tipo);
+		printf("paquete recib \n");
 
 		sem_post(&mutex_fs);
 
 		if(tipo == ESCRITURA_OK){
 			enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
+			printf("recibido piola\n");
 		}else{
 			enviar_paquete_vacio(tipo, socketCpu);
 		}
