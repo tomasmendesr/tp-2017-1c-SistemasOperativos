@@ -836,14 +836,17 @@ int32_t agregarArchivo_aProceso(int32_t proceso, char* file, char* permisos){
 	return archivo->fd;
 }
 
-void eliminarFd(int fd, int proceso){
+int eliminarFd(int fd, int proceso){
 	bool buscarPorProceso(entrada_tabla_archivo_proceso* entrada){
 		return entrada->proceso == proceso ? true : false;
 	}
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
+	if(entrada == NULL) return -1;
 	int i;
 	t_archivo* archivo = buscarArchivo(proceso, fd);
+	if(archivo == NULL) return -1;
 	char* path = buscarPathDeArchivo(archivo->globalFD);
+	if(path == NULL) return -1;
 	free(archivo);
 
 	for(i=0; i< list_size(entrada->archivos);i++){
@@ -866,6 +869,8 @@ void eliminarFd(int fd, int proceso){
 			}
 		}
 	}
+
+	return 0;
 }
 
 void imprimirTablaGlobal(void){
