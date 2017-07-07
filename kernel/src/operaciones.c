@@ -6,7 +6,6 @@ void trabajarMensajeConsola(int32_t socketConsola){
 	void* paquete;
 	int check = recibir_paquete(socketConsola, &paquete, &tipo_mensaje);
 
-
 	if(check <= 0){
 		log_warning(logger, "Se cerro el socket %d (Consola)", socketConsola);
 		verificarProcesosConsolaCaida(socketConsola);
@@ -139,7 +138,7 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case SUPERO_TAMANIO_PAGINA:
 	case SUPERA_LIMITE_ASIGNACION_PAGINAS:
 	case IMPOSIBLE_BORRAR_ARCHIVO:
-	case MEMORIA_CORRUPTA:
+	case MEMORY_CORRUPTION:
 		finalizacion_error(package, socketCPU, mensaje);
 		break;
 	default:
@@ -344,7 +343,7 @@ void verificarAsignar(char* paquete, int socket){
 			offsetAsig + sizeAsig <=  offset)
 		enviar_paquete_vacio(ASIGNACION_OK,socket);
 	else
-		enviar_paquete_vacio(MEMORIA_CORRUPTA,socket);
+		enviar_paquete_vacio(MEMORY_CORRUPTION,socket);
 
 	return;
 }
@@ -529,6 +528,8 @@ void reservarMemoria(int32_t socket, char* paquete){
 	reserva = obtenerReserva(pid=pedido_memoria.pid,cant=pedido_memoria.cant);
 	sem_post(&mutex_dinamico);
 
+	info_estadistica_t* info = buscarInformacion(pedido_memoria.pid);
+
 	while(reserva != NULL){
 
 		bytes.pid = reserva->pid;
@@ -573,6 +574,11 @@ void reservarMemoria(int32_t socket, char* paquete){
 			mostrarReserva(package);
 			free(package);
 			free(header);
+
+			estadisticaAlocarBytes(pedido_memoria.pid, pedido_memoria.cant);
+			aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarAlocar);
+			aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
+
 			return;
 		}
 		sem_wait(&mutex_dinamico);
@@ -602,9 +608,8 @@ void reservarMemoria(int32_t socket, char* paquete){
 		return;
 	}
 
-	info_estadistica_t* info = buscarInformacion(pedido_memoria.pid);
 	reserva = malloc(sizeof(reserva_memoria));
-	reserva->pag = pedido_memoria.pagBase + info->cantPaginasHeap + config->stack_Size;
+	reserva->pag = pedido_memoria.pagBase + info->cantPagReservar + config->stack_Size;
 	reserva->size = pagina_size - sizeof(meta_bloque)*2 - pedido_memoria.cant;
 	reserva->pid = pedido_memoria.pid;
 	reserva->cant = 1;
@@ -652,7 +657,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 	estadisticaAlocarBytes(pedido_memoria.pid, pedido_memoria.cant);
 	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarAlocar);
 	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
-	info->cantPaginasHeap++;
+	info->cantPagReservar++;
 
 	log_debug(logger, "Proceso #%d reserva con exito posicion %d",
 			pedido_memoria.pid,posicion);
@@ -703,7 +708,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 		memcpy(&metadata, paquete + offset, sizeof(meta_bloque));
 
 		if(metadata.used == false){
-			log_error(logger,"El puntero no esta apuntando a memoria valida");
+			log_error(logger,"El puntero apunta a memoria invalida");
 			enviar_paquete_vacio(NULL_POINTER,socket);
 			return;
 		}
@@ -717,6 +722,8 @@ void liberarMemoria(int32_t socket, char* paquete){
 		reserva->cant--;
 
 		if(reserva->cant == 0){
+			info_estadistica_t* info = buscarInformacion(pid);
+
 			sem_wait(&mutex_dinamico);
 			free(list_remove(mem_dinamica,posReserva));
 			sem_post(&mutex_dinamico);
@@ -733,7 +740,10 @@ void liberarMemoria(int32_t socket, char* paquete){
 			recibir_paquete(socketConexionMemoria, &paquete, &tipo);
 			pthread_mutex_unlock(&mutex_memoria_fd);
 
-			if(tipo != OP_OK){
+			if(tipo == OP_OK){
+				info->cantPagLiberar++;
+			}
+			else{
 				log_error(logger,"Segmentation fault");
 				enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
 				return;

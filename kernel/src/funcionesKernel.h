@@ -72,13 +72,14 @@ typedef struct{
 	uint32_t cantRafagas;
 	uint32_t cantSyscalls;
 	uint32_t cantOpPrivi;
-	uint32_t cantPaginasHeap;
 	uint32_t cantAlocar;
 	uint32_t cantLiberar;
 	uint32_t cantBytesAlocar;
 	uint32_t cantBytesLiberar;
 	bool matarSiguienteRafaga;
 	uint32_t exitCode;
+	uint32_t cantPagReservar;
+	uint32_t cantPagLiberar;
 }info_estadistica_t;
 
 typedef struct{

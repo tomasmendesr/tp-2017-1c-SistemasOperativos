@@ -212,7 +212,7 @@ int32_t requestHandlerKernel(void){
 		case SUPERO_TAMANIO_PAGINA:
 		case SUPERA_LIMITE_ASIGNACION_PAGINAS:
 		case IMPOSIBLE_BORRAR_ARCHIVO:
-		case MEMORIA_CORRUPTA:
+		case MEMORY_CORRUPTION:
 			finErrorExitCode = header.type;
 			finPorError = true;
 			if(paquete) free(paquete);

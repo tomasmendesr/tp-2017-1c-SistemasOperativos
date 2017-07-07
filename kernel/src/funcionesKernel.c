@@ -329,10 +329,15 @@ void processInfo(char* comando, char* param){
 	}else{
 		printf("Cantidad rafagas: %d\n", info->cantRafagas);
 		printf("Cantidad operaciones privilegiadas: %d\n", info->cantOpPrivi);
-		printf("Cantidad paginas de heap: %d\n", info->cantPaginasHeap);
-		printf("Cantidad acciones alocar: %d\n", info->cantAlocar);
-		printf("Cantidad acciones liberar: %d\n", info->cantLiberar);
 		printf("Cantidad syscalls: %d\n", info->cantSyscalls);
+		printf("Manejo del HEAP\n");
+		printf("Cantidad paginas reservadas: %d\n", info->cantPagReservar);
+		printf("Cantidad paginas liberadas: %d\n", info->cantPagLiberar);
+		printf("Cantidad acciones alocar: %d\n", info->cantAlocar);
+		printf("Total bytes alocados: %d\n", info->cantBytesAlocar);
+		printf("Cantidad acciones liberar: %d\n", info->cantLiberar);
+		printf("Total bytes liberados: %d\n", info->cantBytesLiberar);
+		printf("Memory leak: %d bytes\n", info->cantBytesAlocar-info->cantBytesLiberar);
 	}
 
 	printf("Archivos Abiertos: \n");
@@ -682,14 +687,16 @@ void crearInfoEstadistica(int32_t pid, uint32_t socketConsola){
 	info->cantLiberar = 0;
 	info->cantAlocar = 0;
 	info->cantOpPrivi = 0;
-	info->cantPaginasHeap = 0;
 	info->cantRafagas = 0;
 	info->cantSyscalls = 0;
 	info->estado = NEW;
 	info->socketConsola = socketConsola;
 	info->matarSiguienteRafaga = false;
+	info->cantBytesAlocar = 0;
+	info->cantBytesLiberar = 0;
+	info->cantPagLiberar = 0;
+	info->cantPagReservar = 0;
 	info->exitCode = NULL;
-
 	list_add(listadoEstadistico, info);
 }
 
@@ -698,7 +705,6 @@ info_estadistica_t* buscarInformacion(int32_t pid){
 	bool buscar(info_estadistica_t* info){
 		return info->pid == pid ? true : false;
 	}
-
 	return list_find(listadoEstadistico, buscar);
 }
 
