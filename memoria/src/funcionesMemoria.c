@@ -390,8 +390,8 @@ int reservarFrames(int pid, int cantPag){
 
 		if(asigne == false){
 			log_error(logger,"Error al reservar frames");
+			return -1;
 		}
-
 	}
 
 	pthread_mutex_unlock(&tablaPag_mutex);
