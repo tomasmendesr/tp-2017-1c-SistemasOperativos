@@ -540,15 +540,13 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
  * @return	void
  */
 void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valor_variable tamanio){
-	log_debug(logger, "ANSISOP_escribir -> fd: %d", descriptor_archivo, tamanio);
+	log_debug(logger, "ANSISOP_escribir -> fd: %d", descriptor_archivo);
 	header_t header;
 	header.type = ESCRIBIR;
-	printf("%s\n",informacion);
 
 	size_t size = sizeof(pcb->pid) + sizeof(uint32_t) * 2 + tamanio + 1;
 	void* buffer = malloc(size);
 	header.length = size;
-	printf("header  length %d\n", size);
 
 	uint32_t offset = 0;
 

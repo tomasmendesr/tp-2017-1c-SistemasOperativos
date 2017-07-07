@@ -27,7 +27,7 @@
 
 typedef struct {
 	int8_t type;
-	int16_t length;
+	int32_t length;
 }__attribute__((__packed__)) header_t;
 
 enum enum_protocolo{// Si yo soy el kernel tengo que enviar handshake_kernel.

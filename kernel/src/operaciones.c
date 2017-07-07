@@ -930,16 +930,13 @@ void escribir(void* paquete, int32_t socketCpu){
 	uint32_t fd = *(uint32_t*) paquete;
 	uint32_t pid = *(uint32_t*) (paquete + sizeof(uint32_t));
 	int sizeEscritura = *(int*) (paquete + sizeof(uint32_t) * 2);
-	printf("sizeEscritura %d\n", sizeEscritura);
 	void* escritura = paquete + sizeof(int) + sizeof(uint32_t) * 2;
-	printf("escritura %s \n", escritura);
-
-
 
 	info_estadistica_t * info = buscarInformacion(pid);
 	header_t header;
 
 	if(fd == 1){
+		log_debug(logger, "Imprimir por pantalla");
 		int32_t sizePedido = sizeof(uint32_t) + sizeEscritura + 1;
 
 		header.type=IMPRIMIR_POR_PANTALLA;
@@ -952,6 +949,7 @@ void escribir(void* paquete, int32_t socketCpu){
 		sendSocket(info->socketConsola, &header, buffer);
 		enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
 	}else{
+		log_debug(logger, "Escribir en FS");
 		t_archivo* archivo = buscarArchivo(pid, fd);
 		if(archivo == NULL){
 			log_error(logger, "No se encontro el archivo para escribir");
@@ -965,7 +963,6 @@ void escribir(void* paquete, int32_t socketCpu){
 		void * buffer = malloc(sizeTotal);
 		uint32_t offset = 0;
 
-
 		memcpy(buffer, &offsetEscritura, sizeof(int));
 		offset += sizeof(int);
 		memcpy(buffer+offset, &sizeEscritura, sizeof(uint32_t));
@@ -974,9 +971,7 @@ void escribir(void* paquete, int32_t socketCpu){
 		offset += sizeof(uint32_t);
 		memcpy(buffer+offset, path, sizePath);
 		offset += sizePath;
-		printf("copio path\n");
 		memcpy(buffer+offset, escritura, sizeEscritura + 1);
-		printf("copio escritura\n");
 
 		header.length = sizeTotal;
 		header.type = GUARDAR_DATOS;
@@ -990,13 +985,11 @@ void escribir(void* paquete, int32_t socketCpu){
 		int32_t tipo;
 
 		recibir_paquete(socketConexionFS, &paquete, &tipo);
-		printf("paquete recib \n");
 
 		sem_post(&mutex_fs);
 
 		if(tipo == ESCRITURA_OK){
 			enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
-			printf("recibido piola\n");
 		}else{
 			enviar_paquete_vacio(tipo, socketCpu);
 		}
