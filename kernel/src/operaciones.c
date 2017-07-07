@@ -431,10 +431,11 @@ int buscarSiguiente(t_bloque* block, t_list* list, uint32_t pagina){
 	return -1;
 }
 
-void mostrarReserva(void* paquete){
+void mostrarReserva(void* paquete, int32_t pag){
 	uint32_t offset = 0;
 	meta_bloque metadata;
 	char* bloques = string_new();
+	string_append_with_format(&bloques,"Pag %s - ",string_itoa(pag));
 
 	while(offset<pagina_size){
 		memcpy(&metadata, paquete + offset, sizeof(meta_bloque));
@@ -578,7 +579,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 			sendSocket(socket, header, &posicion);
 
 			log_debug(logger,"Proceso #%d - Reserva existosa! Puntero: %d",pid,posicion);
-			mostrarReserva(package);
+			mostrarReserva(package,reserva->pag);
 			free(package);
 			free(header);
 
@@ -669,7 +670,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 
 	log_debug(logger, "Proceso #%d - Reserva existosa! Puntero: %d",
 			pedido_memoria.pid,posicion);
-	mostrarReserva(package);
+	mostrarReserva(package,reserva->pag);
 	free(package);
 }
 
@@ -808,7 +809,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 				enviar_paquete_vacio(SEGMENTATION_FAULT,socket);
 				return;
 			}
-			mostrarReserva(paquete);
+			mostrarReserva(paquete,reserva->pag);
 		}
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarLiberar);
