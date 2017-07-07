@@ -102,7 +102,7 @@ void validarArchivo(char* path){
 	if(existe)
 		enviar_paquete_vacio(ARCHIVO_EXISTE, socketConexionKernel);
 	else
-		enviar_paquete_vacio(ARCHIVO_NO_EXISTE, socketConexionKernel);
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketConexionKernel);
 
 	return;
 }

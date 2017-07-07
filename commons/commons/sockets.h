@@ -143,7 +143,6 @@ enum protocolo_kernel_a_fs{
 };
 
 enum protocolo_fs_a_kernel{
-	ARCHIVO_NO_EXISTE = 109,
  	ARCHIVO_EXISTE = 110,
  	LECTURA_OK = 111,
  	ESCRITURA_OK = 112,

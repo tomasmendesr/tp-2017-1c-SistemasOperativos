@@ -489,14 +489,14 @@ t_descriptor_archivo abrir(t_direccion_archivo direccion, t_banderas flags){
 void borrar(t_descriptor_archivo direccion){
 	log_debug(logger, "ANSISOP_borrar -> direccion: %d", direccion);
 	header_t header;
-	uint32_t sizeTotal = sizeof(int) * 2;
+	uint32_t sizeTotal = sizeof(uint32_t) * 2;
 	char* paquete = malloc(sizeTotal);
 	header.type =BORRAR_ARCHIVO;
 	header.length = sizeTotal;
 	uint32_t offset = 0;
-	memcpy(paquete, &(pcb->pid), sizeof(int));
-	offset += sizeof(int);
-	memcpy(paquete+offset,&direccion, sizeof(int));
+	memcpy(paquete, &(pcb->pid), sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(paquete+offset,&direccion, sizeof(uint32_t));
 	sendSocket(socketConexionKernel,&header,paquete);
 	free(paquete);
 	requestHandlerKernel();

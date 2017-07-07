@@ -13,7 +13,6 @@ void crearConfig(int32_t argc, char* argv[]){
 	if(argc>1){
 			if(verificarExistenciaDeArchivo(argv[1])){
 				config=levantarConfiguracionKernel(argv[1]);
-				printf("ME LO MANDARON POR PATHHHHH\n");
 				log_info(logger, "Configuracion levantada correctamente");
 			}else{
 				log_error(logger,"Ruta incorrecta");
@@ -790,6 +789,7 @@ int32_t getArchivoFdMax(void){
 }
 
 void crearEntradaArchivoProceso(int32_t proceso){
+	printf("creo entrada archivo proceso %d\n", proceso);
 	entrada_tabla_archivo_proceso* entrada = malloc(sizeof(entrada_tabla_archivo_proceso));
 	entrada->proceso = proceso;
 	entrada->archivos = list_create();
@@ -806,22 +806,23 @@ int32_t agregarArchivo_aProceso(int32_t proceso, char* file, char* permisos){
 	}
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscar);
 	entrada_tabla_globlal_archivo* entradaGlobal = list_find(globalFileTable, buscarArchivo);
-
+	int fd = getArchivoFdMax();
 	if(entradaGlobal == NULL){ // no existe
 		uint32_t sizeEntrada = strlen(file) + 1 + sizeof(int32_t) * 2;
 		entradaGlobal = malloc(sizeEntrada);
 		entradaGlobal->archivo = file;
 		entradaGlobal->vecesAbierto = 1;
-		int ubicacion = list_size(globalFileTable);
-		entradaGlobal->ubicacion = ubicacion;
+		entradaGlobal->ubicacion = proceso + fd;
+
 		list_add(globalFileTable, entradaGlobal);
 	}else{ //existe en la tabla global
 		entradaGlobal->vecesAbierto++;
+
 	}
 
 	t_archivo* archivo = malloc(sizeof(t_archivo));
 	archivo->flags = permisos;
-	archivo->fd = getArchivoFdMax();
+	archivo->fd = fd;
 	archivo->globalFD = entradaGlobal->ubicacion; //ver esto que es una paja
 	archivo->cursor = 0;
 	list_add(entrada->archivos, archivo);
@@ -835,7 +836,9 @@ void eliminarFd(int fd, int proceso){
 	}
 	entrada_tabla_archivo_proceso* entrada = list_find(processFileTable, buscarPorProceso);
 	int i;
-	char* path = buscarPathDeArchivo(fd);
+	t_archivo* archivo = buscarArchivo(proceso, fd);
+	char* path = buscarPathDeArchivo(archivo->globalFD);
+	free(archivo);
 
 	for(i=0; i< list_size(entrada->archivos);i++){
 		t_archivo* archivo = list_get(entrada->archivos, i);
@@ -847,7 +850,7 @@ void eliminarFd(int fd, int proceso){
 
 	free(entrada);
 
-	for(i = 0; i<list_size(globalFileTable);i++){ // TODO - no esta encontrando la entrada aca.
+	for(i = 0; i<list_size(globalFileTable);i++){
 		entrada_tabla_globlal_archivo* entradaGlobal = list_get(globalFileTable,i);
 		if(strcmp(entradaGlobal->archivo, path) == 0){
 			entradaGlobal->vecesAbierto--;
@@ -863,17 +866,16 @@ void imprimirTablaGlobal(void){
 
 	void imprimirData(entrada_tabla_globlal_archivo* entrada){
 		printf("Nombre del file: %s\n", entrada->archivo);
-		printf("Cantidad de veces abierto: %s\n", entrada->vecesAbierto);
+		printf("Cantidad de veces abierto: %d\n", entrada->vecesAbierto);
 	}
 
 	list_iterate(globalFileTable, imprimirData);
 
 }
 
-char* buscarPathDeArchivo(int32_t globalFD){
-
+char* buscarPathDeArchivo(int globalFD){
 	bool buscarPorUbicacion(entrada_tabla_globlal_archivo* entrada){
-		return entrada->ubicacion = globalFD ? true : false;
+		return entrada->ubicacion == globalFD ? true : false;
 	}
 
 	entrada_tabla_globlal_archivo* entrada = list_find(globalFileTable, buscarPorUbicacion);
@@ -894,7 +896,6 @@ t_archivo* buscarArchivo(int32_t pid, int32_t fd){
 	}
 
 	t_archivo* archivo = list_find(entrada->archivos, buscarPorArchivo);
-	if(archivo == NULL) return NULL;
 	return archivo;
 
 }

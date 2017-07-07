@@ -891,12 +891,10 @@ void abrirArchivo(int32_t socketCpu, void* package){
 }
 
 void borrarArchivo(int32_t socketCpu, void* package){
-	int pid = *(int*) package;
-	int fd = *(int*) (package + sizeof(int));
-
+	uint32_t pid = *(uint32_t*) package;
+	uint32_t fd = *(uint32_t*) (package + sizeof(uint32_t));
 	t_archivo* archivo = buscarArchivo(pid, fd);
 	char* path = buscarPathDeArchivo(archivo->globalFD);
-
 	header_t header;
 	header.type = BORRAR_ARCHIVO;
 	uint32_t size = strlen(path) + 1;
@@ -956,7 +954,7 @@ void escribir(void* paquete, int32_t socketCpu){
 			return;
 		}
 		int32_t offsetEscritura = archivo->cursor;
-		char* path = buscarPathDeArchivo(fd);
+		char* path = buscarPathDeArchivo(archivo->globalFD);
 		uint32_t sizeTotal = 3 * sizeof(int) + strlen(path) + 1 + sizeEscritura;
 		void * buffer = malloc(sizeTotal);
 		int32_t offset = 0;
@@ -1006,7 +1004,7 @@ void leerArchivo(int socketCpu, t_lectura* lectura){
 		return;
 	}
 	int offsetPedidoLectura = archivo->cursor;
-	char* path = buscarPathDeArchivo(lectura->descriptor);
+	char* path = buscarPathDeArchivo(archivo->globalFD);
 	uint32_t sizePath = strlen(path) + 1;
 	uint32_t sizeTotal = sizeof(uint32_t) * 3 + sizePath;
 	void* buffer = malloc(sizeTotal);
