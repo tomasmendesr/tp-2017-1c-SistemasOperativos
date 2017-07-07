@@ -147,13 +147,14 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 }
 
 void leerVarCompartida(int32_t socketCPU, char* variable){
+	log_debug(logger, "Obtener valor variable %s", variable);
 	if(dictionary_has_key(config->variablesGlobales, variable)){
 			int32_t valor = leerVariableGlobal(config->variablesGlobales, variable);
-			header_t* header = malloc(sizeof(header_t));
-			header->type = VALOR_VAR_COMPARTIDA;
-			header->length = sizeof(valor);
-			sendSocket(socketCPU, header, &valor);
-			free(header);
+			header_t header;
+			header.type = VALOR_VAR_COMPARTIDA;
+			header.length = sizeof(valor);
+			sendSocket(socketCPU, &header, &valor);
+			log_info(logger, "Valor obtenido y enviado a cpu");
 	}else{
 		log_error(logger, "Error al leer var compartida %s. No se encontro", variable);
 		enviar_paquete_vacio(GLOBAL_NO_DEFINIDA, socketCPU);
@@ -166,12 +167,14 @@ void asignarVarCompartida(int32_t socketCPU, void* buffer){
 	memcpy(&sizeVariable, buffer, 4);
 	variable = malloc(sizeof(sizeVariable));
 	memcpy(variable, buffer+4, sizeVariable);
+	log_debug(logger, "Asignar valor %d a %s", valor, variable);
 	if(dictionary_has_key(config->variablesGlobales, variable)){
 		memcpy(&valor, buffer+4+sizeVariable, 4);
 		escribirVariableGlobal(config->variablesGlobales, variable, valor);
 		free(variable);
 		aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 		enviar_paquete_vacio(ASIG_VAR_COMPARTIDA_OK, socketCPU);
+		log_info(logger, "Valor asignado");
 	}
 	else{
 		log_error(logger, "No se encontro la variable compartida %s. Se finaliza ejecucion", variable);
@@ -180,6 +183,7 @@ void asignarVarCompartida(int32_t socketCPU, void* buffer){
 }
 
 void realizarSignal(int32_t socketCPU, char* key){
+	log_debug(logger, "Realizar signal %s", key);
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	if(dictionary_has_key(config->semaforos, key)){
 		if(dictionary_get(config->semaforos, key) == NULL){
@@ -189,6 +193,7 @@ void realizarSignal(int32_t socketCPU, char* key){
 		}
 		else{
 			int32_t valor = semaforoSignal(config->semaforos, key);
+			log_info(logger, "signal ok");
 			if(valor <= 0){
 				desbloquearProceso(key);
 				log_info(logger, "Desbloqueo un proceso");
@@ -204,6 +209,7 @@ void realizarSignal(int32_t socketCPU, char* key){
 
 void realizarWait(int32_t socketCPU, char* key){
 	int32_t resultado;
+	log_debug(logger, "Realizar wait %s", key);
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 
 	if(dictionary_has_key(config->semaforos,key)){
@@ -214,6 +220,7 @@ void realizarWait(int32_t socketCPU, char* key){
 		}
 		else{
 			int32_t valor = semaforoWait(config->semaforos, key);
+			log_info(logger, "wait ok");
 			if(valor < 0) resultado = WAIT_DETENER_EJECUCION;
 			else resultado = WAIT_SEGUIR_EJECUCION;
 
@@ -852,11 +859,13 @@ void abrirArchivo(int32_t socketCpu, void* package){
 	memcpy(&sizeDireccion,package + sizeof(uint32_t),sizeof(uint32_t));
 	char* direccion = package + (sizeof(uint32_t) * 2);
 	t_banderas* banderas = package + sizeof(uint32_t) * 2  + sizeDireccion;
+	log_debug(logger, "Abrir archivo %s", direccion);
 
 	char* permisos = string_new();
 	if(banderas->creacion) string_append(&permisos, "C");
 	if(banderas->escritura) string_append(&permisos, "E");
 	if(banderas->lectura) string_append(&permisos, "L");
+	log_info(logger, "Permisos: %s", permisos);
 
 	int fd = agregarArchivo_aProceso(pid, direccion, permisos);
 	header_t header;
@@ -874,11 +883,13 @@ void abrirArchivo(int32_t socketCpu, void* package){
 		sem_post(&mutex_fs);
 
 		if(tipo == ARCHIVO_EXISTE){
+			log_info(logger,"Archivo abierto");
 			header.type = ABRIR_ARCHIVO_OK;
 			header.length = sizeof(int);
 			sendSocket(socketCpu, &header, &fd);
 			return;
 		}else{
+			log_error(logger, "Error al abrir el archivo");
 			enviar_paquete_vacio(tipo, socketCpu);
 		}
 	}
@@ -892,31 +903,38 @@ void abrirArchivo(int32_t socketCpu, void* package){
 	sem_wait(&mutex_fs);
 
 	sendSocket(socketConexionFS, &header, direccion);
+	log_debug(logger, "Se solicito crear el archivo");
 
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
 
 	sem_post(&mutex_fs);
 
 	if(tipo == ABRIR_ARCHIVO_OK){
+		log_info(logger, "Archivo creado con exito");
 		header.type = ABRIR_ARCHIVO_OK;
 		header.length = sizeof(int);
 		sendSocket(socketCpu, &header, &fd);
 	}
-	else
+	else{
+		log_error(logger, "Error al crear el archivo");
 		enviar_paquete_vacio(tipo, socketCpu);
+	}
 }
 
 void borrarArchivo(int32_t socketCpu, void* package){
 	uint32_t pid = *(uint32_t*) package;
 	uint32_t fd = *(uint32_t*) (package + sizeof(uint32_t));
+	log_debug(logger, "Borrar archivo con fd: %d", fd);
 	t_archivo* archivo = buscarArchivo(pid, fd);
 	char* path = buscarPathDeArchivo(archivo->globalFD);
+	if(path != NULL) log_debug(logger, "Archivo a borrar: %s", path);
 	header_t header;
 	header.type = BORRAR_ARCHIVO;
 	uint32_t size = strlen(path) + 1;
 	header.length = size;
 
 	if(!archivoPuedeSerBorrado(archivo->globalFD)){
+		log_error(logger, "No se puede borrar el archivo");
 		enviar_paquete_vacio(IMPOSIBLE_BORRAR_ARCHIVO, socketCpu);
 		return;
 	}
@@ -930,7 +948,8 @@ void borrarArchivo(int32_t socketCpu, void* package){
 	recibir_paquete(socketConexionFS, &paquete, &tipo);
 
 	sem_post(&mutex_fs);
-
+	if(tipo == BORRAR_ARCHIVO_OK) log_info(logger, "Archivo borrado con exito");
+	else log_error(logger, "Error al borrar el archivo");
 	enviar_paquete_vacio(tipo, socketCpu);
 
 }
@@ -938,13 +957,20 @@ void borrarArchivo(int32_t socketCpu, void* package){
 void cerrarArchivo(int32_t socketCpu, void* package){
 	int pid = *(int*) package;
 	int fd = *(int*) (package + sizeof(int));
-	eliminarFd(fd, pid);
-	enviar_paquete_vacio(CERRAR_ARCHIVO_OK, socketCpu);
+	log_debug(logger, "Cerrar archivo con fd %d", fd);
+	if(eliminarFd(fd, pid) == 0){
+		enviar_paquete_vacio(CERRAR_ARCHIVO_OK, socketCpu);
+		log_info(logger, "Archivo cerrado con exito");
+	}else{
+		log_error(logger, "Error al cerrar el archivo");
+		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
+	}
 }
 
 void escribir(void* paquete, int32_t socketCpu){
 	uint32_t fd = *(uint32_t*) paquete;
 	uint32_t pid = *(uint32_t*) (paquete + sizeof(uint32_t));
+	log_debug(logger, "Se solicito escribir -> fd: %d - pid %d", fd, pid);
 	int sizeEscritura = *(int*) (paquete + sizeof(uint32_t) * 2);
 	void* escritura = paquete + sizeof(int) + sizeof(uint32_t) * 2;
 
@@ -1005,8 +1031,10 @@ void escribir(void* paquete, int32_t socketCpu){
 		sem_post(&mutex_fs);
 
 		if(tipo == ESCRITURA_OK){
+			log_info(logger, "Escritura exitosa");
 			enviar_paquete_vacio(ESCRITURA_OK, socketCpu);
 		}else{
+			log_error(logger, "Error al escribir");
 			enviar_paquete_vacio(tipo, socketCpu);
 		}
 
@@ -1014,6 +1042,7 @@ void escribir(void* paquete, int32_t socketCpu){
 }
 
 void leerArchivo(int socketCpu, t_lectura* lectura){
+	log_debug(logger, "Leer arcivo -> fd: %d - pid: %d", lectura->descriptor, lectura->pid);
 	t_archivo* archivo = buscarArchivo(lectura->pid, lectura->descriptor);
 	if(archivo == NULL){
 		log_error(logger, "No se encontro el archivo");
@@ -1022,6 +1051,7 @@ void leerArchivo(int socketCpu, t_lectura* lectura){
 	}
 	int offsetPedidoLectura = archivo->cursor;
 	char* path = buscarPathDeArchivo(archivo->globalFD);
+	log_info(logger, "Archivo a leer: %s", path);
 	uint32_t sizePath = strlen(path) + 1;
 	uint32_t sizeTotal = sizeof(uint32_t) * 3 + sizePath;
 	void* buffer = malloc(sizeTotal);
@@ -1054,6 +1084,7 @@ void leerArchivo(int socketCpu, t_lectura* lectura){
 		header.length = lectura->size;
 		header.type = LECTURA_OK;
 		sendSocket(socketCpu, &header, paquete);
+		log_info(logger, "Lectura exitosa");
 	}else{
 		log_error(logger, "File system no pudo leer el archivo");
 		enviar_paquete_vacio(ARCHIVO_INEXISTENTE, socketCpu);
@@ -1061,7 +1092,8 @@ void leerArchivo(int socketCpu, t_lectura* lectura){
 
 }
 
-void moverCursor(int32_t socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
+void moverCursor(int32_t socketCPU, t_cursor* cursor){ 
+	log_debug(logger, "Mover cursor -> fd %d - pid %d", cursor->descriptor, cursor->pid);
 	t_archivo* archivo = buscarArchivo(cursor->pid, cursor->descriptor);
 	if(archivo == NULL){
 		log_error(logger, "No se encontro el archivo para escribir");
@@ -1071,6 +1103,7 @@ void moverCursor(int32_t socketCPU, t_cursor* cursor){ // TODO con esto alcanza?
 
 	archivo->cursor = cursor->posicion;
 	enviar_paquete_vacio(MOVER_CURSOR_OK, socketCPU);
+	log_info(logger, "Cursor movido con exito");
 }
 
 

@@ -287,7 +287,7 @@ t_list* processFileTable;
 int getArchivoFdMax(void);
 void crearEntradaArchivoProceso(int proceso);
 int agregarArchivo_aProceso(int proceso, char* file, char* permisos);
-void eliminarFd(int fd, int proceso);
+int eliminarFd(int fd, int proceso);
 void imprimirTablaGlobal(void);
 char* buscarPathDeArchivo(int globalFD);
 t_archivo* buscarArchivo(int pid, int fd);
