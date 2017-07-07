@@ -114,15 +114,13 @@ void asignar(t_puntero direccion, t_valor_variable valor){
 			return;
 		}
 		else{
-			if(almacenarBytes(&pedidoEscritura, &valor) != 0)
-				log_error(logger, "La variable no pudo asignarse");
+			if(almacenarBytes(&pedidoEscritura, &valor) != 0) log_error(logger, "La variable no pudo asignarse");
 			else log_info(logger, "Variable asignada");
 			return;
 		}
 	}
 	else{
-		if(almacenarBytes(&pedidoEscritura, &valor) != 0)
-			log_error(logger, "La variable no pudo asignarse");
+		if(almacenarBytes(&pedidoEscritura, &valor) != 0) log_error(logger, "La variable no pudo asignarse");
 		else log_info(logger, "Variable asignada");
 	}
 }
@@ -166,6 +164,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 		if(buffer)free(buffer);
 		return -1;
 	}
+	log_info(logger, "Valor asignado");
 	if(buffer)free(buffer);
 	return valor;
 }
@@ -403,7 +402,10 @@ void retornar(t_valor_variable retorno){
 	t_entrada_stack* contextoEjecucionActual = list_remove(pcb->indiceStack, list_size(pcb->indiceStack) - 1);
 	//Limpio el contexto actual
 	uint32_t i;
-	if(contextoEjecucionActual == NULL)return;
+	if(contextoEjecucionActual == NULL){
+		log_error(logger, "No se encontro el contexto de ejecucion actual");
+		return;
+	}
 	for(i=0; i < list_size(contextoEjecucionActual->argumentos); i++){
 		t_argumento* arg = list_get(contextoEjecucionActual->argumentos, i);
 		free(arg);
@@ -417,6 +419,7 @@ void retornar(t_valor_variable retorno){
 	//calculo la direccion a la que tengo que retornar mediante la direccion de pagina start y offset que esta en el campo retvar
 	t_posicion* retVar = contextoEjecucionActual->retVar;
 	t_puntero direcVariable = retVar->pagina * tamanioPagina + retVar->offset;
+	log_info(logger, "Se asigna el valor a la posicion de retorno");
 	asignar(direcVariable, retorno);
 
 	//Seteo el contexto de ejecucion actual en el anterior
@@ -427,6 +430,7 @@ void retornar(t_valor_variable retorno){
 	list_destroy(contextoEjecucionActual->argumentos);
 	list_destroy(contextoEjecucionActual->variables);
 	free(contextoEjecucionActual);
+	log_info(logger, "Contexto limpiado");
 	return;
 }
 
@@ -499,7 +503,8 @@ void borrar(t_descriptor_archivo direccion){
 	memcpy(paquete+offset,&direccion, sizeof(uint32_t));
 	sendSocket(socketConexionKernel,&header,paquete);
 	free(paquete);
-	requestHandlerKernel();
+	if(requestHandlerKernel() != 0) log_error(logger, "No se pudo borrar");
+	else log_info(logger, "Borrado con exito");
 }
 
 /*
@@ -524,7 +529,8 @@ void cerrar(t_descriptor_archivo descriptor_archivo){
 	memcpy(paquete+offset,&descriptor_archivo, sizeof(int));
 	sendSocket(socketConexionKernel,&header,paquete);
 	free(paquete);
-	requestHandlerKernel();
+	if(requestHandlerKernel() != 0) log_error(logger, "Error al cerrar el archivo");
+	else log_info(logger, "Cerrado con exito");
 }
 
 /*
@@ -564,7 +570,8 @@ void escribir(t_descriptor_archivo descriptor_archivo, void* informacion, t_valo
 		finalizarCPU();
 	}
 	free(buffer);
-	requestHandlerKernel();
+	if(requestHandlerKernel() != 0) log_error(logger, "No se pudo escribir");
+	else log_info(logger, "Escritura exitosa");
 }
 
 /*
@@ -594,7 +601,8 @@ void leer(t_descriptor_archivo descriptor_archivo, t_puntero informacion, t_valo
 	if(sendSocket(socketConexionKernel, &header, &lectura) <= 0){
 		finalizarCPU();
 	}
-	requestHandlerKernel();
+	if(requestHandlerKernel() != 0) log_error(logger, "Error al leer");
+	else log_info(logger, "Lectura exitosa");
 }
 
 /*
@@ -620,6 +628,7 @@ void moverCursor(t_descriptor_archivo descriptor_archivo, t_valor_variable posic
 		finalizarCPU();
 	}
 	if(requestHandlerKernel() == -1) log_error(logger, "No se pudo mover el cursor");
+	else log_info(logger, "Cursor movido");
 }
 
 /*
@@ -638,7 +647,6 @@ t_puntero reservar(t_valor_variable espacio){
 	char* paquete;
 	size_t size = sizeof(t_valor_variable);
 	t_valor_variable valor;
-	int32_t var;
 
 	header.type = RESERVAR_MEMORIA;
 	header.length = sizeof(t_valor_variable)*3;
@@ -651,15 +659,14 @@ t_puntero reservar(t_valor_variable espacio){
 		log_error(logger, "problemas de conexion");
 		finalizarCPU();
 	}
-	var = requestHandlerKernel();
-	if(var == -1){
+	free(paquete);
+	if(requestHandlerKernel() == -1){
 		log_error(logger, "No se pudo realizar la reserva. Se finaliza el proceso");
-		free(paquete);
-		return var;
+		return -1;
 	}
 	valor = *(t_valor_variable*)paqueteGlobal;
+	log_info(logger, "Reserva exitosa. Posicion %d", valor);
 	free(paqueteGlobal);
-	free(paquete);
 	return valor;
 }
 
@@ -686,9 +693,8 @@ void liberarMemoria(t_puntero posicion){
 		finalizarCPU();
 	}
 	if(requestHandlerKernel() == -1) log_error(logger, "Error al liberar");
-	else {
-		log_info(logger, "Memoria liberada");
-	}
+	else log_info(logger, "Memoria liberada");
+
 }
 
 /*
@@ -723,7 +729,7 @@ void wait(t_nombre_semaforo identificador_semaforo){
 	log_debug(logger, "wait a semaforo '%s'", identificador_semaforo);
 	header_t header;
 	header.type=SEM_WAIT;
-	header.length=strlen(identificador_semaforo)+1;
+	header.length = strlen(identificador_semaforo)+1;
 	sendSocket(socketConexionKernel,&header,identificador_semaforo);
 	requestHandlerKernel();
 }
