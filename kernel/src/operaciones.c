@@ -570,7 +570,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 			header->length = sizeof(t_puntero);
 			sendSocket(socket, header, &posicion);
 
-			log_debug(logger,"Proceso #%d reserva con exito posicion %d",pid,posicion);
+			log_debug(logger,"Proceso #%d - Reserva existosa! Puntero: %d",pid,posicion);
 			mostrarReserva(package);
 			free(package);
 			free(header);
@@ -602,7 +602,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 	free(pedido);
 
 	if(resultado != OP_OK){
-		log_error(logger,"Memoria se quedo sin espacio");
+		log_error(logger,"No se pudo realizar la reserva. Memoria sin espacio");
 		enviar_paquete_vacio(FALLA_RESERVAR_RECURSOS,socket);
 		free(header);
 		return;
@@ -614,6 +614,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 	reserva->pid = pedido_memoria.pid;
 	reserva->cant = 1;
 
+	log_info(logger, "Pagina reservada: %d",reserva->pag);
 	sem_wait(&mutex_dinamico);
 	list_add(mem_dinamica, reserva);
 	sem_post(&mutex_dinamico);
@@ -659,7 +660,7 @@ void reservarMemoria(int32_t socket, char* paquete){
 	aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarOpPriviligiada);
 	info->cantPagReservar++;
 
-	log_debug(logger, "Proceso #%d reserva con exito posicion %d",
+	log_debug(logger, "Proceso #%d - Reserva existosa! Puntero: %d",
 			pedido_memoria.pid,posicion);
 	mostrarReserva(package);
 	free(package);
@@ -673,6 +674,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 	meta_bloque metadata;
 	int32_t tamano = sizeof(uint32_t);
 	reserva_memoria* reserva;
+	bool compacto = false;
 
 	int posReserva;
 	memcpy(&pid, paquete, tamano);
@@ -684,7 +686,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 	sem_post(&mutex_dinamico);
 
 	if(posReserva == -1){
-		log_error(logger,"No se puede liberar la memoria");
+		log_error(logger,"Double free or corruption");
 		enviar_paquete_vacio(NULL_POINTER,socket);
 		return;
 	}
@@ -708,7 +710,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 		memcpy(&metadata, paquete + offset, sizeof(meta_bloque));
 
 		if(metadata.used == false){
-			log_error(logger,"El puntero apunta a memoria invalida");
+			log_error(logger,"Double free or corruption");
 			enviar_paquete_vacio(NULL_POINTER,socket);
 			return;
 		}
@@ -756,6 +758,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 				int tamano = sizeof(meta_bloque);
 				int offPrevio = posAnterior(paquete, offset);
 				meta_bloque metadata;
+				compacto = true;
 
 				memcpy(&metadata, paquete + offset, sizeof(meta_bloque));
 				tamano += metadata.size;
@@ -773,6 +776,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 			if(siguienteLibre(paquete, offsetEscritura)){
 				int tamano = sizeof(meta_bloque);
 				meta_bloque metadata;
+				compacto = true;
 
 				memcpy(&metadata, paquete + offsetEscritura, sizeof(meta_bloque));
 				tamano += metadata.size;
@@ -785,6 +789,8 @@ void liberarMemoria(int32_t socket, char* paquete){
 				memcpy(paquete + offsetEscritura, &metadata, sizeof(meta_bloque));
 				reserva->size += sizeof(meta_bloque);
 			}
+			if(compacto)log_debug(logger, "Compactacion realizada!");
+
 			pedido.pid = pid;
 			pedido.pag = posicion / pagina_size;
 			pedido.offset = 0;
@@ -801,7 +807,7 @@ void liberarMemoria(int32_t socket, char* paquete){
 		aumentarEstadisticaPorSocketAsociado(socket, estadisticaAumentarLiberar);
 		estadisticaLiberarBytes(pid, bytesLiberados);
 
-		log_info(logger,"Proceso #%d libera con exito posicion: %d", pid, posicion);
+		log_info(logger,"Proceso #%d - Exito al liberar posicion: %d", pid, posicion);
 		enviar_paquete_vacio(LIBERAR_MEMORIA_OK, socket);
 		return;
 	}
