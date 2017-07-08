@@ -369,7 +369,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 
 	if(cerrarCPU) finalizarCPU();
 
-	if(procesoBloqueado){if(cerrarCPU) finalizarCPU();
+	if(procesoBloqueado){
 		finalizarPor(PROC_BLOCKED);
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
 	}else{
