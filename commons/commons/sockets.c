@@ -23,34 +23,39 @@ int getSocket(void){
 	return sockfd;
 }
 int createServer2(char *addr, char *port, int backlog) {
+	int puerto = atoi(port);
+	struct sockaddr_in socketInfo;
+		int socketEscucha;
+		int optval = 1;
 
-	struct addrinfo hints;
-	struct addrinfo *serverInfo;
+		// Crear un socket
+		socketEscucha = socket (AF_INET, SOCK_STREAM, 0);
+		if (socketEscucha == -1)
+		 	return -1;
 
-	memset(&hints,0,sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_flags = AI_PASSIVE;
-	hints.ai_socktype = SOCK_STREAM;
+		setsockopt(socketEscucha, SOL_SOCKET, SO_REUSEADDR, &optval,
+				sizeof(optval));
+		socketInfo.sin_family = AF_INET;
+		socketInfo.sin_port = htons(puerto);
+		socketInfo.sin_addr.s_addr = INADDR_ANY;
+		if (bind (socketEscucha,(struct sockaddr *)&socketInfo,sizeof (socketInfo)) != 0)
+		{
+			close (socketEscucha);
+			return -1;
+		}
 
-	getaddrinfo(NULL,port,&hints,&serverInfo);
-
-	int sockfd = socket(serverInfo->ai_family,serverInfo->ai_socktype,serverInfo->ai_protocol);
-
-	//int sockfd = getSocket();
-
-	if (bindSocket(sockfd, addr, port) == -1) {
-		perror("bind");
-		close(sockfd);
-		return -1;
-	}
-
-	if (listenSocket(sockfd, backlog) == -1) {
-		perror("listen");
-		close(sockfd);
-		return -1;
-	}
-
-	return sockfd;
+		/*
+		* Se avisa al sistema que comience a atender llamadas de clientes
+		*/
+		if (listen (socketEscucha, 10) == -1)
+		{
+			close (socketEscucha);
+			return -1;
+		}
+		/*
+		* Se devuelve el descriptor del socket servidor
+		*/
+		return socketEscucha;
 }
 /**
  * @NAME: bindSocket
@@ -83,11 +88,15 @@ int listenSocket(int sockfd, int backlog) {
  * Retorna -1 en caso de error.
  */
 int acceptSocket(int sockfd) {
-	struct sockaddr_in their_addr;
-	int sin_size = sizeof(struct sockaddr_in);
+	socklen_t longitudCliente;//esta variable tiene inicialmente el tamaño de la estructura cliente que se le pase
+		struct sockaddr cliente;
+		int socketNuevaConexion;//esta variable va a tener la descripcion del nuevo socket que estaria creando
+		longitudCliente = sizeof(cliente);
+		socketNuevaConexion = accept (sockfd, &cliente, &longitudCliente);//acepto la conexion del cliente
+		if (socketNuevaConexion < 0)
+			return -1;
 
-	return accept(sockfd, (struct sockaddr *) &their_addr,
-			(socklen_t *) &sin_size);
+		return socketNuevaConexion;
 }
 
 /**
@@ -138,22 +147,39 @@ int sendSocket(int sockfd, header_t *header, void *data) {
  * En caso de error retorna -1.
  */
 int createServer(char *addr, char *port, int backlog) {
-	int sockfd = getSocket();
+	int puerto = atoi(port);
+	struct sockaddr_in socketInfo;
+		int socketEscucha;
+		int optval = 1;
 
-	if (bindSocket(sockfd, addr, port) == -1) {
-		perror("bind");
-		close(sockfd);
-		return -1;
-	}
+		// Crear un socket
+		socketEscucha = socket (AF_INET, SOCK_STREAM, 0);
+		if (socketEscucha == -1)
+		 	return -1;
 
-	if (listenSocket(sockfd, backlog) == -1) {
-		perror("listen");
-		close(sockfd);
-		return -1;
-	}
+		setsockopt(socketEscucha, SOL_SOCKET, SO_REUSEADDR, &optval,
+				sizeof(optval));
+		socketInfo.sin_family = AF_INET;
+		socketInfo.sin_port = htons(puerto);
+		socketInfo.sin_addr.s_addr = INADDR_ANY;
+		if (bind (socketEscucha,(struct sockaddr *)&socketInfo,sizeof (socketInfo)) != 0)
+		{
+			close (socketEscucha);
+			return -1;
+		}
 
-	return sockfd;
-	
+		/*
+		* Se avisa al sistema que comience a atender llamadas de clientes
+		*/
+		if (listen (socketEscucha, 10) == -1)
+		{
+			close (socketEscucha);
+			return -1;
+		}
+		/*
+		* Se devuelve el descriptor del socket servidor
+		*/
+		return socketEscucha;
 }
 
 /**

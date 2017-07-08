@@ -354,17 +354,17 @@ void comenzarEjecucionDePrograma(void* paquete){
 		analizadorLinea(instruccion, &functions, &kernel_functions);
 		free(instruccion);
 
-		if(cerrarCPU)finalizarCPU();
+		if(cerrarCPU) finalizarCPU();
 		if(verificarTerminarEjecucion() == -1)return;
 
 		printf("Instruccion ejecutada\n");
 		usleep(quantumSleep * 1000);
 
-		if(procesoBloqueado)break;
 		pcb->programCounter++;
+		if(procesoBloqueado)break;
 		i++;
 	}
-
+	if(cerrarCPU) finalizarCPU();
 	if(procesoBloqueado){
 		finalizarPor(PROC_BLOCKED);
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
