@@ -35,6 +35,7 @@
 #include <sys/inotify.h>
 
 typedef struct {
+	char* ip_kernel;
 	char* puerto_PROG;
 	char* puerto_CPU;
 	char* ip_Memoria;

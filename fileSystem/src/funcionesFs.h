@@ -18,6 +18,7 @@
 
 #define configuracionFS "../confFileSystem.init"
 #define MAX_LEN_PUERTO 6
+#define MAX_LEN_IP 20
 #define IP "192.168.3.3"
 #define BACKLOG 10
 #define METADATA_PATH "Metadata"
@@ -33,6 +34,7 @@ typedef struct{
 	char* punto_montaje;
 	int tamanio_bloque;
 	int cantidad_bloques;
+	char* ip_fs;
 }t_config_FS;
 
 typedef struct

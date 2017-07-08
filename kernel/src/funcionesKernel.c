@@ -66,6 +66,9 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         conf->ip_Memoria = malloc(MAX_LEN_IP);
         strcpy(conf->ip_Memoria, config_get_string_value(configKernel, "IP_MEMORIA"));
 
+        conf->ip_kernel = malloc(MAX_LEN_IP);
+		strcpy(conf->ip_kernel, config_get_string_value(configKernel, "IP_KERNEL"));
+
         conf->puerto_Memoria = malloc(MAX_LEN_PUERTO);
         strcpy(conf->puerto_Memoria, config_get_string_value(configKernel, "PUERTO_MEMORIA"));
 
@@ -586,18 +589,18 @@ void planificarLargoPlazo(void){
 			}
 			else if(resultado == OP_OK){
 				log_info(logger, "Paginas reservadas para el proceso %d", pid);
-				//aviso a consola que se acepto
-				alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
-
-				//mando a memoria el codigo
-				envioCodigoMemoria(proc->codigo, pid, cant_pag_cod);
-
 				sem_wait(&mutex_cola_ready);
 				queue_push(colaReady, pcb);
 				sem_post(&mutex_cola_ready);
 				sem_post(&sem_cola_ready);
 				printf("Proceso #%d agregado a la cola de READY\n", pid);
 				estadisticaCambiarEstado(pid, READY);
+				//aviso a consola que se acepto
+				alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
+
+				//mando a memoria el codigo
+				envioCodigoMemoria(proc->codigo, pid, cant_pag_cod);
+
 				cantProcesosSistema++;
 
 				//destruyo el proceso en espera;

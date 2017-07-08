@@ -26,7 +26,7 @@ endif
 all: memoria
 
 dependents:
-	-cd /home/utnso/tp-2017-1c-Dirty-Cow/commons/Debug && $(MAKE) clean all
+	-cd /home/utnso/tp-2017-1c-Dirty-Cow/commons/Debug && $(MAKE) all
 
 # Tool invocations
 memoria: $(OBJS) $(USER_OBJS) /home/utnso/tp-2017-1c-Dirty-Cow/commons/Debug/libcommons.so

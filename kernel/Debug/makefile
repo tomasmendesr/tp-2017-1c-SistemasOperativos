@@ -26,8 +26,8 @@ endif
 all: kernel
 
 dependents:
-	-cd /home/utnso/tp-2017-1c-Dirty-Cow/commons/Debug && $(MAKE) clean all
-	-cd /home/utnso/tp-2017-1c-Dirty-Cow/parser/Debug && $(MAKE) clean all
+	-cd /home/utnso/tp-2017-1c-Dirty-Cow/commons/Debug && $(MAKE) all
+	-cd /home/utnso/tp-2017-1c-Dirty-Cow/parser/Debug && $(MAKE) all
 
 # Tool invocations
 kernel: $(OBJS) $(USER_OBJS) /home/utnso/tp-2017-1c-Dirty-Cow/commons/Debug/libcommons.so /home/utnso/tp-2017-1c-Dirty-Cow/parser/Debug/libparser.so
