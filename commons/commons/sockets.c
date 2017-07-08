@@ -62,7 +62,7 @@ int bindSocket(int sockfd, char *addr, char *port) {
 
 	my_addr.sin_family = AF_INET;
 	my_addr.sin_port = htons(atoi(port));
-	my_addr.sin_addr.s_addr = inet_addr(addr);
+	my_addr.sin_addr.s_addr = INADDR_ANY;// inet_addr(addr);
 	memset(&(my_addr.sin_zero), '\0', 8);
 
 	return bind(sockfd, (struct sockaddr *) &my_addr, sizeof(struct sockaddr));
