@@ -360,7 +360,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 		printf("Instruccion ejecutada\n");
 		usleep(quantumSleep * 1000);
 
-		if(procesoBloqueado)return;
+		if(procesoBloqueado)break;
 		i++;
 		pcb->programCounter++;
 	}
@@ -368,7 +368,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 	if(procesoBloqueado){
 		finalizarPor(PROC_BLOCKED);
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
-	}else if(i==quantum || !quantum){
+	}else if(i>quantum || !quantum){
 		finalizarPor(FIN_EJECUCION);
 		log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	}
