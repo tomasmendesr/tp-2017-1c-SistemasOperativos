@@ -587,18 +587,18 @@ void planificarLargoPlazo(void){
 			}
 			else if(resultado == OP_OK){
 				log_info(logger, "Paginas reservadas para el proceso %d", pid);
-				//aviso a consola que se acepto
-				alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
-
-				//mando a memoria el codigo
-				envioCodigoMemoria(proc->codigo, pid, cant_pag_cod);
-
 				sem_wait(&mutex_cola_ready);
 				queue_push(colaReady, pcb);
 				sem_post(&mutex_cola_ready);
 				sem_post(&sem_cola_ready);
 				printf("Proceso #%d agregado a la cola de READY\n", pid);
 				estadisticaCambiarEstado(pid, READY);
+				//aviso a consola que se acepto
+				alertarConsolaProcesoAceptado(&pid, proc->socketConsola);
+
+				//mando a memoria el codigo
+				envioCodigoMemoria(proc->codigo, pid, cant_pag_cod);
+
 				cantProcesosSistema++;
 
 				//destruyo el proceso en espera;
