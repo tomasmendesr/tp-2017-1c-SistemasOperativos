@@ -158,6 +158,7 @@ void inicializarColas(void);
 void inicializaciones(void);
 void crearConfig(int argc, char* argv[]);
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf);
+bool verificarConfig(t_config*);
 void destruirConfiguracionKernel(t_config_kernel* config);
 t_dictionary* crearDiccionarioConValue(char** array, char** valores);
 t_dictionary* crearDiccionario(char** array);
