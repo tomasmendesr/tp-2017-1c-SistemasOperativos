@@ -10,10 +10,16 @@ void inicializarColas(){
 }
 
 void crearConfig(int32_t argc, char* argv[]){
+
+	const int path_size = 100;
+	inotify_path = malloc(path_size);
+
 	if(argc>1){
 			if(verificarExistenciaDeArchivo(argv[1])){
 				config=levantarConfiguracionKernel(argv[1]);
 				log_info(logger, "Configuracion levantada correctamente");
+
+				strcpy(inotify_path,argv[1]);
 			}else{
 				log_error(logger,"Ruta incorrecta");
 				exit(EXIT_FAILURE);
@@ -22,15 +28,21 @@ void crearConfig(int32_t argc, char* argv[]){
 	else if(verificarExistenciaDeArchivo(configuracionKernel)){
 		config=levantarConfiguracionKernel(configuracionKernel);
 		log_info(logger,"Configuracion levantada correctamente");
+
+		strcpy(inotify_path,configuracionKernel);
 	}
 	else if(verificarExistenciaDeArchivo(string_substring_from(configuracionKernel,3))){
 		config=levantarConfiguracionKernel(string_substring_from(configuracionKernel,3));
 		log_info(logger,"Configuracion levantada correctamente");
+
+		strcpy(inotify_path,string_substring_from(configuracionKernel,3));
 	}
 	else{
 		log_error(logger,"No se pudo levantar el archivo de configuracion");
 		exit(EXIT_FAILURE);
 	}
+
+	inicializarInotify();
 }
 
 t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
@@ -40,6 +52,8 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         char** varGlob, **semID, **semInit;
 
         configKernel = config_create(archivo_conf);
+        if(configKernel == NULL)
+        	log_error(logger,"ERROR");
 
         conf->puerto_CPU = malloc(MAX_LEN_PUERTO);
         strcpy(conf->puerto_CPU, config_get_string_value(configKernel, "PUERTO_CPU"));
@@ -959,4 +973,52 @@ void verificarProcesosConsolaCaida(uint32_t socketConsola){
 		info->exitCode = DESCONEXION_CONSOLA;
 		log_info(logger, "Se termina la ejecucion del proceso %d por desconexion de la consola", info->pid);
 	}
+}
+
+//////////////////////////////
+//Quilombo del inotify
+void inicializarInotify(){
+	inotify_fd = inotify_init();
+	create_wd = inotify_add_watch(inotify_fd,inotify_path,IN_CREATE);
+	delete_wd = inotify_add_watch(inotify_fd,inotify_path,IN_DELETE);
+	modify_wd = inotify_add_watch(inotify_fd,inotify_path,IN_MODIFY);
+}
+
+void cambiarConfig()
+{
+	struct inotify_event* evento = malloc(sizeof(struct inotify_event));
+
+	if( read(inotify_fd, evento, sizeof(struct inotify_event)) <= 0)
+	{
+		log_error(logger,"Error al leer el inotify");
+	}
+
+	if(evento->mask == IN_MODIFY) //|| evento->mask == IN_CREATE || evento->mask == IN_DELETE)
+	{
+		//destruirConfiguracionKernel(config);
+
+		log_info(logger,"Antes de levantar %s",inotify_path);
+
+		t_config* configNueva = config_create(inotify_path);
+
+		log_info(logger,"despues de levantar");
+
+		if(configNueva == NULL)
+			log_error(logger, "Error al crear nueva configuracion");
+
+		log_info(logger,"antes de get int value");
+		config->quantum = config_get_int_value(configNueva, "QUANTUM");
+		log_info(logger,"despues del primer get int value");
+		config->quantum_Sleep = config_get_int_value(configNueva, "QUANTUM_SLEEP");
+
+		log_info(logger, "antes de destroy");
+
+		config_destroy(configNueva);
+
+		//config = levantarConfiguracionKernel(inotify_path);
+
+		log_info(logger,"Se detecto un cambio de configuracion\nNuevo Quantum Sleep: %d Quantum: %d",config->quantum_Sleep,config->quantum);
+	}
+
+	free(evento);
 }
