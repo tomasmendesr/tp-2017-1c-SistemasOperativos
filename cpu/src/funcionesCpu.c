@@ -367,15 +367,15 @@ void comenzarEjecucionDePrograma(void* paquete){
 		i++;
 	}
 
-	if(cerrarCPU) finalizarCPU();
-
-	if(procesoBloqueado){if(cerrarCPU) finalizarCPU();
+	if(procesoBloqueado){
 		finalizarPor(PROC_BLOCKED);
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
 	}else{
 		finalizarPor(FIN_EJECUCION);
 		log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	}
+
+	if(cerrarCPU) finalizarCPU();
 
 }
 
@@ -449,6 +449,7 @@ void finalizarPor(int type) {
 }
 
 void finalizarCPU(void){
+	enviar_paquete_vacio(DESCONEXION_CPU, socketConexionKernel);
 	finalizarConexion(socketConexionKernel);
 	finalizarConexion(socketConexionMemoria);
 	log_info(logger, "CPU desconectada!");

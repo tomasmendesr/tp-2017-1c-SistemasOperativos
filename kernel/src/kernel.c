@@ -24,7 +24,7 @@ int main(int argc, char** argv){
 	escucharConexiones();
 
 	destruirConfiguracionKernel(config);
-
+	printf("me voy por aca \n");
 	return EXIT_SUCCESS;
 }
 

@@ -141,6 +141,10 @@ void procesarMensajeCPU(int socketCPU, int mensaje, char* package){
 	case MEMORY_CORRUPTION:
 		finalizacion_error(package, socketCPU, mensaje);
 		break;
+	case DESCONEXION_CPU:
+		log_debug(logger, "Recibi mensaje desconexion cpu socket: %d, socketCPU");
+		eliminarCPU(listaCPUs, socketCPU);
+		break;
 	default:
 		log_warning(logger,"Se recibio el codigo de operacion invalido de CPU. %d", mensaje );
 	}
