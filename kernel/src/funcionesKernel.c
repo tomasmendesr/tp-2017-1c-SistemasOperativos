@@ -57,6 +57,9 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         if(configKernel == NULL)
         	log_error(logger,"ERROR");
 
+        if(!verificarConfig(configKernel))
+        	log_error(logger,"CONFIG NO VALIDA");
+
         conf->puerto_CPU = malloc(MAX_LEN_PUERTO);
         strcpy(conf->puerto_CPU, config_get_string_value(configKernel, "PUERTO_CPU"));
 
@@ -99,6 +102,24 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         config_destroy(configKernel);
         printf("Configuracion levantada correctamente.\n");
         return conf;
+}
+
+bool verificarConfig(t_config* a){
+	return config_has_property(a,"PUERTO_PROG") &&
+			config_has_property(a,"PUERTO_CPU") &&
+			config_has_property(a,"IP_MEMORIA") &&
+			config_has_property(a,"PUERTO_MEMORIA") &&
+			config_has_property(a,"IP_FS") &&
+			config_has_property(a,"PUERTO_FS") &&
+			config_has_property(a,"QUANTUM") &&
+			config_has_property(a,"QUANTUM_SLEEP") &&
+			config_has_property(a,"GRADO_MULTIPROG") &&
+			config_has_property(a,"SEM_IDS") &&
+			config_has_property(a,"SEM_INIT") &&
+			config_has_property(a,"SHARED_VARS") &&
+			config_has_property(a,"STACK_SIZE") &&
+			config_has_property(a,"ALGORITMO") &&
+			config_has_property(a,"IP_KERNEL");
 }
 
 void enviarTamanioStack(int32_t fd){
@@ -1000,9 +1021,10 @@ void cambiarConfig()
 
 	if(evento->mask == IN_MODIFY || evento->mask == IN_CREATE || evento->mask == IN_DELETE)
 	{
-		//destruirConfiguracionKernel(config);
+		//Guardo los valores viejos
+		int quantumViejo = config->quantum;
+		int sleepViejo = config->quantum_Sleep;
 
-		//sleep(1);
 		t_config* configNueva = config_create(inotify_path);
 
 		if(configNueva == NULL)
@@ -1014,7 +1036,8 @@ void cambiarConfig()
 			config->quantum = config_get_int_value(configNueva, "QUANTUM");
 			config->quantum_Sleep = config_get_int_value(configNueva, "QUANTUM_SLEEP");
 
-			log_info(logger,"Se detecto un cambio de configuracion\nNuevo Quantum Sleep: %d Quantum: %d",config->quantum_Sleep,config->quantum);
+			if(config->quantum != quantumViejo || config->quantum_Sleep != sleepViejo)
+				log_info(logger,"Se detecto un cambio de configuracion\nNuevo Quantum Sleep: %d Quantum: %d",config->quantum_Sleep,config->quantum);
 		}else
 			log_info(logger,"No pude crear Config");
 
