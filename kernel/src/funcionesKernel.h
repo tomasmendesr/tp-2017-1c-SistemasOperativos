@@ -8,7 +8,8 @@
 #ifndef FUNCIONESKERNEL_H_
 #define FUNCIONESKERNEL_H_
 
-#define IP "127.0.0.1"
+
+#define IP "192.168.3.3"
 #define BACKLOG 10
 #define configuracionKernel "../confKernel.init"
 #define MAX_LEN_PUERTO 6

@@ -15,7 +15,7 @@ int main(int argc, char** argv){
 }
 
 void esperarConexionKernel(){
-	socketEscucha = createServer(IP, conf->puertoEscucha, BACKLOG);
+	socketEscucha = createServer2(IP, conf->puertoEscucha, BACKLOG);
 	if(socketEscucha != -1){
 		log_info(logger,"Esperando conexion del kernel...");
 	}else{
