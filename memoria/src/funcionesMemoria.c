@@ -406,7 +406,7 @@ int liberarFrame(int pid, int nroPag){
 	int frame = buscarFrame(pid,nroPag);
 
 	if(frame == -1){
-		printf("No existe la pagina pid: %d pag: %d\n",pid,nroPag);
+		log_error(logger,"No existe la pagina pid: %d pag: %d\n",pid,nroPag);
 		return -1;
 	}
 
@@ -663,7 +663,7 @@ int entradaAReemplazar(int pid){
 }
 
 int reemplazoLocal(int pid){
-	printf("Reemplazo local.\n");
+	log_debug(logger,"Reemplazo local");
 	int i;
 	int entrada; //A reemplazar
 	int minTime = ULONG_MAX;
@@ -679,7 +679,7 @@ int reemplazoLocal(int pid){
 }
 
 int reemplazoGlobal(){
-	printf("Reemplazo global.\n");
+	log_debug(logger,"Reemplazo global");
 	//Recorro buscando una entrada libre
 	int i;
 	for(i=0;i<cache_entradas;i++){
@@ -784,7 +784,11 @@ void levantarInterfaz(){
 	return;
 }
 void retardo(char* comando, char* param){
-        printf("retardo\n");
+
+	int retardo = atoi(param);
+	config->retardo_Memoria = retardo;
+
+    log_info(logger,"Cambio retardo exitoso\n");
 }
 void dump(char* comando, char* param){
 	//printf("dump\n");
@@ -1001,7 +1005,8 @@ char* getTimeStamp(){
 void esperar(){
 
 	if( config->retardoActivado ){
-		usleep(config->retardo_Memoria);
+		//printf("retardo %d\n\n",config->retardo_Memoria);
+		usleep(config->retardo_Memoria * 1000);
 
 		if( config->imprimirRetardo )
 			log_debug(logger,"RETARDO");
