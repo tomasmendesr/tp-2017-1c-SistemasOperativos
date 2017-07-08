@@ -5,6 +5,7 @@ bool huboStackOver = false;
 bool finPrograma = false;
 bool finPorError = false;
 int finErrorExitCode = 0;
+bool estaEjecutando = false;
 
 AnSISOP_funciones functions = { .AnSISOP_asignar = asignar,
 		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
@@ -327,11 +328,13 @@ void revisarSigusR1(int signo){
 	if(signo == SIGUSR1){
 		printf("Signal SIGUSR1\n");
 		log_info(logger, "Se recibe SIGUSR1");
+		if(!estaEjecutando) finalizarCPU();
 		cerrarCPU = true;
 	}
 }
 
 void comenzarEjecucionDePrograma(void* paquete){
+	estaEjecutando = true;
 	quantum = *(uint32_t*)paquete;
 	if(quantum == 0){
 		log_debug(logger, "Ejecutar - Algoritmo FIFO");
@@ -354,7 +357,6 @@ void comenzarEjecucionDePrograma(void* paquete){
 		analizadorLinea(instruccion, &functions, &kernel_functions);
 		free(instruccion);
 
-		if(cerrarCPU) finalizarCPU();
 		if(verificarTerminarEjecucion() == -1)return;
 
 		printf("Instruccion ejecutada\n");
@@ -364,7 +366,6 @@ void comenzarEjecucionDePrograma(void* paquete){
 		if(procesoBloqueado)break;
 		i++;
 	}
-	if(cerrarCPU) finalizarCPU();
 	if(procesoBloqueado){
 		finalizarPor(PROC_BLOCKED);
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
@@ -372,6 +373,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 		finalizarPor(FIN_EJECUCION);
 		log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	}
+	if(cerrarCPU) finalizarCPU();
 }
 
 int verificarTerminarEjecucion(){
@@ -440,6 +442,7 @@ void finalizarPor(int type) {
 	free(paquete);
 	freePCB(pcb);
 	quantum = -1;
+	estaEjecutando = false;
 }
 
 void finalizarCPU(void){
