@@ -31,6 +31,7 @@
 //#include "pcp.h"
 #include "pcb.h"
 #include "operaciones.h"
+#include <sys/inotify.h>
 
 typedef struct {
 	char* puerto_PROG;
@@ -304,6 +305,15 @@ int max_fd;
 int valor[3];
 t_list* mem_dinamica;
 t_list* bloques;
+
+//Cosas del inotify
+void inicializarInotify();
+void cambiarConfig();
+char* inotify_path;
+int inotify_fd;
+int create_wd;
+int delete_wd;
+int modify_wd;
 
 int16_t grabarBytes(int socket, t_pedido_bytes* pedido, void*buf);
 int16_t solicitudBytes(int socket, t_pedido_bytes* pedido, char**buf);
