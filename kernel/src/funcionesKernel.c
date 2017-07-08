@@ -406,6 +406,10 @@ void getTablaArchivos(char* comando, char* param){
         imprimirTablaGlobal();
 }
 void gradoMultiprogramacion(char* comando, char* param){
+	if(param == NULL || strlen(param) == 0 ){
+		printf("Se necesita un valor.\n");
+		return;
+	}
 	if(!esNumero(param)){
 		printf("Ingrese un valor valido para el grado de multiporgramacion\n");
 		return;
@@ -416,22 +420,27 @@ void gradoMultiprogramacion(char* comando, char* param){
 	planificarLargoPlazo();
 }
 void killProcess(char* comando, char* param){
+		if(param == NULL || strlen(param) == 0 ){
+			printf("Se necesida el pid del proceso.\n");
+			return;
+		}
         if(!esNumero(param)){
         	printf("Ingrese un valor valido\n");
         	return;
         }
-        int32_t pid = atoi(param);
+        uint32_t pid = atoi(param);
         info_estadistica_t* info = buscarInformacion(pid);
         if(info == NULL){
         	printf("Ese proceso no se encuentra en el sistema\n");
         	return;
         }
-        if(info->estado != EXEC){ //como no esta ejecutando no tengo que esperar a que cpu lo devuelva
-        	eliminarEstadistica(info->pid);
-        	enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
-        }else{ //debo esperar a que el cpu devuelva el pcb;
+     //   if(info->estado != EXEC){ //como no esta ejecutando no tengo que esperar a que cpu lo devuelva
+      //  	info_estadistica_t* info = buscarInformacion(pid);
         	info->matarSiguienteRafaga = true;
-        }
+    //    	enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
+   //     }else{ //debo esperar a que el cpu devuelva el pcb;
+    //    	info->matarSiguienteRafaga = true;
+    //    }
 
 }
 void stopPlanification(char* comando, char* param){
