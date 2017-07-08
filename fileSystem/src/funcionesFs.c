@@ -33,6 +33,9 @@ t_config_FS* levantarConfiguracion(char* archivo){
 	conf->puertoEscucha = malloc(strlen(config_get_string_value(configFS, "PUERTO"))+1);
 	strcpy(conf->puertoEscucha, config_get_string_value(configFS, "PUERTO"));
 
+	conf->ip_fs = malloc(MAX_LEN_IP);
+	strcpy(conf->ip_fs, config_get_string_value(configFS, "IP_FS"));
+
 	conf->punto_montaje = malloc(strlen(config_get_string_value(configFS, "PUNTO_MONTAJE"))+1);
 	strcpy(conf->punto_montaje, config_get_string_value(configFS, "PUNTO_MONTAJE"));
 	if(!string_ends_with(conf->punto_montaje, "/") ) string_append(&conf->punto_montaje,"/");
