@@ -99,6 +99,7 @@ int sendSocket(int sockfd, header_t *header, void *data) {
 	bytesEnviados = sendallSocket(sockfd, packet, offset);//El offset representa la cantidad total de bytes del paquete a enviar
 	free(packet);
 
+	
 	return bytesEnviados;
 }
 
@@ -108,7 +109,7 @@ int sendSocket(int sockfd, header_t *header, void *data) {
  * En caso de error retorna -1.
  */
 int createServer(char *addr, char *port, int backlog) {
-	/*int sockfd = getSocket();
+	int sockfd = getSocket();
 
 	if (bindSocket(sockfd, addr, port) == -1) {
 		perror("bind");
@@ -123,30 +124,7 @@ int createServer(char *addr, char *port, int backlog) {
 	}
 
 	return sockfd;
-	*/
-	int socketEscucha;
-	struct sockaddr_in address;
-	if ((socketEscucha = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-		return -1;
-	}
-	int activador = 1;
-	if (setsockopt(socketEscucha, SOL_SOCKET, SO_REUSEADDR, (char *) &activador,
-			sizeof(activador)) < 0) {
-		return -1;
-	}
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(atoi(port));
-	if (bind(socketEscucha, (struct sockaddr *) &address, sizeof(address))
-			< 0) {
-		printf("Error al bindear");
-		return -1;
-	}
-	if (listen(socketEscucha, 5) < 0) {
-		printf("Error al escuchar");
-		return -1;
-	}
-	return socketEscucha;
+	
 }
 
 /**
