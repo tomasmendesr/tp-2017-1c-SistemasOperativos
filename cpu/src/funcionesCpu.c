@@ -360,8 +360,8 @@ void comenzarEjecucionDePrograma(void* paquete){
 		printf("Instruccion ejecutada\n");
 		usleep(quantumSleep * 1000);
 
-		pcb->programCounter++;
 		if(procesoBloqueado)break;
+		pcb->programCounter++;
 		i++;
 	}
 
