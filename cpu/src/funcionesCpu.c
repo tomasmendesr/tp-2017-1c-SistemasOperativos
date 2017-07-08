@@ -366,14 +366,17 @@ void comenzarEjecucionDePrograma(void* paquete){
 		if(procesoBloqueado)break;
 		i++;
 	}
-	if(procesoBloqueado){
+
+	if(cerrarCPU) finalizarCPU();
+
+	if(procesoBloqueado){if(cerrarCPU) finalizarCPU();
 		finalizarPor(PROC_BLOCKED);
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
 	}else{
 		finalizarPor(FIN_EJECUCION);
 		log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	}
-	if(cerrarCPU) finalizarCPU();
+
 }
 
 int verificarTerminarEjecucion(){
