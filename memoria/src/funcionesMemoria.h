@@ -24,7 +24,7 @@
 
 #define configuracionMemoria "../confMemoria.init"
 #define MAX_LEN_PUERTO 6
-#define IP "127.0.0.1"
+#define IP "192.168.3.3"
 #define BACKLOG 10
 
 //Defines para escribir menos

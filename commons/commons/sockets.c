@@ -22,7 +22,36 @@ int getSocket(void){
 
 	return sockfd;
 }
+int createServer2(char *addr, char *port, int backlog) {
 
+	struct addrinfo hints;
+	struct addrinfo *serverInfo;
+
+	memset(&hints,0,sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_socktype = SOCK_STREAM;
+
+	getaddrinfo(NULL,port,&hints,&serverInfo);
+
+	int sockfd = socket(serverInfo->ai_family,serverInfo->ai_socktype,serverInfo->ai_protocol);
+
+	//int sockfd = getSocket();
+
+	if (bindSocket(sockfd, addr, port) == -1) {
+		perror("bind");
+		close(sockfd);
+		return -1;
+	}
+
+	if (listenSocket(sockfd, backlog) == -1) {
+		perror("listen");
+		close(sockfd);
+		return -1;
+	}
+
+	return sockfd;
+}
 /**
  * @NAME: bindSocket
  * @DESC: Bindea el socket a la dirección ip y puerto pasados por parámetro.
