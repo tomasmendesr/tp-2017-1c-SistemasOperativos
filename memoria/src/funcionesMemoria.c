@@ -598,6 +598,8 @@ int leer(int pid, int pag, int offset, int size, char* resultado){
 		pag++;
 	}
 
+	write(1,resultado,size);
+
 	return 0;
 }
 

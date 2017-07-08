@@ -123,7 +123,7 @@ void crearArchivo(void* package){
 		if(bloqueLibre == SIN_BLOQUES_LIBRES){
 			//aviso a kernel que no hay bloques libres
 			enviar_paquete_vacio(SIN_ESPACIO_FS, socketConexionKernel);
-
+			log_error(logger, "No hay bloques libres");
 			return;
 		}
 

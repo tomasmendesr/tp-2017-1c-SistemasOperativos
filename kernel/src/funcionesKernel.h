@@ -270,6 +270,7 @@ sem_t mutex_datos;
 sem_t mutex_fs;
 
 pthread_mutex_t mutex_memoria_fd;
+pthread_mutex_t mutex_sem;
 
 //Listas
 t_list* listaCPUs;

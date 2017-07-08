@@ -135,6 +135,7 @@ void inicializaciones(void){
 	sem_init(&mutex_datos,0,1);
 	sem_init(&mutex_fs,0,1);
 	pthread_mutex_init(&mutex_memoria_fd,NULL);
+	pthread_mutex_init(&mutex_sem,NULL);
 	inicializarColas();
 	listaCPUs = list_create();
 	listadoEstadistico = list_create();

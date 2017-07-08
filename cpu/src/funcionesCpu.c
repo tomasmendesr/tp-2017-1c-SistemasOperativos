@@ -361,10 +361,8 @@ void comenzarEjecucionDePrograma(void* paquete){
 			if(cerrarCPU) finalizarCPU();
 			return;
 		}
-
 		printf("Instruccion ejecutada\n");
 		usleep(quantumSleep * 1000);
-
 		pcb->programCounter++;
 		if(procesoBloqueado)break;
 		i++;

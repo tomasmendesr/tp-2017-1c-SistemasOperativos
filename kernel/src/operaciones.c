@@ -187,12 +187,14 @@ void asignarVarCompartida(int32_t socketCPU, void* buffer){
 }
 
 void realizarSignal(int32_t socketCPU, char* key){
+	pthread_mutex_lock(&mutex_sem);
 	log_debug(logger, "Realizar signal %s", key);
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
 	if(dictionary_has_key(config->semaforos, key)){
 		if(dictionary_get(config->semaforos, key) == NULL){
 			log_error(logger, "El valor de %s es NULL", key);
 			 enviar_paquete_vacio(NULL_POINTER, socketCPU);
+			pthread_mutex_unlock(&mutex_sem);
 			 return;
 		}
 		else{
@@ -209,9 +211,11 @@ void realizarSignal(int32_t socketCPU, char* key){
 		log_error(logger ,"No se encontro el semaforo %s. Se finaliza la ejecucion", key);
 		enviar_paquete_vacio(SEMAFORO_NO_EXISTE, socketCPU);
 	}
+	pthread_mutex_unlock(&mutex_sem);
 }
 
 void realizarWait(int32_t socketCPU, char* key){
+	pthread_mutex_lock(&mutex_sem);
 	int32_t resultado;
 	log_debug(logger, "Realizar wait %s", key);
 	aumentarEstadisticaPorSocketAsociado(socketCPU, estadisticaAumentarOpPriviligiada);
@@ -220,6 +224,7 @@ void realizarWait(int32_t socketCPU, char* key){
 		if(dictionary_get(config->semaforos, key) == NULL){
 			log_error(logger, "El valor de %s es NULL", key);
 			 enviar_paquete_vacio(NULL_POINTER, socketCPU);
+			pthread_mutex_unlock(&mutex_sem);
 			 return;
 		}
 		else{
@@ -242,6 +247,7 @@ void realizarWait(int32_t socketCPU, char* key){
 						pcbRecibido->exitCode = info->exitCode;
 						terminarProceso(pcbRecibido, socketCPU);
 						free(paquete);
+						pthread_mutex_unlock(&mutex_sem);
 						return;
 					}
 					bloquearProceso(key, pcbRecibido);
@@ -258,6 +264,7 @@ void realizarWait(int32_t socketCPU, char* key){
 		log_error(logger ,"No se encontro el semaforo %s. Se finaliza la ejecucion", key);
 		enviar_paquete_vacio(SEMAFORO_NO_EXISTE, socketCPU);
 	}
+	pthread_mutex_unlock(&mutex_sem);
 }
 
 void finalizarPrograma(int32_t consola_fd, int32_t pid){
