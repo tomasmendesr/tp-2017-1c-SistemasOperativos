@@ -357,7 +357,10 @@ void comenzarEjecucionDePrograma(void* paquete){
 		analizadorLinea(instruccion, &functions, &kernel_functions);
 		free(instruccion);
 
-		if(verificarTerminarEjecucion() == -1)return;
+		if(verificarTerminarEjecucion() == -1){
+			if(cerrarCPU) finalizarCPU();
+			return;
+		}
 
 		printf("Instruccion ejecutada\n");
 		usleep(quantumSleep * 1000);
