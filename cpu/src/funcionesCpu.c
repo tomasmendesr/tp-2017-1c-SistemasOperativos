@@ -368,7 +368,7 @@ void comenzarEjecucionDePrograma(void* paquete){
 	if(procesoBloqueado){
 		finalizarPor(PROC_BLOCKED);
 		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
-	}else if(i>quantum || !quantum){
+	}else{
 		finalizarPor(FIN_EJECUCION);
 		log_info(logger, "Finalizo ejecucion por fin de Quantum");
 	}
