@@ -170,8 +170,6 @@ int32_t requestHandlerKernel(void){
 		case WAIT_DETENER_EJECUCION:
 			log_debug(logger,"Proceso queda bloqueado");
 			procesoBloqueado = true;
-			pcb->programCounter++;
-			finalizarPor(PROC_BLOCKED);
 			break;
 		case VALOR_VAR_COMPARTIDA:
 			paqueteGlobal=malloc(header.length);
@@ -330,19 +328,6 @@ void revisarSigusR1(int signo){
 		printf("Signal SIGUSR1\n");
 		log_info(logger, "Se recibe SIGUSR1");
 		cerrarCPU = true;
-	//	enviar_paquete_vacio(DESCONEXION_CPU, socketConexionKernel); NO HACE FALTA PORQUE EL KERNEL DETECTA LA DESCONEXION
-		log_debug(logger, "Desconectando CPU...");
-	}
-}
-
-void revisarFinalizarCPU(void){
-	if(cerrarCPU){
-		finalizarConexion(socketConexionKernel);
-		finalizarConexion(socketConexionMemoria);
-		log_info(logger, "CPU desconectada.");
-		log_destroy(logger);
-		freeConf(config);
-		return;
 	}
 }
 
@@ -368,20 +353,25 @@ void comenzarEjecucionDePrograma(void* paquete){
 		printf("Instruccion recibida: '%s'\n", instruccion);
 		analizadorLinea(instruccion, &functions, &kernel_functions);
 		free(instruccion);
-		if (verificarTerminarEjecucion() == -1) return;
-		revisarFinalizarCPU();
+
+		if(cerrarCPU)finalizarCPU();
+		if(verificarTerminarEjecucion() == -1)return;
+
 		printf("Instruccion ejecutada\n");
-		i++;
-		pcb->programCounter++;
 		usleep(quantumSleep * 1000);
+
+		if(procesoBloqueado)break;
+		pcb->programCounter++;
+		i++;
 	}
-	if(!procesoBloqueado){
+
+	if(procesoBloqueado){
+		finalizarPor(PROC_BLOCKED);
+		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
+	}else{
 		finalizarPor(FIN_EJECUCION);
 		log_info(logger, "Finalizo ejecucion por fin de Quantum");
-	}else
-		log_info(logger, "Finalizo ejecucion por proceso bloqueado");
-
-	revisarFinalizarCPU();
+	}
 }
 
 int verificarTerminarEjecucion(){

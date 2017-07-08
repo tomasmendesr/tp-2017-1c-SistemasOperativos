@@ -20,7 +20,7 @@ int main(int argc, char** argv){
 
 	inicializarMemoria();
 
-	socketEscuchaConexiones = createServer(IP, config->puerto, BACKLOG);
+	socketEscuchaConexiones = createServer2(IP, config->puerto, BACKLOG);
 
 	esperarConexionKernel();
 

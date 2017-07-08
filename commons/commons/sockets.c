@@ -22,7 +22,36 @@ int getSocket(void){
 
 	return sockfd;
 }
+int createServer2(char *addr, char *port, int backlog) {
 
+	struct addrinfo hints;
+	struct addrinfo *serverInfo;
+
+	memset(&hints,0,sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_socktype = SOCK_STREAM;
+
+	getaddrinfo(NULL,port,&hints,&serverInfo);
+
+	int sockfd = socket(serverInfo->ai_family,serverInfo->ai_socktype,serverInfo->ai_protocol);
+
+	//int sockfd = getSocket();
+
+	if (bindSocket(sockfd, addr, port) == -1) {
+		perror("bind");
+		close(sockfd);
+		return -1;
+	}
+
+	if (listenSocket(sockfd, backlog) == -1) {
+		perror("listen");
+		close(sockfd);
+		return -1;
+	}
+
+	return sockfd;
+}
 /**
  * @NAME: bindSocket
  * @DESC: Bindea el socket a la dirección ip y puerto pasados por parámetro.
@@ -33,7 +62,7 @@ int bindSocket(int sockfd, char *addr, char *port) {
 
 	my_addr.sin_family = AF_INET;
 	my_addr.sin_port = htons(atoi(port));
-	my_addr.sin_addr.s_addr = inet_addr(addr);
+	my_addr.sin_addr.s_addr = INADDR_ANY;// inet_addr(addr);
 	memset(&(my_addr.sin_zero), '\0', 8);
 
 	return bind(sockfd, (struct sockaddr *) &my_addr, sizeof(struct sockaddr));
@@ -99,6 +128,7 @@ int sendSocket(int sockfd, header_t *header, void *data) {
 	bytesEnviados = sendallSocket(sockfd, packet, offset);//El offset representa la cantidad total de bytes del paquete a enviar
 	free(packet);
 
+	
 	return bytesEnviados;
 }
 
@@ -123,6 +153,7 @@ int createServer(char *addr, char *port, int backlog) {
 	}
 
 	return sockfd;
+	
 }
 
 /**
