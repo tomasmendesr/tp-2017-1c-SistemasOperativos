@@ -84,7 +84,7 @@ void escucharConexiones(void){
 
 		for(iterador_sockets = 0; iterador_sockets <= max_fd; iterador_sockets++) {
 
-			if(iterador_sockets == inotify_fd)
+			if(iterador_sockets == inotify_fd && FD_ISSET(iterador_sockets,&read_fd))
 				cambiarConfig();
 
 			if(FD_ISSET(iterador_sockets, &setCPUs) && FD_ISSET(iterador_sockets,&read_fd)){ //una cpu realiza una operacion

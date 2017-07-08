@@ -51,6 +51,8 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         t_config* configKernel;
         char** varGlob, **semID, **semInit;
 
+        log_debug(logger,"Path config: %s",archivo_conf);
+
         configKernel = config_create(archivo_conf);
         if(configKernel == NULL)
         	log_error(logger,"ERROR");
@@ -993,25 +995,25 @@ void cambiarConfig()
 		log_error(logger,"Error al leer el inotify");
 	}
 
-	if(evento->mask == IN_MODIFY) //|| evento->mask == IN_CREATE || evento->mask == IN_DELETE)
+	if(evento->mask == IN_MODIFY || evento->mask == IN_CREATE || evento->mask == IN_DELETE)
 	{
 		//destruirConfiguracionKernel(config);
 
-		log_info(logger,"Antes de levantar %s",inotify_path);
-
+		//sleep(1);
 		t_config* configNueva = config_create(inotify_path);
-
-		log_info(logger,"despues de levantar");
 
 		if(configNueva == NULL)
 			log_error(logger, "Error al crear nueva configuracion");
+		if(configNueva->properties == NULL)
+			log_error(logger, "Error al crear nueva configuracion");
 
-		log_info(logger,"antes de get int value");
-		config->quantum = config_get_int_value(configNueva, "QUANTUM");
-		log_info(logger,"despues del primer get int value");
-		config->quantum_Sleep = config_get_int_value(configNueva, "QUANTUM_SLEEP");
+		if(config_has_property(configNueva,"QUANTUM") && config_has_property(configNueva,"QUANTUM_SLEEP")){
+			config->quantum = config_get_int_value(configNueva, "QUANTUM");
+			config->quantum_Sleep = config_get_int_value(configNueva, "QUANTUM_SLEEP");
 
-		log_info(logger, "antes de destroy");
+			log_info(logger,"Se detecto un cambio de configuracion\nNuevo Quantum Sleep: %d Quantum: %d",config->quantum_Sleep,config->quantum);
+		}else
+			log_info(logger,"No pude crear Config");
 
 		config_destroy(configNueva);
 
