@@ -25,7 +25,7 @@ AnSISOP_kernel kernel_functions = { .AnSISOP_abrir =abrir, .AnSISOP_borrar = bor
 };
 
 int crearLog(void){
-	logger = log_create("../logCpu","cpu", 1, LOG_LEVEL_TRACE);
+	logger = log_create("../logCpu","cpu", 0, LOG_LEVEL_TRACE);
 	if(logger)
 		return 1;
 	else
