@@ -358,6 +358,7 @@ char* obtenerExitCode(int32_t exitCode){
 	case SIN_ESPACIO_FS: return "SIN_ESPACIO_FS";
 	case IMPOSIBLE_BORRAR_ARCHIVO: return "IMPOSIBLE_BORRAR_ARCHIVO";
 	case MEMORY_CORRUPTION: return "MEMORY_CORRUPTION";
+	case KILL: return "KILL";
 	default: return "ERROR DESCONOCIDO";
 	}
 }

@@ -1001,7 +1001,7 @@ char* getTimeStamp(){
 void esperar(){
 
 	if( config->retardoActivado ){
-		usleep(config->retardo_Memoria);
+		usleep(config->retardo_Memoria * 1000);
 
 		if( config->imprimirRetardo )
 			log_debug(logger,"RETARDO");

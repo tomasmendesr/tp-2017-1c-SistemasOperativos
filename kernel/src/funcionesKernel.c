@@ -437,6 +437,8 @@ void killProcess(char* comando, char* param){
      //   if(info->estado != EXEC){ //como no esta ejecutando no tengo que esperar a que cpu lo devuelva
       //  	info_estadistica_t* info = buscarInformacion(pid);
         	info->matarSiguienteRafaga = true;
+        	info->exitCode = KILL;
+        	printf("Se termina el proceso %d en la siguiente rafaga\n", pid);
     //    	enviar_paquete_vacio(FINALIZAR_EJECUCION, info->socketConsola);
    //     }else{ //debo esperar a que el cpu devuelva el pcb;
     //    	info->matarSiguienteRafaga = true;
