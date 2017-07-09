@@ -184,7 +184,7 @@ int acceptSocket(int);
 int sendSocket(int socket, header_t* cabecera, void* data);
 int connectSocket(int, char *, char *);
 int sendallSocket(int s, void* buf, int len);
-int createServer(char *, char *, int);
+int createServer(char* puerto);
 int createClient(char *, char *);
 int recibir_paquete(int socket, void** paquete, int* tipo);
 int recibir_string(int socket,void** puntero_buffer,int* tipo);

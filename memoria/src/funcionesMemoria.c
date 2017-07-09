@@ -82,9 +82,6 @@ t_config_memoria* levantarConfiguracionMemoria(char* archivo) {
         config->puerto = malloc(MAX_LEN_PUERTO);
         strcpy(config->puerto, config_get_string_value(configMemoria, "PUERTO"));
 
-        config->ip_memoria = malloc(MAX_LEN_IP);
-		strcpy(config->ip_memoria, config_get_string_value(configMemoria, "IP_MEMORIA"));
-
         config->marcos = config_get_int_value(configMemoria, "MARCOS");
         config->marcos_Size = config_get_int_value(configMemoria, "MARCOS_SIZE");
         config->entradas_Cache = config_get_int_value(configMemoria, "ENTRADAS_CACHE");

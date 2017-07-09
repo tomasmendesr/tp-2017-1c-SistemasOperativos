@@ -69,9 +69,6 @@ t_config_kernel* levantarConfiguracionKernel(char* archivo_conf) {
         conf->ip_Memoria = malloc(MAX_LEN_IP);
         strcpy(conf->ip_Memoria, config_get_string_value(configKernel, "IP_MEMORIA"));
 
-        conf->ip_kernel = malloc(MAX_LEN_IP);
-		strcpy(conf->ip_kernel, config_get_string_value(configKernel, "IP_KERNEL"));
-
         conf->puerto_Memoria = malloc(MAX_LEN_PUERTO);
         strcpy(conf->puerto_Memoria, config_get_string_value(configKernel, "PUERTO_MEMORIA"));
 

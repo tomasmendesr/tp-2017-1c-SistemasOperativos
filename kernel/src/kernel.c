@@ -53,8 +53,8 @@ void escucharConexiones(void){
 	FD_ZERO(&setCPUs);
 	FD_ZERO(&setConsolas);
 
-	socketEscuchaCPUs = createServer2(config->ip_kernel,config->puerto_CPU,BACKLOG);
-	socketEscuchaConsolas = createServer2(config->ip_kernel,config->puerto_PROG,BACKLOG);
+	socketEscuchaCPUs = createServer(config->puerto_CPU);
+	socketEscuchaConsolas = createServer(config->puerto_PROG);
 
 	max_fd = max(socketEscuchaCPUs, socketEscuchaConsolas);
 

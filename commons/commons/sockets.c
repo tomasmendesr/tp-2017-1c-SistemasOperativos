@@ -22,41 +22,7 @@ int getSocket(void){
 
 	return sockfd;
 }
-int createServer2(char *addr, char *port, int backlog) {
-	int puerto = atoi(port);
-	struct sockaddr_in socketInfo;
-		int socketEscucha;
-		int optval = 1;
 
-		// Crear un socket
-		socketEscucha = socket (AF_INET, SOCK_STREAM, 0);
-		if (socketEscucha == -1)
-		 	return -1;
-
-		setsockopt(socketEscucha, SOL_SOCKET, SO_REUSEADDR, &optval,
-				sizeof(optval));
-		socketInfo.sin_family = AF_INET;
-		socketInfo.sin_port = htons(puerto);
-		socketInfo.sin_addr.s_addr = INADDR_ANY;
-		if (bind (socketEscucha,(struct sockaddr *)&socketInfo,sizeof (socketInfo)) != 0)
-		{
-			close (socketEscucha);
-			return -1;
-		}
-
-		/*
-		* Se avisa al sistema que comience a atender llamadas de clientes
-		*/
-		if (listen (socketEscucha, 10) == -1)
-		{
-			close (socketEscucha);
-			return -1;
-		}
-		/*
-		* Se devuelve el descriptor del socket servidor
-		*/
-		return socketEscucha;
-}
 /**
  * @NAME: bindSocket
  * @DESC: Bindea el socket a la dirección ip y puerto pasados por parámetro.
@@ -146,7 +112,7 @@ int sendSocket(int sockfd, header_t *header, void *data) {
  * @DESC: Crea y devuelve un socket para ser utilizado como servidor.
  * En caso de error retorna -1.
  */
-int createServer(char *addr, char *port, int backlog) {
+int createServer(char *port) {
 	int puerto = atoi(port);
 	struct sockaddr_in socketInfo;
 		int socketEscucha;

@@ -24,7 +24,6 @@
 
 #define configuracionMemoria "../confMemoria.init"
 #define MAX_LEN_PUERTO 6
-#define IP "192.168.3.3"
 #define BACKLOG 10
 #define MAX_LEN_IP 20
 //Defines para escribir menos
@@ -40,7 +39,6 @@
 
 typedef struct{
         char* puerto;
-        char* ip_memoria;
         int marcos;
         int marcos_Size;
         int entradas_Cache;
