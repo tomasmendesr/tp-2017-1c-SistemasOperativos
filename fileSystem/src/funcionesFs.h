@@ -18,6 +18,7 @@
 
 #define configuracionFS "../confFileSystem.init"
 #define MAX_LEN_PUERTO 6
+#define MAX_LEN_IP 20
 #define BACKLOG 10
 #define METADATA_PATH "Metadata"
 #define METADATA_ARCHIVO "/Metadata.bin"
